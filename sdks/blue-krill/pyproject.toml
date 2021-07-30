@@ -1,0 +1,102 @@
+[tool.poetry]
+name = "blue-krill"
+version = "1.0.5"
+description = "Tools and common packages for blueking paas"
+license = "Apach License 2.0"
+readme = "README.md"
+authors = ["blueking"]
+
+[tool.poetry.dependencies]
+python = ">=3.6.2,<3.8"
+dataclasses = {version = "^0.7", python = "~3.6"}
+cryptography = "^3.0.0"
+django-environ = "^0.4.0"
+pyjwt = "<2.0.0"
+requests = "*"
+six = "*"
+click = "*"
+pydantic = "^1.7"
+toml = "*"
+python-editor = "^1.0.4"
+watchdog = "^1.0.2"
+curlify = "^2.2.1"
+
+[tool.poetry.dev-dependencies]
+redis = "^3.5.3"
+django = "~1"
+tox = "^3.18.1"
+requests_mock = "^1.8.0"
+requests-mock = "^1.8.0"
+boto3 = "^1.16.45"
+moto = "^1.3.16"
+django-rest-framework = "^0.1.0"
+celery = "^5.0.5"
+# For flake8 support pyproject.toml
+toml = "^0.10.1"
+pyproject-flake8 = "^0.0.1-alpha.2"
+flake8-comprehensions = "^3.5.0"
+# pytest
+pytest = "^6.2.2"
+pytest-django = "^4.1.0"
+# black
+black = "^21.7b0"
+# mypy
+mypy = "^0.910"
+# install extension stubs if missing
+types-requests = "^2.25.0"
+types-setuptools = "^57.0.0"
+types-dataclasses = "^0.1.5"
+types-redis = "^3.5.4"
+types-PyMySQL = "^1.0.0"
+types-six = "^0.1.7"
+types-toml = "^0.1.3"
+# isort
+isort = "^5.9.2"
+
+[tool.poetry.scripts]
+bk-secure = "blue_krill.secure.bk_secure:main"
+editionctl = "blue_krill.editions.editionctl:main"
+
+[build-system]
+requires = [
+    "poetry>=1.1.4",
+    # Must add setuptools to enable develop-mode installation, discussion: https://github.com/pypa/setuptools/issues/2353
+    "setuptools"
+]
+build-backend = "poetry.masonry.api"
+
+[tool.black]
+line-length = 119
+skip-string-normalization = 'true'
+exclude = '''
+/(
+  | .+/dist/.*
+)/
+'''
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = 'true'
+force_grid_wrap = 0
+use_parentheses = 'true'
+line_length = 119
+# ignore example
+skip_glob = ["*/dist/**"]
+
+[tool.flake8]
+ignore = "C901,E203,W503"
+max-line-length = 119
+max-complexity = 12
+format = "pylint"
+# ignore example
+ exclude = "*.pyc,.git,__pycache__,*/dist/*"
+
+[tool.mypy]
+ignore_missing_imports = true
+show_error_codes = true
+strict_optional = false
+pretty = true
+
+[[tool.mypy.overrides]]
+module = ["*.dist.*"]
+ignore_errors = true

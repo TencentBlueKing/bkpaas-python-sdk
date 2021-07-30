@@ -1,0 +1,5 @@
+# only ignore poetry.lock in root
+/poetry.lock
+
+# For ide
+.idea

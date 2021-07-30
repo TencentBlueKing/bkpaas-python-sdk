@@ -1,0 +1,5 @@
+# Requirements modules for running tests
+pytest>=3.0.4
+pytest-django>=3.1.2
+six
+boto3
