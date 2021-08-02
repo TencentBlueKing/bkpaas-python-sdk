@@ -1,0 +1,46 @@
+name: CI Check
+
+on:
+  push:
+    branches: [ master, staging ]
+  pull_request:
+    branches: [ master, staging ]
+
+jobs:
+  build:
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+        poetry-version: [1.1.7]
+        os: [ubuntu-18.04, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Set up Poetry
+      uses: abatilo/actions-poetry@v2.1.0
+      with:
+          poetry-version: ${{ matrix.poetry-version }}
+    - name: Install dependencies
+      run: |
+        cd sdks/blue-krill
+        poetry install
+    - name: Format with isort
+      run: |
+        isort sdks/ --settings-path=sdks/blue-krill/pyproject.toml
+    - name: Format with black
+      run: |
+        black sdks/ --config=sdks/blue-krill/pyproject.toml
+    - name: Lint with flake8
+      run: |
+        pflake8 sdks/ --config=sdks/blue-krill/pyproject.toml
+    - name: Lint with mypy
+      run: |
+        mypy sdks/ --config-file=sdks/blue-krill/pyproject.toml
+
