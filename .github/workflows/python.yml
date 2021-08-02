@@ -30,7 +30,7 @@ jobs:
     - name: Install dependencies
       run: |
         cd sdks/blue-krill
-        poetry install
+        poetry config virtualenvs.create false && poetry install
     - name: Format with isort
       run: |
         isort sdks/ --settings-path=sdks/blue-krill/pyproject.toml
