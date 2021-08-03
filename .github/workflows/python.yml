@@ -41,4 +41,3 @@ jobs:
     - name: Lint with mypy
       run: |
         mypy sdks/ --config-file=sdks/blue-krill/pyproject.toml
-
