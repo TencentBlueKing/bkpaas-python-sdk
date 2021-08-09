@@ -16,6 +16,7 @@ import six
 from bkstorages.backends.rgw import RGWBoto3Storage
 from django.core.files import File
 from django.core.files.base import ContentFile
+from django.conf import settings
 
 from .models import RGWFile
 
@@ -69,6 +70,14 @@ class TestRGWBoto3Storage:
     def test_location(self, storage):
         storage = RGWBoto3Storage(location="/static/")
         storage.save(u"test/content_file", make_content_file())
+
+    def test_url(self, storage):
+        fname = "/test/content_file"
+        storage.save(fname, make_content_file())
+        assert (
+            storage.url("/test/content_file")
+            == f"{settings.RGW_ENDPOINT_URL}/{settings.RGW_STORAGE_BUCKET_NAME}{fname}"
+        )
 
 
 class TestFileWithStorage:

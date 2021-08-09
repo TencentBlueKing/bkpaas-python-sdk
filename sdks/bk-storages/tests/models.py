@@ -13,8 +13,6 @@ import os
 from bkstorages.backends.rgw import RGWBoto3Storage
 from django.db import models
 
-# from bkstorages.backends.cos import StaticCOSStorage as COSStorage
-
 
 storage = RGWBoto3Storage()
 
@@ -22,11 +20,6 @@ storage = RGWBoto3Storage()
 def file_path(instance, filename):
     ext = os.path.splitext(filename)[1]
     return "users/%s%s" % (instance.user_id, ext)
-
-
-class CosFile(models.Model):
-    user_id = models.IntegerField(null=False)
-    user_file = models.FileField(upload_to=file_path, storage=storage)
 
 
 class RGWFile(models.Model):

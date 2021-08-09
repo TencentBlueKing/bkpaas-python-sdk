@@ -39,8 +39,6 @@ def pytest_configure():
             'tests',
         ),
         # DEFAULT_FILE_STORAGE = 'bkstorages.backends.rgw.RGWBoto3Storage',
-        # COS settings: sensitive settings should be set via env vars
-        # COS_LOCATION='static'
         # RGW settings
         RGW_AUTO_CREATE_BUCKET=True,
         RGW_ENDPOINT_URL="http://127.0.0.1:9100",
