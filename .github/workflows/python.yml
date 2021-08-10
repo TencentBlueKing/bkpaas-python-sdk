@@ -42,5 +42,6 @@ jobs:
         pflake8 sdks/ --config=sdks/blue-krill/pyproject.toml
     - name: Lint with mypy
       run: |
-        mypy sdks/ --config-file=sdks/blue-krill/pyproject.toml
+        mypy sdks/bk-storages --config-file=sdks/bk-storages/pyproject.toml
+        mypy sdks/blue-krill --config-file=sdks/blue-krill/pyproject.toml
 
