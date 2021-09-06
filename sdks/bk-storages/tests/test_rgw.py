@@ -13,10 +13,11 @@ from tempfile import NamedTemporaryFile
 
 import pytest
 import six
-from bkstorages.backends.rgw import RGWBoto3Storage
+from django.conf import settings
 from django.core.files import File
 from django.core.files.base import ContentFile
-from django.conf import settings
+
+from bkstorages.backends.rgw import RGWBoto3Storage
 
 from .models import RGWFile
 

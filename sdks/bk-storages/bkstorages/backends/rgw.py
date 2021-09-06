@@ -10,12 +10,10 @@
 """
 import mimetypes
 import os
-import posixpath
 from gzip import GzipFile
 from tempfile import SpooledTemporaryFile
 
 import botocore.utils
-from bkstorages.utils import get_setting, setting
 from boto3 import __version__ as boto3_version
 from boto3 import resource
 from botocore.client import Config
@@ -29,6 +27,8 @@ from django.utils.encoding import filepath_to_uri, force_bytes, force_text, smar
 from django.utils.timezone import is_naive, localtime
 from six import BytesIO, string_types
 from six.moves.urllib import parse as urlparse
+
+from bkstorages.utils import clean_name, get_available_overwrite_name, get_setting, safe_join, setting
 
 SAFE_CHARS = '-._~'
 
@@ -64,37 +64,6 @@ if boto3_version_info[:2] < (1, 4):
     raise ImproperlyConfigured(
         "The installed Boto3 library must be 1.4.0 or " "higher.\nSee https://github.com/boto/boto3"
     )
-
-
-def safe_join(base, *paths):
-    """
-    A version of django.utils._os.safe_join for S3 paths.
-
-    Joins one or more path components to the base path component
-    intelligently. Returns a normalized version of the final path.
-
-    The final path must be located inside of the base path component
-    (otherwise a ValueError is raised).
-
-    Paths outside the base path indicate a possible security
-    sensitive operation.
-    """
-    base_path = force_text(base)
-    base_path = base_path.rstrip('/')
-    paths = [force_text(p) for p in paths]
-
-    final_path = base_path
-    for path in paths:
-        final_path = urlparse.urljoin(final_path.rstrip('/') + "/", path)
-
-    # Ensure final_path starts with base_path and that the next character after
-    # the final path is '/' (or nothing, in which case final_path must be
-    # equal to base_path).
-    base_path_len = len(base_path)
-    if not final_path.startswith(base_path) or final_path[base_path_len : base_path_len + 1] not in ('', '/'):
-        raise ValueError('the joined path is located outside of the base path' ' component')
-
-    return final_path.lstrip('/')
 
 
 @deconstructible
@@ -424,21 +393,6 @@ class RGWBoto3Storage(Storage):
                     )
         return bucket
 
-    def _clean_name(self, name):
-        """
-        Cleans the name so that Windows style paths work
-        """
-        # Normalize Windows style paths
-        clean_name = posixpath.normpath(name).replace('\\', '/')
-
-        # os.path.normpath() can strip trailing slashes so we implement
-        # a workaround here.
-        if name.endswith('/') and not clean_name.endswith('/'):
-            # Add a trailing slash as it was stripped.
-            return clean_name + '/'
-        else:
-            return clean_name
-
     def _normalize_name(self, name):
         """
         Normalizes the name so that paths like /path/to/ignored/../something.txt
@@ -471,7 +425,7 @@ class RGWBoto3Storage(Storage):
         return zbuf
 
     def _open(self, name, mode='rb'):
-        name = self._normalize_name(self._clean_name(name))
+        name = self._normalize_name(clean_name(name))
         try:
             f = self.file_class(name, mode, self)
         except self.connection_response_error as err:
@@ -481,7 +435,7 @@ class RGWBoto3Storage(Storage):
         return f
 
     def _save(self, name, content):
-        cleaned_name = self._clean_name(name)
+        cleaned_name = clean_name(name)
         name = self._normalize_name(cleaned_name)
         parameters = self.object_parameters.copy()
         content_type = getattr(content, 'content_type', mimetypes.guess_type(name)[0] or self.default_content_type)
@@ -516,7 +470,7 @@ class RGWBoto3Storage(Storage):
         obj.upload_fileobj(content, ExtraArgs=put_parameters)
 
     def delete(self, name):
-        name = self._normalize_name(self._clean_name(name))
+        name = self._normalize_name(clean_name(name))
         self.bucket.Object(self._encode_name(name)).delete()
 
     def exists(self, name):
@@ -526,7 +480,7 @@ class RGWBoto3Storage(Storage):
                 return True
             except ImproperlyConfigured:
                 return False
-        name = self._normalize_name(self._clean_name(name))
+        name = self._normalize_name(clean_name(name))
         if self.entries:
             return name in self.entries
         obj = self.bucket.Object(self._encode_name(name))
@@ -537,7 +491,7 @@ class RGWBoto3Storage(Storage):
             return False
 
     def listdir(self, name):
-        name = self._normalize_name(self._clean_name(name))
+        name = self._normalize_name(clean_name(name))
         # for the bucket.objects.filter and logic below name needs to end in /
         # But for the root path "" we leave it as an empty string
         if name and not name.endswith('/'):
@@ -558,7 +512,7 @@ class RGWBoto3Storage(Storage):
         return list(dirs), files
 
     def size(self, name):
-        name = self._normalize_name(self._clean_name(name))
+        name = self._normalize_name(clean_name(name))
         if self.entries:
             entry = self.entries.get(name)
             if entry:
@@ -571,7 +525,7 @@ class RGWBoto3Storage(Storage):
         Returns an (aware) datetime object containing the last modified time if
         USE_TZ is True, otherwise returns a naive datetime in the local timezone.
         """
-        name = self._normalize_name(self._clean_name(name))
+        name = self._normalize_name(clean_name(name))
         entry = self.entries.get(name)
         # only call self.bucket.Object() if the key is not found
         # in the preloaded metadata.
@@ -623,7 +577,7 @@ class RGWBoto3Storage(Storage):
     def url(self, name, parameters=None, expire=None):
         # Preserve the trailing slash after normalizing the path.
         # TODO: Handle force_http=not self.secure_urls like in s3boto
-        name = self._normalize_name(self._clean_name(name))
+        name = self._normalize_name(clean_name(name))
         if self.custom_domain:
             return "%s//%s/%s" % (self.url_protocol, self.custom_domain, filepath_to_uri(name))
         if expire is None:
@@ -639,9 +593,9 @@ class RGWBoto3Storage(Storage):
 
     def get_available_name(self, name, max_length=None):
         """Overwrite existing file with the same name."""
+        name = clean_name(name)
         if self.file_overwrite:
-            name = self._clean_name(name)
-            return name
+            return get_available_overwrite_name(name, max_length)
         return super(RGWBoto3Storage, self).get_available_name(name, max_length)
 
 

@@ -15,13 +15,14 @@ from typing import Dict, List, Tuple
 
 import curlify
 import requests
-from bkstorages.utils import get_setting, setting
 from django.core.exceptions import ImproperlyConfigured
 from django.core.files.base import File
 from django.core.files.storage import Storage
 from django.utils.deconstruct import deconstructible
 from requests.auth import HTTPBasicAuth
 from six.moves.urllib_parse import urljoin
+
+from bkstorages.utils import clean_name, get_available_overwrite_name, get_setting, safe_join, setting
 
 logger = logging.getLogger(__name__)
 
@@ -319,9 +320,11 @@ class BKRepoStorage(Storage):
         )
 
     def _full_path(self, name):
-        if name == '/':
-            name = ''
-        return urljoin(self.root_path, name).replace('\\', '/')
+        cleaned_name = clean_name(name)
+        # safe_join can not work with absolute path
+        if cleaned_name.startswith("/"):
+            cleaned_name = cleaned_name[1:]
+        return safe_join(self.root_path, cleaned_name)
 
     def _open(self, name, mode='rb'):
         return BKRepoFile(self._full_path(name), self)
@@ -364,6 +367,9 @@ class BKRepoStorage(Storage):
         Returns a filename that's free on the target storage system, and
         available for new content to be written to.
         """
+        name = clean_name(name)
+        if self.file_overwrite:
+            return get_available_overwrite_name(name, max_length)
         return super().get_available_name(name, max_length)
 
     def generate_filename(self, filename):

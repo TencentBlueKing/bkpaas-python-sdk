@@ -14,9 +14,9 @@ from unittest import mock
 import pytest
 import requests
 import requests_mock
-from bkstorages.backends.bkrepo import BKGenericRepoClient, BKRepoFile, BKRepoStorage
 from six.moves.urllib_parse import urljoin
 
+from bkstorages.backends.bkrepo import BKGenericRepoClient, BKRepoFile, BKRepoStorage
 from tests.utils import generate_random_string
 
 
