@@ -23,9 +23,9 @@ readme = ''
 setup(
     long_description=readme,
     name='bkstorages',
-    version='1.0.1',
+    version='1.0.2',
     description='File storage backends for blueking PaaS platform',
-    python_requires='<3.8,>=3.6',
+    python_requires='<3.8,>=3.6.2',
     author='blueking',
     author_email='blueking@tencent.com',
     classifiers=['Programming Language :: Python', 'Programming Language :: Python :: 3', 'Framework :: Django'],
@@ -34,6 +34,21 @@ setup(
     package_data={},
     install_requires=['boto3>=1.4.1', 'curlify==2.*,>=2.2.1', 'requests', 'six>=1.14'],
     extras_require={
-        "dev": ["django<3.0.0,>=1.7", "pytest>=3.0.4", "pytest-django>=3.1.2", "requests-mock==1.*,>=1.8.0"]
+        "dev": [
+            "black==21.7b0",
+            "django<3.0.0,>=1.7",
+            "flake8-comprehensions==3.*,>=3.5.0",
+            "isort==5.*,>=5.9.2",
+            "mypy==0.910",
+            "pyproject-flake8==0.*,>=0.0.1.a2",
+            "pytest==6.2.2",
+            "pytest-django==4.1.0",
+            "requests-mock==1.*,>=1.8.0",
+            "toml==0.10.1",
+            "types-requests==2.25.0",
+            "types-setuptools==57.0.0",
+            "types-six==0.1.7",
+            "types-toml==0.1.3",
+        ]
     },
 )
