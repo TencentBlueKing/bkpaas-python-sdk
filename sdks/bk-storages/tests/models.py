@@ -10,9 +10,9 @@
 """
 import os
 
-from bkstorages.backends.rgw import RGWBoto3Storage
 from django.db import models
 
+from bkstorages.backends.rgw import RGWBoto3Storage
 
 storage = RGWBoto3Storage()
 
