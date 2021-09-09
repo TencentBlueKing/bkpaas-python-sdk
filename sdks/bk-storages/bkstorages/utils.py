@@ -111,6 +111,23 @@ def clean_name(name):
 def get_available_overwrite_name(name, max_length):
     """Return a filename that's meet the maximum length limit.
     If the name is too long, this function will try to truncate those overflow.
+
+    >>> get_available_overwrite_name("foo/bar/baz.ext", max_length=12)
+    Traceback (most recent call last):
+        ...
+    django.core.exceptions.SuspiciousFileOperation: ...
+
+    >>> get_available_overwrite_name("foo/bar/baz.ext", max_length=13)
+    'foo/bar/b.ext'
+
+    >>> get_available_overwrite_name("foo/bar/baz.ext", max_length=14)
+    'foo/bar/ba.ext'
+
+    >>> get_available_overwrite_name("foo/bar/baz.ext", max_length=15)
+    'foo/bar/bar.ext'
+
+    >>> get_available_overwrite_name("foo/bar/baz.ext", max_length=None)
+    'foo/bar/bar.ext'
     """
     if max_length is None or len(name) <= max_length:
         return name
