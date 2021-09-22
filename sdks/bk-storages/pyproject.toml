@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bkstorages"
-version = "1.0.2"
+version = "1.0.3"
 description = "File storage backends for blueking PaaS platform"
 classifiers = ["Programming Language :: Python", "Programming Language :: Python :: 3", "Framework :: Django"]
 authors = ["blueking <blueking@tencent.com>"]
