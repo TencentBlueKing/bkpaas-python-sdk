@@ -19,11 +19,13 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.files.base import File
 from django.core.files.storage import Storage
 from django.utils.deconstruct import deconstructible
+from requests.adapters import HTTPAdapter
 from requests.auth import HTTPBasicAuth
 from six.moves.urllib_parse import urljoin
 
 from bkstorages.utils import clean_name, get_available_overwrite_name, get_setting, safe_join, setting
 
+MAX_RETRIES = 2
 logger = logging.getLogger(__name__)
 
 
@@ -61,10 +63,13 @@ class BKGenericRepoClient:
         self.endpoint_url = endpoint_url.rstrip("/")
         self.username = username
         self.password = password
+        self._max_retries = kwargs.get("max_retries", MAX_RETRIES)
 
     def get_client(self) -> requests.Session:
         session = requests.session()
         session.auth = HTTPBasicAuth(username=self.username, password=self.password)
+        session.mount("http://", HTTPAdapter(max_retries=self._max_retries))
+        session.mount("https://", HTTPAdapter(max_retries=self._max_retries))
         return session
 
     def upload_file(self, filepath: PathLike, key: str, allow_overwrite: bool = True, **kwargs):

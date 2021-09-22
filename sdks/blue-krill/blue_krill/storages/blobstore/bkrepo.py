@@ -15,11 +15,13 @@ from urllib.parse import urljoin
 
 import curlify
 import requests
+from requests.adapters import HTTPAdapter
 from requests.auth import HTTPBasicAuth
 
 from blue_krill.data_types.enum import EnumField, StructuredEnum
 from blue_krill.storages.blobstore.base import BlobStore, ObjectAlreadyExists, RequestError, SignatureType
 
+MAX_RETRIES = 2
 logger = logging.getLogger(__name__)
 
 
@@ -59,15 +61,19 @@ class BKRepoManager:
         endpoint_url: str,
         username: str,
         password: str,
+        **kwargs,
     ):
         # endpoint can not endswith '/'
         self.endpoint_url = endpoint_url.rstrip("/")
         self.username = username
         self.password = password
+        self._max_retries = kwargs.get("max_retries", MAX_RETRIES)
 
     def get_client(self) -> requests.Session:
         session = requests.session()
         session.auth = HTTPBasicAuth(username=self.username, password=self.password)
+        session.mount("http://", HTTPAdapter(max_retries=self._max_retries))
+        session.mount("https://", HTTPAdapter(max_retries=self._max_retries))
         return session
 
     def create_user_to_repo(
@@ -190,10 +196,13 @@ class BKGenericRepo(BlobStore):
         self.endpoint_url = endpoint_url.rstrip("/")
         self.username = username
         self.password = password
+        self._max_retries = kwargs.get("max_retries", MAX_RETRIES)
 
     def get_client(self) -> requests.Session:
         session = requests.session()
         session.auth = HTTPBasicAuth(username=self.username, password=self.password)
+        session.mount("http://", HTTPAdapter(max_retries=self._max_retries))
+        session.mount("https://", HTTPAdapter(max_retries=self._max_retries))
         return session
 
     def upload_file(self, filepath: PathLike, key: str, allow_overwrite: bool = True, **kwargs):

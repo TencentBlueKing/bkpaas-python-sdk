@@ -1,5 +1,9 @@
 ## Change logs
 
+### 1.0.6
+
+- `blue_krill.storages.blobstore.bkrepo` 模块增加错误重试机制
+
 ### 1.0.5
 
 - `StructuredEnum` 中新增 `get_choices`、`get_labels` 和 `get_values` 方法
