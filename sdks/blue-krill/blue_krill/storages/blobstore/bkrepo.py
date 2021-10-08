@@ -257,7 +257,8 @@ class BKGenericRepo(BlobStore):
         url = urljoin(self.endpoint_url, f'/generic/{self.project}/{self.bucket}/{key}')
         resp = client.get(url, stream=True)
         if not resp.ok:
-            raise RequestError(str("system error"), code=str(resp.status_code), response=resp)
+            _validate_resp(resp)
+            raise RequestError(str("下载制品文件失败"), code=str(resp.status_code), response=resp)
         try:
             for chunk in resp.iter_content(chunk_size=512):
                 if chunk:

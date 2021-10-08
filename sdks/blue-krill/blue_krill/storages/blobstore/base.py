@@ -28,6 +28,9 @@ class RequestError(Exception):
         self.code = code
         self.response = response
 
+    def __str__(self):
+        return self.message
+
 
 class ObjectAlreadyExists(RequestError):
     """该对象已存在."""
