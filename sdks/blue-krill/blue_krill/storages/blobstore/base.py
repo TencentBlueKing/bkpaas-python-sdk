@@ -83,9 +83,16 @@ class BlobStore:
         """
         raise NotImplementedError
 
+    def delete_file(self, key: str, *args, **kwargs):
+        """Delete file in filepath
+
+        :param str key: The name of the key to delete.
+        """
+        raise NotImplementedError
+
     def get_file_metadata(self, key: str):
         """Get file's metadata
-        :param str key: The name of the key to read
+        :param str key: The name of the key to read.
         """
         raise NotImplementedError
 

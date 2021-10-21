@@ -1,5 +1,9 @@
 ## Change logs
 
+### 1.0.7
+
+- `blue_krill.storages.blobstore.base.BlobStore` 增加 delete_file 的函数签名.
+
 ### 1.0.6
 
 - `blue_krill.storages.blobstore.bkrepo` 模块增加错误重试机制
