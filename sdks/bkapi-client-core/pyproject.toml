@@ -42,10 +42,6 @@ name = "tencent"
 url = "https://mirrors.cloud.tencent.com/pypi/simple/"
 default = true
 
-[[tool.poetry.source]]
-name = "pypi"
-url = "https://pypi.org/simple"
-
 [tool.isort]
 multi_line_output = 3
 include_trailing_comma = true
