@@ -37,4 +37,4 @@ build:
 publish:
 	rm -rf dist ||true
 	python setup.py sdist
-	twine upload dist/* -r tencent
+	twine upload dist/* -r pypi
