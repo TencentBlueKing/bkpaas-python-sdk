@@ -43,8 +43,8 @@ url = "https://mirrors.cloud.tencent.com/pypi/simple/"
 default = true
 
 [[tool.poetry.source]]
-name = "tencent-blueking"
-url = "https://mirrors.tencent.com/tencent_pypi/simple/"
+name = "pypi"
+url = "https://pypi.org/simple"
 
 [tool.isort]
 multi_line_output = 3
