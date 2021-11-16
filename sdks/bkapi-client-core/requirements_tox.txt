@@ -1,0 +1,8 @@
+django==1.11.20
+mock==3.0.5; python_version >= "2.7" and python_full_version < "3.0.0" and python_version < "3.0" or python_full_version >= "3.4.0" and python_version < "3.0"
+pytest-cov==2.12.1; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.5.0")
+pytest-django==3.10.0; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.4.0")
+pytest-faker==2.0.0
+pytest-mock==2.0.0; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.4.0")
+pytest==4.6.11; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.4.0")
+requests-mock==1.9.3

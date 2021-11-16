@@ -1,0 +1,100 @@
+[tool.poetry]
+name = "bkapi-client-core"
+version = "1.1.0"
+description = ""
+authors = []
+
+[tool.poetry.dependencies]
+python = "^2.7 || ^3.6"
+requests = "^2.20"
+typing = {version = "^3.10.0", python = "2.7"}
+curlify = "^2.0"
+bkoauth = { version = ">=0.0.10", markers = "extra == 'django'", optional = true}
+typing-extensions = "^3.7.4"
+
+[tool.poetry.dev-dependencies]
+black = {version = "^21.6b0", python = "^3.7"}
+flake8 = {version = "^3.9.2", python = "^3.7"}
+isort = {version = "^5.9.1", python = "^3.7"}
+mypy = {version = "^0.910", python = "^3.7"}
+pre-commit = {version = "^2.13.0", python = "^3.7"}
+pytest = {version = "^4.6"}
+pytest-cov = {version = "^2.12.1"}
+pyproject-flake8 = {version = "^0.0.1-alpha.2", python = "^3.7"}
+requests-mock = {version = "^1.9.3"}
+dephell = {version = "^0.8.3", python = "^3.7"}
+tox = {version = "^3.23.1", python = "^3.7"}
+pytest-mock = {version = "^2.0"}
+pytest-faker = {version = "^2.0.0"}
+more-itertools = "^5.0"
+types-requests = {version = "^2.25.0", python = "^3.6"}
+faker = {version = "3.0.1", python = "2.7"}
+dataclasses = {version = "0.8", python = "~3.6"}
+django = "1.11.20"
+pytest-django = "^3.10"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[[tool.poetry.source]]
+name = "tencent"
+url = "https://mirrors.cloud.tencent.com/pypi/simple/"
+default = true
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+line_length = 119
+
+[tool.black]
+line-length = 119
+skip-string-normalization = 'true'
+target-version = ['py27']
+exclude = '''
+/(
+  node_modules/.*
+  | .*/migrations
+)/
+'''
+
+[tool.flake8]
+ignore = "C901,F405,F403,W504,E741,E125,W503,F841,E203,E231,F541,W292"
+exclude = "*migrations*,*.pyc,.git,__pycache__,venv,"
+max-line-length = 119
+max-complexity = 12
+format = "pylint"
+show_source = "true"
+statistics = "true"
+count = "true"
+
+[tool.mypy]
+ignore_missing_imports = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = "*.migrations.*"
+ignore_errors = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["tests.py", "test_*.py"]
+filterwarnings = "ignore::DeprecationWarning"
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+minversion = 3.23
+isolated_build = True
+envlist = py{27,36,37}-requests2-{20,26}
+
+[testenv]
+deps =
+  -r requirements_tox.txt
+  requests2-20: requests==2.20
+  requests2-26: requests==2.26
+commands =
+  pytest tests
+"""

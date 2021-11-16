@@ -1,0 +1,42 @@
+# See https://pre-commit.com/ for usage and config
+fail_fast: true
+repos:
+  - repo: local
+    hooks:
+      - id: isort
+        name: isort
+        stages: [commit]
+        language: system
+        entry: make isort
+        types: [python]
+
+      - id: black
+        name: black
+        stages: [commit]
+        language: system
+        entry: make black
+        types: [python]
+
+      - id: flake8
+        name: flake8
+        stages: [commit]
+        language: system
+        entry: make flake8
+        types: [python]
+        exclude: setup.py
+
+      - id: mypy
+        name: mypy
+        stages: [commit]
+        language: system
+        entry: make mypy
+        types: [python]
+        require_serial: true
+
+      - id: pytest
+        name: pytest
+        stages: [commit]
+        language: system
+        entry: make test
+        types: [python]
+        pass_filenames: false

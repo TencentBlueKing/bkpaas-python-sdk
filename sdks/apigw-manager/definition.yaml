@@ -1,0 +1,48 @@
+apigateway:
+  description: xxxx
+  is_public: true
+  maintainers:
+    - "{% firstof settings.ADMIN data.admin "admin" %}"
+
+release:
+  title: ""
+  comment: ""
+
+stage:
+  vars:
+    key: value
+  proxy_http:
+    timeout: 1
+    upstreams:
+      loadbalance: "roundrobin"
+      hosts:
+        - host: "http://127.0.0.1"
+          weight: 100
+  rate_limit:
+    enabled: true
+    rate:
+      tokens: 5000
+      period: 60
+
+grant_permissions:
+  - bk_app_code: "{{ settings.BK_APP_CODE }}"
+
+apply_permissions:
+  - api_name: "{{ settings.BK_APIGW_NAME }}"
+
+resources:
+  swagger: "2.0"
+  paths: []
+
+strategies:
+  - type: "rate_limit"
+    comment: "rate_limit"
+    config:
+      rates: {}
+  - type: "error_status_code_200"
+    comment: "error_status_code_200"
+    config: {}
+
+resource_docs:
+  archivefile: "{{ settings.BK_APIGW_RESOURCE_DOCS_ARCHIVE_FILE }}"
+  basedir: "{{ settings.BK_APIGW_RESOURCE_DOCS_BASE_DIR }}"
