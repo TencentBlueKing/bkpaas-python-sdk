@@ -4,6 +4,9 @@
 [![license](https://img.shields.io/badge/license-mit-brightgreen.svg?style=flat)](LICENSE)
 [![blue-krill Release](https://img.shields.io/badge/blue--krill-1.0.5-brightgreen)](https://github.com/TencentBlueKing/bkpaas-python-sdk/releases)
 [![bkstorages Release](https://img.shields.io/badge/bkstorages-1.0.1-brightgreen)](https://github.com/TencentBlueKing/bkpaas-python-sdk/releases)
+[![bkapi-client-core Release](https://img.shields.io/badge/bkapi--client--core-1.1.0-brightgreen)](https://github.com/TencentBlueKing/bkpaas-python-sdk/releases)
+[![bkapi-component-open Release](https://img.shields.io/badge/bkapi--component-open-1.1.0-brightgreen)](https://github.com/TencentBlueKing/bkpaas-python-sdk/releases)
+[![apigw-manager Release](https://img.shields.io/badge/apigw--manager-1.0.0-brightgreen)](https://github.com/TencentBlueKing/bkpaas-python-sdk/releases)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/TencentBlueKing/bkpaas-python-sdkpulls)
 
 [English](readme_en.md) | 简体中文
@@ -16,6 +19,9 @@
 
 - [blue-krill](sdks/blue-krill/README.md) 常用 Python 工具包
 - [bkstorages](sdks/bkstorages/README.md) 帮助你在蓝鲸 Django 应用中轻松使用 ***蓝鲸制品库*** 和 [S3 对象存储](https://docs.ceph.com/en/latest/radosgw/s3/) ，支持加速静态资源，管理用户上传文件
+- [bkapi-client-core](sdks/bkapi-client-core/README.md) 蓝鲸云 API 客户端
+- [bkapi-component-open](sdks/bkapi-component-open/README.md) 蓝鲸组件 API 客户端
+- [apigw-manager](sdks/apigw-manager/README.md) 网关管理工具包
 
 当前 SDK 均只支持 **Python 3.6+**
 
