@@ -5,7 +5,7 @@
 ## 功能
 
 - 根据预定义的 YAML 文件进行网关创建，更新，发布及资源同步操作
-- 蓝鲸 APIGateway jwt 解析中间件，后端接口校验请求来自 APIGateway
+- 蓝鲸 APIGateway jwt 解析中间件，校验接口请求来自 APIGateway
 
 ## 根据 YAML 同步网关配置
 

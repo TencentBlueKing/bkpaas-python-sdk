@@ -60,6 +60,12 @@ strategies:
     config: {}
 
 # 资源文档
+# 资源文档的目录格式样例如下，en 为英文文档，zh 为中文文档，创建归档文件可使用指令 `tar czvf xxx.tgz en zh`：
+# ./
+# - en
+#   - get_user.md
+# - zh
+#   - get_user.md
 resource_docs:
   # 资源文档的归档文件，可为 tar.gz，zip 格式文件
   archivefile: "{{ settings.BK_APIGW_RESOURCE_DOCS_ARCHIVE_FILE }}"
