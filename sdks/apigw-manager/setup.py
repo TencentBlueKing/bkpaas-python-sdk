@@ -37,7 +37,7 @@ def get_doc():
 
 setup(
     long_description=get_doc(),
-    version="1.0.0",
+    version="1.0.1",
     name='apigw-manager',
     python_requires='==3.*,>=3.6.1',
     author="blueking",
