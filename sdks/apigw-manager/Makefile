@@ -36,5 +36,5 @@ build:
 .PHONY: publish
 publish:
 	rm -rf dist || true
-	python setup.py sdist
-	poetry publish -r pypi
+	poetry build -f wheel
+	poetry publish -r public
