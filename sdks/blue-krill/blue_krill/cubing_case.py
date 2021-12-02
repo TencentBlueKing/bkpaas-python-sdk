@@ -9,15 +9,15 @@
  * specific language governing permissions and limitations under the License.
 """
 
-from typing import Callable, Iterable
-from functools import partial
 import re
+from functools import partial
+from typing import Callable, Iterable, cast
 
 
 def cubing(
     string: str,
     split_fn: Callable[[str], Iterable[str]],
-    transform_fn: Callable[[Iterable[str]], str],
+    transform_fn: Callable[[Iterable[str]], Iterable[str]],
     concatenate_fn: Callable[[Iterable[str]], str],
 ) -> str:
     """The best way to resolve a Rubik's cube is to take it apart and put it back together."""
@@ -44,7 +44,7 @@ def transform_capitalize_case(parts: Iterable[str]) -> Iterable[str]:
 def split_by_regex(patterns: Iterable[str]):
     """Split the string by the given patterns, return the parts that are not in the stop words."""
 
-    return partial(re.split, "|".join(patterns))
+    return cast(Callable[[str], Iterable[str]], partial(re.split, "|".join(patterns)))
 
 
 class CaseSplitRegexPattern:
@@ -80,16 +80,12 @@ def join_the_upper_case(string: str, sep: str, patterns: Iterable[str] = CaseSpl
 def to_sentence(string: str, patterns: Iterable[str] = CaseSplitRegexPattern.ALL) -> str:
     """Convert the string to sentence."""
 
-    is_first = True
-
     def transform(parts: Iterable[str]) -> Iterable[str]:
-        nonlocal is_first
-        for i in parts:
-            if is_first:
-                is_first = False
-                yield i.capitalize()
+        for index, part in enumerate(parts):
+            if index == 0:
+                yield part.capitalize()
             else:
-                yield i.lower()
+                yield part.lower()
 
     return cubing(string, split_by_regex(patterns), transform, " ".join)
 

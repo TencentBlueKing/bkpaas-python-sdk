@@ -9,8 +9,9 @@
  * specific language governing permissions and limitations under the License.
 """
 
-from blue_krill import cubing_case
 import pytest
+
+from blue_krill import cubing_case
 
 
 @pytest.mark.parametrize(
