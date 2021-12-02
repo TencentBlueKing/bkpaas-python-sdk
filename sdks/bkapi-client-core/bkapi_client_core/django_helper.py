@@ -75,7 +75,7 @@ def get_client_by_request(
 
     client = _get_client_by_settings(client_cls, **kwargs)
 
-    authorization = dict(access_token=get_access_token(), bk_username=request.user.username)
+    authorization = {"access_token": get_access_token(), "bk_username": request.user.username}
     authorization.update(
         _get_authorization_from_cookies(
             request,

@@ -3,3 +3,6 @@
 
 # For ide
 .idea
+
+# direnv
+.envrc
