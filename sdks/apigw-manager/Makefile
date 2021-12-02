@@ -30,11 +30,11 @@ feature_test:
 
 .PHONY: build
 build:
-	rm -rf dist ||true
-	python setup.py sdist
+	rm -rf dist || true
+	poetry build -f wheel
 
 .PHONY: publish
 publish:
-	rm -rf dist ||true
-	python setup.py sdist
-	twine upload dist/* -r pypi
+	rm -rf dist || true
+	poetry build -f wheel
+	poetry publish -r public

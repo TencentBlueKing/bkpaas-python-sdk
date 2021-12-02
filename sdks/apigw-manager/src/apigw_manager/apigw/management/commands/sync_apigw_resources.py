@@ -14,8 +14,18 @@ from apigw_manager.apigw.command import SyncCommand
 class Command(SyncCommand):
     """Synchronous API Gateway resources"""
 
+    def add_arguments(self, parser):
+        super(Command, self).add_arguments(parser)
+
+        parser.add_argument(
+            "--delete",
+            default=False,
+            action="store_true",
+            help="delete extraneous resources from existing resources",
+        )
+
     def do(self, manager, definition, *args, **kwargs):
-        result = manager.sync_resources_config(content=definition)
+        result = manager.sync_resources_config(content=definition, delete=kwargs["delete"])
 
         added = result["added"]
         deleted = result["deleted"]

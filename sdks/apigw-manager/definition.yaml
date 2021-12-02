@@ -1,35 +1,51 @@
-apigateway:
-  description: xxxx
-  is_public: true
-  maintainers:
-    - "{% firstof settings.ADMIN data.admin "admin" %}"
-
 release:
+  # 发布版本号，
+  # 如果指定版本号，若资源配置更新，需更新此版本号才会发布资源版本，
+  # 如不指定，则使用自动生成的版本号，每次同步均发布版本
   title: ""
   comment: ""
 
+apigateway:
+  description: "xxxx"
+  is_public: true
+  maintainers:
+    - "admin"
+
 stage:
+  name: "prod"
+  # 环境变量
   vars:
-    key: value
+    key: "value"
+  # 代理配置
   proxy_http:
-    timeout: 1
+    timeout: 60
+    # 负载均衡类型 + Hosts
     upstreams:
       loadbalance: "roundrobin"
       hosts:
         - host: "http://127.0.0.1"
           weight: 100
+    # Header转换
+    transform_headers:
+      # 设置Headers
+      set:
+        X-Token: "token"
+  # 流量控制
   rate_limit:
-    enabled: true
+    enabled: false
     rate:
       tokens: 5000
       period: 60
 
+# 主动授权，网关主动给应用，添加访问网关所有资源的权限
 grant_permissions:
   - bk_app_code: "{{ settings.BK_APP_CODE }}"
 
+# 应用申请指定网关所有资源的权限，待网关管理员审批后，应用才可访问网关资源
 apply_permissions:
   - api_name: "{{ settings.BK_APIGW_NAME }}"
 
+# 网关资源，建议资源配置采用单独的配置文件，可通过网关管理端导出资源配置
 resources:
   swagger: "2.0"
   paths: []
@@ -43,6 +59,15 @@ strategies:
     comment: "error_status_code_200"
     config: {}
 
+# 资源文档
+# 资源文档的目录格式样例如下，en 为英文文档，zh 为中文文档，创建归档文件可使用指令 `tar czvf xxx.tgz en zh`：
+# ./
+# - en
+#   - get_user.md
+# - zh
+#   - get_user.md
 resource_docs:
+  # 资源文档的归档文件，可为 tar.gz，zip 格式文件
   archivefile: "{{ settings.BK_APIGW_RESOURCE_DOCS_ARCHIVE_FILE }}"
+  # 资源文档目录，basedir 与 archivefile 二者至少一个有效，若同时存在，则 archivefile 优先
   basedir: "{{ settings.BK_APIGW_RESOURCE_DOCS_BASE_DIR }}"
