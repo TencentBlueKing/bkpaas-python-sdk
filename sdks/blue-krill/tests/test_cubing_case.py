@@ -11,7 +11,13 @@
 
 import pytest
 
-from blue_krill.cubing_case import shortcuts
+from blue_krill.cubing_case import RegexCubingHelper, shortcuts
+
+
+def test_regex_cubing_helper():
+    helper = RegexCubingHelper(["0us0", "_"])
+    assert helper.cubing_lower_case("app0us0worker", "_") == "app_worker"
+    assert helper.cubing_lower_case("app_worker", "0us0") == "app0us0worker"
 
 
 @pytest.mark.parametrize(
