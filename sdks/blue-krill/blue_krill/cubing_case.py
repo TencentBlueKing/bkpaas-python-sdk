@@ -10,123 +10,132 @@
 """
 
 import re
-from functools import partial
-from typing import Callable, Iterable, cast
+from typing import Callable, Iterable
 
 
-def cubing(
-    string: str,
-    split_fn: Callable[[str], Iterable[str]],
-    transform_fn: Callable[[Iterable[str]], Iterable[str]],
-    concatenate_fn: Callable[[Iterable[str]], str],
-) -> str:
-    """The best way to resolve a Rubik's cube is to take it apart and put it back together."""
-
-    parts = (i for i in split_fn(string) if i)
-    return concatenate_fn(i for i in transform_fn(parts) if i)
-
-
-def transform_lower_case(parts: Iterable[str]) -> Iterable[str]:
-    """Transform the parts to lower case."""
-    return (i.lower() for i in parts)
-
-
-def transform_upper_case(parts: Iterable[str]) -> Iterable[str]:
-    """Transform the parts to upper case."""
-    return (i.upper() for i in parts)
-
-
-def transform_capitalize_case(parts: Iterable[str]) -> Iterable[str]:
-    """Transform the parts to capitalize case."""
-    return (i.capitalize() for i in parts)
-
-
-def split_by_regex(patterns: Iterable[str]):
-    """Split the string by the given patterns, return the parts that are not in the stop words."""
-
-    return cast(Callable[[str], Iterable[str]], partial(re.split, "|".join(patterns)))
-
-
-class CaseSplitRegexPattern:
+class RegexCubingPatterns:
     """The builtin regex pattern use for split_by_regex."""
 
-    CAMELCASE = "(?<=[^A-Z])(?=[A-Z])"
-    SNAKECASE = "_+"
-    DASHCASE = "-+"
-    DOTCASE = "\\.+"
-    SENTENCE = " +"
-
-    ALL = (CAMELCASE, SNAKECASE, DASHCASE, DOTCASE, SENTENCE)
+    CAMELCASE = r"(?<=[^A-Z])(?=[A-Z])"
+    SNAKECASE = r"_+"
+    DASHCASE = r"-+"
+    DOTCASE = r"\.+"
+    SENTENCE = r" +"
 
 
-def join_the_capitalize_case(string: str, sep: str, patterns: Iterable[str] = CaseSplitRegexPattern.ALL) -> str:
-    """Join the string with the given separator and capitalize the parts."""
+class RegexCubingHelper:
+    """The best way to resolve a Rubik's cube is to take it apart and put it back together."""
 
-    return cubing(string, split_by_regex(patterns), transform_capitalize_case, sep.join)
+    def __init__(self, patterns: Iterable[str]):
+        self._pattern = re.compile("|".join(patterns))
 
+    def cubing(self, string: str, transform_fn: Callable[[Iterable[str]], Iterable[str]], sep: str) -> str:
+        """Join the string with the given separator and transform the parts."""
 
-def join_the_lower_case(string: str, sep: str, patterns: Iterable[str] = CaseSplitRegexPattern.ALL) -> str:
-    """Join the string with the given separator and lower case the parts."""
+        parts = (i for i in self._pattern.split(string) if i)
+        return sep.join((i for i in transform_fn(parts) if i))
 
-    return cubing(string, split_by_regex(patterns), transform_lower_case, sep.join)
+    def join_the_capitalize_case(self, string: str, sep: str) -> str:
+        """Join the string with the given separator and capitalize the parts."""
 
+        return self.cubing(string, lambda parts: (i.capitalize() for i in parts), sep)
 
-def join_the_upper_case(string: str, sep: str, patterns: Iterable[str] = CaseSplitRegexPattern.ALL) -> str:
-    """Join the string with the given separator and upper case the parts."""
+    def join_the_lower_case(self, string: str, sep: str) -> str:
+        """Join the string with the given separator and lower case the parts."""
 
-    return cubing(string, split_by_regex(patterns), transform_upper_case, sep.join)
+        return self.cubing(string, lambda parts: (i.lower() for i in parts), sep)
 
+    def join_the_upper_case(self, string: str, sep: str) -> str:
+        """Join the string with the given separator and upper case the parts."""
 
-def to_sentence(string: str, patterns: Iterable[str] = CaseSplitRegexPattern.ALL) -> str:
-    """Convert the string to sentence."""
-
-    def transform(parts: Iterable[str]) -> Iterable[str]:
-        for index, part in enumerate(parts):
-            if index == 0:
-                yield part.capitalize()
-            else:
-                yield part.lower()
-
-    return cubing(string, split_by_regex(patterns), transform, " ".join)
+        return self.cubing(string, lambda parts: (i.upper() for i in parts), sep)
 
 
-def to_camel_case(string: str, patterns: Iterable[str] = CaseSplitRegexPattern.ALL) -> str:
-    """Convert the string to camel case."""
+class Shortcuts:
+    """The builtin shortcuts use for common cases."""
 
-    return join_the_capitalize_case(string, "")
+    _helper = RegexCubingHelper(
+        (
+            RegexCubingPatterns.CAMELCASE,
+            RegexCubingPatterns.SNAKECASE,
+            RegexCubingPatterns.DASHCASE,
+            RegexCubingPatterns.DOTCASE,
+            RegexCubingPatterns.SENTENCE,
+        )
+    )
 
+    @classmethod
+    def to_camel_case(cls, string: str) -> str:
+        """
+        Convert the string to camel case, like this:
+        >>> Shortcuts.to_camel_case("cubing case")
+        'CubingCase'
+        """
 
-def to_lower_snake_case(string: str, patterns: Iterable[str] = CaseSplitRegexPattern.ALL) -> str:
-    """Convert the string to lower snake case."""
+        return cls._helper.join_the_capitalize_case(string, "")
 
-    return join_the_lower_case(string, "_")
+    @classmethod
+    def to_lower_snake_case(cls, string: str) -> str:
+        """
+        Convert the string to lower snake case, like this:
+        >>> Shortcuts.to_lower_snake_case("cubing case")
+        'cubing_case'
+        """
 
+        return cls._helper.join_the_lower_case(string, "_")
 
-def to_upper_snake_case(string: str, patterns: Iterable[str] = CaseSplitRegexPattern.ALL) -> str:
-    """Convert the string to upper snake case."""
+    @classmethod
+    def to_upper_snake_case(cls, string: str) -> str:
+        """
+        Convert the string to upper snake case, like this:
+        >>> Shortcuts.to_upper_snake_case("cubing case")
+        'CUBING_CASE'
+        """
 
-    return join_the_upper_case(string, "_")
+        return cls._helper.join_the_upper_case(string, "_")
 
+    @classmethod
+    def to_lower_dash_case(cls, string: str) -> str:
+        """
+        Convert the string to lower dash case, like this:
+        >>> Shortcuts.to_lower_dash_case("cubing case")
+        'cubing-case'
+        """
 
-def to_lower_dash_case(string: str, patterns: Iterable[str] = CaseSplitRegexPattern.ALL) -> str:
-    """Convert the string to lower dash case."""
+        return cls._helper.join_the_lower_case(string, "-")
 
-    return join_the_lower_case(string, "-")
+    @classmethod
+    def to_upper_dash_case(cls, string: str) -> str:
+        """Convert the string to upper dash case, like this:
+        >>> Shortcuts.to_upper_dash_case("cubing case")
+        'CUBING-CASE'
+        """
 
+        return cls._helper.join_the_upper_case(string, "-")
 
-def to_upper_dash_case(string: str, patterns: Iterable[str] = CaseSplitRegexPattern.ALL) -> str:
-    """Convert the string to upper dash case."""
+    @classmethod
+    def to_lower_dot_case(cls, string: str) -> str:
+        """Convert the string to lower dot case, like this:
+        >>> Shortcuts.to_lower_dot_case("cubing case")
+        'cubing.case'
+        """
 
-    return join_the_upper_case(string, "-")
+        return cls._helper.join_the_lower_case(string, ".")
 
+    @classmethod
+    def to_capitalize_dot_case(cls, string: str) -> str:
+        """Convert the string to upper dot case, like this:
+        >>> Shortcuts.to_capitalize_dot_case("cubing case")
+        'Cubing.Case'
+        """
 
-def to_lower_dot_case(string: str, patterns: Iterable[str] = CaseSplitRegexPattern.ALL) -> str:
-    """Convert the string to lower dot case."""
+        return cls._helper.join_the_capitalize_case(string, ".")
 
-    return join_the_lower_case(string, ".")
+    @classmethod
+    def to_lower_space_case(cls, string: str) -> str:
+        """Convert the string to lower space case, like this:
+        >>> Shortcuts.to_lower_space_case("cubing case")
+        'cubing case'
+        """
 
-
-def to_capitalize_dot_case(string: str, patterns: Iterable[str] = CaseSplitRegexPattern.ALL) -> str:
-    """Convert the string to upper dot case."""
-
-    return join_the_capitalize_case(string, ".")
+        return cls._helper.join_the_lower_case(string, " ")
