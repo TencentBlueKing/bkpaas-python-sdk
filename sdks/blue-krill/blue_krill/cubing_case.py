@@ -12,15 +12,7 @@
 import re
 from typing import Callable, Iterable
 
-
-class RegexCubingPatterns:
-    """The builtin regex pattern use for split_by_regex."""
-
-    CAMELCASE = r"(?<=[^A-Z])(?=[A-Z])"
-    SNAKECASE = r"_+"
-    DASHCASE = r"-+"
-    DOTCASE = r"\.+"
-    SENTENCE = r" +"
+__all__ = ["RegexCubingHelper", "CommonCaseRegexPatterns", "CommonCaseConvertor", "shortcuts"]
 
 
 class RegexCubingHelper:
@@ -51,91 +43,105 @@ class RegexCubingHelper:
         return self.cubing(string, lambda parts: (i.upper() for i in parts), sep)
 
 
-class Shortcuts:
-    """The builtin shortcuts use for common cases."""
+class CommonCaseRegexPatterns:
+    """The regex pattern for common case."""
 
-    _helper = RegexCubingHelper(
-        (
-            RegexCubingPatterns.CAMELCASE,
-            RegexCubingPatterns.SNAKECASE,
-            RegexCubingPatterns.DASHCASE,
-            RegexCubingPatterns.DOTCASE,
-            RegexCubingPatterns.SENTENCE,
-        )
-    )
+    CAMELCASE = r"(?<=[^A-Z])(?=[A-Z])"
+    SNAKECASE = r"_+"
+    DASHCASE = r"-+"
+    DOTCASE = r"\.+"
+    SPACECASE = r" +"
 
-    @classmethod
-    def to_camel_case(cls, string: str) -> str:
+
+class CommonCaseConvertor:
+    """The convertor for common case."""
+
+    def __init__(self, patterns: Iterable[str]):
+        self._helper = RegexCubingHelper(patterns)
+
+    def to_camel_case(self, string: str) -> str:
         """
         Convert the string to camel case, like this:
-        >>> Shortcuts.to_camel_case("cubing case")
+        >>> convertor = CommonCaseConvertor([CommonCaseRegexPatterns.SPACECASE])
+        >>> convertor.to_camel_case("Cubing Case")
         'CubingCase'
         """
 
-        return cls._helper.cubing_capitalize_case(string, "")
+        return self._helper.cubing_capitalize_case(string, "")
 
-    @classmethod
-    def to_lower_snake_case(cls, string: str) -> str:
+    def to_lower_snake_case(self, string: str) -> str:
         """
         Convert the string to lower snake case, like this:
-        >>> Shortcuts.to_lower_snake_case("cubing case")
+        >>> convertor = CommonCaseConvertor([CommonCaseRegexPatterns.SPACECASE])
+        >>> convertor.to_lower_snake_case("Cubing Case")
         'cubing_case'
         """
 
-        return cls._helper.cubing_lower_case(string, "_")
+        return self._helper.cubing_lower_case(string, "_")
 
-    @classmethod
-    def to_upper_snake_case(cls, string: str) -> str:
+    def to_upper_snake_case(self, string: str) -> str:
         """
         Convert the string to upper snake case, like this:
-        >>> Shortcuts.to_upper_snake_case("cubing case")
+        >>> convertor = CommonCaseConvertor([CommonCaseRegexPatterns.SPACECASE])
+        >>> convertor.to_upper_snake_case("Cubing Case")
         'CUBING_CASE'
         """
 
-        return cls._helper.cubing_upper_case(string, "_")
+        return self._helper.cubing_upper_case(string, "_")
 
-    @classmethod
-    def to_lower_dash_case(cls, string: str) -> str:
+    def to_lower_dash_case(self, string: str) -> str:
         """
         Convert the string to lower dash case, like this:
-        >>> Shortcuts.to_lower_dash_case("cubing case")
+        >>> convertor = CommonCaseConvertor([CommonCaseRegexPatterns.SPACECASE])
+        >>> convertor.to_lower_dash_case("Cubing Case")
         'cubing-case'
         """
 
-        return cls._helper.cubing_lower_case(string, "-")
+        return self._helper.cubing_lower_case(string, "-")
 
-    @classmethod
-    def to_upper_dash_case(cls, string: str) -> str:
+    def to_upper_dash_case(self, string: str) -> str:
         """Convert the string to upper dash case, like this:
-        >>> Shortcuts.to_upper_dash_case("cubing case")
+        >>> convertor = CommonCaseConvertor([CommonCaseRegexPatterns.SPACECASE])
+        >>> convertor.to_upper_dash_case("Cubing Case")
         'CUBING-CASE'
         """
 
-        return cls._helper.cubing_upper_case(string, "-")
+        return self._helper.cubing_upper_case(string, "-")
 
-    @classmethod
-    def to_lower_dot_case(cls, string: str) -> str:
+    def to_lower_dot_case(self, string: str) -> str:
         """Convert the string to lower dot case, like this:
-        >>> Shortcuts.to_lower_dot_case("cubing case")
+        >>> convertor = CommonCaseConvertor([CommonCaseRegexPatterns.SPACECASE])
+        >>> convertor.to_lower_dot_case("Cubing Case")
         'cubing.case'
         """
 
-        return cls._helper.cubing_lower_case(string, ".")
+        return self._helper.cubing_lower_case(string, ".")
 
-    @classmethod
-    def to_capitalize_dot_case(cls, string: str) -> str:
+    def to_capitalize_dot_case(self, string: str) -> str:
         """Convert the string to upper dot case, like this:
-        >>> Shortcuts.to_capitalize_dot_case("cubing case")
+        >>> convertor = CommonCaseConvertor([CommonCaseRegexPatterns.SPACECASE])
+        >>> convertor.to_capitalize_dot_case("Cubing Case")
         'Cubing.Case'
         """
 
-        return cls._helper.cubing_capitalize_case(string, ".")
+        return self._helper.cubing_capitalize_case(string, ".")
 
-    @classmethod
-    def to_lower_space_case(cls, string: str) -> str:
+    def to_lower_space_case(self, string: str) -> str:
         """Convert the string to lower space case, like this:
-        >>> Shortcuts.to_lower_space_case("cubing case")
+        >>> convertor = CommonCaseConvertor([CommonCaseRegexPatterns.SPACECASE])
+        >>> convertor.to_lower_space_case("Cubing Case")
         'cubing case'
         """
 
-        return cls._helper.cubing_lower_case(string, " ")
+        return self._helper.cubing_lower_case(string, " ")
+
+
+shortcuts = CommonCaseConvertor(
+    (
+        CommonCaseRegexPatterns.CAMELCASE,
+        CommonCaseRegexPatterns.SNAKECASE,
+        CommonCaseRegexPatterns.DASHCASE,
+        CommonCaseRegexPatterns.DOTCASE,
+        CommonCaseRegexPatterns.SPACECASE,
+    )
+)

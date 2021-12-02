@@ -11,7 +11,7 @@
 
 import pytest
 
-from blue_krill.cubing_case import Shortcuts
+from blue_krill.cubing_case import shortcuts
 
 
 @pytest.mark.parametrize(
@@ -40,11 +40,11 @@ from blue_krill.cubing_case import Shortcuts
     ],
 )
 def test_shortcuts(case):
-    assert Shortcuts.to_lower_space_case(case) == "the result resolved by cubing case"
-    assert Shortcuts.to_camel_case(case) == "TheResultResolvedByCubingCase"
-    assert Shortcuts.to_lower_snake_case(case) == "the_result_resolved_by_cubing_case"
-    assert Shortcuts.to_upper_snake_case(case) == "THE_RESULT_RESOLVED_BY_CUBING_CASE"
-    assert Shortcuts.to_lower_dash_case(case) == "the-result-resolved-by-cubing-case"
-    assert Shortcuts.to_upper_dash_case(case) == "THE-RESULT-RESOLVED-BY-CUBING-CASE"
-    assert Shortcuts.to_lower_dot_case(case) == "the.result.resolved.by.cubing.case"
-    assert Shortcuts.to_capitalize_dot_case(case) == "The.Result.Resolved.By.Cubing.Case"
+    assert shortcuts.to_lower_space_case(case) == "the result resolved by cubing case"
+    assert shortcuts.to_camel_case(case) == "TheResultResolvedByCubingCase"
+    assert shortcuts.to_lower_snake_case(case) == "the_result_resolved_by_cubing_case"
+    assert shortcuts.to_upper_snake_case(case) == "THE_RESULT_RESOLVED_BY_CUBING_CASE"
+    assert shortcuts.to_lower_dash_case(case) == "the-result-resolved-by-cubing-case"
+    assert shortcuts.to_upper_dash_case(case) == "THE-RESULT-RESOLVED-BY-CUBING-CASE"
+    assert shortcuts.to_lower_dot_case(case) == "the.result.resolved.by.cubing.case"
+    assert shortcuts.to_capitalize_dot_case(case) == "The.Result.Resolved.By.Cubing.Case"
