@@ -35,17 +35,17 @@ class RegexCubingHelper:
         parts = (i for i in self._pattern.split(string) if i)
         return sep.join((i for i in transform_fn(parts) if i))
 
-    def join_the_capitalize_case(self, string: str, sep: str) -> str:
+    def cubing_capitalize_case(self, string: str, sep: str) -> str:
         """Join the string with the given separator and capitalize the parts."""
 
         return self.cubing(string, lambda parts: (i.capitalize() for i in parts), sep)
 
-    def join_the_lower_case(self, string: str, sep: str) -> str:
+    def cubing_lower_case(self, string: str, sep: str) -> str:
         """Join the string with the given separator and lower case the parts."""
 
         return self.cubing(string, lambda parts: (i.lower() for i in parts), sep)
 
-    def join_the_upper_case(self, string: str, sep: str) -> str:
+    def cubing_upper_case(self, string: str, sep: str) -> str:
         """Join the string with the given separator and upper case the parts."""
 
         return self.cubing(string, lambda parts: (i.upper() for i in parts), sep)
@@ -72,7 +72,7 @@ class Shortcuts:
         'CubingCase'
         """
 
-        return cls._helper.join_the_capitalize_case(string, "")
+        return cls._helper.cubing_capitalize_case(string, "")
 
     @classmethod
     def to_lower_snake_case(cls, string: str) -> str:
@@ -82,7 +82,7 @@ class Shortcuts:
         'cubing_case'
         """
 
-        return cls._helper.join_the_lower_case(string, "_")
+        return cls._helper.cubing_lower_case(string, "_")
 
     @classmethod
     def to_upper_snake_case(cls, string: str) -> str:
@@ -92,7 +92,7 @@ class Shortcuts:
         'CUBING_CASE'
         """
 
-        return cls._helper.join_the_upper_case(string, "_")
+        return cls._helper.cubing_upper_case(string, "_")
 
     @classmethod
     def to_lower_dash_case(cls, string: str) -> str:
@@ -102,7 +102,7 @@ class Shortcuts:
         'cubing-case'
         """
 
-        return cls._helper.join_the_lower_case(string, "-")
+        return cls._helper.cubing_lower_case(string, "-")
 
     @classmethod
     def to_upper_dash_case(cls, string: str) -> str:
@@ -111,7 +111,7 @@ class Shortcuts:
         'CUBING-CASE'
         """
 
-        return cls._helper.join_the_upper_case(string, "-")
+        return cls._helper.cubing_upper_case(string, "-")
 
     @classmethod
     def to_lower_dot_case(cls, string: str) -> str:
@@ -120,7 +120,7 @@ class Shortcuts:
         'cubing.case'
         """
 
-        return cls._helper.join_the_lower_case(string, ".")
+        return cls._helper.cubing_lower_case(string, ".")
 
     @classmethod
     def to_capitalize_dot_case(cls, string: str) -> str:
@@ -129,7 +129,7 @@ class Shortcuts:
         'Cubing.Case'
         """
 
-        return cls._helper.join_the_capitalize_case(string, ".")
+        return cls._helper.cubing_capitalize_case(string, ".")
 
     @classmethod
     def to_lower_space_case(cls, string: str) -> str:
@@ -138,4 +138,4 @@ class Shortcuts:
         'cubing case'
         """
 
-        return cls._helper.join_the_lower_case(string, " ")
+        return cls._helper.cubing_lower_case(string, " ")
