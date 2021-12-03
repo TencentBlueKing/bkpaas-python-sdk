@@ -1,5 +1,9 @@
 ## Change logs
 
+### 1.0.4
+
+- 修复 `BKRepoStorage` 的 get_modified_time 返回的数据未正确处理的问题
+
 ### 1.0.3
 
 - `BKRepoStorage` 模块增加错误重试机制

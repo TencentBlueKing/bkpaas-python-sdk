@@ -8,6 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+import datetime
 import logging
 from os import PathLike
 from tempfile import SpooledTemporaryFile
@@ -19,12 +20,14 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.files.base import File
 from django.core.files.storage import Storage
 from django.utils.deconstruct import deconstructible
+from django.utils.timezone import localtime
 from requests.adapters import HTTPAdapter
 from requests.auth import HTTPBasicAuth
 from six.moves.urllib_parse import urljoin
 
 from bkstorages.utils import clean_name, get_available_overwrite_name, get_setting, safe_join, setting
 
+GMT_FORMAT = '%a, %d %b %Y %H:%M:%S GMT'
 MAX_RETRIES = 2
 logger = logging.getLogger(__name__)
 
@@ -387,15 +390,24 @@ class BKRepoStorage(Storage):
     # 获取文件时间属性
     def get_accessed_time(self, name):
         # NOTE: bk-repo 不支持获取访问时间
-        return self.get_modified_time(name)
+        raise NotImplementedError
 
     def get_created_time(self, name):
         # NOTE: bk-repo 不支持获取创建时间
-        return self.get_modified_time(name)
+        raise NotImplementedError
 
-    def get_modified_time(self, name):
+    def get_modified_time(self, name) -> datetime.datetime:
         metadata = self.client.get_file_metadata(self._full_path(name))
-        return metadata.get("Last-Modified", 0)
+
+        gmt = metadata.get("Last-Modified")
+        if gmt is None:
+            raise NotImplementedError
+
+        dt = parse_gmt_datetime(gmt)
+        if setting('USE_TZ'):
+            return localtime(dt)
+        else:
+            return dt
 
     # [Deprecated Method]
     def accessed_time(self, name):
@@ -406,3 +418,11 @@ class BKRepoStorage(Storage):
 
     def modified_time(self, name):
         return self.get_modified_time(name)
+
+
+def parse_gmt_datetime(gmt: str) -> datetime.datetime:
+    """从 gmt 字符串解析出 datetime.datetime
+    >>> parse_gmt_datetime('Fri, 03 Dec 2021 10:55:04 GMT')
+    datetime.datetime(2021, 12, 3, 10, 55, 4)
+    """
+    return datetime.datetime.strptime(gmt, GMT_FORMAT)
