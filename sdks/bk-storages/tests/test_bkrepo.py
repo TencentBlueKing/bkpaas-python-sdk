@@ -8,6 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+import datetime
 import io
 from unittest import mock
 
@@ -16,7 +17,7 @@ import requests
 import requests_mock
 from six.moves.urllib_parse import urljoin
 
-from bkstorages.backends.bkrepo import BKGenericRepoClient, BKRepoFile, BKRepoStorage
+from bkstorages.backends.bkrepo import BKGenericRepoClient, BKRepoFile, BKRepoStorage, parse_gmt_datetime
 from tests.utils import generate_random_string
 
 
@@ -52,7 +53,7 @@ def bk_repo_cli(session, username, password, endpoint):
     bk_repo_cli = BKGenericRepoClient(
         bucket="dummy-bucket", username=username, password=password, project="dummy-project", endpoint_url=endpoint
     )
-    with mock.patch("bkstorages.backends.bkrepo.requests.session", lambda: session):
+    with mock.patch.object(bk_repo_cli, "get_client", lambda: session):
         yield bk_repo_cli
 
 
@@ -140,3 +141,14 @@ class TestBKRepoStorage:
         assert adapter.call_count == len(mock_responses)
         assert expect_directories == directories
         assert expect_files == files
+
+
+@pytest.mark.parametrize(
+    "gmt, expected",
+    [
+        ('Fri, 03 Dec 2021 10:55:04 GMT', datetime.datetime(2021, 12, 3, 10, 55, 4)),
+        ('Thu, 15 Aug 2019 03:02:38 GMT', datetime.datetime(2019, 8, 15, 3, 2, 38)),
+    ],
+)
+def test_parse_gmt_datetime(gmt, expected):
+    assert parse_gmt_datetime(gmt) == expected
