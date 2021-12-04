@@ -69,6 +69,22 @@ class CommonCaseConvertor:
 
         return self._helper.cubing_capitalize_case(string, "")
 
+    def to_lower_camel_case(self, string: str) -> str:
+        """Convert the string to lower camel case, like this:
+        >>> convertor = CommonCaseConvertor([CommonCaseRegexPatterns.SPACECASE])
+        >>> convertor.to_lower_camel_case("Cubing Case")
+        'cubingCase'
+        """
+
+        def transform(parts):
+            for index, part in enumerate(parts):
+                if index == 0:
+                    yield part.lower()
+                else:
+                    yield part.capitalize()
+
+        return self._helper.cubing(string, transform, "")
+
     def to_lower_snake_case(self, string: str) -> str:
         """
         Convert the string to lower snake case, like this:

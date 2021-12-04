@@ -48,6 +48,7 @@ def test_regex_cubing_helper():
 def test_shortcuts(case):
     assert shortcuts.to_lower_space_case(case) == "the result resolved by cubing case"
     assert shortcuts.to_camel_case(case) == "TheResultResolvedByCubingCase"
+    assert shortcuts.to_lower_camel_case(case) == "theResultResolvedByCubingCase"
     assert shortcuts.to_lower_snake_case(case) == "the_result_resolved_by_cubing_case"
     assert shortcuts.to_upper_snake_case(case) == "THE_RESULT_RESOLVED_BY_CUBING_CASE"
     assert shortcuts.to_lower_dash_case(case) == "the-result-resolved-by-cubing-case"
