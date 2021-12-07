@@ -517,6 +517,27 @@ class SomeRedisProbe(RedisProbe):
 report = SomeRedisProbe().report()
 ```
 
+### 8 blue_krill.cubing_case
+`blue_krill.cubing_case` 增加各个方法互相转换的工具库.
+
+#### 8.1 blue_krill.cubing_case.RegexCubingHelper
+基于多种正则将多种模式混合的字符串进行拆分，转换并组合成新的字符串的工具类。
+
+#### 8.2 blue_krill.cubing_case.CommonCaseConvertor
+在 `blue_krill.cubing_case.RegexCubingHelper` 之上的一个封装实现，将指定的多种模式的字符串转化成常见的方法，包含：
+- 驼峰式：`CubingCase`
+- 小写开头的驼峰式：`cubingCase`
+- 小写下划线式：`cubing_case`
+- 大写下划线式：`CUBING_CASE`
+- 小写连字符式：`cubing-case`
+- 大写下划线式：`CUBING-CASE`
+- 小写点分式：`cubing.case`
+- 大写下划线式：`CUBING.CASE`
+- 小写空格分隔式：`cubing case`
+
+#### 8.3 blue_krill.cubing_case.shortcuts
+`blue_krill.cubing_case.shortcuts` 是 `blue_krill.cubing_case.CommonCaseConvertor` 的一个快捷方式，内置了其转换目标的所有源模式，可以实现所有模式的正反转换。
+
 
 ## 开发指南
 
