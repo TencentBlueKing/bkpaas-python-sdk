@@ -1,5 +1,9 @@
 ## Change logs
 
+### 1.0.8
+
+- `blue_krill.cubing_case` 增加各个命名方法互相转换的工具库.
+
 ### 1.0.7
 
 - `blue_krill.storages.blobstore.base.BlobStore` 增加 delete_file 的函数签名.
