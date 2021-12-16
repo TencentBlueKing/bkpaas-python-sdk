@@ -32,6 +32,9 @@ MAX_RETRIES = 2
 logger = logging.getLogger(__name__)
 
 
+TIMEOUT_THRESHOLD = float(get_setting("BKREPO_TIMEOUT_THRESHOLD") or 30)
+
+
 class RequestError(Exception):
     """服务请求异常"""
 
@@ -102,7 +105,7 @@ class BKGenericRepoClient:
         fh = File(file=fh, name=getattr(fh, "name", key) or key)
 
         try:
-            resp = client.put(url, headers=headers, data=fh)
+            resp = client.put(url, headers=headers, data=fh, timeout=TIMEOUT_THRESHOLD * 3)
             self._validate_resp(resp)
         except RequestError as e:
             if not allow_overwrite:
@@ -128,7 +131,7 @@ class BKGenericRepoClient:
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, f'/generic/{self.project}/{self.bucket}/{key}')
-        resp = client.get(url, stream=True)
+        resp = client.get(url, stream=True, timeout=TIMEOUT_THRESHOLD * 3)
         if not resp.ok:
             raise RequestError(str("system error"), code=str(resp.status_code), response=resp)
         try:
@@ -145,17 +148,17 @@ class BKGenericRepoClient:
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, f'/generic/{self.project}/{self.bucket}/{key}')
-        resp = client.delete(url)
+        resp = client.delete(url, timeout=TIMEOUT_THRESHOLD)
         self._validate_resp(resp)
 
     def get_file_metadata(self, key: str, *args, **kwargs) -> Dict:
         """具体返回值请看 bk-repo 的文档."""
         client = self.get_client()
         url = urljoin(self.endpoint_url, f'/generic/{self.project}/{self.bucket}/{key}')
-        resp = client.head(url)
+        resp = client.head(url, timeout=TIMEOUT_THRESHOLD)
         if resp.status_code == 200:
             return dict(resp.headers)
-        raise RequestError("Can't get file head info", code=resp.status_code, response=resp)
+        raise RequestError("Can't get file head info", code=str(resp.status_code), response=resp)
 
     def generate_presigned_url(self, key: str, expires_in: int, token_type: str = "DOWNLOAD", *args, **kwargs) -> str:
         """创建临时访问url
@@ -176,6 +179,7 @@ class BKGenericRepoClient:
                 'expireSeconds': expires_in,
                 'type': token_type,
             },
+            timeout=TIMEOUT_THRESHOLD,
         )
         try:
             data = self._validate_resp(resp)
@@ -212,7 +216,7 @@ class BKGenericRepoClient:
         url = urljoin(self.endpoint_url, f"/repository/api/node/page/{self.project}/{self.bucket}/{key_prefix}")
         # NOTE: 按分页查询 bkrepo 的文件数, 1000 是一个经验值, 设置仅可能大的数值是避免发送太多次请求到 bk-repo
         params = {"pageSize": 1000, "PageNumber": cur_page, "includeFolder": True}
-        resp = client.get(url, params=params)
+        resp = client.get(url, params=params, timeout=TIMEOUT_THRESHOLD)
         data = self._validate_resp(resp)
         total_pages = data["totalPages"]
         for record in data["records"]:

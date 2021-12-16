@@ -1,5 +1,9 @@
 ## Change logs
 
+### 1.0.5
+
+- `BKRepoStorage` 增加访问 bkrepo 服务的超时机制
+
 ### 1.0.4
 
 - 修复 `BKRepoStorage` 的 get_modified_time 返回的数据未正确处理的问题

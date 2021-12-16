@@ -1,5 +1,9 @@
 ## Change logs
 
+### 1.0.9
+
+- `blue_krill.storages.blobstore.bkrepo` 模块增加超时机制
+
 ### 1.0.8
 
 - `blue_krill.cubing_case` 增加各个命名方法互相转换的工具库.
