@@ -11,6 +11,7 @@
 from typing import Optional
 
 from bkapi_client_core.client import BaseClient
+from bkapi_client_core.config import SettingKeys, settings
 from bkapi_client_core.session import Session
 from bkapi_client_core.utils import urljoin
 
@@ -25,7 +26,12 @@ class APIGatewayClient(BaseClient):
         endpoint="",  # type: str
         session=None,  # type: Optional[Session]
     ):
-        self._stage = stage
+        # Stage is allowed to be an empty string, because the endpoint may already contain stage
+        if stage is not None:
+            self._stage = stage
+        else:
+            stage_mappings = settings.get(SettingKeys.DEFAULT_STAGE_MAPPINGS) or {}
+            self._stage = stage_mappings.get(self._api_name, self._default_stage)
 
         # The path of the APIGateway API contains stage name,
         # so, add it to endpoint as a path variable, in order to switch stage
@@ -35,9 +41,6 @@ class APIGatewayClient(BaseClient):
     def _get_endpoint(self):
         # type: (...) -> str
 
-        # Stage is allowed to be an empty string, because the endpoint may already contain stage
-        stage_name = self._stage if self._stage is not None else self._default_stage
-
         # In order to prevent `api_name`, `stage_name` from conflicting with other path variables,
         # render the endpoint first.
-        return self._endpoint.format(api_name=self._api_name, stage_name=stage_name)
+        return self._endpoint.format(api_name=self._api_name, stage_name=self._stage)

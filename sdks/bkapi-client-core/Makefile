@@ -10,7 +10,7 @@ poetry.lock: pyproject.toml
 	poetry lock --no-update
 
 bkapi_client_core/__init__.py: pyproject.toml
-	poetry version | awk '{printf "__version__ = \"%s\"\n",$$2}' > ${PKG_DIR}/__init__.py
+	sed -i "/__version__ =.*/c __version__ = \"$(shell poetry version -s)\"" ${PKG_DIR}/__init__.py
 
 .PHONY: version
 version: bkapi_client_core/__init__.py

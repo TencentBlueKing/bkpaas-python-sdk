@@ -12,9 +12,17 @@ import os
 from typing import Any, Dict, List, Optional
 
 try:
-    from django.conf import settings as django_settings
+    from django.conf import settings as django_settings  # noqa
 except ImportError:
     django_settings = None
+
+
+class SettingKeys:
+    """The defined setting keys"""
+
+    APP_CODE = "BK_APP_CODE"
+    APP_SECRET = "BK_APP_SECRET"
+    DEFAULT_STAGE_MAPPINGS = "BK_API_DEFAULT_STAGE_MAPPINGS"
 
 
 class Settings(object):
@@ -27,24 +35,46 @@ class Settings(object):
         self._aliases = aliases or {}  # type: Dict[str, List[str]]
         self._env = os.environ if env is None else env
         self._settings = django_settings if settings is None else settings
+        self._resolved = {}  # type: Dict[str, Any]
 
     def get(
         self,
         key,  # type: str
         default=None,  # type: Any
     ):
+        # type: (...) -> Any
         """
         Returns the specified value, if not found, return to the default value
         """
 
+        # If the key has been hold in the cache, return it directly
+        if key in self._resolved:
+            return self._resolved[key]
+
         for key in self._aliases.get(key, [key]):
             if self._settings and hasattr(self._settings, key):
-                return getattr(self._settings, key)
+                value = self._resolved[key] = getattr(self._settings, key)
+                return value
 
             if self._env and key in self._env:
-                return self._env[key]
+                value = self._resolved[key] = self._env[key]
+                return value
 
         return default
+
+    def set(self, key, value):
+        """
+        Set the value of the key
+        """
+
+        self._resolved[key] = value
+
+    def reset(self):
+        """
+        Reset the resolved cache
+        """
+
+        self._resolved.clear()
 
     def declare_aliases(
         self,
@@ -60,7 +90,7 @@ class Settings(object):
 
 settings = Settings(
     aliases={
-        "BK_APP_CODE": ["BK_APP_CODE", "APP_CODE"],
-        "BK_APP_SECRET": ["BK_APP_SECRET", "SECRET_KEY"],
+        SettingKeys.APP_CODE: ["BK_APP_CODE", "APP_CODE"],
+        SettingKeys.APP_SECRET: ["BK_APP_SECRET", "SECRET_KEY"],
     }
 )
