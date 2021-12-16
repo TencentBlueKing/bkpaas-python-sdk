@@ -12,7 +12,7 @@ import logging
 from typing import Optional, Type
 
 from bkapi_client_core.client import BaseClient
-from bkapi_client_core.config import settings
+from bkapi_client_core.config import SettingKeys, settings
 from bkapi_client_core.exceptions import UserNotAuthenticated
 
 try:
@@ -33,8 +33,8 @@ def _get_client_by_settings(
     client = client_cls(**kwargs)
 
     client.update_bkapi_authorization(
-        bk_app_code=bk_app_code or settings.get("BK_APP_CODE"),
-        bk_app_secret=bk_app_secret or settings.get("BK_APP_SECRET"),
+        bk_app_code=bk_app_code or settings.get(SettingKeys.APP_CODE),
+        bk_app_secret=bk_app_secret or settings.get(SettingKeys.APP_SECRET),
     )
 
     return client
