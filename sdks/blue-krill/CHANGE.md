@@ -1,5 +1,9 @@
 ## Change logs
 
+### 1.0.10
+
+- 增加 `blue_krill.termcolors` 模块, 提供了往终端输出彩色文本的工具库.
+
 ### 1.0.9
 
 - `blue_krill.storages.blobstore.bkrepo` 模块增加超时机制
