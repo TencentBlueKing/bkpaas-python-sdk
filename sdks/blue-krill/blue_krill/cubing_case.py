@@ -10,6 +10,8 @@
 """
 
 import re
+import sys
+from functools import partial
 from typing import Callable, Iterable
 
 __all__ = ["RegexCubingHelper", "CommonCaseRegexPatterns", "CommonCaseConvertor", "shortcuts"]
@@ -18,11 +20,15 @@ __all__ = ["RegexCubingHelper", "CommonCaseRegexPatterns", "CommonCaseConvertor"
 class RegexCubingHelper:
     """The best way to resolve a Rubik's cube is to take it apart and put it back together."""
 
-    def __init__(self, patterns: Iterable[str]):
+    def __init__(self, patterns: Iterable[str], preprocessor: Callable[[str], str] = None):
         self._pattern = re.compile("|".join(patterns))
+        self._preprocessor = preprocessor
 
     def cubing(self, string: str, transform_fn: Callable[[Iterable[str]], Iterable[str]], sep: str) -> str:
         """Join the string with the given separator and transform the parts."""
+
+        if self._preprocessor:
+            string = self._preprocessor(string)
 
         parts = (i for i in self._pattern.split(string) if i)
         return sep.join((i for i in transform_fn(parts) if i))
@@ -56,8 +62,8 @@ class CommonCaseRegexPatterns:
 class CommonCaseConvertor:
     """The convertor for common case."""
 
-    def __init__(self, patterns: Iterable[str]):
-        self._helper = RegexCubingHelper(patterns)
+    def __init__(self, patterns: Iterable[str], preprocessor: Callable[[str], str] = None):
+        self._helper = RegexCubingHelper(patterns, preprocessor)
 
     def to_camel_case(self, string: str) -> str:
         """
@@ -152,12 +158,27 @@ class CommonCaseConvertor:
         return self._helper.cubing_lower_case(string, " ")
 
 
-shortcuts = CommonCaseConvertor(
-    (
-        CommonCaseRegexPatterns.CAMELCASE,
-        CommonCaseRegexPatterns.SNAKECASE,
-        CommonCaseRegexPatterns.DASHCASE,
-        CommonCaseRegexPatterns.DOTCASE,
-        CommonCaseRegexPatterns.SPACECASE,
+python_version = sys.version_info
+if python_version.major == 3 and python_version.minor == 6:
+    # convert the string from camel case to space case because of the underlying bug in python 3.6 re module
+    # details: https://bugs.python.org/issue43222
+    shortcuts = CommonCaseConvertor(
+        (
+            CommonCaseRegexPatterns.SNAKECASE,
+            CommonCaseRegexPatterns.DASHCASE,
+            CommonCaseRegexPatterns.DOTCASE,
+            CommonCaseRegexPatterns.SPACECASE,
+        ),
+        partial(re.compile(f"({CommonCaseRegexPatterns.CAMELCASE})").sub, " "),
     )
-)
+
+else:
+    shortcuts = CommonCaseConvertor(
+        (
+            CommonCaseRegexPatterns.CAMELCASE,
+            CommonCaseRegexPatterns.SNAKECASE,
+            CommonCaseRegexPatterns.DASHCASE,
+            CommonCaseRegexPatterns.DOTCASE,
+            CommonCaseRegexPatterns.SPACECASE,
+        )
+    )
