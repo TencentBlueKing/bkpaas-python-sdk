@@ -1,5 +1,8 @@
 ## Change logs
 
+### 1.0.11
+- `blue_krill.storages.blobstore` 增加 `DownloadFailedError` 和 `UploadFailedError` 异常
+
 ### 1.0.10
 
 - 增加 `blue_krill.termcolors` 模块, 提供了往终端输出彩色文本的工具库.
