@@ -1,5 +1,8 @@
 ## Change logs
 
+### 1.0.6
+- `BKRepoStorage` 增加 DownloadFailedError 和 UploadFailedError 异常
+
 ### 1.0.5
 
 - `BKRepoStorage` 增加访问 bkrepo 服务的超时机制
