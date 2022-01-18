@@ -32,7 +32,7 @@ if os.path.exists(readme_path):
 setup(
     long_description=readme,
     name='blue-krill',
-    version='1.0.10',
+    version='1.0.11',
     description='Tools and common packages for blueking paas',
     python_requires='<3.8,>=3.6.2',
     author='blueking',

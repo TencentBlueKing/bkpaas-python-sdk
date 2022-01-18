@@ -13,7 +13,8 @@ from os import PathLike
 from shutil import copyfileobj
 from typing import BinaryIO
 
-from blue_krill.storages.blobstore.base import BlobStore, ObjectAlreadyExists, SignatureType
+from blue_krill.storages.blobstore.base import BlobStore, SignatureType
+from blue_krill.storages.blobstore.exceptions import DownloadFailedError, ObjectAlreadyExists, UploadFailedError
 
 try:
     import boto3
@@ -67,8 +68,13 @@ class S3Store(BlobStore):
         # 由于 S3 默认的上传行为是覆盖, 因此如果不允许覆盖, 只能先发请求判断文件是否存在, 再进行上传操作.
         if not allow_overwrite:
             self.check_key_exists_in_bucket(client, bucket=self.bucket, key=key)
-        bucket.upload_file(str(filepath), key, **kwargs)
-        logger.info("Upload finished.")
+
+        try:
+            bucket.upload_file(str(filepath), key, **kwargs)
+            logger.info("Upload to '%s' success.", key)
+        except Exception as e:
+            logger.exception("upload to '%s' failed.", key)
+            raise UploadFailedError(key=key, src=str(filepath)) from e
 
     def upload_fileobj(self, fh: BinaryIO, key: str, allow_overwrite: bool = True, **kwargs):
         client = self.get_client()
@@ -77,20 +83,31 @@ class S3Store(BlobStore):
         # 由于 S3 默认的上传行为是覆盖, 因此如果不允许覆盖, 只能先发请求判断文件是否存在, 再进行上传操作.
         if not allow_overwrite:
             self.check_key_exists_in_bucket(client, bucket=self.bucket, key=key)
-        bucket.upload_fileobj(fh, key, **kwargs)
-        logger.info("Upload finished.")
+
+        try:
+            bucket.upload_fileobj(fh, key, **kwargs)
+            logger.info("Upload to '%s' success.", key)
+        except Exception as e:
+            logger.exception("upload to '%s' failed.", key)
+            raise UploadFailedError(key=key, src='<memory>') from e
 
     def download_file(self, key: str, filepath: PathLike, *args, **kwargs) -> PathLike:
         client = self.get_client()
         bucket = client.Bucket(self.bucket)
-        bucket.download_file(key, str(filepath))
+        try:
+            bucket.download_file(key, str(filepath))
+        except Exception as e:
+            raise DownloadFailedError(key=key, dest=str(filepath)) from e
         return filepath
 
     def download_fileobj(self, key: str, fh: BinaryIO, *args, **kwargs):
         client = self.get_client()
         bucket = client.Bucket(self.bucket)
-        obj = bucket.Object(key).get()
-        copyfileobj(obj["Body"], fh)
+        try:
+            obj = bucket.Object(key).get()
+            copyfileobj(obj["Body"], fh)
+        except Exception as e:
+            raise DownloadFailedError(key=key, dest='<memory>') from e
 
     def delete_file(self, key: str, *args, **kwargs):
         client = self.get_client()

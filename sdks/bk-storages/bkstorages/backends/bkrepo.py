@@ -26,6 +26,7 @@ from requests.auth import HTTPBasicAuth
 from six.moves.urllib_parse import urljoin
 
 from bkstorages.utils import clean_name, get_available_overwrite_name, get_setting, safe_join, setting
+from bkstorages.exceptions import RequestError, ObjectAlreadyExists, UploadFailedError, DownloadFailedError
 
 GMT_FORMAT = '%a, %d %b %Y %H:%M:%S GMT'
 MAX_RETRIES = 2
@@ -33,20 +34,6 @@ logger = logging.getLogger(__name__)
 
 
 TIMEOUT_THRESHOLD = float(get_setting("BKREPO_TIMEOUT_THRESHOLD") or 30)
-
-
-class RequestError(Exception):
-    """服务请求异常"""
-
-    def __init__(self, message, code="400", response=None) -> None:
-        super().__init__(message)
-        self.message = message
-        self.code = code
-        self.response = response
-
-
-class ObjectAlreadyExists(RequestError):
-    """该对象已存在."""
 
 
 class BKGenericRepoClient:
@@ -97,21 +84,22 @@ class BKGenericRepoClient:
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, f'/generic/{self.project}/{self.bucket}/{key}')
-        headers = {
-            # TODO: 是否需要上传 md5 或者 sha256?
-            "X-BKREPO-OVERWRITE": str(allow_overwrite),
-        }
-        # ditry-code: fix the file with missing file name will be ignored by requests
-        fh = File(file=fh, name=getattr(fh, "name", key) or key)
+        src = getattr(fh, "name", "<memory>")
+        headers = {"X-BKREPO-OVERWRITE": str(allow_overwrite)}
 
         try:
-            resp = client.put(url, headers=headers, data=fh, timeout=TIMEOUT_THRESHOLD * 3)
+            resp = client.put(url, headers=headers, data=fh, timeout=TIMEOUT_THRESHOLD)
             self._validate_resp(resp)
         except RequestError as e:
-            if not allow_overwrite:
-                # NOTE: 由于 BKRepo 尚未定义具体的错误码, 因此只能认为服务端报 RequestError 时, 就是对象已存在
-                raise ObjectAlreadyExists(e.message, e.code, e.response)
-            raise
+            # 250107: 请求资源已经存在
+            # 251012: Node Existed
+            if str(e.code) in ["250107", "251012"]:
+                raise ObjectAlreadyExists(e.message, e.code, e.response) from e
+            logger.exception("Request success, but the server rejects the upload request.")
+            raise UploadFailedError(key=key, src=src) from e
+        except Exception as e:
+            logger.exception("An unexpected exception occurred, detail: %s", e)
+            raise UploadFailedError(key=key, src=src) from e
 
     def download_file(self, key: str, filepath: PathLike, *args, **kwargs) -> PathLike:
         """下载通用制品文件
@@ -131,15 +119,27 @@ class BKGenericRepoClient:
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, f'/generic/{self.project}/{self.bucket}/{key}')
-        resp = client.get(url, stream=True, timeout=TIMEOUT_THRESHOLD * 3)
+        dest = getattr(fh, "name", "<memory>")
+        try:
+            resp = client.get(url, stream=True, timeout=TIMEOUT_THRESHOLD)
+            logger.info("Calling BkRepo, the equivalent curl command: %s", curlify.to_curl(resp.request))
+        except Exception as e:
+            logger.exception("Fail to init request to BkRepo when calling '%s'", url)
+            raise DownloadFailedError(key=key, dest=dest) from e
+
         if not resp.ok:
-            raise RequestError(str("system error"), code=str(resp.status_code), response=resp)
+            logger.exception("Request success, but the server rejects the download request.")
+            raise DownloadFailedError(key=key, dest=dest) from RequestError(
+                str("下载制品文件失败"), code=str(resp.status_code), response=resp
+            )
+
         try:
             for chunk in resp.iter_content(chunk_size=512):
                 if chunk:
                     fh.write(chunk)
         except Exception as e:
-            raise RequestError(str(e), code=str(resp.status_code), response=resp) from e
+            logger.exception("File save failed, detail %s", e)
+            raise DownloadFailedError(key=key, dest=dest) from e
 
     def delete_file(self, key: str, *args, **kwargs):
         """删除通用制品文件
@@ -230,7 +230,7 @@ class BKGenericRepoClient:
     def _validate_resp(response: requests.Response) -> Dict:
         """校验响应体"""
         try:
-            logger.debug("Equivalent curl command: %s", curlify.to_curl(response.request))
+            logger.info("Equivalent curl command: %s", curlify.to_curl(response.request))
         except Exception:  # pylint: disable=broad-except
             pass
 
