@@ -124,6 +124,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
 BK_APP_CODE = "demo"
 BK_APP_SECRET = SECRET_KEY
 

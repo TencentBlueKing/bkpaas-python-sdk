@@ -18,23 +18,23 @@ class Synchronizer(Handler):
     """Synchronous API gateway configuration"""
 
     def sync_basic_config(self, *args, **kwargs):
-        result = self._call("sync_api", *args, **kwargs)
+        result = self._call(self.client.api.sync_api, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))
 
     def sync_stage_config(self, *args, **kwargs):
-        result = self._call("sync_stage", *args, **kwargs)
+        result = self._call(self.client.api.sync_stage, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))
 
     def sync_access_strategies(self, *args, **kwargs):
-        result = self._call("sync_access_strategy", *args, **kwargs)
+        result = self._call(self.client.api.sync_access_strategy, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))
 
     def sync_resources_config(self, content, *args, **kwargs):
         kwargs["content"] = yaml.dump(dict(content))
 
-        result = self._call("sync_resources", *args, **kwargs)
+        result = self._call(self.client.api.sync_resources, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))
 
     def sync_resource_docs_by_archive(self, *args, **kwargs):
-        result = self._call("import_resource_docs_by_archive", *args, **kwargs)
+        result = self._call(self.client.api.import_resource_docs_by_archive, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))

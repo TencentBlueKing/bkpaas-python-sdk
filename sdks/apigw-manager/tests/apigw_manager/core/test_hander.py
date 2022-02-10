@@ -8,10 +8,19 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+from unittest.mock import ANY
+
 from faker import Faker
 from pytest import fixture
 
 from apigw_manager.core.handler import Handler
+
+
+@fixture()
+def api_cache(config, mocker):
+    api_cache = mocker.MagicMock()
+    config.api_cache = api_cache
+    return api_cache
 
 
 @fixture()
@@ -21,7 +30,12 @@ def handler(api_instance, config):
 
 @fixture()
 def operation_id(faker: Faker):
-    return faker.color
+    return faker.color_name()
+
+
+@fixture()
+def operation(mocker, operation_id):
+    return mocker.MagicMock(name=operation_id)
 
 
 @fixture()
@@ -57,21 +71,16 @@ class TestHandler:
 
         assert handler._put_into_cache(operation_id, api_data, {})
 
-    def test_call_with_cache(self, handler: Handler, operation_id, faker, mocker):
-        mocker.patch.object(Handler, "_call", return_value={})
-        mock_get_from_cache = mocker.patch.object(Handler, "_get_from_cache", return_value=(False, None))
-        mock_put_into_cache = mocker.patch.object(Handler, "_put_into_cache", return_value=None)
+    def test_call_with_cache(self, handler: Handler, operation, operation_id, faker, api_cache):
+        api_cache.try_get.return_value = (False, None)
 
         api_name = faker.pystr()
         kwargs = {
             "api_name": api_name,
             "foo": "bar",
         }
-        handler._call_with_cache(operation_id, **kwargs)
 
-        cache_key = {
-            "api_name": api_name,
-            "kwargs": {"api_name": api_name, "foo": "bar"},
-        }
-        mock_get_from_cache.assert_called_once_with(operation_id, cache_key)
-        mock_put_into_cache.assert_called_once_with(operation_id, cache_key, {})
+        handler._call_with_cache(operation, **kwargs)
+
+        api_cache.try_get.assert_called()
+        api_cache.update.assert_called()

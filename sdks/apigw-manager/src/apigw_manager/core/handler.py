@@ -57,24 +57,25 @@ class Handler(object):
 
         return False
 
-    def _call_with_cache(self, operation_id, **kwargs):
+    def _call_with_cache(self, operation, **kwargs):
         """Call the API instance, allow data to be retrieved from the cache"""
         cache_key = {
             "api_name": kwargs.get("api_name", self.config.api_name),
             "kwargs": kwargs,
         }
 
+        operation_id = operation.name
         cached, result = self._get_from_cache(operation_id, cache_key)
         if cached:
             return result
 
-        result = self._call(operation_id, **kwargs)
+        result = self._call(operation, **kwargs)
 
         self._put_into_cache(operation_id, cache_key, result)
 
         return result
 
-    def _call(self, operation_id, files=None, **kwargs):
+    def _call(self, operation, files=None, **kwargs):
         """Call the API instance"""
         data = {
             "path_params": {"api_name": kwargs.pop("api_name", self.config.api_name)},
@@ -85,10 +86,11 @@ class Handler(object):
             "files": files,
         }
 
+        operation_id = operation.name
         logger.debug("call api %s, data: %s", operation_id, data)
 
         try:
-            return getattr(self.client.api, operation_id)(**data)
+            return operation(**data)
         except Exception as err:
             raise_from(ApiException(operation_id), err)
 
