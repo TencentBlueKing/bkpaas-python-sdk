@@ -13,9 +13,10 @@ import logging
 import typing
 
 from bkapi.bk_apigateway.client import Client as BKAPIGatewayClient
+from bkapi_client_core.exceptions import HTTPResponseError
 from future.utils import raise_from
 
-from apigw_manager.core.exceptions import ApiException, ApiResultError
+from apigw_manager.core.exceptions import ApiException, ApiRequestError, ApiResultError
 
 if typing.TYPE_CHECKING:
     from apigw_manager.core import configuration
@@ -57,24 +58,25 @@ class Handler(object):
 
         return False
 
-    def _call_with_cache(self, operation_id, **kwargs):
+    def _call_with_cache(self, operation, **kwargs):
         """Call the API instance, allow data to be retrieved from the cache"""
         cache_key = {
             "api_name": kwargs.get("api_name", self.config.api_name),
             "kwargs": kwargs,
         }
 
+        operation_id = operation.name
         cached, result = self._get_from_cache(operation_id, cache_key)
         if cached:
             return result
 
-        result = self._call(operation_id, **kwargs)
+        result = self._call(operation, **kwargs)
 
         self._put_into_cache(operation_id, cache_key, result)
 
         return result
 
-    def _call(self, operation_id, files=None, **kwargs):
+    def _call(self, operation, files=None, **kwargs):
         """Call the API instance"""
         data = {
             "path_params": {"api_name": kwargs.pop("api_name", self.config.api_name)},
@@ -85,10 +87,13 @@ class Handler(object):
             "files": files,
         }
 
+        operation_id = operation.name
         logger.debug("call api %s, data: %s", operation_id, data)
 
         try:
-            return getattr(self.client.api, operation_id)(**data)
+            return operation(**data)
+        except HTTPResponseError as err:
+            raise self._convert_operation_exception(err)
         except Exception as err:
             raise_from(ApiException(operation_id), err)
 
@@ -102,3 +107,19 @@ class Handler(object):
             )
 
         return convertor(result)
+
+    def _convert_operation_exception(self, err: HTTPResponseError):
+        response = err.response
+        if not response or response.status_code / 100 != 4:
+            return err
+
+        try:
+            result = response.json()
+        except Exception:
+            return err
+
+        return ApiRequestError(
+            response.status_code,
+            result.get("code"),
+            result.get("message"),
+        )

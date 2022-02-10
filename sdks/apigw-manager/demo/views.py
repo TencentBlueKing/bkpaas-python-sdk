@@ -46,7 +46,7 @@ def jwt_user(request):
         data.update(
             {
                 "username": user.username,
-                "is_anonymous": user.is_anonymous(),
+                "is_anonymous": user.is_anonymous,
             }
         )
 

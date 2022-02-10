@@ -18,11 +18,11 @@ class Releaser(Handler):
     def create_resource_version(self, *args, **kwargs):
         """create a version"""
 
-        result = self._call("create_resource_version", *args, **kwargs)
+        result = self._call(self.client.api.create_resource_version, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))
 
     def release(self, *args, **kwargs):
         """release a version"""
 
-        result = self._call("release", *args, **kwargs)
+        result = self._call(self.client.api.release, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))

@@ -44,12 +44,12 @@ def django_jwt_cache(settings, django_jwt_cache_name, mocker):
     settings.APIGW_JWT_PUBLIC_KEY_CACHE_NAME = django_jwt_cache_name
 
     cache = mocker.MagicMock()
-    caches._caches.caches[django_jwt_cache_name] = cache
+    caches[django_jwt_cache_name] = cache
 
     try:
         yield cache
     finally:
-        del caches._caches.caches[django_jwt_cache_name]
+        del caches[django_jwt_cache_name]
 
 
 @pytest.fixture()
