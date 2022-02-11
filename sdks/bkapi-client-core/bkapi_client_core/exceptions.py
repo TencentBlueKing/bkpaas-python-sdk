@@ -49,6 +49,10 @@ class UserNotAuthenticated(BKAPIError):
     """User not authenticated"""
 
 
+class PathParamsMissing(BKAPIError):
+    """Path params is missing"""
+
+
 class ResponseError(RequestException, BKAPIError):
     """Response has error"""
 
