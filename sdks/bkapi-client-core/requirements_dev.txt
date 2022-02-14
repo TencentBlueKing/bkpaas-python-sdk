@@ -1,3 +1,4 @@
+Warning: The lock file is not up to date with the latest changes in pyproject.toml. You may be getting outdated dependencies. Run update to update them.
 
 aiohttp==3.7.4.post0; python_version >= "3.7" and python_version < "4.0"
 appdirs==1.4.4; python_version >= "3.7" and python_version < "4.0" and python_full_version >= "3.6.2"
