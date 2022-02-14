@@ -9,7 +9,7 @@
  * specific language governing permissions and limitations under the License.
 """
 import string
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional
 
 from requests import Session as RequestSession
 from requests.hooks import dispatch_hook
