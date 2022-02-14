@@ -10,9 +10,8 @@
 """
 
 import re
-import sys
 from functools import partial
-from typing import Callable, Iterable
+from typing import Callable, Iterable, Optional
 
 __all__ = ["RegexCubingHelper", "CommonCaseRegexPatterns", "CommonCaseConvertor", "shortcuts"]
 
@@ -20,7 +19,7 @@ __all__ = ["RegexCubingHelper", "CommonCaseRegexPatterns", "CommonCaseConvertor"
 class RegexCubingHelper:
     """The best way to resolve a Rubik's cube is to take it apart and put it back together."""
 
-    def __init__(self, patterns: Iterable[str], preprocessor: Callable[[str], str] = None):
+    def __init__(self, patterns: Iterable[str], preprocessor: Optional[Callable[[str], str]] = None):
         self._pattern = re.compile("|".join(patterns))
         self._preprocessor = preprocessor
 
@@ -62,7 +61,7 @@ class CommonCaseRegexPatterns:
 class CommonCaseConvertor:
     """The convertor for common case."""
 
-    def __init__(self, patterns: Iterable[str], preprocessor: Callable[[str], str] = None):
+    def __init__(self, patterns: Iterable[str], preprocessor: Optional[Callable[[str], str]] = None):
         self._helper = RegexCubingHelper(patterns, preprocessor)
 
     def to_camel_case(self, string: str) -> str:
@@ -158,27 +157,23 @@ class CommonCaseConvertor:
         return self._helper.cubing_lower_case(string, " ")
 
 
-python_version = sys.version_info
-if python_version.major == 3 and python_version.minor == 6:
-    # convert the string from camel case to space case because of the underlying bug in python 3.6 re module
-    # details: https://bugs.python.org/issue43222
-    shortcuts = CommonCaseConvertor(
-        (
-            CommonCaseRegexPatterns.SNAKECASE,
-            CommonCaseRegexPatterns.DASHCASE,
-            CommonCaseRegexPatterns.DOTCASE,
-            CommonCaseRegexPatterns.SPACECASE,
-        ),
-        partial(re.compile(f"({CommonCaseRegexPatterns.CAMELCASE})").sub, " "),
-    )
+_shortcuts_patterns = [
+    CommonCaseRegexPatterns.SNAKECASE,
+    CommonCaseRegexPatterns.DASHCASE,
+    CommonCaseRegexPatterns.DOTCASE,
+    CommonCaseRegexPatterns.SPACECASE,
+]
+_shortcuts_preprocessor = None
 
+try:
+    # this pattern must be a lookahead assertion, test if it contains the underlying bug
+    re.split("(?=.)", "")
+except ValueError:
+    # convert the string from camel case to space case for python 3.6, details: https://bugs.python.org/issue43222
+    _shortcuts_preprocessor = partial(re.compile(f"({CommonCaseRegexPatterns.CAMELCASE})").sub, " ")
 else:
-    shortcuts = CommonCaseConvertor(
-        (
-            CommonCaseRegexPatterns.CAMELCASE,
-            CommonCaseRegexPatterns.SNAKECASE,
-            CommonCaseRegexPatterns.DASHCASE,
-            CommonCaseRegexPatterns.DOTCASE,
-            CommonCaseRegexPatterns.SPACECASE,
-        )
-    )
+    # for python 3.7+, it's ok to handle camel case directly
+    _shortcuts_patterns.append(CommonCaseRegexPatterns.CAMELCASE)
+
+
+shortcuts = CommonCaseConvertor(_shortcuts_patterns, _shortcuts_preprocessor)
