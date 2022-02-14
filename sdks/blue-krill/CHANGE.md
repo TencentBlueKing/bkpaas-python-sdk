@@ -1,5 +1,9 @@
 ## Change logs
 
+### 1.0.12
+
+- `blue_krill.cubing_case` 兼容 python3.6 正则对驼峰命名解析的 bug.
+
 ### 1.0.11
 - `blue_krill.storages.blobstore` 增加 `DownloadFailedError` 和 `UploadFailedError` 异常
 
