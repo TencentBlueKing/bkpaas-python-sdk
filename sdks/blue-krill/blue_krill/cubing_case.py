@@ -166,7 +166,7 @@ _shortcuts_patterns = [
 _shortcuts_preprocessor = None
 
 try:
-    # this pattern must be a lookahead assertion, test if it contains the underlying bug
+    # this pattern must be a zero-length assertion, test if it contains the underlying bug
     re.split("(?=.)", "")
 except ValueError:
     # convert the string from camel case to space case for python 3.6, details: https://bugs.python.org/issue43222
