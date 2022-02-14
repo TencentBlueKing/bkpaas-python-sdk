@@ -10,7 +10,8 @@
 """
 
 import re
-from typing import Callable, Iterable
+from functools import partial
+from typing import Callable, Iterable, Optional
 
 __all__ = ["RegexCubingHelper", "CommonCaseRegexPatterns", "CommonCaseConvertor", "shortcuts"]
 
@@ -18,11 +19,15 @@ __all__ = ["RegexCubingHelper", "CommonCaseRegexPatterns", "CommonCaseConvertor"
 class RegexCubingHelper:
     """The best way to resolve a Rubik's cube is to take it apart and put it back together."""
 
-    def __init__(self, patterns: Iterable[str]):
+    def __init__(self, patterns: Iterable[str], preprocessor: Optional[Callable[[str], str]] = None):
         self._pattern = re.compile("|".join(patterns))
+        self._preprocessor = preprocessor
 
     def cubing(self, string: str, transform_fn: Callable[[Iterable[str]], Iterable[str]], sep: str) -> str:
         """Join the string with the given separator and transform the parts."""
+
+        if self._preprocessor:
+            string = self._preprocessor(string)
 
         parts = (i for i in self._pattern.split(string) if i)
         return sep.join((i for i in transform_fn(parts) if i))
@@ -56,8 +61,8 @@ class CommonCaseRegexPatterns:
 class CommonCaseConvertor:
     """The convertor for common case."""
 
-    def __init__(self, patterns: Iterable[str]):
-        self._helper = RegexCubingHelper(patterns)
+    def __init__(self, patterns: Iterable[str], preprocessor: Optional[Callable[[str], str]] = None):
+        self._helper = RegexCubingHelper(patterns, preprocessor)
 
     def to_camel_case(self, string: str) -> str:
         """
@@ -152,12 +157,23 @@ class CommonCaseConvertor:
         return self._helper.cubing_lower_case(string, " ")
 
 
-shortcuts = CommonCaseConvertor(
-    (
-        CommonCaseRegexPatterns.CAMELCASE,
-        CommonCaseRegexPatterns.SNAKECASE,
-        CommonCaseRegexPatterns.DASHCASE,
-        CommonCaseRegexPatterns.DOTCASE,
-        CommonCaseRegexPatterns.SPACECASE,
-    )
-)
+_shortcuts_patterns = [
+    CommonCaseRegexPatterns.SNAKECASE,
+    CommonCaseRegexPatterns.DASHCASE,
+    CommonCaseRegexPatterns.DOTCASE,
+    CommonCaseRegexPatterns.SPACECASE,
+]
+_shortcuts_preprocessor = None
+
+try:
+    # this pattern must be a zero-length assertion, test if it contains the underlying bug
+    re.split("(?=.)", "")
+except ValueError:
+    # convert the string from camel case to space case for python 3.6, details: https://bugs.python.org/issue43222
+    _shortcuts_preprocessor = partial(re.compile(f"({CommonCaseRegexPatterns.CAMELCASE})").sub, " ")
+else:
+    # for python 3.7+, it's ok to handle camel case directly
+    _shortcuts_patterns.append(CommonCaseRegexPatterns.CAMELCASE)
+
+
+shortcuts = CommonCaseConvertor(_shortcuts_patterns, _shortcuts_preprocessor)

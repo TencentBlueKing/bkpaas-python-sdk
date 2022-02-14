@@ -18,7 +18,6 @@ try:
 except ImportError:
     from distutils.core import setup
 
-
 import os.path
 
 readme = ''
