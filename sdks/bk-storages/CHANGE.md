@@ -1,5 +1,8 @@
 ## Change logs
 
+### 1.0.7
+- 修复 `BKRepoStorage` 在保存没有配置名称的 File 对象时会触发无法上传的问题
+
 ### 1.0.6
 - `BKRepoStorage` 增加 DownloadFailedError 和 UploadFailedError 异常
 

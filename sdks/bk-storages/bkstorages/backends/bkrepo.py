@@ -25,8 +25,8 @@ from requests.adapters import HTTPAdapter
 from requests.auth import HTTPBasicAuth
 from six.moves.urllib_parse import urljoin
 
+from bkstorages.exceptions import DownloadFailedError, ObjectAlreadyExists, RequestError, UploadFailedError
 from bkstorages.utils import clean_name, get_available_overwrite_name, get_setting, safe_join, setting
-from bkstorages.exceptions import RequestError, ObjectAlreadyExists, UploadFailedError, DownloadFailedError
 
 GMT_FORMAT = '%a, %d %b %Y %H:%M:%S GMT'
 MAX_RETRIES = 2
@@ -342,6 +342,9 @@ class BKRepoStorage(Storage):
         return BKRepoFile(self._full_path(name), self)
 
     def _save(self, name, content):
+        if isinstance(content, File) and not content.name:
+            content.name = name
+
         key = self._full_path(name)
         self.client.upload_fileobj(fh=content, key=key)
         return key
