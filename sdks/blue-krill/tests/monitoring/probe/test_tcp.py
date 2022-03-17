@@ -32,7 +32,7 @@ def tcpd():
                 try:
                     tcpd.server_bind()
                     tcpd.server_activate()
-                except:
+                except Exception:
                     tcpd.server_close()
                     raise
                 yield tcpd
@@ -79,6 +79,8 @@ class TestTCPProbe:
         assert len(issues) == 0
 
     def test_timeout(self, prober, tcpd):
+        tcpd.RequestHandlerClass = BusyHandler
+        prober.diagnose()
         prober.diagnose()
         issues = prober.diagnose()
         assert len(issues) == 1
@@ -91,4 +93,4 @@ class TestTCPProbe:
         assert len(issues) == 1
         issue = issues[0]
         assert issue.fatal
-        assert issue.description == "Unknown Exception<ConnectionRefusedError>, detail: [Errno 61] Connection refused"
+        assert "Connection refused" in issue.description
