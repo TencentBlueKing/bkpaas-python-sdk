@@ -5,6 +5,7 @@ on:
     branches: [ master, staging ]
   pull_request:
     branches: [ master, staging ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -27,10 +28,11 @@ jobs:
       uses: abatilo/actions-poetry@v2.1.0
       with:
           poetry-version: ${{ matrix.poetry-version }}
-    - name: Install dependencies
+    - name: Test blue-krill
       run: |
         cd sdks/blue-krill
-        poetry config virtualenvs.create false && poetry install
+        poetry install
+        poetry run pytest
     - name: Format with isort
       run: |
         isort sdks/ --settings-path=sdks/blue-krill/pyproject.toml
