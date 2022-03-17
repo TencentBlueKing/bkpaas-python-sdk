@@ -15,6 +15,7 @@ from unittest import mock
 import pytest
 import requests
 import requests_mock
+from django.core.files.base import File
 from six.moves.urllib_parse import urljoin
 
 from bkstorages.backends.bkrepo import BKGenericRepoClient, BKRepoFile, BKRepoStorage, parse_gmt_datetime
@@ -141,6 +142,29 @@ class TestBKRepoStorage:
         assert adapter.call_count == len(mock_responses)
         assert expect_directories == directories
         assert expect_files == files
+
+    def test_save_without_name(self, bk_repo_storage, adapter, endpoint):
+        filename = "foo/bar"
+        content = b"aaa"
+        fh = File(io.BytesIO(content))
+        adapter.register_uri(
+            "PUT", urljoin(endpoint, f'/generic/dummy-project/dummy-bucket/{filename}'), json={"code": 0}
+        )
+        assert bk_repo_storage.save(filename, fh)
+        assert adapter.called
+        assert adapter.last_request.headers["Content-Length"] == str(len(content))
+        assert fh.name == filename
+
+    def test_save_with_name(self, bk_repo_storage, adapter, endpoint):
+        key = "foo/bar"
+        filename = "baz.py"
+        content = b"aaa"
+        fh = File(io.BytesIO(content), name=filename)
+        adapter.register_uri("PUT", urljoin(endpoint, f'/generic/dummy-project/dummy-bucket/{key}'), json={"code": 0})
+        assert bk_repo_storage.save(key, fh)
+        assert adapter.called
+        assert adapter.last_request.headers["Content-Length"] == str(len(content))
+        assert fh.name == filename
 
 
 @pytest.mark.parametrize(
