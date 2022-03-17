@@ -9,49 +9,85 @@
  * specific language governing permissions and limitations under the License.
 """
 import random
-import socket
+import threading
+import time
+from socketserver import StreamRequestHandler, TCPServer
 
 import pytest
 
 from blue_krill.monitoring.probe.tcp import InternetAddress, TCPProbe
 
 
+def get_server_address():
+    return InternetAddress(host="localhost", port=random.randint(30000, 60000))
+
+
+@pytest.fixture
+def tcpd():
+    for i in range(10):
+        server_address = get_server_address()
+        try:
+            with TCPServer(server_address, StreamRequestHandler, bind_and_activate=False) as tcpd:
+                tcpd.request_queue_size = 1
+                try:
+                    tcpd.server_bind()
+                    tcpd.server_activate()
+                except:
+                    tcpd.server_close()
+                    raise
+                yield tcpd
+                break
+        except OSError:
+            continue
+    else:
+        pytest.skip("failed to start http server")
+
+
+class BusyHandler(StreamRequestHandler):
+    def handle(self) -> None:
+        time.sleep(2)
+
+
+@pytest.fixture
+def tcp_server(tcpd):
+    sa = tcpd.socket.getsockname()
+    t = threading.Thread(target=tcpd.serve_forever)
+    t.start()
+    yield sa[0], sa[1]
+    tcpd.shutdown()
+
+
 class TestTCPProbe:
     @pytest.fixture()
-    def server_address(self):
-        return InternetAddress(host="localhost", port=random.randint(30000, 60000))
-
-    @pytest.fixture()
-    def tcp_server(self, server_address):
-        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server.bind(server_address)
-        # only support 1 client.
-        server.listen(1)
-        yield
-        server.close()
-
-    @pytest.fixture()
-    def prober(self, server_address):
+    def prober(self, tcpd):
         class SomeTCPProbe(TCPProbe):
-            timeout = 5
-            address = server_address
+            timeout = 1
+            address = InternetAddress(*tcpd.socket.getsockname())
 
         return SomeTCPProbe()
 
-    def test_success(self, tcp_server, prober):
+    @pytest.fixture
+    def dummy_prober(self, ):
+        class SomeTCPProbe(TCPProbe):
+            timeout = 1
+            address = InternetAddress(host="localhost", port=random.randint(30000, 60000))
+
+        return SomeTCPProbe()
+
+    def test_success(self, prober, tcp_server):
         issues = prober.diagnose()
         assert len(issues) == 0
 
-    def test_busy(self, tcp_server, prober):
+    def test_timeout(self, prober, tcpd):
         prober.diagnose()
         issues = prober.diagnose()
         assert len(issues) == 1
         issue = issues[0]
         assert issue.fatal
-        assert issue.description == "Unknown Exception<ConnectionRefusedError>, detail: [Errno 61] Connection refused"
+        assert "Timeout, detail: timed out" in issue.description
 
-    def test_no_server(self, prober):
-        issues = prober.diagnose()
+    def test_no_server(self, dummy_prober):
+        issues = dummy_prober.diagnose()
         assert len(issues) == 1
         issue = issues[0]
         assert issue.fatal

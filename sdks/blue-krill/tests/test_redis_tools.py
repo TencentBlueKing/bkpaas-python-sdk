@@ -8,23 +8,33 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+import os
 import time
 import uuid
-from unittest import TestCase
+import pytest
 
 import redis
 
 from blue_krill.redis_tools.messaging import StreamChannel, StreamChannelSubscriber
 
 
-def get_default_redis():
-    return redis.Redis(port=6479)
+@pytest.fixture
+def redis_db():
+    if "REDIS_PORT" not in os.environ:
+        raise pytest.skip("MISSING REDIS_PORT")
+    return redis.Redis(port=int(os.environ["REDIS_PORT"]), password=os.getenv("REDIS_PASSWORD", None))
 
 
-class TestMessageChannel(TestCase):
-    def setUp(self):
-        self.redis_db = get_default_redis()
-        self.channel_id = uuid.uuid4().hex
+@pytest.fixture
+def channel_id():
+    return uuid.uuid4().hex
+
+
+class TestMessageChannel:
+    @pytest.fixture(autouse=True)
+    def setUp(self, redis_db, channel_id):
+        self.redis_db = redis_db
+        self.channel_id = channel_id
 
     def producer(self, batch=4, wait=0.25):
         channel = StreamChannel(self.channel_id, self.redis_db)

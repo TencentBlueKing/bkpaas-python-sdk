@@ -14,7 +14,7 @@ import pytest
 from moto import mock_s3
 
 from blue_krill.contextlib import nullcontext as does_not_raise
-from blue_krill.storages.blobstore.exceptions import ObjectAlreadyExists
+from blue_krill.storages.blobstore.exceptions import ObjectAlreadyExists, DownloadFailedError
 from blue_krill.storages.blobstore.s3 import S3Store
 from tests.utils import generate_random_string
 
@@ -90,10 +90,8 @@ class TestS3Store:
         store.upload_file(filepath=mktemp(content), key=key)
 
         assert store.delete_file(key)
-        with pytest.raises(Exception) as err:
+        with pytest.raises(DownloadFailedError):
             store.download_fileobj(key=key, fh=SpooledTemporaryFile())
-
-        assert err.value.response["Error"]["Code"] == "NoSuchKey"
 
     def test_delete_file_not_exist(self, key, store):
         assert store.delete_file(key)
