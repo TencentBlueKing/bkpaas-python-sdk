@@ -9,26 +9,20 @@
  * specific language governing permissions and limitations under the License.
 """
 import copy
-from typing import List
-
-from rest_framework.exceptions import ValidationError
-from rest_framework.settings import api_settings
-from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
-
-
 import functools
+from collections import namedtuple
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Optional, Type, Union
+from typing import TYPE_CHECKING, Any, List, Optional, Type, Union
 
 from django.conf import settings
 from django.http.response import HttpResponseBase
 from django.utils.module_loading import import_string
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.fields import empty
 from rest_framework.serializers import BaseSerializer
-
-
-from collections import namedtuple
+from rest_framework.settings import api_settings
+from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 
 if TYPE_CHECKING:
     from rest_framework.request import Request
