@@ -37,4 +37,5 @@ build:
 publish:
 	rm -rf dist || true
 	poetry build -f wheel
-	poetry publish -r public
+	poetry publish -r pypi
+	poetry publish -r tencent

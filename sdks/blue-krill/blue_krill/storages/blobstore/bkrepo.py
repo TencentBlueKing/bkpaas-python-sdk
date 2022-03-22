@@ -9,7 +9,7 @@
  * specific language governing permissions and limitations under the License.
 """
 import logging
-from os import PathLike
+from os import PathLike, getenv
 from typing import Any, BinaryIO, List
 from urllib.parse import urljoin
 
@@ -19,16 +19,24 @@ from requests.adapters import HTTPAdapter
 from requests.auth import HTTPBasicAuth
 
 from blue_krill.data_types.enum import EnumField, StructuredEnum
-from blue_krill.storages.blobstore.base import BlobStore, ObjectAlreadyExists, RequestError, SignatureType
+from blue_krill.storages.blobstore.base import BlobStore, SignatureType
+from blue_krill.storages.blobstore.exceptions import (
+    DownloadFailedError,
+    ObjectAlreadyExists,
+    RequestError,
+    UploadFailedError,
+)
 
 MAX_RETRIES = 2
 logger = logging.getLogger(__name__)
+
+TIMEOUT_THRESHOLD = float(getenv("BKREPO_TIMEOUT_THRESHOLD", 30))
 
 
 def _validate_resp(response: requests.Response) -> Any:
     """校验响应体"""
     try:
-        logger.debug("Equivalent curl command: %s", curlify.to_curl(response.request))
+        logger.info("Calling BkRepo, the equivalent curl command: %s", curlify.to_curl(response.request))
     except Exception:  # pylint: disable=broad-except
         pass
 
@@ -98,20 +106,20 @@ class BKRepoManager:
             "projectId": project,
             "repoName": repo,
         }
-        return _validate_resp(client.post(url, json=data))
+        return _validate_resp(client.post(url, json=data, timeout=TIMEOUT_THRESHOLD))
 
     def update_user(self, username: str, password: str, association_users: List[str]):
         """更新用户信息"""
         client = self.get_client()
         url = urljoin(self.endpoint_url, f'/auth/api/user/{username}')
         data = {"admin": True, "name": username, "pwd": password, "asstUsers": association_users}
-        return _validate_resp(client.put(url, json=data))
+        return _validate_resp(client.put(url, json=data, timeout=TIMEOUT_THRESHOLD))
 
     def delete_user(self, username: str):
         """删除用户"""
         client = self.get_client()
         url = urljoin(self.endpoint_url, f'/auth/api/user/{username}')
-        return _validate_resp(client.delete(url))
+        return _validate_resp(client.delete(url, timeout=TIMEOUT_THRESHOLD))
 
     def create_repo(self, project: str, repo: str, repo_type: str = RepositoryType.GENERIC, public: bool = False):
         """创建仓库
@@ -130,7 +138,7 @@ class BKRepoManager:
             "configuration": None,
             "storageCredentialsKey": None,
         }
-        return _validate_resp(client.post(url, json=data))
+        return _validate_resp(client.post(url, json=data, timeout=TIMEOUT_THRESHOLD))
 
     def delete_repo(self, project: str, repo: str, forced: bool = False):
         """删除仓库
@@ -140,7 +148,7 @@ class BKRepoManager:
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, f'/repository/api/repo/delete/{project}/{repo}?forced={forced}')
-        return _validate_resp(client.delete(url))
+        return _validate_resp(client.delete(url, timeout=TIMEOUT_THRESHOLD))
 
     # 以下是项目无关的管理接口
 
@@ -152,7 +160,7 @@ class BKRepoManager:
         client = self.get_client()
         url = urljoin(self.endpoint_url, "/repository/api/project/create")
         data = {"name": project, "displayName": project, "description": ""}
-        return _validate_resp(client.post(url, json=data))
+        return _validate_resp(client.post(url, json=data, timeout=TIMEOUT_THRESHOLD))
 
     def create_user_to_project(self, username: str, password: str, association_users: List[str], project: str) -> bool:
         """创建用户到项目管理员
@@ -173,7 +181,7 @@ class BKRepoManager:
             "group": False,
             "projectId": project,
         }
-        return _validate_resp(client.post(url, json=data))
+        return _validate_resp(client.post(url, json=data, timeout=TIMEOUT_THRESHOLD))
 
 
 class BKGenericRepo(BlobStore):
@@ -213,7 +221,7 @@ class BKGenericRepo(BlobStore):
         :param bool allow_overwrite: 是否覆盖已存在文件
         """
         with open(filepath, "rb") as fh:
-            self.upload_fileobj(fh, key=key, allow_overwrite=allow_overwrite, **kwargs)
+            self.upload_fileobj(fh, key=key, allow_overwrite=allow_overwrite, timeout=TIMEOUT_THRESHOLD, **kwargs)
 
     def upload_fileobj(self, fh: BinaryIO, key: str, allow_overwrite: bool = True, **kwargs):
         """上传通用制品文件
@@ -224,18 +232,22 @@ class BKGenericRepo(BlobStore):
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, f'/generic/{self.project}/{self.bucket}/{key}')
-        headers = {
-            # TODO: 是否需要上传 md5 或者 sha256?
-            "X-BKREPO-OVERWRITE": str(allow_overwrite),
-        }
+        src = getattr(fh, "name", "<memory>")
+        headers = {"X-BKREPO-OVERWRITE": str(allow_overwrite)}
+
         try:
-            resp = client.put(url, headers=headers, data=fh)
+            resp = client.put(url, headers=headers, data=fh, timeout=TIMEOUT_THRESHOLD)
             _validate_resp(resp)
         except RequestError as e:
-            if not allow_overwrite:
-                # NOTE: 由于 BKRepo 尚未定义具体的错误码, 因此只能认为服务端报 RequestError 时, 就是对象已存在
-                raise ObjectAlreadyExists(e.message, e.code, e.response)
-            raise
+            # 250107: 请求资源已经存在
+            # 251012: Node Existed
+            if str(e.code) in ["250107", "251012"]:
+                raise ObjectAlreadyExists(e.message, e.code, e.response) from e
+            logger.exception("Request success, but the server rejects the upload request.")
+            raise UploadFailedError(key=key, src=src) from e
+        except Exception as e:
+            logger.exception("An unexpected exception occurred, detail: %s", e)
+            raise UploadFailedError(key=key, src=src) from e
 
     def download_file(self, key: str, filepath: PathLike, *args, **kwargs) -> PathLike:
         """下载通用制品文件
@@ -255,16 +267,27 @@ class BKGenericRepo(BlobStore):
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, f'/generic/{self.project}/{self.bucket}/{key}')
-        resp = client.get(url, stream=True)
+        dest = getattr(fh, "name", "<memory>")
+        try:
+            resp = client.get(url, stream=True, timeout=TIMEOUT_THRESHOLD)
+            logger.info("Calling BkRepo, the equivalent curl command: %s", curlify.to_curl(resp.request))
+        except Exception as e:
+            logger.exception("Fail to init request to BkRepo when calling '%s'", url)
+            raise DownloadFailedError(key=key, dest=dest) from e
+
         if not resp.ok:
-            _validate_resp(resp)
-            raise RequestError(str("下载制品文件失败"), code=str(resp.status_code), response=resp)
+            logger.exception("Request success, but the server rejects the download request.")
+            raise DownloadFailedError(key=key, dest=dest) from RequestError(
+                str("下载制品文件失败"), code=str(resp.status_code), response=resp
+            )
+
         try:
             for chunk in resp.iter_content(chunk_size=512):
                 if chunk:
                     fh.write(chunk)
         except Exception as e:
-            raise RequestError(str(e), code=str(resp.status_code), response=resp) from e
+            logger.exception("File save failed, detail %s", e)
+            raise DownloadFailedError(key=key, dest=dest) from e
 
     def delete_file(self, key: str, *args, **kwargs):
         """删除通用制品文件
@@ -273,7 +296,7 @@ class BKGenericRepo(BlobStore):
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, f'/generic/{self.project}/{self.bucket}/{key}')
-        resp = client.delete(url)
+        resp = client.delete(url, timeout=TIMEOUT_THRESHOLD)
         return _validate_resp(resp)
 
     def get_file_metadata(self, key, *args, **kwargs):
@@ -283,10 +306,10 @@ class BKGenericRepo(BlobStore):
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, f'/generic/{self.project}/{self.bucket}/{key}')
-        resp = client.head(url)
+        resp = client.head(url, timeout=TIMEOUT_THRESHOLD)
         if resp.status_code == 200:
             return resp.headers
-        raise RequestError("Can't get file head info", code=resp.status_code, response=resp)
+        raise RequestError("Can't get file head info", code=str(resp.status_code), response=resp)
 
     def generate_presigned_url(
         self, key: str, expires_in: int, signature_type: SignatureType = SignatureType.DOWNLOAD, *args, **kwargs
@@ -315,6 +338,7 @@ class BKGenericRepo(BlobStore):
                 'expireSeconds': expires_in,
                 'type': token_type,
             },
+            timeout=TIMEOUT_THRESHOLD,
         )
         data = _validate_resp(resp)
         return data[0]["url"]

@@ -1,5 +1,24 @@
 ## Change logs
 
+### 1.0.12
+
+- `blue_krill.cubing_case` 兼容 python3.6 正则对驼峰命名解析的 bug.
+
+### 1.0.11
+- `blue_krill.storages.blobstore` 增加 `DownloadFailedError` 和 `UploadFailedError` 异常
+
+### 1.0.10
+
+- 增加 `blue_krill.termcolors` 模块, 提供了往终端输出彩色文本的工具库.
+
+### 1.0.9
+
+- `blue_krill.storages.blobstore.bkrepo` 模块增加超时机制
+
+### 1.0.8
+
+- `blue_krill.cubing_case` 增加各个命名方法互相转换的工具库.
+
 ### 1.0.7
 
 - `blue_krill.storages.blobstore.base.BlobStore` 增加 delete_file 的函数签名.

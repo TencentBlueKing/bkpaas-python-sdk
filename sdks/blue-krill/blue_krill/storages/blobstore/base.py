@@ -9,7 +9,7 @@
  * specific language governing permissions and limitations under the License.
 """
 from os import PathLike
-from typing import Any, BinaryIO, ClassVar
+from typing import BinaryIO, ClassVar
 
 from blue_krill.data_types.enum import EnumField, StructuredEnum
 
@@ -17,23 +17,6 @@ from blue_krill.data_types.enum import EnumField, StructuredEnum
 class SignatureType(str, StructuredEnum):
     DOWNLOAD = EnumField("DOWNLOAD", label="下载")
     UPLOAD = EnumField("UPLOAD", label="上传")
-
-
-class RequestError(Exception):
-    """服务请求异常"""
-
-    def __init__(self, message: str, code: str = "400", response: Any = None) -> None:
-        super().__init__(message)
-        self.message = message
-        self.code = code
-        self.response = response
-
-    def __str__(self):
-        return self.message
-
-
-class ObjectAlreadyExists(RequestError):
-    """该对象已存在."""
 
 
 class BlobStore:
@@ -54,6 +37,7 @@ class BlobStore:
         :param str key: key to store the package.
         :param bool allow_overwrite: whether to overwrite the original file
         :raise BlobAlreadyExists: if the key already exists.
+        :raise UploadFailedError: if the server return error when uploading
         """
         raise NotImplementedError
 
@@ -65,6 +49,7 @@ class BlobStore:
         :param str key: The name of the key to upload to.
         :param bool allow_overwrite: whether to overwrite the original file
         :raise BlobAlreadyExists: if the key already exists.
+        :raise UploadFailedError: if the server return error when uploading
         """
         raise NotImplementedError
 
@@ -73,6 +58,8 @@ class BlobStore:
         :param str key: The name of the key to download from.
         :param PathLike filepath: The path to the file to download to.
         :return path to download.
+
+        :raise DownloadFailedError: If due to server error or client error (such as disk full)
         """
         raise NotImplementedError
 
@@ -80,6 +67,8 @@ class BlobStore:
         """Download file to fh
         :param str key: The name of the key to download from.
         :param BinaryIO fh: The fileobj to the file to download to.
+
+        :raise DownloadFailedError: If due to server error or client error (such as disk full)
         """
         raise NotImplementedError
 

@@ -17,10 +17,10 @@ class Manager(Handler):
 
     def apply_permission(self, *args, **kwargs):
         """Apply for API Gateway Permissions"""
-        result = self._call("apply_permissions", *args, **kwargs)
+        result = self._call(self.client.api.apply_permissions, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))
 
     def grant_permission(self, *args, **kwargs):
         """Grant API gateway permissions for applications"""
-        result = self._call("grant_permissions", *args, **kwargs)
+        result = self._call(self.client.api.grant_permissions, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))

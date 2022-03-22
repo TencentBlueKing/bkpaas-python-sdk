@@ -8,6 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+import string
 from typing import Any, Dict, Optional
 
 from requests import Session as RequestSession
@@ -16,6 +17,40 @@ from requests.models import RequestHooksMixin
 from requests.sessions import merge_setting
 
 from bkapi_client_core import __version__
+from bkapi_client_core.exceptions import PathParamsMissing
+
+
+class _UrlRender(string.Formatter):
+    """_UrlRender should format the url by path parameters."""
+
+    def __init__(self, url, common_path_params=None):
+        self.url = url
+        self.common_path_params = common_path_params
+
+    def render(self, path_params=None):
+        """Render the url with path_params."""
+        real_path_params = merge_setting(path_params, self.common_path_params)
+
+        return self.format(self.url, **real_path_params)
+
+    def get_field(self, field_name, args, kwargs):
+        """Get the path parameter."""
+
+        # Why should I override `get_field` but not `get_value`?
+        # Because the `get_field` implementation allow to drill down the attributes by `.`.
+        # This feature is unnecessary and unsafe.
+
+        field_name = field_name.strip()
+
+        if field_name not in kwargs:
+            raise PathParamsMissing(
+                "url {url} path parameter is required: {field_name}".format(
+                    field_name=field_name,
+                    url=self.url,
+                ),
+            )
+
+        return kwargs[field_name], field_name
 
 
 class Session(RequestSession, RequestHooksMixin):
@@ -44,8 +79,9 @@ class Session(RequestSession, RequestHooksMixin):
         timeout=None,  # type: float
         **kwargs  # type: Any
     ):
-        url = url.format(**merge_setting(path_params, self.path_params))
-        return self.request(url=url, timeout=timeout or self.timeout, **kwargs)
+        render = _UrlRender(url, self.path_params)
+        rendered_url = render.render(path_params)
+        return self.request(url=rendered_url, timeout=timeout or self.timeout, **kwargs)
 
     def set_user_agent(
         self,

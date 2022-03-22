@@ -8,9 +8,11 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+from bkapi_client_core.exceptions import HTTPResponseError
 from faker import Faker
-from pytest import fixture
+from pytest import fixture, raises
 
+from apigw_manager.core.exceptions import ApiRequestError
 from apigw_manager.core.handler import Handler
 
 
@@ -21,7 +23,15 @@ def handler(api_instance, config):
 
 @fixture()
 def operation_id(faker: Faker):
-    return faker.color
+    return faker.color_name()
+
+
+@fixture()
+def operation(mocker, operation_id):
+    mock_operation = mocker.MagicMock()
+    mock_operation.name = operation_id
+
+    return mock_operation
 
 
 @fixture()
@@ -57,8 +67,9 @@ class TestHandler:
 
         assert handler._put_into_cache(operation_id, api_data, {})
 
-    def test_call_with_cache(self, handler: Handler, operation_id, faker, mocker):
-        mocker.patch.object(Handler, "_call", return_value={})
+    def test_call_with_cache(self, handler: Handler, operation, operation_id, faker, mocker):
+        result = faker.pydict()
+        operation.return_value = result
         mock_get_from_cache = mocker.patch.object(Handler, "_get_from_cache", return_value=(False, None))
         mock_put_into_cache = mocker.patch.object(Handler, "_put_into_cache", return_value=None)
 
@@ -67,11 +78,44 @@ class TestHandler:
             "api_name": api_name,
             "foo": "bar",
         }
-        handler._call_with_cache(operation_id, **kwargs)
+
+        handler._call_with_cache(operation, **kwargs)
 
         cache_key = {
             "api_name": api_name,
             "kwargs": {"api_name": api_name, "foo": "bar"},
         }
         mock_get_from_cache.assert_called_once_with(operation_id, cache_key)
-        mock_put_into_cache.assert_called_once_with(operation_id, cache_key, {})
+        mock_put_into_cache.assert_called_once_with(operation_id, cache_key, result)
+
+    def test_call_connect_error(self, handler: Handler, operation):
+        operation.side_effect = HTTPResponseError()
+        with raises(HTTPResponseError):
+            handler._call(operation)
+
+    def test_call_server_error(self, handler: Handler, operation, mocker):
+        operation.side_effect = HTTPResponseError(response=mocker.MagicMock(status_code=500))
+        with raises(HTTPResponseError):
+            handler._call(operation)
+
+    def test_call_request_error(self, handler: Handler, operation, mocker):
+        operation.side_effect = HTTPResponseError(
+            response=mocker.MagicMock(
+                status_code=400,
+                json=mocker.MagicMock(return_value={"code": "400", "message": "request error"}),
+            )
+        )
+
+        with raises(ApiRequestError):
+            handler._call(operation)
+
+    def test_call_request_error_with_no_json(self, handler: Handler, operation, mocker):
+        operation.side_effect = HTTPResponseError(
+            response=mocker.MagicMock(
+                status_code=400,
+                json=mocker.MagicMock(side_effect=ValueError()),
+            )
+        )
+
+        with raises(HTTPResponseError):
+            handler._call(operation)

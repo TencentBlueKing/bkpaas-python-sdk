@@ -10,6 +10,7 @@
 """
 import pytest
 
+from bkapi_client_core.exceptions import PathParamsMissing
 from bkapi_client_core.session import Session
 
 
@@ -26,6 +27,7 @@ class TestSession:
         "url, path_params, session_path_params",
         [
             ("http://example.com/red/", {}, {}),
+            ("http://example.com/{ color }/", {"color": "red"}, {}),
             ("http://example.com/{color}/", {"color": "red"}, {}),
             ("http://example.com/{color-name}/", {"color-name": "red"}, {}),
             ("http://example.com/{color_name}/", {"color_name": "red"}, {}),
@@ -37,6 +39,15 @@ class TestSession:
         session = Session(**{"path_params": session_path_params})
         result = session.handle(url, method="GET", path_params=path_params)
         assert result.json() == {"a": "b"}
+
+    def test_path_params_missing(self):
+        session = Session()
+
+        with pytest.raises(
+            PathParamsMissing,
+            match="url http://example.com/{color}/ path parameter is required: color",
+        ):  # type: ignore
+            session.handle("http://example.com/{color}/", method="GET")
 
     def test_user_agent(self, requests_mock, faker):
         url = faker.url()

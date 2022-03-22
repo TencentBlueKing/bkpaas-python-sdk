@@ -11,16 +11,15 @@
 import pytest
 
 from bkapi_client_core.apigateway.client import APIGatewayClient
+from bkapi_client_core.config import SettingKeys
 
 
 class TestAPIGatewayClient:
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        self.client = APIGatewayClient()
+    def test_init(self):
+        client = APIGatewayClient()
+        assert client._endpoint == "/{stage_name}"
 
-    def test_init(self, faker):
-        assert self.client._endpoint == "/{stage_name}"
-
+    def test_init_with_args(self, faker):
         endpoint = faker.pystr()
         stage = faker.pystr()
         client = APIGatewayClient(endpoint=endpoint, stage=stage)
@@ -43,3 +42,24 @@ class TestAPIGatewayClient:
     def test_get_endpoint(self, endpoint, stage, expected):
         client = APIGatewayClient(endpoint=endpoint, stage=stage)
         assert client._get_endpoint() == expected
+
+    @pytest.mark.parametrize(
+        "stage, mappings, expected",
+        [
+            (None, None, "prod"),
+            (None, {}, "prod"),
+            (None, {"": "prod"}, "prod"),
+            (None, {"nothing": "stag"}, "prod"),
+            (None, {"": "stag"}, "stag"),
+            ("stag", None, "stag"),
+            ("stag", {}, "stag"),
+            ("stag", {"": "stag"}, "stag"),
+            ("stag", {"nothing": "stag"}, "stag"),
+            ("stag", {"": "prod"}, "stag"),
+        ],
+    )
+    def test_default_stage(self, core_settings, stage, mappings, expected):
+        core_settings.set(SettingKeys.DEFAULT_STAGE_MAPPINGS, mappings)
+        client = APIGatewayClient(stage=stage)
+
+        assert client._stage == expected

@@ -2,6 +2,19 @@
 
 蓝鲸 API 网关管理 SDK，提供了基本的注册，同步，发布等功能。
 
+## 安装
+基础安装：
+
+```shell
+pip install apigw-manager
+```
+
+如果需要使用 apigw-manager 的中间件来解析 JWT，可以安装：
+
+```shell
+pip install "apigw-manager[cryptography]"
+```
+
 ## 功能
 
 - 根据预定义的 YAML 文件进行网关创建，更新，发布及资源同步操作
