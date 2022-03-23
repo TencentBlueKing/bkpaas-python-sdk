@@ -8,7 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
-import random
+import socket
 import threading
 import time
 from wsgiref.simple_server import make_server
@@ -18,10 +18,6 @@ import pytest
 from requests import codes
 
 from blue_krill.monitoring.probe.http import BKHttpProbe, HttpProbe
-
-
-def get_server_address():
-    return "localhost", random.randint(30000, 60000)
 
 
 class FakeApp:
@@ -54,22 +50,22 @@ class FakeApp:
 
 
 @pytest.fixture
+def usable_port():
+    sock = socket.socket()
+    sock.bind(('', 0))
+    return sock.getsockname()[1]
+
+
+@pytest.fixture
 def fake_app():
     return FakeApp()
 
 
 @pytest.fixture
-def httpd(fake_app):
-    for i in range(10):
-        server_address = get_server_address()
-        try:
-            with make_server(*server_address, fake_app) as httpd:
-                yield httpd
-                break
-        except OSError:
-            continue
-    else:
-        pytest.skip("failed to start http server")
+def httpd(fake_app, usable_port):
+    server_address = "localhost", usable_port
+    with make_server(*server_address, fake_app) as httpd:
+        yield httpd
 
 
 @pytest.fixture

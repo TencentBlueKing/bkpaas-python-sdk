@@ -8,7 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
-import random
+import socket
 import threading
 import time
 from socketserver import StreamRequestHandler, TCPServer
@@ -18,29 +18,25 @@ import pytest
 from blue_krill.monitoring.probe.tcp import InternetAddress, TCPProbe
 
 
-def get_server_address():
-    return InternetAddress(host="localhost", port=random.randint(30000, 60000))
+@pytest.fixture
+def usable_port():
+    sock = socket.socket()
+    sock.bind(('', 0))
+    return sock.getsockname()[1]
 
 
 @pytest.fixture
-def tcpd():
-    for i in range(10):
-        server_address = get_server_address()
+def tcpd(usable_port):
+    server_address = InternetAddress(host="localhost", port=usable_port)
+    with TCPServer(server_address, StreamRequestHandler, bind_and_activate=False) as tcpd:
+        tcpd.request_queue_size = 1
         try:
-            with TCPServer(server_address, StreamRequestHandler, bind_and_activate=False) as tcpd:
-                tcpd.request_queue_size = 1
-                try:
-                    tcpd.server_bind()
-                    tcpd.server_activate()
-                except Exception:
-                    tcpd.server_close()
-                    raise
-                yield tcpd
-                break
-        except OSError:
-            continue
-    else:
-        pytest.skip("failed to start http server")
+            tcpd.server_bind()
+            tcpd.server_activate()
+        except Exception:
+            tcpd.server_close()
+            raise
+        yield tcpd
 
 
 class BusyHandler(StreamRequestHandler):
@@ -67,10 +63,10 @@ class TestTCPProbe:
         return SomeTCPProbe()
 
     @pytest.fixture
-    def dummy_prober(self, ):
+    def dummy_prober(self, usable_port):
         class SomeTCPProbe(TCPProbe):
             timeout = 1
-            address = InternetAddress(host="localhost", port=random.randint(30000, 60000))
+            address = InternetAddress(host="localhost", port=usable_port)
 
         return SomeTCPProbe()
 

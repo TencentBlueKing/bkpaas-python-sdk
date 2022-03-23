@@ -11,8 +11,8 @@
 import os
 import time
 import uuid
-import pytest
 
+import pytest
 import redis
 
 from blue_krill.redis_tools.messaging import StreamChannel, StreamChannelSubscriber
@@ -20,9 +20,18 @@ from blue_krill.redis_tools.messaging import StreamChannel, StreamChannelSubscri
 
 @pytest.fixture
 def redis_db():
-    if "REDIS_PORT" not in os.environ:
-        raise pytest.skip("MISSING REDIS_PORT")
-    return redis.Redis(port=int(os.environ["REDIS_PORT"]), password=os.getenv("REDIS_PASSWORD", None))
+    """
+    Return a Redis client object configured from the given URL
+
+    For example::
+
+        redis://[[username]:[password]]@localhost:6379/0
+        rediss://[[username]:[password]]@localhost:6379/0
+        unix://[[username]:[password]]@/path/to/socket.sock?db=0
+    """
+    if "REDIS_URL" not in os.environ or not os.environ["REDIS_URL"]:
+        raise pytest.skip("MISSING REDIS_URL")
+    return redis.Redis.from_url(os.environ["REDIS_URL"])
 
 
 @pytest.fixture

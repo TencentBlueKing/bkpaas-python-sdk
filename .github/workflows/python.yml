@@ -37,9 +37,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.6, 3.7]
+        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
         poetry-version: [1.1.7]
-        os: [ubuntu-18.04, macos-latest, windows-latest]
+        os: [ubuntu-18.04, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v2
@@ -51,9 +51,17 @@ jobs:
       uses: abatilo/actions-poetry@v2.1.0
       with:
           poetry-version: ${{ matrix.poetry-version }}
+    - name: Start Redis Container
+      uses: supercharge/redis-github-action@1.4.0
+      if: runner.os == 'Linux'
+      with:
+        redis-version: 3.2.0
+    - name: Set Redis URL
+      if: runner.os == 'Linux'
+      run: |
+        echo "REDIS_URL=redis://localhost:6379/0" >> $GITHUB_ENV
     - name: Test blue-krill
       run: |
         cd sdks/blue-krill
         poetry install
         poetry run pytest
-        poetry build
