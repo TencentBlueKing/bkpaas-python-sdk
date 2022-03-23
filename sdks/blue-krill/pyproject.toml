@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "blue-krill"
-version = "1.0.12"
+version = "1.0.13"
 description = "Tools and common packages for blueking paas"
 license = "Apach License 2.0"
 readme = "README.md"
@@ -8,7 +8,7 @@ authors = ["blueking"]
 
 [tool.poetry.dependencies]
 python = ">=3.6.2,<3.11"
-dataclasses = {version = "^0.7", python = "~3.6"}
+dataclasses = {version = "^0.7", python = ">=3.6.2,<3.7"}
 cryptography = "^3.0.0"
 django-environ = "^0.4.0"
 pyjwt = "<2.0.0"

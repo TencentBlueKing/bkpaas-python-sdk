@@ -18,6 +18,7 @@ try:
 except ImportError:
     from distutils.core import setup
 
+
 import os.path
 
 readme = ''
@@ -31,7 +32,7 @@ if os.path.exists(readme_path):
 setup(
     long_description=readme,
     name='blue-krill',
-    version='1.0.12',
+    version='1.0.13',
     description='Tools and common packages for blueking paas',
     python_requires='<3.11,>=3.6.2',
     author='blueking',
@@ -69,7 +70,7 @@ setup(
         'click',
         'cryptography==3.*,>=3.0.0',
         'curlify==2.*,>=2.2.1',
-        'dataclasses==0.*,>=0.7.0; python_version == "3.6.*" and python_version >= "3.6.0"',
+        'dataclasses==0.*,>=0.7.0; python_version >= "3.6.2" and python_version < "3.7"',
         'django-environ==0.*,>=0.4.0',
         'pydantic==1.*,>=1.7.0',
         'pyjwt<2.0.0',
