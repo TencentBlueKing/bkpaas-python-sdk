@@ -18,6 +18,7 @@ try:
 except ImportError:
     from distutils.core import setup
 
+
 import os.path
 
 readme = ''
@@ -33,7 +34,7 @@ setup(
     name='blue-krill',
     version='1.0.13',
     description='Tools and common packages for blueking paas',
-    python_requires='<=3.10,>=3.6.2',
+    python_requires='<3.11,>=3.6.2',
     author='blueking',
     license='Apach License 2.0',
     entry_points={
@@ -69,7 +70,7 @@ setup(
         'click',
         'cryptography==3.*,>=3.0.0',
         'curlify==2.*,>=2.2.1',
-        'dataclasses==0.*,>=0.7.0; python_version == "3.6.*" and python_version >= "3.6.0"',
+        'dataclasses==0.*,>=0.7.0; python_version >= "3.6.2" and python_version < "3.7"',
         'django-environ==0.*,>=0.4.0',
         'pydantic==1.*,>=1.7.0',
         'pyjwt<2.0.0',
@@ -84,11 +85,11 @@ setup(
             "black==21.*,>=21.7.0.b0",
             "boto3==1.*,>=1.16.45",
             "celery==5.*,>=5.0.5",
-            "django==1.*,>=1.0.0",
+            "django==3.*,>=3.2.0",
             "django-rest-framework==0.*,>=0.1.0",
             "flake8-comprehensions==3.*,>=3.5.0",
             "isort==5.*,>=5.9.2",
-            "moto==1.*,>=1.3.16",
+            "moto==2.*,>=2.3.2",
             "mypy==0.*,>=0.910.0",
             "pyproject-flake8==0.*,>=0.0.1.a2",
             "pytest==6.*,>=6.2.2",
