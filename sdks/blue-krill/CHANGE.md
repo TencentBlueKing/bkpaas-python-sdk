@@ -1,5 +1,10 @@
 ## Change logs
 
+### 1.0.13
+
+- `blue_krill.web.drf_util` 增加依赖注入工具
+- `blue_krill` 支持 Python 3.8/3.9/3.10
+
 ### 1.0.12
 
 - `blue_krill.cubing_case` 兼容 python3.6 正则对驼峰命名解析的 bug.
