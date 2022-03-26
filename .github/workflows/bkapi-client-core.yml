@@ -22,9 +22,12 @@ jobs:
         uses: abatilo/actions-poetry@v2.1.0
         with:
           poetry-version: ${{ matrix.poetry-version }}
+      - name: debug
+        working-directory: sdks/bkapi-client-core
+        run: which -a poetry
       - name: Install dependencies
         working-directory: sdks/bkapi-client-core
-        run: poetry config virtualenvs.create false && poetry install
+        run: poetry install
       - name: Test
         working-directory: sdks/bkapi-client-core
         run: make linter test
