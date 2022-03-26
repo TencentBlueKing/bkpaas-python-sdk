@@ -37,6 +37,10 @@ def _get_client_by_settings(
         bk_app_secret=bk_app_secret or settings.get(SettingKeys.APP_SECRET),
     )
 
+    # disable global https verify
+    if settings.get(SettingKeys.BKAPI_CLIENT_DISABLE_SSL_VERIFY):
+        client.disable_ssl_verify()
+
     return client
 
 
@@ -79,7 +83,7 @@ def get_client_by_request(
     authorization.update(
         _get_authorization_from_cookies(
             request,
-            settings.get("BK_API_AUTHORIZATION_COOKIES_MAPPING", {}),
+            settings.get(SettingKeys.BK_API_AUTHORIZATION_COOKIES_MAPPING) or {},
         )
     )
     client.update_bkapi_authorization(**authorization)

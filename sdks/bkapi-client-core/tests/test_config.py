@@ -15,15 +15,31 @@ import pytest
 from bkapi_client_core.config import Settings
 
 
-@pytest.fixture
+@pytest.fixture()
 def env():
     return {}
 
 
-@pytest.fixture
+@pytest.fixture()
 def django_settings(faker):
     FakeSettings = namedtuple("FakeSettings", ["SETTINGS"])
     return FakeSettings(faker.pystr())
+
+
+class TestDefaultsSettings:
+    @pytest.fixture(autouse=True)
+    def setup(self, env):
+        self.settings = Settings()
+
+    def test_set_defaults_with_position_arg(self):
+        self.settings.set_defaults({
+            "KEY": "VALUE",
+        })
+        assert self.settings.get("KEY") == "VALUE"
+
+    def test_set_defaults_with_keyword_arg(self):
+        self.settings.set_defaults(KEY="VALUE")
+        assert self.settings.get("KEY") == "VALUE"
 
 
 class TestEnvSettings:
@@ -63,6 +79,13 @@ class TestEnvSettings:
         self.settings.declare_aliases("Y", ["Y1", "Y2"])
         assert self.settings.get("Y") == env["Y2"]
 
+    def test_defaults(self, env):
+        env["VAR_IN_ENV"] = "x1"
+        self.settings.set_defaults(VAR_IN_DEFAULTS="x2")
+
+        assert self.settings.get("VAR_IN_ENV") == "x1"
+        assert self.settings.get("VAR_IN_DEFAULTS") == "x2"
+
 
 class TestDjangoSettings(TestEnvSettings):
     @pytest.fixture(autouse=True)
@@ -93,3 +116,9 @@ class TestDjangoSettings(TestEnvSettings):
 
         assert self.settings.get("SETTINGS") == django_settings.SETTINGS
         assert self.settings.get("ENV") == env["ENV"]
+
+    def test_defaults(self, django_settings):
+        self.settings.set_defaults(VAR_IN_DEFAULTS="x2")
+
+        assert self.settings.get("SETTINGS") == django_settings.SETTINGS
+        assert self.settings.get("VAR_IN_DEFAULTS") == "x2"

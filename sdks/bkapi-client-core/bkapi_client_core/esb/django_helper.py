@@ -11,15 +11,17 @@
 from typing import Optional, Type
 
 from bkapi_client_core.client import BaseClient
-from bkapi_client_core.config import settings
+from bkapi_client_core.config import SettingKeys, settings
 from bkapi_client_core.django_helper import get_client_by_request as _get_client_by_request
 from bkapi_client_core.django_helper import get_client_by_username as _get_client_by_username
+
+_bk_api_use_test_env = False
 
 
 def _get_endpoint(endpoint=None):
     if endpoint:
         return endpoint
-    return settings.get("BK_COMPONENT_API_URL", "")
+    return settings.get(SettingKeys.BK_COMPONENT_API_URL, "")
 
 
 def _get_default_language():
@@ -52,8 +54,8 @@ def get_client_by_request(
         endpoint=_get_endpoint(endpoint),
         bk_app_code=bk_app_code,
         bk_app_secret=bk_app_secret,
-        bk_api_ver=settings.get("DEFAULT_BK_API_VER", "v2"),
-        use_test_env=settings.get("BK_API_USE_TEST_ENV", False),
+        bk_api_ver=settings.get(SettingKeys.DEFAULT_BK_API_VER),
+        use_test_env=settings.get(SettingKeys.BK_API_USE_TEST_ENV),
         language=_get_default_language(),
     )
 
@@ -79,8 +81,8 @@ def get_client_by_username(
         endpoint=_get_endpoint(endpoint),
         bk_app_code=bk_app_code,
         bk_app_secret=bk_app_secret,
-        bk_api_ver=settings.get("DEFAULT_BK_API_VER", "v2"),
-        use_test_env=settings.get("BK_API_USE_TEST_ENV", False),
+        bk_api_ver=settings.get(SettingKeys.DEFAULT_BK_API_VER),
+        use_test_env=settings.get(SettingKeys.BK_API_USE_TEST_ENV),
         language=_get_default_language(),
     )
 

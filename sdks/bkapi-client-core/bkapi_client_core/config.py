@@ -22,7 +22,17 @@ class SettingKeys:
 
     APP_CODE = "BK_APP_CODE"
     APP_SECRET = "BK_APP_SECRET"
+
+    # apigateway
     DEFAULT_STAGE_MAPPINGS = "BK_API_DEFAULT_STAGE_MAPPINGS"
+    BKAPI_CLIENT_DISABLE_SSL_VERIFY = "BKAPI_CLIENT_DISABLE_SSL_VERIFY"
+    BK_API_AUTHORIZATION_COOKIES_MAPPING = "BK_API_AUTHORIZATION_COOKIES_MAPPING"
+    BK_API_URL_TMPL = "BK_API_URL_TMPL"
+
+    # esb
+    BK_COMPONENT_API_URL = "BK_COMPONENT_API_URL"
+    DEFAULT_BK_API_VER = "DEFAULT_BK_API_VER"
+    BK_API_USE_TEST_ENV = "BK_API_USE_TEST_ENV"
 
 
 class Settings(object):
@@ -30,11 +40,12 @@ class Settings(object):
         self,
         env=None,  # type: Optional[Dict[str, Any]]
         settings=None,  # type: Any
-        aliases=None,  # type: Dict[str, List[str]]
+        aliases=None,  # type: Optional[Dict[str, List[str]]]
     ):
         self._aliases = aliases or {}  # type: Dict[str, List[str]]
         self._env = os.environ if env is None else env
         self._settings = django_settings if settings is None else settings
+        self._defaults = {}  # type: Dict[str, Any]
         self._resolved = {}  # type: Dict[str, Any]
 
     def get(
@@ -60,6 +71,10 @@ class Settings(object):
                 value = self._resolved[key] = self._env[key]
                 return value
 
+            if key in self._defaults:
+                value = self._resolved[key] = self._defaults[key]
+                return value
+
         return default
 
     def set(self, key, value):
@@ -68,6 +83,14 @@ class Settings(object):
         """
 
         self._resolved[key] = value
+
+    def set_defaults(self, defaults_=None, **mappings):
+        """
+        Set the default value of the key
+        """
+        self._defaults.update(mappings)
+        if defaults_:
+            self._defaults.update(defaults_)
 
     def reset(self):
         """
@@ -92,5 +115,13 @@ settings = Settings(
     aliases={
         SettingKeys.APP_CODE: ["BK_APP_CODE", "APP_CODE"],
         SettingKeys.APP_SECRET: ["BK_APP_SECRET", "SECRET_KEY"],
+    }
+)
+
+settings.set_defaults(
+    {
+        SettingKeys.DEFAULT_BK_API_VER: "v2",
+        SettingKeys.BK_API_USE_TEST_ENV: False,
+        SettingKeys.BKAPI_CLIENT_DISABLE_SSL_VERIFY: False,
     }
 )
