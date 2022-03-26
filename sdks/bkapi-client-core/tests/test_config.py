@@ -32,9 +32,11 @@ class TestDefaultsSettings:
         self.settings = Settings()
 
     def test_set_defaults_with_position_arg(self):
-        self.settings.set_defaults({
-            "KEY": "VALUE",
-        })
+        self.settings.set_defaults(
+            {
+                "KEY": "VALUE",
+            }
+        )
         assert self.settings.get("KEY") == "VALUE"
 
     def test_set_defaults_with_keyword_arg(self):
