@@ -1,0 +1,32 @@
+on: [push, pull_request]
+name: test
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [2.7, 3.6, 3.7]
+        poetry-version: [1.1.7]
+        os: [ubuntu-18.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Set up Poetry
+        uses: abatilo/actions-poetry@v2.1.0
+        with:
+          poetry-version: ${{ matrix.poetry-version }}
+      - name: Install dependencies
+        run: |
+          cd sdks/bkapi-client-core
+          poetry config virtualenvs.create false && poetry install
+      - name: Test
+        run: |
+          cd sdks/bkapi-client-core
+          make linter test
