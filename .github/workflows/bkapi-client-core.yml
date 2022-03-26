@@ -24,7 +24,7 @@ jobs:
           poetry-version: ${{ matrix.poetry-version }}
       - name: Install dependencies
         working-directory: sdks/bkapi-client-core
-        run: for i in {1..5}; do poetry install && break; done
+        run: pip install -r requirements_dev.txt
       - name: Test
         working-directory: sdks/bkapi-client-core
         run: make test
