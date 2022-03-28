@@ -39,10 +39,6 @@ class TestDefaultsSettings:
         )
         assert self.settings.get("KEY") == "VALUE"
 
-    def test_set_defaults_with_keyword_arg(self):
-        self.settings.set_defaults(KEY="VALUE")
-        assert self.settings.get("KEY") == "VALUE"
-
 
 class TestEnvSettings:
     @pytest.fixture(autouse=True)
@@ -83,7 +79,7 @@ class TestEnvSettings:
 
     def test_defaults(self, env):
         env["VAR_IN_ENV"] = "x1"
-        self.settings.set_defaults(VAR_IN_DEFAULTS="x2")
+        self.settings.set_defaults({"VAR_IN_DEFAULTS": "x2"})
 
         assert self.settings.get("VAR_IN_ENV") == "x1"
         assert self.settings.get("VAR_IN_DEFAULTS") == "x2"
@@ -120,7 +116,7 @@ class TestDjangoSettings(TestEnvSettings):
         assert self.settings.get("ENV") == env["ENV"]
 
     def test_defaults(self, django_settings):
-        self.settings.set_defaults(VAR_IN_DEFAULTS="x2")
+        self.settings.set_defaults({"VAR_IN_DEFAULTS": "x2"})
 
         assert self.settings.get("SETTINGS") == django_settings.SETTINGS
         assert self.settings.get("VAR_IN_DEFAULTS") == "x2"

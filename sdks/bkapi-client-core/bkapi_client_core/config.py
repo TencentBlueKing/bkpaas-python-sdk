@@ -25,7 +25,7 @@ class SettingKeys:
 
     # apigateway
     DEFAULT_STAGE_MAPPINGS = "BK_API_DEFAULT_STAGE_MAPPINGS"
-    BKAPI_CLIENT_DISABLE_SSL_VERIFY = "BKAPI_CLIENT_DISABLE_SSL_VERIFY"
+    BK_API_CLIENT_ENABLE_SSL_VERIFY = "BK_API_CLIENT_ENABLE_SSL_VERIFY"
     BK_API_AUTHORIZATION_COOKIES_MAPPING = "BK_API_AUTHORIZATION_COOKIES_MAPPING"
     BK_API_URL_TMPL = "BK_API_URL_TMPL"
 
@@ -84,11 +84,10 @@ class Settings(object):
 
         self._resolved[key] = value
 
-    def set_defaults(self, defaults_=None, **mappings):
+    def set_defaults(self, defaults_):
         """
         Set the default value of the key
         """
-        self._defaults.update(mappings)
         if defaults_:
             self._defaults.update(defaults_)
 
@@ -122,6 +121,6 @@ settings.set_defaults(
     {
         SettingKeys.DEFAULT_BK_API_VER: "v2",
         SettingKeys.BK_API_USE_TEST_ENV: False,
-        SettingKeys.BKAPI_CLIENT_DISABLE_SSL_VERIFY: False,
+        SettingKeys.BK_API_CLIENT_ENABLE_SSL_VERIFY: True,
     }
 )

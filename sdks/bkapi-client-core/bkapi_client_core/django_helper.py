@@ -38,7 +38,7 @@ def _get_client_by_settings(
     )
 
     # disable global https verify
-    if settings.get(SettingKeys.BKAPI_CLIENT_DISABLE_SSL_VERIFY):
+    if settings.get(SettingKeys.BK_API_CLIENT_ENABLE_SSL_VERIFY):
         client.disable_ssl_verify()
 
     return client

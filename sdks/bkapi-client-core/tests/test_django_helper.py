@@ -147,7 +147,7 @@ def test_get_client_by_request(
 
 @pytest.mark.parametrize("verify", [True, False])
 def test_get_client_by_request_with_verify(verify, core_settings, client_cls, django_request):
-    core_settings.set(SettingKeys.BKAPI_CLIENT_DISABLE_SSL_VERIFY, verify)
+    core_settings.set(SettingKeys.BK_API_CLIENT_ENABLE_SSL_VERIFY, verify)
     client = django_helper.get_client_by_request(client_cls, django_request)
 
     if verify:
@@ -183,7 +183,7 @@ def test_get_client_by_username(
 
 @pytest.mark.parametrize("verify", [True, False])
 def test_get_client_by_username_with_verify(verify, core_settings, client_cls, django_request):
-    core_settings.set(SettingKeys.BKAPI_CLIENT_DISABLE_SSL_VERIFY, verify)
+    core_settings.set(SettingKeys.BK_API_CLIENT_ENABLE_SSL_VERIFY, verify)
     client = django_helper.get_client_by_username(client_cls, "test")
 
     if verify:
