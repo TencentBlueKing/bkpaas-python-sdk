@@ -1817,7 +1817,7 @@ reference = "tencent"
 [metadata]
 lock-version = "1.1"
 python-versions = "^2.7 || ^3.6"
-content-hash = "6ccd2cb35b1b4bf30ee8bbc2c0e4449b62d3fae4b0be433eff81a12f10f05458"
+content-hash = "a02814aa50d2bdffe15826b901d36d68c7702ad7febdca0222a4fb14ff22551e"
 
 [metadata.files]
 aiohttp = [
