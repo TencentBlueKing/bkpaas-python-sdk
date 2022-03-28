@@ -1578,7 +1578,7 @@ django = []
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.1"
-content-hash = "7bf9647524fc466efb8ac999b93c8dc77cdf0d7699ada9606ed7717147e8d39b"
+content-hash = "97c85f9ae866b90f66030be1b4f8b9c47ea433b652fc190f5f03a65909f1ddd0"
 
 [metadata.files]
 appdirs = [
