@@ -11,7 +11,7 @@
 from typing import Optional, Type
 
 from bkapi_client_core.client import BaseClient
-from bkapi_client_core.config import settings
+from bkapi_client_core.config import SettingKeys, settings
 from bkapi_client_core.django_helper import get_client_by_request as _get_client_by_request
 from bkapi_client_core.django_helper import get_client_by_username as _get_client_by_username
 
@@ -20,7 +20,7 @@ def _get_endpoint(endpoint=None):
     if endpoint:
         return endpoint
 
-    return settings.get("BK_API_URL_TMPL", "")  # type: ignore
+    return settings.get(SettingKeys.BK_API_URL_TMPL, "")  # type: ignore
 
 
 def get_client_by_request(

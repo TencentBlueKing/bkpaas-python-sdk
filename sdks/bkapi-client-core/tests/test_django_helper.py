@@ -11,30 +11,31 @@
 import pytest
 
 from bkapi_client_core import django_helper
+from bkapi_client_core.config import SettingKeys
 from bkapi_client_core.exceptions import UserNotAuthenticated
 
 
-@pytest.fixture
+@pytest.fixture()
 def django_settings(settings):
     return settings
 
 
-@pytest.fixture
+@pytest.fixture()
 def client_cls(mocker):
     return mocker.MagicMock()
 
 
-@pytest.fixture
+@pytest.fixture()
 def django_request(mocker):
     return mocker.MagicMock()
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_get_client_by_settings(mocker):
     return mocker.patch.object(django_helper, "_get_client_by_settings")
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_validate_user_authenticated(mocker):
     return mocker.patch.object(django_helper, "_validate_user_authenticated")
 
@@ -144,6 +145,17 @@ def test_get_client_by_request(
     )
 
 
+@pytest.mark.parametrize("verify", [True, False])
+def test_get_client_by_request_with_verify(verify, core_settings, client_cls, django_request):
+    core_settings.set(SettingKeys.BK_API_CLIENT_ENABLE_SSL_VERIFY, verify)
+    client = django_helper.get_client_by_request(client_cls, django_request)
+
+    if verify:
+        client.disable_ssl_verify.assert_called_once_with()
+    else:
+        client.disable_ssl_verify.assert_not_called()
+
+
 @pytest.mark.parametrize(
     "bkoauth,expected_access_token",
     [
@@ -156,7 +168,6 @@ def test_get_client_by_username(
     mocker,
     faker,
     client_cls,
-    django_request,
     mock_get_client_by_settings,
     bkoauth,
     expected_access_token,
@@ -168,3 +179,14 @@ def test_get_client_by_username(
     client = django_helper.get_client_by_username(client_cls, "test", endpoint=endpoint)
     mock_get_client_by_settings.assert_called_once_with(client_cls, endpoint=endpoint)
     client.update_bkapi_authorization.assert_called_once_with(access_token=expected_access_token, bk_username="test")
+
+
+@pytest.mark.parametrize("verify", [True, False])
+def test_get_client_by_username_with_verify(verify, core_settings, client_cls, django_request):
+    core_settings.set(SettingKeys.BK_API_CLIENT_ENABLE_SSL_VERIFY, verify)
+    client = django_helper.get_client_by_username(client_cls, "test")
+
+    if verify:
+        client.disable_ssl_verify.assert_called_once_with()
+    else:
+        client.disable_ssl_verify.assert_not_called()
