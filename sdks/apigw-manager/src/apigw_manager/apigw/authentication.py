@@ -26,6 +26,10 @@ from apigw_manager.apigw.utils import get_configuration
 logger = logging.getLogger(__name__)
 
 
+class JWTTokenInvalid(Exception):
+    pass
+
+
 class ApiGatewayJWTMiddleware:
     """
     The middleware reads the JWT header information transmitted by the API gateway,
@@ -49,6 +53,7 @@ class ApiGatewayJWTMiddleware:
         configuration = get_configuration()
         self.default_api_name = configuration.api_name
         self.algorithm = getattr(settings, 'APIGW_JWT_ALGORITHM', self.ALGORITHM)
+        self.allow_invalid_jwt_token = getattr(settings, 'APIGW_ALLOW_INVALID_JWT_TOKEN', False)
 
     def get_public_key(self, api_name):
         """Return the public key specified by Settings"""
@@ -71,28 +76,32 @@ class ApiGatewayJWTMiddleware:
         )
 
     def __call__(self, request):
-        jwt_payload = request.META.get(self.JWT_KEY_NAME, '')
-        if not jwt_payload:
+        jwt_token = request.META.get(self.JWT_KEY_NAME, '')
+        if not jwt_token:
             return self.get_response(request)
 
-        jwt_header = self.decode_jwt_header(jwt_payload)
+        try:
+            jwt_header = self.decode_jwt_header(jwt_token)
+            api_name = jwt_header.get("kid") or self.default_api_name
+            public_key = self.get_public_key(api_name)
+            if not public_key:
+                logger.warning('no public key found')
+                return self.get_response(request)
 
-        api_name = jwt_header.get("kid") or self.default_api_name
-        public_key = self.get_public_key(api_name)
-        if not public_key:
-            logger.warning('no public key found')
-            return self.get_response(request)
+            algorithm = jwt_header.get("alg") or self.algorithm
+            decoded = self.decode_jwt(
+                jwt_token,
+                public_key,
+                algorithm,
+            )
 
-        algorithm = jwt_header.get("alg") or self.algorithm
-        decoded = self.decode_jwt(
-            jwt_payload,
-            public_key,
-            algorithm,
-        )
+            request.jwt = self.JWT(api_name=api_name, payload=decoded)
+            # disable csrf checks
+            request._dont_enforce_csrf_checks = True
+        except jwt.PyJWTError as e:
+            if not self.allow_invalid_jwt_token:
+                raise JWTTokenInvalid(e)
 
-        request.jwt = self.JWT(api_name=api_name, payload=decoded)
-        # disable csrf checks
-        request._dont_enforce_csrf_checks = True
         return self.get_response(request)
 
 
