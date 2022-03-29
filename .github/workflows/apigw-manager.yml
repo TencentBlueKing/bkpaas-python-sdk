@@ -26,6 +26,7 @@ jobs:
       - name: Set up Poetry
         uses: abatilo/actions-poetry@v2.1.0
       - name: Install dependencies
+        working-directory: sdks/apigw-manager
         run: |
           poetry export -f requirements.txt --without-hashes --output requirements.txt
           python -m pip install --upgrade pip
