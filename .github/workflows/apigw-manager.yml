@@ -27,7 +27,7 @@ jobs:
         uses: abatilo/actions-poetry@v2.1.0
       - name: Install dependencies
         run: |
-          poetry export -f requirements.txt --without-hashes > requirements.txt
+          poetry export -f requirements.txt --without-hashes --output requirements.txt
           python -m pip install --upgrade pip
           python -m pip install tox tox-gh-actions -r requirements.txt
       - name: Test with tox
