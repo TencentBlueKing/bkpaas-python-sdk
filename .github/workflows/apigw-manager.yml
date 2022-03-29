@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [2.7, 3.7]
+        python-version: [3.6, 3.7]
         os: [ubuntu-18.04, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
@@ -28,7 +28,7 @@ jobs:
       - name: Install dependencies
         working-directory: sdks/apigw-manager
         run: |
-          poetry export -f requirements.txt --without-hashes --output requirements.txt
+          poetry export -f requirements.txt --without-hashes --dev --output requirements.txt
           python -m pip install --upgrade pip
           python -m pip install tox tox-gh-actions -r requirements.txt
       - name: Test with tox
