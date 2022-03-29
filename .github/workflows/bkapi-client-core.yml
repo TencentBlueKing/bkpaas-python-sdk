@@ -6,7 +6,6 @@ jobs:
       fail-fast: false
       matrix:
         python-version: [2.7, 3.7]
-        poetry-version: [1.1.13]
         os: [ubuntu-18.04, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
@@ -14,17 +13,13 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Set up Poetry
-        uses: abatilo/actions-poetry@v2.1.0
-        with:
-          poetry-version: ${{ matrix.poetry-version }}
       - name: Install dependencies
-        working-directory: sdks/bkapi-client-core
-        run: poetry install
-      - name: Test
-        working-directory: sdks/bkapi-client-core
-        run: make test
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install tox tox-gh-actions
+      - name: Test with tox
+        run: tox
