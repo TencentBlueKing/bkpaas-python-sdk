@@ -30,7 +30,7 @@ jobs:
         run: |
           poetry export -f requirements.txt --without-hashes --dev --output requirements.txt
           python -m pip install --upgrade pip
-          python -m pip install tox tox-gh-actions -r requirements.txt
-      - name: Test with tox
+          python -m pip install -r requirements.txt
+      - name: Test
         working-directory: sdks/apigw-manager
-        run: tox
+        run: pytest -v --ds demo.settings --cov apigw_manager tests/
