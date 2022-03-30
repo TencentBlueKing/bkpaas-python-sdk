@@ -87,18 +87,18 @@ class TestParseValueList:
 
 class TestZipArchiveFile:
     def test_archive(self):
-        file_path = os.path.join(settings.BASE_DIR, "tests/docs/test")
+        file_path = os.path.join(settings.BASE_DIR, "tests", "files", "docs")
         with tempfile.TemporaryFile() as temp_file:
             ZipArchiveFile.archive(file_path, temp_file)
 
             with zipfile.ZipFile(temp_file, "r") as zip_:
-                zip_.namelist() == ["zh/get.md"]
+                assert zip_.namelist() == [os.path.join("zh", "get.md")]
 
     def test_get_archived_files(self):
-        file_path = os.path.join(settings.BASE_DIR, "tests/files/docs/zh/get.md")
+        file_path = os.path.join(settings.BASE_DIR, os.path.join("tests", "files", "docs", "zh", "get.md"))
         result = ZipArchiveFile._get_archived_files(file_path)
         assert result == {file_path: "get.md"}
 
-        file_path = os.path.join(settings.BASE_DIR, "tests/files/docs/")
+        file_path = os.path.join(settings.BASE_DIR, "tests", "files", "docs")
         result = ZipArchiveFile._get_archived_files(file_path)
-        assert result == {file_path + "zh/get.md": "zh/get.md"}
+        assert result == {os.path.join(file_path, "zh", "get.md"): os.path.join("zh", "get.md")}
