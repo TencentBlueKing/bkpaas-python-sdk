@@ -90,6 +90,12 @@ minversion = 3.23
 isolated_build = True
 envlist = py{27,36,37}-requests2-{20,26}
 
+[gh-actions]
+python =
+    2.7: py27
+    3.6: py36
+    3.7: py37
+
 [testenv]
 deps =
   -r requirements_tox.txt

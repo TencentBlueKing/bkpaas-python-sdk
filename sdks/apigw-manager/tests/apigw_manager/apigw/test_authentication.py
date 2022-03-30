@@ -68,6 +68,15 @@ def jwt_request(api_name, jwt_decoded, mock_request):
     return mock_request
 
 
+@pytest.fixture()
+def invalid_apigw_request(mock_request):
+    mock_request.META[
+        "HTTP_X_BKAPI_JWT"
+    ] = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoibHljIn0.iHy-g0R-q3sVnO16gTHV0FAIViEuKMGCtNLNVYSJX5c"
+
+    return mock_request
+
+
 class TestApiGatewayJWTMiddleware:
     @pytest.fixture(autouse=True)
     def setup_middleware(self, mock_response, api_name):
@@ -119,6 +128,21 @@ class TestApiGatewayJWTMiddleware:
 
         assert apigw_request.jwt.api_name == api_name
         assert apigw_request._dont_enforce_csrf_checks
+
+    def test_jwt_invalid(self, settings, public_key, invalid_apigw_request, mock_response):
+        middleware = authentication.ApiGatewayJWTMiddleware(mock_response)
+        settings.APIGW_PUBLIC_KEY = public_key
+
+        with pytest.raises(authentication.JWTTokenInvalid):
+            middleware(invalid_apigw_request)
+
+    def test_allow_jwt_invalid(self, settings, public_key, invalid_apigw_request, mock_response):
+        settings.APIGW_ALLOW_INVALID_JWT_TOKEN = True
+        settings.APIGW_PUBLIC_KEY = public_key
+
+        middleware = authentication.ApiGatewayJWTMiddleware(mock_response)
+        middleware(invalid_apigw_request)
+        mock_response.assert_called_with(invalid_apigw_request)
 
 
 class TestApiGatewayJWTGenericMiddleware:

@@ -87,6 +87,7 @@ python manage.py sync_apigw_resources -f resources.yaml  # 同步网关资源
 python manage.py sync_resource_docs_by_archive -f definition.yaml  # 同步资源文档
 python manage.py create_version_and_release_apigw -f definition.yaml  # 创建资源版本并发布
 python manage.py fetch_apigw_public_key  # 获取网关公钥
+python manage.py fetch_esb_public_key  # 获取 ESB 公钥（专用于同时接入 ESB 和网关的系统）
 ```
 
 ## 校验请求来自 APIGateway
