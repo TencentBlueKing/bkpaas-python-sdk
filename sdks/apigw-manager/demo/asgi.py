@@ -9,12 +9,11 @@
  specific language governing permissions and limitations under the License.
 """
 
-from django.conf.urls import url
 
-from demo import views
+import os
 
-urlpatterns = [
-    url(r'^test/jwt/?', views.jwt_info),
-    url(r'^test/app/?', views.jwt_app),
-    url(r'^test/user/?', views.jwt_user),
-]
+from django.core.asgi import get_asgi_application
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "demo.settings")
+
+application = get_asgi_application()

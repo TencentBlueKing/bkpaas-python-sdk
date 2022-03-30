@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "apigw-manager"
-version = "1.0.4"
+version = "1.0.5"
 description = ""
 authors = []
 
@@ -14,10 +14,14 @@ pyjwt = ">=1.6.4"
 python-dateutil = "2.8.1,<3.0.0"
 bkapi-bk-apigateway = "^1.0.3"
 bkapi-client-core = ">=1.1.0"
+django-environ = {version = ">=0.8.1", optional = true}
+Django = {version = ">=1.11.1", optional = true}
+cryptography = {version = ">=3.1.1", optional = true}
 
 [tool.poetry.extras]
-cryptography = ["cryptography>=3.1.1"]
-django=["django>=1.11.1"]
+cryptography = ["cryptography"]
+django=["django"]
+demo=["django-environ", "django"]
 
 [tool.poetry.dev-dependencies]
 m2r = "^0.2.1"

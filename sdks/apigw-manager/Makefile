@@ -4,6 +4,12 @@ export PYTHONPATH=src
 test:
 	pytest -v --ds demo.settings --cov apigw_manager tests/
 
+.PHONY: clean
+clean:
+	rm -rf build dist
+	find . -name "*.pyc" -delete
+	find . -name "__pycache__" -delete
+
 .PHONY: tox
 tox:
 	tox
