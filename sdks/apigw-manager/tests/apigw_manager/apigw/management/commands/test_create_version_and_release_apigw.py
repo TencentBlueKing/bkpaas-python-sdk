@@ -8,9 +8,29 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+from datetime import datetime
+
 import pytest
+import yaml
+from packaging.version import parse as parse_version
 
 from apigw_manager.apigw.management.commands.create_version_and_release_apigw import Command
+
+
+@pytest.fixture()
+def definition_file(tmpdir):
+    path = tmpdir.join("definition.yaml")
+    path.write(yaml.dump({}))
+    return path
+
+
+@pytest.fixture()
+def default_command_flags(definition_file):
+    return {
+        "define": [],
+        "file": str(definition_file),
+        "namespace": "",
+    }
 
 
 @pytest.fixture()
@@ -24,116 +44,179 @@ def releaser(mocker):
 
 
 @pytest.fixture()
-def default_command_flags():
-    return {
-        "define": [],
-        "file": None,
-        "namespace": "",
-    }
+def resource_sync_manager(mocker):
+    manager = mocker.MagicMock()
+    manager.get.return_value = {}
+    return manager
 
 
 @pytest.fixture()
-def command(mocker, fetcher, releaser):
+def datetime_now():
+    return datetime.now()
+
+
+@pytest.fixture()
+def command(mocker, fetcher, releaser, resource_sync_manager, datetime_now):
     command = Command()
     command.Fetcher = mocker.MagicMock(return_value=fetcher)
     command.Releaser = mocker.MagicMock(return_value=releaser)
+    command.ResourceSyncManager = mocker.MagicMock(return_value=resource_sync_manager)
+    command.now_func = mocker.MagicMock(return_value=datetime_now)
     return command
 
 
 @pytest.mark.parametrize(
-    "resource_version,title,expected",
+    "version, title, expected",
     [
-        (None, "v2", True),
-        ({"title": "v1"}, "v2", True),
-        ({"title": "v2"}, "v2", False),
+        (None, None, "None"),
+        ("1.0.0", None, "1.0.0"),
+        (None, "1.0.0", "1.0.0"),
+        ("1.0.1", "1.0.0", "1.0.1"),
+        ("v1.0.0", None, "1.0.0"),
+        (None, "v1.0.0", "1.0.0"),
     ],
 )
-def test_should_create_resource_version(command, resource_version, title, expected):
-    assert command._should_create_resource_version(resource_version, title) == expected
-
-
-def test_handle_title_not_change(command, fetcher, releaser, faker, default_command_flags):
-    title = faker.pystr()
-    name = faker.pystr()
-    fetcher.latest_resource_version.return_value = {"title": title, "name": name}
-    releaser.release.return_value = {
-        "resource_version_name": faker.pystr(),
-        "resource_version_title": faker.pystr(),
-        "stage_names": [faker.pystr()],
-    }
-
-    comment = faker.pystr()
-    stage = faker.pystr()
-    command.handle(title=title, comment=comment, stage=stage, **default_command_flags)
-
-    releaser.create_resource_version.assert_not_called()
-    releaser.release.assert_called_once_with(
-        resource_version_name=name,
-        comment=comment,
-        stage_names=stage,
+def test_get_version_from_definition(command, version, title, expected):
+    result = command.get_version_from_definition(
+        {
+            "version": version,
+            "title": title,
+        }
     )
 
+    assert str(result) == expected
 
-def test_handle_title_changed(command, fetcher, releaser, faker, default_command_flags):
-    resource_version_name = faker.pystr()
-    fetcher.latest_resource_version.return_value = {"title": faker.pystr()}
-    releaser.create_resource_version.return_value = {"name": resource_version_name}
 
-    title = faker.pystr()
-    comment = faker.pystr()
-    stage = faker.pystr()
-    command.handle(title=title, comment=comment, stage=stage, **default_command_flags)
+@pytest.mark.parametrize(
+    "resource_version, expected",
+    [
+        (None, "None"),
+        ({"version": "1.0.0"}, "1.0.0"),
+        ({"version": "v1.0.0"}, "1.0.0"),
+        ({"title": "1.0.0"}, "1.0.0"),
+        ({"title": "v1.0.0"}, "1.0.0"),
+    ],
+)
+def test_get_version_from_resource_version(command, resource_version, expected):
+    result = command.get_version_from_resource_version(resource_version)
 
-    releaser.create_resource_version.assert_any_call(title=title, comment=comment)
-    releaser.release.assert_any_call(
-        resource_version_name=resource_version_name,
-        comment=comment,
-        stage_names=stage,
+    assert str(result) == expected
+
+
+@pytest.mark.parametrize(
+    # This is a parametrize decorator. It allows you to create multiple test cases with the same
+    # method name.
+    "current, latest, expected_current_version, expected_latest_version",
+    [
+        (None, None, "0.0.1", "?"),
+        (None, "1.0.0", "1.0.0+{build_metadata}", "1.0.0"),
+        ("1.0.1", "1.0.0", "1.0.1", "1.0.0"),
+        ("1.0.1", None, "1.0.1", "?"),
+    ],
+)
+def test_fix_version(command, current, latest, expected_current_version, expected_latest_version, datetime_now):
+    current_version, latest_version = command.fix_version(
+        current and parse_version(current),
+        latest and parse_version(latest),
     )
 
-
-def test_handle_title_not_specified(command, fetcher, releaser, faker, default_command_flags):
-    resource_version_name = faker.pystr()
-    releaser.create_resource_version.return_value = {"name": resource_version_name}
-
-    comment = faker.pystr()
-    stage = faker.pystr()
-    command.handle(title=None, comment=comment, stage=stage, **default_command_flags)
-
-    releaser.create_resource_version.assert_called()
-    with pytest.raises(AssertionError):
-        releaser.create_resource_version.assert_any_call(title=None, comment=comment)
-
-    releaser.release.assert_any_call(
-        resource_version_name=resource_version_name,
-        comment=comment,
-        stage_names=stage,
-    )
+    build_metadata = datetime_now.strftime("%Y%m%d%H%M%S")
+    assert str(current_version) == expected_current_version.format(build_metadata=build_metadata)
+    assert str(latest_version) == expected_latest_version.format(build_metadata=build_metadata)
 
 
-def test_handle_from_definition_file(command, fetcher, releaser, tmp_path, faker):
-    fetcher.latest_resource_version.return_value = {"title": faker.pystr(), "name": faker.pystr()}
-    resource_version_name = faker.pystr()
-    releaser.create_resource_version.return_value = {"name": resource_version_name}
+class TestIsVersionChanged:
+    def test_public_part_changed(self, configuration, command):
+        current = parse_version("1.0.1")
+        latest = parse_version("1.0.0")
+        assert command.is_version_changed(configuration, current, latest)
 
-    file = tmp_path / "definition.yaml"
-    file.write_text('release: {"title": "test", "comment": "update"}')
 
-    stage = faker.pystr()
-    command.handle(
-        title=None,
-        comment=None,
-        stage=stage,
-        file=file,
-        define=[],
-        namespace="release",
-    )
-    releaser.create_resource_version.assert_any_call(
-        title="test",
-        comment="update",
-    )
-    releaser.release.assert_any_call(
-        resource_version_name=resource_version_name,
-        comment="update",
-        stage_names=stage,
-    )
+class TestHandle:
+    def test_handle_version_not_change(
+        self,
+        command,
+        fetcher,
+        releaser,
+        faker,
+        definition_file,
+        default_command_flags,
+    ):
+        version = "1.0.0"
+        definition_file.write(yaml.dump({"version": version}))
+        stage = faker.pystr()
+        resource_version_name = faker.pystr()
+        fetcher.latest_resource_version.return_value = {
+            "version": version,
+            "name": resource_version_name,
+        }
+        releaser.release.return_value = {
+            "resource_version_name": resource_version_name,
+            "resource_version_title": faker.pystr(),
+            "stage_names": [stage],
+        }
+
+        command.handle(stage=stage, **default_command_flags)
+
+        releaser.create_resource_version.assert_not_called()
+        releaser.release.assert_called_once_with(
+            resource_version_name=resource_version_name,
+            stage_names=stage,
+        )
+
+    def test_handle_version_changed(
+        self,
+        command,
+        fetcher,
+        releaser,
+        faker,
+        definition_file,
+        default_command_flags,
+    ):
+        current_version = "1.0.1"
+        definition_file.write(yaml.dump({"version": current_version}))
+        latest_version = "1.0.0"
+        resource_version_name = faker.pystr()
+        fetcher.latest_resource_version.return_value = {
+            "version": latest_version,
+        }
+        releaser.create_resource_version.return_value = {"name": resource_version_name}
+
+        stage = faker.pystr()
+        command.handle(stage=stage, **default_command_flags)
+
+        releaser.create_resource_version.assert_any_call(version=current_version)
+        releaser.release.assert_any_call(
+            resource_version_name=resource_version_name,
+            stage_names=stage,
+        )
+
+    def test_handle_version_not_set(
+        self,
+        command,
+        fetcher,
+        releaser,
+        faker,
+        definition_file,
+        default_command_flags,
+    ):
+        version = "1.0.0"
+        stage = faker.pystr()
+        resource_version_name = faker.pystr()
+        fetcher.latest_resource_version.return_value = {
+            "version": version,
+            "name": resource_version_name,
+        }
+        releaser.release.return_value = {
+            "resource_version_name": resource_version_name,
+            "resource_version_title": faker.pystr(),
+            "stage_names": [stage],
+        }
+
+        command.handle(stage=stage, **default_command_flags)
+
+        releaser.create_resource_version.assert_not_called()
+        releaser.release.assert_called_once_with(
+            resource_version_name=resource_version_name,
+            stage_names=stage,
+        )
