@@ -8,6 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+import json
 import logging
 
 from django.db.transaction import atomic
@@ -108,3 +109,17 @@ class ReleaseVersionManager(ContextManager):
             self.set_value(api_name, version)
 
         return version
+
+
+class ResourceSyncManager(ContextManager):
+    scope = "resource_sync"
+
+    def get(self, api_name):
+        value = self.get_value(api_name)
+        if not value:
+            return {}
+
+        return json.loads(value)
+
+    def set(self, api_name, added, deleted, updated):
+        self.set_value(api_name, json.dumps({"added": added, "deleted": deleted, "updated": updated}))
