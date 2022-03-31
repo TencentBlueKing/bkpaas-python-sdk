@@ -26,7 +26,7 @@ call_command() {
     
     shift
     log_info "Running command ${command}"
-    if ! python manage.py "${command}" "$@"
+    if ! apigw-manager "${command}" "$@"
     then
         status=$?
         log_warn "Command ${command} failed with status ${status}"
@@ -80,14 +80,14 @@ title "begin to db migrate"
 call_command migrate
 
 title "syncing apigateway"
-must_call_definition_command sync_apigw_config data/definition.yaml
-must_call_definition_command sync_apigw_stage data/definition.yaml
-must_call_definition_command sync_apigw_strategies data/definition.yaml
-must_call_definition_command apply_apigw_permissions data/definition.yaml
-must_call_definition_command grant_apigw_permissions data/definition.yaml
-must_call_definition_command sync_apigw_resources data/resources.yaml --delete
-must_call_definition_command sync_resource_docs_by_archive data/definition.yaml
-must_call_definition_command create_version_and_release_apigw data/definition.yaml
+must_call_definition_command sync_apigw_config definition.yaml
+must_call_definition_command sync_apigw_stage definition.yaml
+must_call_definition_command sync_apigw_strategies definition.yaml
+must_call_definition_command apply_apigw_permissions definition.yaml
+must_call_definition_command grant_apigw_permissions definition.yaml
+must_call_definition_command sync_apigw_resources resources.yaml --delete
+must_call_definition_command sync_resource_docs_by_archive definition.yaml
+must_call_definition_command create_version_and_release_apigw definition.yaml
 
 title "fetch apigateway public key"
 call_command fetch_apigw_public_key --print
