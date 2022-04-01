@@ -13,7 +13,7 @@ pyyaml = ">=5.4.1"
 pyjwt = ">=1.6.4"
 python-dateutil = "2.8.1,<3.0.0"
 bkapi-bk-apigateway = "^1.0.3"
-bkapi-client-core = ">=1.1.0"
+bkapi-client-core = ">=1.1.3"
 django-environ = {version = ">=0.8.1", optional = true}
 Django = {version = ">=1.11.1", optional = true}
 cryptography = {version = ">=3.1.1", optional = true}
