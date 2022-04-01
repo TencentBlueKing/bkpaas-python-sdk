@@ -11,11 +11,13 @@
 import datetime
 from tempfile import NamedTemporaryFile
 
+import boto3
 import pytest
 import six
 from django.conf import settings
 from django.core.files import File
 from django.core.files.base import ContentFile
+from moto import mock_s3
 
 from bkstorages.backends.rgw import RGWBoto3Storage
 
@@ -34,14 +36,19 @@ def make_content_file(content=None):
 
 @pytest.fixture
 def storage():
-    return RGWBoto3Storage()
+    with mock_s3():
+        instance = RGWBoto3Storage()
+        instance.endpoint_url = None
+        instance._connection = boto3.resource('s3', region_name='us-east-1')
+        instance._bucket = instance.connection.create_bucket(Bucket=instance.bucket_name)
+        yield instance
 
 
 class TestRGWBoto3Storage:
     def test_save_content_file(self, storage):
         f = make_content_file()
-        assert storage.save(u"/test/content_file", f) == "/test/content_file"
-        assert storage.save(u"/test/中文名称", f) == u"/test/中文名称"
+        assert storage.save("test/content_file", f) == "test/content_file"
+        assert storage.save("test/中文名称", f) == u"test/中文名称"
 
     def test_save_file(self, storage):
         with NamedTemporaryFile() as fp:
@@ -49,13 +56,13 @@ class TestRGWBoto3Storage:
             fp.flush()
 
             f = File(fp)
-            assert storage.save(u"/test/file", f) == "/test/file"
+            assert storage.save("test/file", f) == "test/file"
 
     def test_listdir(self, storage):
-        assert len(storage.listdir("/test")[1]) > 0
+        assert len(storage.listdir("test")[1]) == 0
 
     def test_delete(self, storage):
-        fname = u"/test/to_be_removed"
+        fname = "test/to_be_removed"
 
         storage.save(fname, make_content_file())
         assert storage.exists(fname) is True
@@ -64,26 +71,26 @@ class TestRGWBoto3Storage:
         assert storage.exists(fname) is False
 
     def test_mtime(self, storage):
-        fname = u"/test/content_file"
+        fname = "test/content_file"
         storage.save(fname, make_content_file())
         assert (datetime.datetime.now() - storage.modified_time(fname)).total_seconds() < 5
 
     def test_location(self, storage):
-        storage = RGWBoto3Storage(location="/static/")
-        storage.save(u"test/content_file", make_content_file())
+        storage.save("test/content_file", make_content_file())
 
     def test_url(self, storage):
-        fname = "/test/content_file"
+        fname = "test/content_file"
         storage.save(fname, make_content_file())
         assert (
-            storage.url("/test/content_file")
-            == f"{settings.RGW_ENDPOINT_URL}/{settings.RGW_STORAGE_BUCKET_NAME}{fname}"
+            storage.url("test/content_file") == f"https://{settings.RGW_STORAGE_BUCKET_NAME}.s3.amazonaws.com/{fname}"
         )
 
 
 class TestFileWithStorage:
     @pytest.mark.parametrize("pic_filename", ["tests/flower.png"])
-    def test_upload(self, pic_filename):
+    def test_upload(self, pic_filename, storage):
+        RGWFile._meta.get_field("user_file").storage = storage
+
         f = File(open(pic_filename, "rb"))
         obj = RGWFile(user_id=3074, user_file=f)
         obj.save()
