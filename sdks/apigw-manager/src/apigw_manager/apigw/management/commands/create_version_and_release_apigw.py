@@ -14,7 +14,7 @@ from django.conf import settings
 from packaging.version import parse as parse_version
 
 from apigw_manager.apigw.command import DefinitionCommand
-from apigw_manager.apigw.helper import ResourceSyncManager
+from apigw_manager.apigw.helper import ResourceSignatureManager
 from apigw_manager.core.fetch import Fetcher
 from apigw_manager.core.release import Releaser
 
@@ -25,25 +25,18 @@ class Command(DefinitionCommand):
     # 如何判断是否需要创建新版本？
     # 1.使用配置中的版本号与线上版本进行比较，如果不一致，直接使用配置中的版本号创建新版本
     # 2.如果配置中的版本号与线上版本一致，为了避免开发者忘记更新版本号的情况，获取同步结果进行判断：
-    #   - 如果有资源增加或删除，使用配置中的版本号（加上当前时间作为元数据）创建新版本
-    #   - 如果有更新，且配置了 settings.BK_API_RELEASE_FORCE_UPDATE_VERSION = True，同上一条的情况进行处理
+    #   - 如果有资源变更，使用配置中的版本号（加上当前时间作为元数据）创建新版本
 
     default_namespace = "release"
     Fetcher = Fetcher
     Releaser = Releaser
-    ResourceSyncManager = ResourceSyncManager
+    ResourceSignatureManager = ResourceSignatureManager
     now_func = datetime.now
 
     def add_arguments(self, parser):
         super().add_arguments(parser)
 
         parser.add_argument("-s", "--stage", default=[], nargs="+", help="release stages")
-        parser.add_argument(
-            "--force-update-version",
-            default=getattr(settings, "BK_API_RELEASE_FORCE_UPDATE_VERSION", False),
-            action="store_true",
-            help="force update release version when resource version is outdated",
-        )
 
     def get_version_from_definition(self, definition):
         for k in ["version", "title"]:
@@ -81,25 +74,20 @@ class Command(DefinitionCommand):
 
         return current_version, latest_version
 
-    def is_version_changed(self, configuration, current_version, latest_version, force_update_version=False):
-        # 版本不一致，说明有变更
-        if current_version.public != latest_version.public:
-            return True
+    def create_resource_version(self, releaser, api_name, current_version, latest_version):
+        manager = self.ResourceSignatureManager()
 
-        manager = self.ResourceSyncManager()
-        cached = manager.get(configuration.api_name)
+        # 版本一致，且没有变更
+        if current_version.public == latest_version.public and not manager.is_dirty(api_name):
+            return None
 
-        # 同步时有资源的增删，说明有变更
-        if cached.get("added", 0) > 0 or cached.get("deleted", 0) > 0:
-            return True
+        version = str(current_version)
+        resource_version = releaser.create_resource_version(version=version)
+        manager.reset_dirty(api_name)
 
-        # 因为每次同步都会更新资源时间，无法判断，所以需要指定强制更新
-        if force_update_version:
-            return cached.get("updated", 0) > 0
+        return resource_version
 
-        return False
-
-    def handle(self, stage, force_update_version=False, *args, **kwargs):
+    def handle(self, stage, *args, **kwargs):
         configuration = self.get_configuration(**kwargs)
         fetcher = self.Fetcher(configuration)
         resource_version = fetcher.latest_resource_version()
@@ -112,9 +100,14 @@ class Command(DefinitionCommand):
 
         releaser = self.Releaser(configuration)
 
-        if self.is_version_changed(configuration, current_version, latest_version, force_update_version):
-            version = str(current_version)
-            resource_version = releaser.create_resource_version(version=version)
+        created_resource_version = self.create_resource_version(
+            releaser,
+            configuration.api_name,
+            current_version,
+            latest_version,
+        )
+        if created_resource_version:
+            resource_version = created_resource_version
         else:
             print("resource_version already exists and is the latest, skip creating")
 

@@ -111,8 +111,8 @@ class ReleaseVersionManager(ContextManager):
         return version
 
 
-class ResourceSyncManager(ContextManager):
-    scope = "resource_sync"
+class ResourceSignatureManager(ContextManager):
+    scope = "resource_signature"
 
     def get(self, api_name):
         value = self.get_value(api_name)
@@ -121,5 +121,24 @@ class ResourceSyncManager(ContextManager):
 
         return json.loads(value)
 
-    def set(self, api_name, added, deleted, updated):
-        self.set_value(api_name, json.dumps({"added": added, "deleted": deleted, "updated": updated}))
+    def set(self, api_name, is_dirty, signature):
+        self.set_value(api_name, json.dumps({"is_dirty": is_dirty, "signature": signature}))
+
+    def get_signature(self, api_name):
+        saved = self.get(api_name)
+        return saved.get("signature", "")
+
+    def is_dirty(self, api_name, defaults=False):
+        saved = self.get(api_name)
+        return saved.get("is_dirty", defaults)
+
+    def mark_dirty(self, api_name):
+        self.set(api_name, True, self.get_signature(api_name))
+
+    def reset_dirty(self, api_name):
+        self.set(api_name, False, self.get_signature(api_name))
+
+    def update_signature(self, api_name, signature):
+        saved = self.get(api_name)
+        last_signature = saved.get("signature")
+        self.set(api_name, saved.get("is_dirty") or last_signature != signature, signature)

@@ -19,27 +19,27 @@ def manager(mocker):
 
 
 @pytest.fixture()
-def resource_sync_manager(mocker):
+def resource_signature_manager(mocker):
     return mocker.MagicMock()
 
 
 @pytest.fixture()
-def command(mocker, manager, resource_sync_manager):
+def command(mocker, manager, resource_signature_manager):
     command = Command()
     command.manager_class = mocker.MagicMock(return_value=manager)
-    command.ResourceSyncManager = mocker.MagicMock(return_value=resource_sync_manager)
+    command.ResourceSignatureManager = mocker.MagicMock(return_value=resource_signature_manager)
 
     return command
 
 
-def test_do(mocker, configuration, command, manager, resource_sync_manager):
+def test_do(mocker, configuration, command, manager, resource_signature_manager):
     result = {
         "added": [],
         "deleted": [{"id": 1}, {"id": 2}],
         "updated": [{"id": 3}],
     }
     manager.sync_resources_config.return_value = result
-    definition = mocker.MagicMock()
+    definition = {}
 
     command.do(manager, definition, configuration, delete=True)
 
@@ -47,9 +47,24 @@ def test_do(mocker, configuration, command, manager, resource_sync_manager):
         content=definition,
         delete=True,
     )
-    resource_sync_manager.set.assert_called_once_with(
-        configuration.api_name,
-        len(result["added"]),
-        len(result["deleted"]),
-        len(result["updated"]),
-    )
+    resource_signature_manager.update_signature.assert_called_once_with(configuration.api_name, mocker.ANY)
+    resource_signature_manager.mark_dirty.assert_called_once_with(configuration.api_name)
+
+
+@pytest.mark.parametrize(
+    "added, deleted, dirty",
+    [
+        (True, True, True),
+        (True, False, True),
+        (False, True, True),
+        (False, False, False),
+    ],
+)
+def test_update_signature(mocker, command, configuration, resource_signature_manager, added, deleted, dirty):
+    command.update_signature(configuration.api_name, {}, added, deleted)
+    resource_signature_manager.update_signature(configuration.api_name, mocker.ANY)
+
+    if dirty:
+        resource_signature_manager.mark_dirty.assert_called_once_with(configuration.api_name)
+    else:
+        resource_signature_manager.mark_clean.assert_not_called()

@@ -18,13 +18,6 @@ from apigw_manager.apigw.management.commands.create_version_and_release_apigw im
 
 
 @pytest.fixture()
-def definition_file(tmpdir):
-    path = tmpdir.join("definition.yaml")
-    path.write(yaml.dump({}))
-    return path
-
-
-@pytest.fixture()
 def default_command_flags(definition_file):
     return {
         "define": [],
@@ -60,7 +53,7 @@ def command(mocker, fetcher, releaser, resource_sync_manager, datetime_now):
     command = Command()
     command.Fetcher = mocker.MagicMock(return_value=fetcher)
     command.Releaser = mocker.MagicMock(return_value=releaser)
-    command.ResourceSyncManager = mocker.MagicMock(return_value=resource_sync_manager)
+    command.ResourceSignatureManager = mocker.MagicMock(return_value=resource_sync_manager)
     command.now_func = mocker.MagicMock(return_value=datetime_now)
     return command
 
@@ -125,13 +118,6 @@ def test_fix_version(command, current, latest, expected_current_version, expecte
     assert str(latest_version) == expected_latest_version.format(build_metadata=build_metadata)
 
 
-class TestIsVersionChanged:
-    def test_public_part_changed(self, configuration, command):
-        current = parse_version("1.0.1")
-        latest = parse_version("1.0.0")
-        assert command.is_version_changed(configuration, current, latest)
-
-
 class TestHandle:
     def test_handle_version_not_change(
         self,
@@ -140,6 +126,7 @@ class TestHandle:
         releaser,
         faker,
         definition_file,
+        resource_sync_manager,
         default_command_flags,
     ):
         version = "1.0.0"
@@ -155,10 +142,45 @@ class TestHandle:
             "resource_version_title": faker.pystr(),
             "stage_names": [stage],
         }
+        resource_sync_manager.is_dirty.return_value = False
 
         command.handle(stage=stage, **default_command_flags)
 
         releaser.create_resource_version.assert_not_called()
+        releaser.release.assert_called_once_with(
+            resource_version_name=resource_version_name,
+            stage_names=stage,
+        )
+
+    def test_handle_version_not_change_but_dirty(
+        self,
+        command,
+        fetcher,
+        releaser,
+        faker,
+        definition_file,
+        resource_sync_manager,
+        default_command_flags,
+    ):
+        version = "1.0.0"
+        definition_file.write(yaml.dump({"version": version}))
+        stage = faker.pystr()
+        resource_version_name = faker.pystr()
+        fetcher.latest_resource_version.return_value = {
+            "version": version,
+            "name": resource_version_name,
+        }
+        releaser.release.return_value = {
+            "resource_version_name": resource_version_name,
+            "resource_version_title": faker.pystr(),
+            "stage_names": [stage],
+        }
+        releaser.create_resource_version.return_value = {"name": resource_version_name}
+        resource_sync_manager.is_dirty.return_value = True
+
+        command.handle(stage=stage, **default_command_flags)
+
+        releaser.create_resource_version.assert_any_call(version=version)
         releaser.release.assert_called_once_with(
             resource_version_name=resource_version_name,
             stage_names=stage,
@@ -197,7 +219,7 @@ class TestHandle:
         fetcher,
         releaser,
         faker,
-        definition_file,
+        resource_sync_manager,
         default_command_flags,
     ):
         version = "1.0.0"
@@ -213,6 +235,7 @@ class TestHandle:
             "stage_names": [stage],
         }
 
+        resource_sync_manager.is_dirty.return_value = False
         command.handle(stage=stage, **default_command_flags)
 
         releaser.create_resource_version.assert_not_called()
