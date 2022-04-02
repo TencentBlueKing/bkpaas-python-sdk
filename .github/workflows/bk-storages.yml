@@ -1,8 +1,10 @@
-name: CI Check
+name: CI Check for bk-storages
 
 on:
   push:
     branches: [ master, staging ]
+    paths:
+      - 'sdks/bk-storages/**'
   pull_request:
     branches: [ master, staging ]
   workflow_dispatch:
@@ -19,20 +21,19 @@ jobs:
     - name: Format with isort
       run: |
         pip install isort==5.9.2
-        isort sdks/ --settings-path=sdks/blue-krill/pyproject.toml
+        isort sdks/ --settings-path=sdks/bk-storages/pyproject.toml
     - name: Format with black
       run: |
-        pip install black==21.7b0
-        black sdks/ --config=sdks/blue-krill/pyproject.toml
+        pip install black==21.7b0 click==8.0.4
+        black sdks/ --config=sdks/bk-storages/pyproject.toml
     - name: Lint with flake8
       run: |
         pip install pyproject-flake8
-        pflake8 sdks/ --config=sdks/blue-krill/pyproject.toml
+        pflake8 sdks/ --config=sdks/bk-storages/pyproject.toml
     - name: Lint with mypy
       run: |
         pip install mypy==0.910 types-requests==2.25.0 types-setuptools==57.0.0 types-dataclasses==0.1.5 types-redis==3.5.4 types-PyMySQL==1.0.0 types-six==0.1.7 types-toml==0.1.3
         mypy sdks/bk-storages --config-file=sdks/bk-storages/pyproject.toml
-        mypy sdks/blue-krill --config-file=sdks/blue-krill/pyproject.toml
   test:
     strategy:
       fail-fast: false
@@ -51,17 +52,8 @@ jobs:
       uses: abatilo/actions-poetry@v2.1.0
       with:
           poetry-version: ${{ matrix.poetry-version }}
-    - name: Start Redis Container
-      uses: supercharge/redis-github-action@1.4.0
-      if: runner.os == 'Linux'
-      with:
-        redis-version: 3.2.0
-    - name: Set Redis URL
-      if: runner.os == 'Linux'
+    - name: Test bk-storages
       run: |
-        echo "REDIS_URL=redis://localhost:6379/0" >> $GITHUB_ENV
-    - name: Test blue-krill
-      run: |
-        cd sdks/blue-krill
+        cd sdks/bk-storages
         poetry install
         poetry run pytest
