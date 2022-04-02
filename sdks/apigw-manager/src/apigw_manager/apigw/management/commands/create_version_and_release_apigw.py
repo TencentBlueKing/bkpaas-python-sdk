@@ -10,7 +10,6 @@
 """
 from datetime import datetime
 
-from django.conf import settings
 from packaging.version import parse as parse_version
 
 from apigw_manager.apigw.command import DefinitionCommand

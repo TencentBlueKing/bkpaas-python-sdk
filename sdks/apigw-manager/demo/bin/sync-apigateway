@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 log() {
     NOW=$(date +"%Y-%m-%d %H:%M:%S")
     echo "${NOW} [$1] $2"
@@ -76,18 +78,21 @@ must_call_definition_command() {
     esac
 }
 
+definition_file="${definition_file:-definition.yaml}"
+resources_file="${resources_file:-resources.yaml}"
+
 title "begin to db migrate"
 call_command migrate
 
 title "syncing apigateway"
-must_call_definition_command sync_apigw_config definition.yaml
-must_call_definition_command sync_apigw_stage definition.yaml
-must_call_definition_command sync_apigw_strategies definition.yaml
-must_call_definition_command apply_apigw_permissions definition.yaml
-must_call_definition_command grant_apigw_permissions definition.yaml
-must_call_definition_command sync_apigw_resources resources.yaml --delete
-must_call_definition_command sync_resource_docs_by_archive definition.yaml
-must_call_definition_command create_version_and_release_apigw definition.yaml
+must_call_definition_command sync_apigw_config "${definition_file}"
+must_call_definition_command sync_apigw_stage "${definition_file}"
+must_call_definition_command sync_apigw_strategies "${definition_file}"
+must_call_definition_command apply_apigw_permissions "${definition_file}"
+must_call_definition_command grant_apigw_permissions "${definition_file}"
+must_call_definition_command sync_apigw_resources "${resources_file}" --delete
+must_call_definition_command sync_resource_docs_by_archive "${definition_file}"
+must_call_definition_command create_version_and_release_apigw "${definition_file}"
 
 title "fetch apigateway public key"
 call_command fetch_apigw_public_key --print

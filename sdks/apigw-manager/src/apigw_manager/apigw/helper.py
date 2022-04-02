@@ -46,9 +46,12 @@ class Definition:
 
         return namespace.split(".")
 
-    def get(self, namespace):
+    def get(self, namespace, defaults=None):
         """Get the definition according to the namespace"""
-        return get_item(self.loaded, self._get_namespace_list(namespace))
+        try:
+            return get_item(self.loaded, self._get_namespace_list(namespace))
+        except (KeyError, IndexError):
+            return defaults
 
 
 class ContextManager:
