@@ -10,6 +10,7 @@
 """
 from datetime import datetime
 
+from packaging.version import LegacyVersion
 from packaging.version import parse as parse_version
 
 from apigw_manager.apigw.command import DefinitionCommand
@@ -57,6 +58,10 @@ class Command(DefinitionCommand):
             return parse_version(value)
 
     def fix_version(self, current_version, latest_version):
+        # 非语义化版本，直接忽略
+        if isinstance(latest_version, LegacyVersion):
+            latest_version = None
+
         # 没有发布记录且没配置版本
         if current_version is None and latest_version is None:
             return parse_version("0.0.1"), parse_version("?")

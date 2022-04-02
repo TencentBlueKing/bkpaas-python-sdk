@@ -110,7 +110,7 @@ class Handler(object):
 
     def _convert_operation_exception(self, err: HTTPResponseError):
         response = err.response
-        if not response or response.status_code / 100 != 4:
+        if response is None or response.status_code / 100 != 4:
             return err
 
         try:
