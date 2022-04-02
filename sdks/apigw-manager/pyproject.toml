@@ -18,11 +18,12 @@ django-environ = {version = ">=0.8.1", optional = true}
 Django = {version = ">=1.11.1", optional = true}
 cryptography = {version = ">=3.1.1", optional = true}
 mysqlclient = {version = ">=2.1.0", optional = true}
+packaging = {version = ">=21.0", optional = true}
 
 [tool.poetry.extras]
 cryptography = ["cryptography"]
-django=["django"]
-demo=["django-environ", "django", "mysqlclient"]
+django=["django", "packaging"]
+demo=["django-environ", "django", "mysqlclient", "packaging"]
 
 [tool.poetry.dev-dependencies]
 m2r = "^0.2.1"
