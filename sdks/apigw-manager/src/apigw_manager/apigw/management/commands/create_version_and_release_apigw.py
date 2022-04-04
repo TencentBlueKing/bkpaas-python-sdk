@@ -36,6 +36,8 @@ class Command(DefinitionCommand):
     def add_arguments(self, parser):
         super().add_arguments(parser)
 
+        parser.add_argument("-t", "--title", default=None, help="release title")
+        parser.add_argument("-c", "--comment", default="", help="release comment")
         parser.add_argument("-s", "--stage", default=[], nargs="+", help="release stages")
 
     def get_version_from_definition(self, definition):
@@ -78,7 +80,15 @@ class Command(DefinitionCommand):
 
         return current_version, latest_version
 
-    def create_resource_version(self, releaser, api_name, current_version, latest_version):
+    def create_resource_version(
+        self,
+        releaser,
+        api_name,
+        current_version,
+        latest_version,
+        title,
+        comment,
+    ):
         manager = self.ResourceSignatureManager()
 
         # 版本一致，且没有变更
@@ -86,12 +96,16 @@ class Command(DefinitionCommand):
             return None
 
         version = str(current_version)
-        resource_version = releaser.create_resource_version(version=version)
+        resource_version = releaser.create_resource_version(
+            version=version,
+            title=title,
+            comment=comment,
+        )
         manager.reset_dirty(api_name)
 
         return resource_version
 
-    def handle(self, stage, *args, **kwargs):
+    def handle(self, stage, title, comment, *args, **kwargs):
         configuration = self.get_configuration(**kwargs)
         fetcher = self.Fetcher(configuration)
         resource_version = fetcher.latest_resource_version()
@@ -105,10 +119,12 @@ class Command(DefinitionCommand):
         releaser = self.Releaser(configuration)
 
         created_resource_version = self.create_resource_version(
-            releaser,
-            configuration.api_name,
-            current_version,
-            latest_version,
+            releaser=releaser,
+            api_name=configuration.api_name,
+            current_version=current_version,
+            latest_version=latest_version,
+            title=title or definition.get("title", ""),
+            comment=comment or definition.get("comment", ""),
         )
         if created_resource_version:
             resource_version = created_resource_version
@@ -117,6 +133,8 @@ class Command(DefinitionCommand):
 
         result = releaser.release(
             resource_version_name=resource_version["name"],
+            title=title or resource_version.get("title", ""),
+            comment=comment or resource_version.get("comment", ""),
             stage_names=stage,
         )
         print(

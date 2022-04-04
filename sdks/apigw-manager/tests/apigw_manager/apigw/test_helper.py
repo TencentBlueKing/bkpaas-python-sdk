@@ -146,7 +146,7 @@ class TestResourceSignatureManager:
             "signature": "signature",
         }
 
-    def test_get_signature_defaults(self, faker):
+    def test_get_signature_default(self, faker):
         assert self.manager.get_signature(faker.pystr()) == ""
 
     def test_get_signature(self, faker):
@@ -167,7 +167,7 @@ class TestResourceSignatureManager:
         "is_dirty",
         [True, False],
     )
-    def test_is_dirty_defaults(self, faker, is_dirty):
+    def test_is_dirty_default(self, faker, is_dirty):
         api_name = faker.pystr()
         assert self.manager.is_dirty(api_name, is_dirty) == is_dirty
 

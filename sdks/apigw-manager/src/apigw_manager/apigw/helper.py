@@ -46,12 +46,12 @@ class Definition:
 
         return namespace.split(".")
 
-    def get(self, namespace, defaults=None):
+    def get(self, namespace, default=None):
         """Get the definition according to the namespace"""
         try:
             return get_item(self.loaded, self._get_namespace_list(namespace))
         except (KeyError, IndexError):
-            return defaults
+            return default
 
 
 class ContextManager:
@@ -116,6 +116,10 @@ class ReleaseVersionManager(ContextManager):
 
 class ResourceSignatureManager(ContextManager):
     scope = "resource_signature"
+    # is_dirty 表示对环境资源进行了改动，但是还没有发布的状态，可能有两种更新的方式：
+    # 1. 同步时，发现当前资源签名和上次不一致
+    # 2. 其他明确需要发布的场景，比如同步接口时，发现有资源的增删
+    # 原则是，如果有涉及到需发布的变更，就要设置 dirty，发布后重置，尽可能避免漏发的情况
 
     def get(self, api_name):
         value = self.get_value(api_name)
@@ -131,9 +135,9 @@ class ResourceSignatureManager(ContextManager):
         saved = self.get(api_name)
         return saved.get("signature", "")
 
-    def is_dirty(self, api_name, defaults=False):
+    def is_dirty(self, api_name, default=False):
         saved = self.get(api_name)
-        return saved.get("is_dirty", defaults)
+        return saved.get("is_dirty", default)
 
     def mark_dirty(self, api_name):
         self.set(api_name, True, self.get_signature(api_name))

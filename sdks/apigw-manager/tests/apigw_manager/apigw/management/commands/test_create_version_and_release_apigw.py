@@ -23,6 +23,8 @@ def default_command_flags(definition_file):
         "define": [],
         "file": str(definition_file),
         "namespace": "",
+        "title": "",
+        "comment": "",
     }
 
 
@@ -133,9 +135,13 @@ class TestHandle:
         definition_file.write(yaml.dump({"version": version}))
         stage = faker.pystr()
         resource_version_name = faker.pystr()
+        resource_version_title = faker.pystr()
+        resource_version_comment = faker.pystr()
         fetcher.latest_resource_version.return_value = {
             "version": version,
             "name": resource_version_name,
+            "title": resource_version_title,
+            "comment": resource_version_comment,
         }
         releaser.release.return_value = {
             "resource_version_name": resource_version_name,
@@ -148,8 +154,10 @@ class TestHandle:
 
         releaser.create_resource_version.assert_not_called()
         releaser.release.assert_called_once_with(
-            resource_version_name=resource_version_name,
             stage_names=stage,
+            resource_version_name=resource_version_name,
+            title=resource_version_title,
+            comment=resource_version_comment,
         )
 
     def test_handle_version_not_change_but_dirty(
@@ -162,8 +170,19 @@ class TestHandle:
         resource_sync_manager,
         default_command_flags,
     ):
+        resource_version_name = faker.pystr()
+        resource_version_title = faker.pystr()
+        resource_version_comment = faker.pystr()
         version = "1.0.0"
-        definition_file.write(yaml.dump({"version": version}))
+        definition_file.write(
+            yaml.dump(
+                {
+                    "version": version,
+                    "title": resource_version_title,
+                    "comment": resource_version_comment,
+                }
+            )
+        )
         stage = faker.pystr()
         resource_version_name = faker.pystr()
         fetcher.latest_resource_version.return_value = {
@@ -175,15 +194,25 @@ class TestHandle:
             "resource_version_title": faker.pystr(),
             "stage_names": [stage],
         }
-        releaser.create_resource_version.return_value = {"name": resource_version_name}
+        releaser.create_resource_version.return_value = {
+            "name": resource_version_name,
+            "title": resource_version_title,
+            "comment": resource_version_comment,
+        }
         resource_sync_manager.is_dirty.return_value = True
 
         command.handle(stage=stage, **default_command_flags)
 
-        releaser.create_resource_version.assert_any_call(version=version)
+        releaser.create_resource_version.assert_any_call(
+            version=version,
+            title=resource_version_title,
+            comment=resource_version_comment,
+        )
         releaser.release.assert_called_once_with(
-            resource_version_name=resource_version_name,
             stage_names=stage,
+            resource_version_name=resource_version_name,
+            title=resource_version_title,
+            comment=resource_version_comment,
         )
 
     def test_handle_version_changed(
@@ -195,22 +224,44 @@ class TestHandle:
         definition_file,
         default_command_flags,
     ):
-        current_version = "1.0.1"
-        definition_file.write(yaml.dump({"version": current_version}))
-        latest_version = "1.0.0"
         resource_version_name = faker.pystr()
+        resource_version_title = faker.pystr()
+        resource_version_comment = faker.pystr()
+        current_version = "1.0.1"
+        definition_file.write(
+            yaml.dump(
+                {
+                    "version": current_version,
+                    "title": resource_version_title,
+                    "comment": resource_version_comment,
+                }
+            )
+        )
+        latest_version = "1.0.0"
         fetcher.latest_resource_version.return_value = {
             "version": latest_version,
         }
-        releaser.create_resource_version.return_value = {"name": resource_version_name}
+
+        releaser.create_resource_version.return_value = {
+            "version": current_version,
+            "name": resource_version_name,
+            "title": resource_version_title,
+            "comment": resource_version_comment,
+        }
 
         stage = faker.pystr()
         command.handle(stage=stage, **default_command_flags)
 
-        releaser.create_resource_version.assert_any_call(version=current_version)
+        releaser.create_resource_version.assert_any_call(
+            version=current_version,
+            title=resource_version_title,
+            comment=resource_version_comment,
+        )
         releaser.release.assert_any_call(
-            resource_version_name=resource_version_name,
             stage_names=stage,
+            resource_version_name=resource_version_name,
+            title=resource_version_title,
+            comment=resource_version_comment,
         )
 
     def test_handle_version_not_set(
@@ -225,9 +276,13 @@ class TestHandle:
         version = "1.0.0"
         stage = faker.pystr()
         resource_version_name = faker.pystr()
+        resource_version_title = faker.pystr()
+        resource_version_comment = faker.pystr()
         fetcher.latest_resource_version.return_value = {
             "version": version,
             "name": resource_version_name,
+            "title": resource_version_title,
+            "comment": resource_version_comment,
         }
         releaser.release.return_value = {
             "resource_version_name": resource_version_name,
@@ -240,6 +295,8 @@ class TestHandle:
 
         releaser.create_resource_version.assert_not_called()
         releaser.release.assert_called_once_with(
-            resource_version_name=resource_version_name,
             stage_names=stage,
+            resource_version_name=resource_version_name,
+            title=resource_version_title,
+            comment=resource_version_comment,
         )
