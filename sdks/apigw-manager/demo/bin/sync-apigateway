@@ -85,19 +85,19 @@ title "begin to db migrate"
 call_command migrate apigw
 
 title "syncing apigateway"
-must_call_definition_command sync_apigw_config "${definition_file}"
-must_call_definition_command sync_apigw_stage "${definition_file}"
-must_call_definition_command sync_apigw_strategies "${definition_file}"
-must_call_definition_command apply_apigw_permissions "${definition_file}"
-must_call_definition_command grant_apigw_permissions "${definition_file}"
-must_call_definition_command sync_apigw_resources "${resources_file}" --delete
-must_call_definition_command sync_resource_docs_by_archive "${definition_file}"
-must_call_definition_command create_version_and_release_apigw "${definition_file}"
+must_call_definition_command sync_apigw_config "${definition_file}" ${SYNC_APIGW_CONFIG_ARGS}
+must_call_definition_command sync_apigw_stage "${definition_file}" ${SYNC_APIGW_STAGE_ARGS}
+must_call_definition_command sync_apigw_strategies "${definition_file}" ${SYNC_APIGW_STRATEGIES_ARGS}
+must_call_definition_command apply_apigw_permissions "${definition_file}" ${APPLY_APIGW_PERMISSIONS_ARGS}
+must_call_definition_command grant_apigw_permissions "${definition_file}" ${GRANT_APIGW_PERMISSIONS_ARGS}
+must_call_definition_command sync_apigw_resources "${resources_file}" ${SYNC_APIGW_RESOURCES_ARGS:-"--delete"}
+must_call_definition_command sync_resource_docs_by_archive "${definition_file}" ${SYNC_RESOURCE_DOCS_BY_ARCHIVE_ARGS}
+must_call_definition_command create_version_and_release_apigw "${definition_file}" ${CREATE_VERSION_AND_RELEASE_APIGW_ARGS}
 
 title "fetch apigateway public key"
 call_command fetch_apigw_public_key --print > apigateway.pub
 
 title "fetch esb public key"
-call_command fetch_esb_public_key --print
+call_command fetch_esb_public_key ${FETCH_ESB_PUBLIC_KEY_ARGS}
 
 title "done"
