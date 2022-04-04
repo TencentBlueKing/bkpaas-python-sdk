@@ -95,7 +95,7 @@ must_call_definition_command sync_resource_docs_by_archive "${definition_file}" 
 must_call_definition_command create_version_and_release_apigw "${definition_file}" ${CREATE_VERSION_AND_RELEASE_APIGW_ARGS}
 
 title "fetch apigateway public key"
-call_command fetch_apigw_public_key --print > apigateway.pub
+apigw-manager fetch_apigw_public_key --print > "${APIGW_PUBLIC_KEY_PATH:-apigateway.pub}"
 
 title "fetch esb public key"
 call_command fetch_esb_public_key ${FETCH_ESB_PUBLIC_KEY_ARGS}
