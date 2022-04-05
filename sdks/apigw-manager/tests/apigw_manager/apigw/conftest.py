@@ -9,6 +9,7 @@
  * specific language governing permissions and limitations under the License.
 """
 import pytest
+import yaml
 
 from apigw_manager.apigw.utils import get_configuration
 
@@ -16,3 +17,10 @@ from apigw_manager.apigw.utils import get_configuration
 @pytest.fixture()
 def configuration():
     return get_configuration()
+
+
+@pytest.fixture()
+def definition_file(tmpdir):
+    path = tmpdir.join("definition.yaml")
+    path.write(yaml.dump({}))
+    return path

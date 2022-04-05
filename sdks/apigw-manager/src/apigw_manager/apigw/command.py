@@ -65,7 +65,7 @@ class DefinitionCommand(ApiCommand):
         if definition is None:
             return {}
 
-        return definition.get(namespace)
+        return definition.get(namespace, {})
 
     def do(self, manager, definition, *args, **kwargs):
         pass

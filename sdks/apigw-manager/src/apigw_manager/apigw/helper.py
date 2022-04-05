@@ -8,6 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+import json
 import logging
 
 from django.db.transaction import atomic
@@ -45,9 +46,12 @@ class Definition:
 
         return namespace.split(".")
 
-    def get(self, namespace):
+    def get(self, namespace, default=None):
         """Get the definition according to the namespace"""
-        return get_item(self.loaded, self._get_namespace_list(namespace))
+        try:
+            return get_item(self.loaded, self._get_namespace_list(namespace))
+        except (KeyError, IndexError):
+            return default
 
 
 class ContextManager:
@@ -108,3 +112,40 @@ class ReleaseVersionManager(ContextManager):
             self.set_value(api_name, version)
 
         return version
+
+
+class ResourceSignatureManager(ContextManager):
+    scope = "resource_signature"
+    # is_dirty 表示对环境资源进行了改动，但是还没有发布的状态，可能有两种更新的方式：
+    # 1. 同步时，发现当前资源签名和上次不一致
+    # 2. 其他明确需要发布的场景，比如同步接口时，发现有资源的增删
+    # 原则是，如果有涉及到需发布的变更，就要设置 dirty，发布后重置，尽可能避免漏发的情况
+
+    def get(self, api_name):
+        value = self.get_value(api_name)
+        if not value:
+            return {}
+
+        return json.loads(value)
+
+    def set(self, api_name, is_dirty, signature):
+        self.set_value(api_name, json.dumps({"is_dirty": is_dirty, "signature": signature}))
+
+    def get_signature(self, api_name):
+        saved = self.get(api_name)
+        return saved.get("signature", "")
+
+    def is_dirty(self, api_name, default=False):
+        saved = self.get(api_name)
+        return saved.get("is_dirty", default)
+
+    def mark_dirty(self, api_name):
+        self.set(api_name, True, self.get_signature(api_name))
+
+    def reset_dirty(self, api_name):
+        self.set(api_name, False, self.get_signature(api_name))
+
+    def update_signature(self, api_name, signature):
+        saved = self.get(api_name)
+        last_signature = saved.get("signature")
+        self.set(api_name, saved.get("is_dirty") or last_signature != signature, signature)

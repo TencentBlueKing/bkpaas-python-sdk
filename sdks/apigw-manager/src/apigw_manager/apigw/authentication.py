@@ -19,6 +19,7 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import AnonymousUser
 from django.core.cache import caches
 from django.core.cache.backends.dummy import DummyCache
+from future.utils import raise_from
 
 from apigw_manager.apigw.helper import PublicKeyManager
 from apigw_manager.apigw.utils import get_configuration
@@ -100,7 +101,7 @@ class ApiGatewayJWTMiddleware:
             request._dont_enforce_csrf_checks = True
         except jwt.PyJWTError as e:
             if not self.allow_invalid_jwt_token:
-                raise JWTTokenInvalid(e)
+                raise_from(JWTTokenInvalid, e)
 
         return self.get_response(request)
 

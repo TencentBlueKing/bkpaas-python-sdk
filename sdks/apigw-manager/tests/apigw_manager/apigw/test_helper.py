@@ -10,7 +10,13 @@
 """
 import pytest
 
-from apigw_manager.apigw.helper import ContextManager, Definition, PublicKeyManager, ReleaseVersionManager
+from apigw_manager.apigw.helper import (
+    ContextManager,
+    Definition,
+    PublicKeyManager,
+    ReleaseVersionManager,
+    ResourceSignatureManager,
+)
 from apigw_manager.apigw.models import Context
 
 
@@ -122,3 +128,93 @@ class TestReleaseVersionManager:
 
         for excepted in ["v1", "v2", "v3"]:
             assert self.manager.increase(api_name) == excepted
+
+
+class TestResourceSignatureManager:
+    @pytest.fixture(autouse=True)
+    def setup_manager(self):
+        self.manager = ResourceSignatureManager()
+
+    def test_get_not_found(self, faker):
+        assert self.manager.get(faker.pystr()) == {}
+
+    def test_get(self, faker):
+        api_name = faker.pystr()
+        self.manager.set(api_name, False, "signature")
+        assert self.manager.get(api_name) == {
+            "is_dirty": False,
+            "signature": "signature",
+        }
+
+    def test_get_signature_default(self, faker):
+        assert self.manager.get_signature(faker.pystr()) == ""
+
+    def test_get_signature(self, faker):
+        api_name = faker.pystr()
+        self.manager.set(api_name, False, "signature")
+        assert self.manager.get_signature(api_name) == "signature"
+
+    @pytest.mark.parametrize(
+        "is_dirty",
+        [True, False],
+    )
+    def test_is_dirty(self, faker, is_dirty):
+        api_name = faker.pystr()
+        self.manager.set(api_name, is_dirty, "signature")
+        assert self.manager.is_dirty(api_name) == is_dirty
+
+    @pytest.mark.parametrize(
+        "is_dirty",
+        [True, False],
+    )
+    def test_is_dirty_default(self, faker, is_dirty):
+        api_name = faker.pystr()
+        assert self.manager.is_dirty(api_name, is_dirty) == is_dirty
+
+    def test_mark_dirty(self, faker):
+        api_name = faker.pystr()
+        self.manager.mark_dirty(api_name)
+        assert self.manager.get(api_name) == {
+            "is_dirty": True,
+            "signature": "",
+        }
+
+    def test_reset_dirty(self, faker):
+        api_name = faker.pystr()
+        self.manager.reset_dirty(api_name)
+        assert self.manager.get(api_name) == {
+            "is_dirty": False,
+            "signature": "",
+        }
+
+    def test_update_signature_at_first_time(self, faker):
+        api_name = faker.pystr()
+        self.manager.update_signature(api_name, "signature")
+        assert self.manager.get(api_name) == {
+            "is_dirty": True,
+            "signature": "signature",
+        }
+
+    @pytest.mark.parametrize(
+        "is_dirty",
+        [True, False],
+    )
+    def test_update_signature_not_change(self, faker, is_dirty):
+        api_name = faker.pystr()
+        self.manager.set(api_name, is_dirty, "signature")
+
+        self.manager.update_signature(api_name, "signature")
+        assert self.manager.get(api_name) == {
+            "is_dirty": is_dirty,
+            "signature": "signature",
+        }
+
+    def test_update_signature_changed(self, faker):
+        api_name = faker.pystr()
+        self.manager.set(api_name, False, "")
+
+        self.manager.update_signature(api_name, "signature")
+        assert self.manager.get(api_name) == {
+            "is_dirty": True,
+            "signature": "signature",
+        }
