@@ -19,7 +19,7 @@ RUN python manage.py migrate
 
 WORKDIR /data
 
-CMD ["bash"]
+CMD ["sync-apigateway"]
 
 ONBUILD ARG BK_APIGW_NAME
 ONBUILD ENV BK_APIGW_NAME "${BK_APIGW_NAME}"
