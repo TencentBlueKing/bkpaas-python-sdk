@@ -15,6 +15,14 @@ from pathlib import Path
 
 import environ
 
+try:
+    import pymysql
+
+    pymysql.version_info = (1, 4, 6, 'final', 0)  # change mysqlclient version
+    pymysql.install_as_MySQLdb()
+except ImportError:
+    pass
+
 # Build paths inside the project like this: BASE_DIR / "subdir".
 BASE_DIR = Path(__file__).resolve().parent.parent
 

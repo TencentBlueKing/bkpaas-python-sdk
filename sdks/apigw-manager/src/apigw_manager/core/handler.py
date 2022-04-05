@@ -93,7 +93,7 @@ class Handler(object):
         try:
             return operation(**data)
         except HTTPResponseError as err:
-            raise self._convert_operation_exception(err)
+            raise_from(self._convert_operation_exception(err), err)
         except Exception as err:
             raise_from(ApiException(operation_id), err)
 
