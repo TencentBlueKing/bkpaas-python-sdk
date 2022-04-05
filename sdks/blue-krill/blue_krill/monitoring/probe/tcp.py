@@ -36,7 +36,7 @@ class TCPProbe(VirtualProbe):
 
     def diagnose(self) -> List[Issue]:
         try:
-            sock = socket.create_connection(address=self.address, timeout=self.timeout)  # type: ignore
+            sock = socket.create_connection(address=self.address, timeout=self.timeout)
             sock.close()
         except socket.timeout as e:
             logger.exception("Connect %s Timeout", self.address)

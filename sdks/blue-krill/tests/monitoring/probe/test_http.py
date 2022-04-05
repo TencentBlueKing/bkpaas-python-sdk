@@ -8,68 +8,142 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
-from unittest import mock
+import socket
+import threading
+import time
+from wsgiref.simple_server import make_server
+from wsgiref.util import setup_testing_defaults
 
 import pytest
-import requests
-import requests_mock as requests_mock_mod
+from requests import codes
 
 from blue_krill.monitoring.probe.http import BKHttpProbe, HttpProbe
 
 
+class FakeApp:
+    def __init__(self):
+        self._init_status = '200 OK'
+        self._init_headers = [('Content-type', 'text/plain; charset=utf-8')]
+        self._init_handler = lambda: [b'ok']
+
+        self.status = self._init_status
+        self.headers = self._init_headers
+        self.handler = self._init_handler
+
+    def __call__(self, environ, start_response):
+        setup_testing_defaults(environ)
+        start_response(self.status, self.headers)
+        return self.handler()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.status = self._init_status
+        self.headers = self._init_headers
+        self.handler = self._init_handler
+
+    @staticmethod
+    def timeout():
+        time.sleep(2)
+        return [b'timeout']
+
+
+@pytest.fixture
+def usable_port():
+    sock = socket.socket()
+    sock.bind(('', 0))
+    return sock.getsockname()[1]
+
+
+@pytest.fixture
+def fake_app():
+    return FakeApp()
+
+
+@pytest.fixture
+def httpd(fake_app, usable_port):
+    server_address = "localhost", usable_port
+    with make_server(*server_address, fake_app) as httpd:
+        yield httpd
+
+
+@pytest.fixture
+def http_server(httpd):
+    sa = httpd.socket.getsockname()
+    t = threading.Thread(target=httpd.serve_forever)
+    t.start()
+    yield sa[0], sa[1]
+    httpd.shutdown()
+
+
 class TestHttpProbe:
     @pytest.fixture()
-    def prober(self):
+    def prober(self, http_server):
         class MockHttpProbe(HttpProbe):
             name = "mock"
-            url = "mock://"
-            desired_code = requests.codes.ok
+            url = f"http://{http_server[0]}:{http_server[1]}"
+            desired_code = codes.ok
+            timeout = 1
 
         return MockHttpProbe()
 
-    @mock.patch("blue_krill.monitoring.probe.http.requests.get", side_effect=requests.Timeout("timeout!"))
-    def test_timeout(self, m_get, prober):
-        issues = prober.diagnose()
+    def test_timeout(self, fake_app, prober):
+        with fake_app as context:
+            context.handler = fake_app.timeout
+            issues = prober.diagnose()
+
         assert len(issues) == 1
         issue = issues[0]
         assert issue.fatal
-        assert issue.description == "Request mock:// timeout, detail: timeout!"
+        assert "Read timed out" in issue.description
 
-    @pytest.mark.parametrize("status_code", [requests.codes.ok, requests.codes.bad, requests.codes.server_error])
-    def test_desired_code(self, prober, requests_mock, status_code):
-        requests_mock.register_uri(requests_mock_mod.ANY, requests_mock_mod.ANY, status_code=status_code)
-        issues = prober.diagnose()
-        if status_code == requests.codes.ok:
+    @pytest.mark.parametrize(
+        "status, expected",
+        [
+            ("200 OK", codes.ok),
+            ("400 BAD", codes.bad),
+            ("500 SERVER_ERROR", codes.server_error),
+        ],
+    )
+    def test_desired_code(self, prober, fake_app, status, expected):
+        with fake_app as context:
+            context.status = status
+            issues = prober.diagnose()
+
+        if expected == codes.ok:
             assert len(issues) == 0
         else:
             assert len(issues) == 1
             issue = issues[0]
             assert issue.fatal
-            assert issue.description == f"Undesired status code<{status_code}>"
+            assert issue.description == f"Undesired status code<{expected}>"
 
 
 class TestBKHttpProbe:
-    @pytest.fixture()
-    def prober(self):
+    @pytest.fixture
+    def prober(self, http_server):
         class MockHttpProbe(BKHttpProbe):
             name = "mock"
-            url = "mock://"
-            desired_code = requests.codes.ok
+            url = f"http://{http_server[0]}:{http_server[1]}"
+            desired_code = codes.ok
+            timeout = 1
 
         return MockHttpProbe()
 
     @pytest.mark.parametrize(
         "resp_text, expected",
         [
-            ("--", "invalid data: b'--'"),
-            ("{}", "missing message."),
-            ('{"result": false}', "missing message."),
-            ('{"result": false, "message": "Oops!!"}', "Oops!!"),
+            (b"--", "invalid data: b'--'"),
+            (b"{}", "missing message."),
+            (b'{"result": false}', "missing message."),
+            (b'{"result": false, "message": "Oops!!"}', "Oops!!"),
         ],
     )
-    def test_validate_response(self, prober, requests_mock, resp_text, expected):
-        requests_mock.register_uri(requests_mock_mod.ANY, requests_mock_mod.ANY, text=resp_text)
-        issues = prober.diagnose()
+    def test_validate_response(self, prober, fake_app, resp_text, expected):
+        with fake_app as context:
+            context.handler = lambda: [resp_text]
+            issues = prober.diagnose()
         assert len(issues) == 1
         issue = issues[0]
         assert issue.fatal

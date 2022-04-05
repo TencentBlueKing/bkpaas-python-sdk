@@ -17,10 +17,11 @@ from urllib.parse import urljoin
 import pytest
 import requests
 import requests_mock
+from requests.auth import HTTPBasicAuth
 
 from blue_krill.contextlib import nullcontext as does_not_raise
 from blue_krill.storages.blobstore.bkrepo import BKGenericRepo
-from blue_krill.storages.blobstore.exceptions import ObjectAlreadyExists, RequestError
+from blue_krill.storages.blobstore.exceptions import ObjectAlreadyExists, UploadFailedError
 from tests.utils import generate_random_string
 
 
@@ -56,7 +57,8 @@ def store(session, username, password, endpoint):
     store = BKGenericRepo(
         bucket="dummy-bucket", username=username, password=password, project="dummy-project", endpoint_url=endpoint
     )
-    with mock.patch("blue_krill.storages.blobstore.bkrepo.requests.session", lambda: session):
+    with mock.patch.object(store, "get_client", lambda: session):
+        session.auth = HTTPBasicAuth(username=username, password=password)
         yield store
 
 
@@ -74,9 +76,10 @@ class TestBKGenericRepo:
         "allow_overwrite, fake_response, expected",
         [
             (True, {"code": 0, "message": ""}, does_not_raise()),
-            (True, {"code": 1, "message": ""}, pytest.raises(RequestError)),
+            (True, {"code": 1, "message": ""}, pytest.raises(UploadFailedError)),
             (False, {"code": 0, "message": ""}, does_not_raise()),
-            (False, {"code": 1, "message": ""}, pytest.raises(ObjectAlreadyExists)),
+            (False, {"code": 250107, "message": ""}, pytest.raises(ObjectAlreadyExists)),
+            (False, {"code": 251012, "message": ""}, pytest.raises(ObjectAlreadyExists)),
         ],
     )
     def test_upload(self, store, adapter, endpoint, allow_overwrite, fake_response, expected):

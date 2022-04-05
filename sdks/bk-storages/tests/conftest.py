@@ -40,11 +40,12 @@ def pytest_configure():
         ),
         # DEFAULT_FILE_STORAGE = 'bkstorages.backends.rgw.RGWBoto3Storage',
         # RGW settings
-        RGW_AUTO_CREATE_BUCKET=True,
-        RGW_ENDPOINT_URL="http://127.0.0.1:9100",
+        RGW_AUTO_CREATE_BUCKET=False,
+        RGW_ENDPOINT_URL='http://localhost/',
         RGW_ACCESS_KEY_ID="minio",
-        RGW_SECRET_ACCESS_KEY="minio12345678",
+        RGW_SECRET_ACCESS_KEY="",
         RGW_STORAGE_BUCKET_NAME="unittest",
+        RGW_REGION_NAME="us-east-1",
         # BK_REPO
         BKREPO_ENDPOINT_URL="",
         BKREPO_USERNAME="",

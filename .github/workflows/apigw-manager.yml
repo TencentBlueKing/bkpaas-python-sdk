@@ -1,7 +1,7 @@
 on:
   push:
-  # paths:
-  #   - "sdks/apigw-manager/**"
+    paths:
+      - "sdks/apigw-manager/**"
   pull_request:
     branches:
       - "master"
