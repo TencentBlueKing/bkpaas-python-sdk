@@ -28,7 +28,7 @@ jobs:
       - name: Install dependencies
         working-directory: sdks/apigw-manager
         run: |
-          poetry export -f requirements.txt --without-hashes --dev --output requirements.txt
+          poetry export -f requirements.txt --without-hashes -E demo --dev --output requirements.txt
           python -m pip install --upgrade pip
           python -m pip install . tox tox-gh-actions -r requirements.txt
       - name: Test with tox
