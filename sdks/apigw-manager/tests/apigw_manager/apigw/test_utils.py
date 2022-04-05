@@ -92,7 +92,7 @@ class TestZipArchiveFile:
             ZipArchiveFile.archive(file_path, temp_file)
 
             with zipfile.ZipFile(temp_file, "r") as zip_:
-                assert zip_.namelist() == [os.path.join("zh", "get.md")]
+                assert zip_.namelist() == ["zh/get.md"]
 
     def test_get_archived_files(self):
         file_path = os.path.join(settings.BASE_DIR, os.path.join("tests", "files", "docs", "zh", "get.md"))

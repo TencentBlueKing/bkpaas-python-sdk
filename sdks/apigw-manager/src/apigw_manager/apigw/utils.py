@@ -89,7 +89,7 @@ class ZipArchiveFile:
         if os.path.isfile(path):
             return {path: os.path.basename(path)}
 
-        path = path if path.endswith("/") else path + "/"
+        path = path if path.endswith(os.path.sep) else path + os.path.sep
 
         path_to_name = {}
         for root, dirs, files in os.walk(path):
