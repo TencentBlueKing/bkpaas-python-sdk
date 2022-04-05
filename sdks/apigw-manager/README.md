@@ -64,7 +64,7 @@ definition.yaml 中可以使用 Django 模块语法引用和渲染变量，内�
 - `environ`：环境变量；
 - `data`：命令行自定义变量；
 
-推荐在一个文件中统一进行定义，用命名空间来区分不同资源间的定义，[definition.yaml 样例](./definition.yaml)：
+推荐在一个文件中统一进行定义，用命名空间来区分不同资源间的定义，[definition.yaml 样例](definition.yaml)：
 - `apigateway`：定义网关基本信息，用于命令 `sync_apigw_config`；
 - `stage`：定义环境信息，用于命令 `sync_apigw_stage`；
 - `strategies`：定义网关策略，用于命令 `sync_apigw_strategies`；
@@ -72,6 +72,8 @@ definition.yaml 中可以使用 Django 模块语法引用和渲染变量，内�
 - `grant_permissions`：应用主动授权，用于命令 `grant_apigw_permissions`；
 - `release`：定义发布内容，用于命令 `create_version_and_release_apigw`；
 - `resource_docs`：定义资源文档，用于命令 `sync_resource_docs_by_archive`；
+
+**注意，同步资源后需要发布后才生效，发布内容定义于 `release`，请及时更新对应的版本信息，否则可能会导致资源漏发或 SDK 版本异常的情况**
 
 特别的，为了方便用户直接使用网关导出的资源文件，资源定义默认没有命名空间。
 
@@ -136,4 +138,58 @@ auth.authenticate(request, username=username, verified=verified)
 ### 用户认证后端
 #### UserModelBackend
 - 已认证的用户名，通过 `UserModel` 根据 `username` 获取用户，不存在时返回 `None`；
-- 未认证的用户名，返回 `AnonymousUser`；
+- 未认证的用户名，返回 `AnonymousUser`，可通过继承后修改 `make_anonymous_user` 的实现来定制具体字段；
+
+## 镜像
+### 基础镜像
+基础镜像通过 [Dockerfile](Dockerfile) 进行构建，该镜像封装了 [demo](demo) 项目，可读取 /data/ 目录，直接进行网关注册和同步操作，目录约定：
+- */data/definition.yaml*：网关定义文件，用于注册网关；
+- */data/resources.yaml*：资源定义文件，用于同步网关资源，可通过网关导出；
+- */data/docs*：文档目录，可通过网关导出后解压；
+
+镜像执行同步时，需要额外的环境变量支持：
+- `BK_APIGW_NAME`：网关名称；
+- `BK_API_URL_TMPL`：云网关 API 地址模板；
+- `BK_APP_CODE`：应用名称；
+- `BK_APP_SECRET`：应用密钥；
+- `DATABASE_URL`：数据库连接地址，格式：`mysql://username:password@host:port/dbname`；
+- `APIGW_PUBLIC_KEY_PATH`：网关公钥保存路径，默认为当前目录下 `apigateway.pub`；
+
+#### 如何获得网关公钥
+1. 如果设置了环境变量 `APIGW_PUBLIC_KEY_PATH`，同步后可读取改文件获取；
+2. 如果通过 `DATABASE_URL` 设置了外部数据库，可通过执行以下 SQL 查询：
+    ```sql
+    select value from apigw_manager_context where scope="public_key" and key="<BK_APIGW_NAME>";
+    ```
+
+### 通过外部挂载方式同步
+通过外部文件挂载的方式，将对应的目录挂载到 `/data/` 目录下，可通过以下类似的命令进行同步：
+```shell
+docker run rm \
+    -v /<MY_PATH>/:/data/ \
+    -e BK_APIGW_NAME=<BK_APIGW_NAME> \
+    -e BK_API_URL_TMPL=<BK_API_URL_TMPL> \
+    -e BK_APP_CODE=<BK_APP_CODE> \
+    -e BK_APP_SECRET=<BK_APP_SECRET> \
+    -e DATABASE_URL=<DATABASE_URL> \
+    apigw-manager
+```
+
+同步后，会在 *<MY_PATH>* 目录下获得网关公钥文件 *apigateway.pub*。
+
+### 通过镜像方式同步
+可将 apigw-manager 作为基础镜像，将配置文件和文档一并构建成一个新镜像，然后通过如 K8S Job 方式进行同步，构建 Dockerfile 参考：
+```Dockerfile
+FROM apigw-manager
+
+COPY <MY_PATH> /data/
+```
+
+环境变量可通过运行时传入，也可以通过构建参数提前设置（仅支持 `BK_APIGW_NAME` 和 `BK_APP_CODE`）：
+```shell
+docker build \
+    -t my-apigw-manager \
+    --build-arg BK_APIGW_NAME=<BK_APIGW_NAME> \
+    --build-arg BK_APP_CODE=<BK_APP_CODE> \
+    -f Dockerfile .
+```
