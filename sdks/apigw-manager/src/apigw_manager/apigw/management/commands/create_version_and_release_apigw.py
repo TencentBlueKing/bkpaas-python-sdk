@@ -39,6 +39,7 @@ class Command(DefinitionCommand):
         parser.add_argument("-t", "--title", default=None, help="release title")
         parser.add_argument("-c", "--comment", default="", help="release comment")
         parser.add_argument("-s", "--stage", default=[], nargs="+", help="release stages")
+        parser.add_argument("--generate-sdks", default=False, action="store_true", help="with sdks generation")
 
     def get_version_from_definition(self, definition):
         for k in ["version", "title"]:
@@ -80,20 +81,19 @@ class Command(DefinitionCommand):
 
         return current_version, latest_version
 
+    def should_create_resource_version(self, manager, api_name, current_version, latest_version):
+        # 版本一致，且没有变更
+        if current_version.public == latest_version.public and not manager.is_dirty(api_name):
+            return False
+        return True
+
     def create_resource_version(
         self,
         releaser,
-        api_name,
         current_version,
-        latest_version,
         title,
         comment,
     ):
-        manager = self.ResourceSignatureManager()
-
-        # 版本一致，且没有变更
-        if current_version.public == latest_version.public and not manager.is_dirty(api_name):
-            return None
 
         version = str(current_version)
         resource_version = releaser.create_resource_version(
@@ -101,9 +101,14 @@ class Command(DefinitionCommand):
             title=title,
             comment=comment,
         )
-        manager.reset_dirty(api_name)
 
         return resource_version
+
+    def generate_sdks(self, releaser, resource_version, generate_sdks, *args, **kwargs):
+        if not generate_sdks:
+            return
+
+        releaser.generate_sdks(resource_version=resource_version["version"])
 
     def handle(self, stage, title, comment, *args, **kwargs):
         configuration = self.get_configuration(**kwargs)
@@ -117,17 +122,24 @@ class Command(DefinitionCommand):
         current_version, latest_version = self.fix_version(current_version, latest_version)
 
         releaser = self.Releaser(configuration)
+        manager = self.ResourceSignatureManager()
+        api_name = configuration.api_name
 
-        created_resource_version = self.create_resource_version(
-            releaser=releaser,
-            api_name=configuration.api_name,
-            current_version=current_version,
-            latest_version=latest_version,
-            title=title or definition.get("title", ""),
-            comment=comment or definition.get("comment", ""),
-        )
-        if created_resource_version:
-            resource_version = created_resource_version
+        if self.should_create_resource_version(manager, api_name, current_version, latest_version):
+            resource_version = self.create_resource_version(
+                releaser=releaser,
+                current_version=current_version,
+                title=title or definition.get("title", ""),
+                comment=comment or definition.get("comment", ""),
+            )
+            manager.reset_dirty(api_name)
+
+            self.generate_sdks(
+                releaser=releaser,
+                resource_version=resource_version,
+                *args,
+                **kwargs,
+            )
         else:
             print("resource_version already exists and is the latest, skip creating")
 

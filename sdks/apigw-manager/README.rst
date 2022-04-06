@@ -211,7 +211,7 @@ UserModelBackend
 ~~~~~~~~~~~~~~~~
 
 
-#. 如果设置了环境变量 ``APIGW_PUBLIC_KEY_PATH``\ ，同步后可读取改文件获取；
+#. 如果设置了环境变量 ``APIGW_PUBLIC_KEY_PATH``\ ，同步后可读取该文件获取；
 #. 如果通过 ``DATABASE_URL`` 设置了外部数据库，可通过执行以下 SQL 查询：
    .. code-block:: sql
 

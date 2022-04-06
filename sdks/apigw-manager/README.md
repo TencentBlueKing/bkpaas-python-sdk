@@ -156,7 +156,7 @@ auth.authenticate(request, username=username, verified=verified)
 - `APIGW_PUBLIC_KEY_PATH`：网关公钥保存路径，默认为当前目录下 `apigateway.pub`；
 
 #### 如何获得网关公钥
-1. 如果设置了环境变量 `APIGW_PUBLIC_KEY_PATH`，同步后可读取改文件获取；
+1. 如果设置了环境变量 `APIGW_PUBLIC_KEY_PATH`，同步后可读取该文件获取；
 2. 如果通过 `DATABASE_URL` 设置了外部数据库，可通过执行以下 SQL 查询：
     ```sql
     select value from apigw_manager_context where scope="public_key" and key="<BK_APIGW_NAME>";

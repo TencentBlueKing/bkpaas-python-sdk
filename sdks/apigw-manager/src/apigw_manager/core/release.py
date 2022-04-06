@@ -26,3 +26,9 @@ class Releaser(Handler):
 
         result = self._call(self.client.api.release, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))
+
+    def generate_sdks(self, *args, **kwargs):
+        """generate sdks"""
+
+        result = self._call(self.client.api.generate_sdk, *args, **kwargs)
+        return self._parse_result(result, itemgetter("data"))
