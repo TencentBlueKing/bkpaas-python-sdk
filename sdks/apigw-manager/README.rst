@@ -110,7 +110,7 @@ definition.yaml 中可以使用 Django 模块语法引用和渲染变量，内�
    python manage.py grant_apigw_permissions -f definition.yaml  # 为应用主动授权，如无可跳过
    python manage.py sync_apigw_resources -f resources.yaml  # 同步网关资源
    python manage.py sync_resource_docs_by_archive -f definition.yaml  # 同步资源文档
-   python manage.py create_version_and_release_apigw -f definition.yaml  # 创建资源版本并发布
+   python manage.py create_version_and_release_apigw -f definition.yaml --generate-sdks  # 创建资源版本并发布，同时生成 SDK
    python manage.py fetch_apigw_public_key  # 获取网关公钥
    python manage.py fetch_esb_public_key  # 获取 ESB 公钥（专用于同时接入 ESB 和网关的系统）
 
