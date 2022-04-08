@@ -87,7 +87,7 @@ python manage.py apply_apigw_permissions -f definition.yaml  # 申请网关权�
 python manage.py grant_apigw_permissions -f definition.yaml  # 为应用主动授权，如无可跳过
 python manage.py sync_apigw_resources -f resources.yaml  # 同步网关资源
 python manage.py sync_resource_docs_by_archive -f definition.yaml  # 同步资源文档
-python manage.py create_version_and_release_apigw -f definition.yaml  # 创建资源版本并发布
+python manage.py create_version_and_release_apigw -f definition.yaml --generate-sdks  # 创建资源版本并发布，同时生成 SDK
 python manage.py fetch_apigw_public_key  # 获取网关公钥
 python manage.py fetch_esb_public_key  # 获取 ESB 公钥（专用于同时接入 ESB 和网关的系统）
 ```
@@ -156,7 +156,7 @@ auth.authenticate(request, username=username, verified=verified)
 - `APIGW_PUBLIC_KEY_PATH`：网关公钥保存路径，默认为当前目录下 `apigateway.pub`；
 
 #### 如何获得网关公钥
-1. 如果设置了环境变量 `APIGW_PUBLIC_KEY_PATH`，同步后可读取改文件获取；
+1. 如果设置了环境变量 `APIGW_PUBLIC_KEY_PATH`，同步后可读取该文件获取；
 2. 如果通过 `DATABASE_URL` 设置了外部数据库，可通过执行以下 SQL 查询：
     ```sql
     select value from apigw_manager_context where scope="public_key" and key="<BK_APIGW_NAME>";
