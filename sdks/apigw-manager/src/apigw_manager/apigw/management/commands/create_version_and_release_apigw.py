@@ -42,12 +42,11 @@ class Command(DefinitionCommand):
         parser.add_argument("--generate-sdks", default=False, action="store_true", help="with sdks generation")
 
     def get_version_from_definition(self, definition):
-        for k in ["version", "title"]:
-            value = definition.get(k)
-            if not value:
-                continue
+        value = definition.get("version")
+        if not value:
+            raise ValueError("version is required")
 
-            return parse_version(value)
+        return parse_version(value)
 
     def get_version_from_resource_version(self, resource_version):
         if not resource_version:
@@ -61,6 +60,9 @@ class Command(DefinitionCommand):
             return parse_version(value)
 
     def fix_version(self, current_version, latest_version):
+        if isinstance(current_version, LegacyVersion):
+            raise ValueError(f"current version {current_version} is not a valid version")
+
         # 非语义化版本，直接忽略
         if isinstance(latest_version, LegacyVersion):
             latest_version = None
@@ -112,12 +114,12 @@ class Command(DefinitionCommand):
 
     def handle(self, stage, title, comment, *args, **kwargs):
         configuration = self.get_configuration(**kwargs)
+        definition = self.get_definition(**kwargs)
+        current_version = self.get_version_from_definition(definition)
+
         fetcher = self.Fetcher(configuration)
         resource_version = fetcher.latest_resource_version()
         latest_version = self.get_version_from_resource_version(resource_version)
-
-        definition = self.get_definition(**kwargs)
-        current_version = self.get_version_from_definition(definition)
 
         current_version, latest_version = self.fix_version(current_version, latest_version)
 

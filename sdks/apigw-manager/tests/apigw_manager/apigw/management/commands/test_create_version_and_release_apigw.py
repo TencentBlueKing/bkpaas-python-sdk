@@ -72,21 +72,16 @@ def fake_resource_version():
 
 
 @pytest.mark.parametrize(
-    "version, title, expected",
+    "version,  expected",
     [
-        (None, None, "None"),
-        ("1.0.0", None, "1.0.0"),
-        (None, "1.0.0", "1.0.0"),
-        ("1.0.1", "1.0.0", "1.0.1"),
-        ("v1.0.0", None, "1.0.0"),
-        (None, "v1.0.0", "1.0.0"),
+        ("1.0.0", "1.0.0"),
+        ("v1.0.0", "1.0.0"),
     ],
 )
-def test_get_version_from_definition(command, version, title, expected):
+def test_get_version_from_definition(command, version, expected):
     result = command.get_version_from_definition(
         {
             "version": version,
-            "title": title,
         }
     )
 
@@ -264,28 +259,9 @@ class TestHandle:
     def test_handle_version_not_set(
         self,
         command,
-        fetcher,
-        releaser,
         faker,
-        resource_sync_manager,
-        fake_resource_version,
         default_command_flags,
     ):
         stage = faker.pystr()
-        fetcher.latest_resource_version.return_value = fake_resource_version
-        releaser.release.return_value = {
-            "resource_version_name": fake_resource_version["name"],
-            "resource_version_title": faker.pystr(),
-            "stage_names": [stage],
-        }
-
-        resource_sync_manager.is_dirty.return_value = False
-        command.handle(stage=stage, **default_command_flags)
-
-        releaser.create_resource_version.assert_not_called()
-        releaser.release.assert_called_once_with(
-            stage_names=stage,
-            resource_version_name=fake_resource_version["name"],
-            title=fake_resource_version["title"],
-            comment=fake_resource_version["comment"],
-        )
+        with pytest.raises(ValueError):
+            command.handle(stage=stage, **default_command_flags)
