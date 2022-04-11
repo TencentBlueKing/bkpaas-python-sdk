@@ -22,6 +22,7 @@
 - [bkapi-client-core](sdks/bkapi-client-core/README.md) 蓝鲸云 API 客户端
 - [bkapi-component-open](sdks/bkapi-component-open/README.md) 蓝鲸组件 API 客户端
 - [apigw-manager](sdks/apigw-manager/README.md) 网关管理工具包
+- [bkpaas_auth](sdks/bkpaas_auth/README.md) 蓝鲸 PaaS 平台内部服务使用的用户鉴权模块
 
 当前 SDK 均只支持 **Python 3.6+**
 

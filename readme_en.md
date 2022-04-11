@@ -22,6 +22,7 @@ This toolset is a collection of Python SDKs for BlueKing PaaS/SaaS development, 
 - [bkapi-client-core](sdks/bkapi-client-core/README.md) Blueking cloud API Client
 - [bkapi-component-open](sdks/bkapi-component-open/README.md) Blueking component API Client
 - [apigw-manager](sdks/apigw-manager/README.md) Gateway management toolkits
+- [bkpaas_auth](sdks/bkpaas_auth/README.md) User authentication module used by internal services of the BK PaaS platform
 
 All sdks above only support **Python 3.6+**
 
