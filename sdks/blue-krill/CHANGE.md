@@ -1,5 +1,9 @@
 ## Change logs
 
+### 1.0.15
+
+- `blue_krill.models.better_loaddata` 支持 django>=3
+
 ### 1.0.14
 
 - `blue_krill.models.fields.EncryptField` 支持 django>=3

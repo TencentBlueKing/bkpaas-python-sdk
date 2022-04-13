@@ -12,4 +12,4 @@ from django.apps import AppConfig
 
 
 class BetterLoadDataConfig(AppConfig):
-    name = "better_loaddata"
+    name = "blue_krill.models.better_loaddata"
