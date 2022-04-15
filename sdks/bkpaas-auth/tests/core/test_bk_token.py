@@ -32,7 +32,7 @@ class TestMisc:
                     "email": "",
                     "phone": "",
                 },
-                "request_id": "b7d16f921d8d427188e476fc66a5e675",
+                "request_id": "ed3c8f75-d956-4dcd-b5d0-7bcd6c2e386a",
             }
         )
         user = get_user_by_user_id(settings.USER_ID, username_only=True)
@@ -58,7 +58,7 @@ class TestUser:
                     "email": "",
                     "phone": "",
                 },
-                "request_id": "b7d16f921d8d427188e476fc66a5e675",
+                "request_id": "ed3c8f75-d956-4dcd-b5d0-7bcd6c2e386a",
             }
         )
         user_info = get_bk_user_info(username=settings.USER_NAME)

@@ -11,17 +11,17 @@ from tests.utils import mock_json_response
 
 class TestUser:
     def test_user_authenticated(self):
-        user = User(token=None, provider_type=ProviderType.UIN, username='382238495')
+        user = User(token=None, provider_type=ProviderType.UIN, username='12345')
         assert user.is_authenticated is False
         assert user.is_anonymous is True
 
         expired_token = LoginToken('token', expires_in=-1)
-        user = User(token=expired_token, provider_type=ProviderType.UIN, username='382238495')
+        user = User(token=expired_token, provider_type=ProviderType.UIN, username='12345')
         assert user.is_authenticated is False
         assert user.is_anonymous is True
 
         token = LoginToken('token', expires_in=86400)
-        user = User(token=token, provider_type=ProviderType.UIN, username='382238495')
+        user = User(token=token, provider_type=ProviderType.UIN, username='12345')
         assert user.is_authenticated is True
         assert user.is_anonymous is False
 

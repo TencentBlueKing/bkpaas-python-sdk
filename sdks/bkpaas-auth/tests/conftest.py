@@ -65,5 +65,5 @@ def get_rtx_user_info_response(settings):
             "avatar_url": "",
         },
         "result": True,
-        "request_id": "b7d16f921d8d427188e476fc66a5e675",
+        "request_id": "ed3c8f75-d956-4dcd-b5d0-7bcd6c2e386a",
     }

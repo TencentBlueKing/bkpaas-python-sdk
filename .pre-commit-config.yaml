@@ -29,9 +29,9 @@ repos:
         types: [python]
         pass_filenames: false
         entry: pflake8 --config=pyproject.toml
-      - id: mypy
-        name: mypy
-        language: python
-        types: [python]
-        pass_filenames: false
-        entry: mypy . --config-file=pyproject.toml
+      # - id: mypy
+      #   name: mypy
+      #   language: python
+      #   types: [python]
+      #   pass_filenames: false
+      #   entry: mypy . --config-file=pyproject.toml

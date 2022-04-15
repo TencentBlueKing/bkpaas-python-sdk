@@ -34,12 +34,13 @@ class RtxUserInfo(UserInfo):
     """User info for RTX user"""
 
     provider_type = ProviderType.RTX
+    email_suffix = "@tencent.com"
 
     def __init__(self, **kwargs):
         super().__init__(kwargs["LoginName"])
         self.nickname = kwargs['ChineseName']
         self.chinese_name = kwargs['ChineseName']
-        self.email = '%s@tencent.com' % self.username
+        self.email = f'{self.username}{self.email_suffix}'
         # 用户 API 添加了限制，没有申请特殊权限的情况下无法获取手机信息
         self.phone = kwargs.get('MobilePhoneNumber', '')
         self.avatar_url = ''
