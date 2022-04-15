@@ -11,11 +11,10 @@
 from tempfile import SpooledTemporaryFile
 
 import pytest
-from moto import mock_s3
-
 from blue_krill.contextlib import nullcontext as does_not_raise
 from blue_krill.storages.blobstore.exceptions import DownloadFailedError, ObjectAlreadyExists
 from blue_krill.storages.blobstore.s3 import S3Store
+from moto import mock_s3
 from tests.utils import generate_random_string
 
 

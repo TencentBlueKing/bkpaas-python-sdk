@@ -162,8 +162,8 @@ class YourDjangoAuthUserCompatibleBackend(DjangoAuthUserCompatibleBackend):
            ...
            return db_user
 
-和 `apigw-manager <https://git.woa.com/bk-tools/apigw-manager>`_ 集成
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+和 `apigw-manager <../apigw-manager>`_ 集成
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 该 SDK 可以和 apigw-manager 集成，完成网关 JWT 的校验，在 settings 中配置：
 

@@ -11,12 +11,11 @@
 import json
 import logging
 
-from django.db.transaction import atomic
-from django.template import Context, Template
-
 from apigw_manager.apigw.models import Context as ContextModel
 from apigw_manager.apigw.utils import get_configuration, yaml_load
 from apigw_manager.core.utils import get_item
+from django.db.transaction import atomic
+from django.template import Context, Template
 
 logger = logging.getLogger(__name__)
 

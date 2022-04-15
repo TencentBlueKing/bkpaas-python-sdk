@@ -12,7 +12,6 @@ import time
 from unittest import mock
 
 import pytest
-
 from blue_krill.async_utils.poll_task import (
     CallbackHandler,
     CallbackStatus,

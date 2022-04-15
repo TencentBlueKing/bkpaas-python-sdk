@@ -13,9 +13,8 @@ import tempfile
 import zipfile
 
 import pytest
-from django.conf import settings
-
 from apigw_manager.apigw.utils import ZipArchiveFile, get_configuration, parse_value_list
+from django.conf import settings
 
 
 class TestGetConfiguration:

@@ -12,7 +12,6 @@ import jwt
 import pytest
 import requests
 import requests_mock as requests_mock_mod
-
 from blue_krill.auth.jwt import ClientJWTAuth, JWTAuthConf
 
 

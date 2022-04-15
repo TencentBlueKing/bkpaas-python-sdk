@@ -8,8 +8,9 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
-import nox
 import os
+
+import nox
 
 nox.needs_version = '>=2021.6.12'
 

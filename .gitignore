@@ -6,3 +6,10 @@
 
 # direnv
 .envrc
+
+# pipfile
+Pipfile
+Pipfile.lock
+
+# pre-commit
+pre_commit_hooks

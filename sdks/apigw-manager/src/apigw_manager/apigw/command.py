@@ -11,14 +11,13 @@
 import os
 import typing
 
-from django.conf import settings
-from django.core.management.base import BaseCommand
-
 from apigw_manager.apigw.helper import Definition
 from apigw_manager.apigw.utils import get_configuration, parse_value_list
 from apigw_manager.core.fetch import Fetcher
 from apigw_manager.core.permission import Manager as PermissionManager
 from apigw_manager.core.sync import Synchronizer
+from django.conf import settings
+from django.core.management.base import BaseCommand
 
 
 class ApiCommand(BaseCommand):

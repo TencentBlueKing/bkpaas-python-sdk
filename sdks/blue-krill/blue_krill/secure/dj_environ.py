@@ -11,10 +11,9 @@
 import os
 from typing import Optional
 
+from blue_krill.encrypt.utils import decrypt_string
 from cryptography.fernet import InvalidToken
 from environ import Env
-
-from blue_krill.encrypt.utils import decrypt_string
 
 
 class EncryptedEnviron:

@@ -11,7 +11,6 @@
 import json
 
 import pytest
-
 from bkapi_client_core.auth import BKApiAuthorization
 
 

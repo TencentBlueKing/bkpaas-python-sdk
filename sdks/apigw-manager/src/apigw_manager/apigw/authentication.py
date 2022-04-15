@@ -12,6 +12,8 @@ import logging
 from collections import namedtuple
 
 import jwt
+from apigw_manager.apigw.helper import PublicKeyManager
+from apigw_manager.apigw.utils import get_configuration
 from django.conf import settings
 from django.contrib import auth
 from django.contrib.auth import get_user_model
@@ -20,9 +22,6 @@ from django.contrib.auth.models import AnonymousUser
 from django.core.cache import caches
 from django.core.cache.backends.dummy import DummyCache
 from future.utils import raise_from
-
-from apigw_manager.apigw.helper import PublicKeyManager
-from apigw_manager.apigw.utils import get_configuration
 
 logger = logging.getLogger(__name__)
 

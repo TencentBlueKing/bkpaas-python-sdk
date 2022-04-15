@@ -11,7 +11,6 @@
 from collections import namedtuple
 
 import pytest
-
 from bkapi_client_core.config import Settings
 
 

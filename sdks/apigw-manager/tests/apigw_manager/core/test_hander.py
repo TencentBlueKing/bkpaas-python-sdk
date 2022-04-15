@@ -8,12 +8,11 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+from apigw_manager.core.exceptions import ApiRequestError
+from apigw_manager.core.handler import Handler
 from bkapi_client_core.exceptions import HTTPResponseError
 from faker import Faker
 from pytest import fixture, raises
-
-from apigw_manager.core.exceptions import ApiRequestError
-from apigw_manager.core.handler import Handler
 
 
 @fixture()

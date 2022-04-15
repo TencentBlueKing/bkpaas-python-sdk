@@ -12,7 +12,7 @@ class TestGetRTXUserInfoCredentails:
             assert _get_app_credentials() == {'bk_app_code': 'foo', 'bk_app_secret': 'bar'}
 
     def test_not_provided(self, settings):
-        with pytest.raises(ImproperlyConfigured) as e:
+        with pytest.raises(ImproperlyConfigured):
             with mock.patch.multiple(
                 conf,
                 TOKEN_APP_CODE=None,

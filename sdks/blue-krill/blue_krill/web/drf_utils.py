@@ -109,9 +109,7 @@ class ViewCrown:
 
     def __post_init__(self):
         if self.query_in and self.body_in:
-            raise ValueError(
-                "there should be only one param between in_body & in_query"
-            )
+            raise ValueError("there should be only one param between in_body & in_query")
 
         self.valid_params = self.valid_params or {"raise_exception": True}
 
@@ -119,23 +117,17 @@ class ViewCrown:
         # 1. config as parameter from decorator
         # 2. config from django.settings
         # 3. config from Config class(above)
-        _config = getattr(
-            settings, _DEFAULT_SETTINGS_PREFIX + "DEFAULT_CONFIG", {}
-        ).copy()
+        _config = getattr(settings, _DEFAULT_SETTINGS_PREFIX + "DEFAULT_CONFIG", {}).copy()
         _config.update(self.config_params or {})
         self.config = Config(**_config)
 
         # remain an entrance for custom response class
         try:
-            self.resp_cls = import_string(
-                getattr(settings, _DEFAULT_SETTINGS_PREFIX + "RESP_CLS")
-            )
+            self.resp_cls = import_string(getattr(settings, _DEFAULT_SETTINGS_PREFIX + "RESP_CLS"))
         except AttributeError:
             self.resp_cls = import_string("rest_framework.response.Response")
 
-    def get_in_serializer_instance(
-        self, request: Optional["Request"] = None
-    ) -> "BaseSerializer":
+    def get_in_serializer_instance(self, request: Optional["Request"] = None) -> "BaseSerializer":
         if not self.body_in and not self.query_in:
             raise ValueError("should given at least one serializer input")
 
@@ -166,9 +158,7 @@ class ViewCrown:
 
         return slz_obj
 
-    def get_serializer_instance_by_request(
-        self, request: "Request"
-    ) -> "BaseSerializer":
+    def get_serializer_instance_by_request(self, request: "Request") -> "BaseSerializer":
         """Get in serializer instance"""
         slz_obj = self.get_in_serializer_instance(request)
         slz_obj.is_valid(**self.valid_params)
@@ -186,9 +176,7 @@ class ViewCrown:
         if self.config.return_validated_data:
             return {"validated_data": self.get_validated_data(request)}
         else:
-            return {
-                "serializer_instance": self.get_serializer_instance_by_request(request)
-            }
+            return {"serializer_instance": self.get_serializer_instance_by_request(request)}
 
     def get_response(self, data, out_params: dict) -> Any:
         """Get Response data"""
@@ -228,9 +216,7 @@ def generate_swagger_params(crown: ViewCrown, swagger_params: dict) -> dict:
         default_params = {"query_serializer": crown.get_in_serializer_instance()}
 
     if crown.out:
-        default_params.update(
-            {"responses": {crown.config.default_return_status: crown.out}}
-        )
+        default_params.update({"responses": {crown.config.default_return_status: crown.out}})
 
     default_params.update(swagger_params or {})
     return default_params
@@ -256,9 +242,7 @@ def inject_serializer(
         crown = ViewCrown(body_in, query_in, out, config)
 
         if not WearOptions.skip_swagger_schema:
-            func = swagger_auto_schema(
-                **generate_swagger_params(crown, swagger_kwargs)
-            )(func)
+            func = swagger_auto_schema(**generate_swagger_params(crown, swagger_kwargs))(func)
 
         @functools.wraps(func)
         def decorated(*args, **kwargs):

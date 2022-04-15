@@ -10,7 +10,6 @@
 """
 
 import pytest
-
 from blue_krill.cubing_case import RegexCubingHelper, shortcuts
 
 
