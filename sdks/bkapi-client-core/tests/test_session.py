@@ -9,7 +9,6 @@
  * specific language governing permissions and limitations under the License.
 """
 import pytest
-
 from bkapi_client_core.exceptions import PathParamsMissing
 from bkapi_client_core.session import Session
 

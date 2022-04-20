@@ -9,12 +9,11 @@
  * specific language governing permissions and limitations under the License.
 """
 import pytest
-from requests.exceptions import RequestException
-
 from bkapi_client_core.base import Operation, OperationGroup
 from bkapi_client_core.client import BaseClient, RequestContextBuilder, ResponseHeadersRepresenter
 from bkapi_client_core.exceptions import EndpointNotSetError, ResponseError
 from bkapi_client_core.property import bind_property
+from requests.exceptions import RequestException
 
 
 class TestRequestContextBuilder:

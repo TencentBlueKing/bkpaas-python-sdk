@@ -14,7 +14,6 @@ import uuid
 
 import pytest
 import redis
-
 from blue_krill.redis_tools.messaging import StreamChannel, StreamChannelSubscriber
 
 

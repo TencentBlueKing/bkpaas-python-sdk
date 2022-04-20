@@ -8,10 +8,9 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
-from cryptography.fernet import Fernet
-
 from blue_krill.encoding import force_bytes, force_text
 from blue_krill.encrypt.utils import get_default_secret_key
+from cryptography.fernet import Fernet
 
 
 class EncryptHandler:

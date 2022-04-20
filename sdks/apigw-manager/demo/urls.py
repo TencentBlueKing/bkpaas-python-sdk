@@ -9,9 +9,8 @@
  specific language governing permissions and limitations under the License.
 """
 
-from django.conf.urls import url
-
 from demo import views
+from django.conf.urls import url
 
 urlpatterns = [
     url(r'^test/jwt/?', views.jwt_info),

@@ -1,0 +1,47 @@
+[tool.poetry]
+name = "bkpaas-auth"
+version = "2.0.2"
+description = "User authentication django app for blueking internal projects"
+license = "Apach License 2.0"
+readme = "README.md"
+authors = ["blueking <blueking@tencent.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.6,<4.0"
+django = ">=1.11,<4.0"
+requests = "*"
+six = "*"
+cryptography = "*"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.4.1"
+pytest-django = "^3.8.0"
+mock = "^4.0.2"
+mypy = "^0.942"
+flake8 = "^3.8.4"
+rope = "^0.18.0"
+pytest-mock = "^3.4.0"
+types-cryptography = "^3.3.19"
+types-six = "^1.16.12"
+types-requests = "^2.27.16"
+types-mock = "^4.0.13"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
+
+[tool.black]
+line-length = 119
+skip-string-normalization = 'true'
+exclude = '''
+/(
+    .*/migrations/.*
+)/
+'''
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = 'true'
+force_grid_wrap = 0
+use_parentheses = 'true'
+line_length = 119

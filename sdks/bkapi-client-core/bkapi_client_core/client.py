@@ -12,11 +12,6 @@ import json
 import logging
 from typing import Any, Dict, Optional
 
-from requests import Response
-from requests.exceptions import HTTPError, RequestException
-from requests.sessions import merge_setting
-from requests.structures import CaseInsensitiveDict
-
 from bkapi_client_core.auth import BKApiAuthorization
 from bkapi_client_core.base import Operation
 from bkapi_client_core.exceptions import (
@@ -27,6 +22,10 @@ from bkapi_client_core.exceptions import (
 )
 from bkapi_client_core.session import Session
 from bkapi_client_core.utils import to_curl, urljoin
+from requests import Response
+from requests.exceptions import HTTPError, RequestException
+from requests.sessions import merge_setting
+from requests.structures import CaseInsensitiveDict
 
 logger = logging.getLogger(__name__)
 

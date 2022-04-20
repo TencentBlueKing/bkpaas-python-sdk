@@ -14,10 +14,9 @@ import sys
 
 import click
 import editor
-from cryptography.fernet import InvalidToken
-
 from blue_krill.encoding import force_bytes, force_text
 from blue_krill.encrypt.utils import decrypt_string, encrypt_string
+from cryptography.fernet import InvalidToken
 
 """The command line tool for blue_krill.secure module, it's can do follow things:
 

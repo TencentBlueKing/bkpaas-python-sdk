@@ -9,7 +9,6 @@
  * specific language governing permissions and limitations under the License.
 """
 import pytest
-
 from blue_krill.web.std_error import APIError, ErrorCode
 
 

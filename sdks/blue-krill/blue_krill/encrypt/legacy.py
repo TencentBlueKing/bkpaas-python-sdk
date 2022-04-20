@@ -11,9 +11,8 @@
 import base64
 from typing import Union
 
-from cryptography.hazmat.primitives.ciphers import Cipher
-
 from blue_krill.encoding import force_bytes, force_text
+from cryptography.hazmat.primitives.ciphers import Cipher
 
 
 def legacy_decrypt(text: Union[bytes, str], legacy_secret_key: Union[bytes, str]) -> str:

@@ -10,8 +10,8 @@
 """
 from bkapi_client_core.esb import generic_type_partial as _partial
 from bkapi_client_core.esb.django_helper import get_client_by_request as _get_client_by_request
-from bkapi_client_core.esb.django_helper import get_client_by_username as _get_client_by_username
 from bkapi_client_core.esb.django_helper import get_client_by_user as _get_client_by_user
+from bkapi_client_core.esb.django_helper import get_client_by_username as _get_client_by_username
 
 from .client import Client
 

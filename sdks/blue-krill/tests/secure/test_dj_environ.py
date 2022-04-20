@@ -11,10 +11,9 @@
 from functools import partial
 
 import pytest
-from cryptography.fernet import Fernet
-
 from blue_krill.encrypt.utils import encrypt_string
 from blue_krill.secure.dj_environ import EncryptedEnviron, SecureEnv
+from cryptography.fernet import Fernet
 
 
 class TestSecureEnv:

@@ -13,8 +13,6 @@ from pathlib import Path
 from textwrap import dedent
 
 import pytest
-from toml.decoder import TomlDecodeError
-
 from blue_krill.editions.editionctl import (
     Configuration,
     DirectorySyncer,
@@ -25,6 +23,7 @@ from blue_krill.editions.editionctl import (
     load_configuration,
     reset_project,
 )
+from toml.decoder import TomlDecodeError
 
 
 class TestLoadConfiguration:

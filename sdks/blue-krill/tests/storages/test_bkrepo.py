@@ -17,11 +17,10 @@ from urllib.parse import urljoin
 import pytest
 import requests
 import requests_mock
-from requests.auth import HTTPBasicAuth
-
 from blue_krill.contextlib import nullcontext as does_not_raise
 from blue_krill.storages.blobstore.bkrepo import BKGenericRepo
 from blue_krill.storages.blobstore.exceptions import ObjectAlreadyExists, UploadFailedError
+from requests.auth import HTTPBasicAuth
 from tests.utils import generate_random_string
 
 
