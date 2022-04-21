@@ -72,11 +72,14 @@ class Command(DefinitionCommand):
         if latest_version is None:
             return current_version, parse_version("?")
 
+        now_str = self.now_func().strftime("%Y%m%d%H%M%S")
         # 没有配置版本
         if current_version is None:
             # 加上当前时间作为元数据，但不改变版本优先级
-            now = self.now_func()
-            current_version = parse_version("%s+%s" % (latest_version.public, now.strftime("%Y%m%d%H%M%S")))
+            current_version = parse_version("%s+%s" % (latest_version.public, now_str))
+        # 手动升级过线上版本，或者同一版本已发布过，但版本内容发生了变化，需要重新发布
+        elif current_version <= latest_version:
+            current_version = parse_version("%s+%s" % (current_version.public, now_str))
 
         return current_version, latest_version
 
@@ -143,6 +146,7 @@ class Command(DefinitionCommand):
             print("resource_version already exists and is the latest, skip creating")
 
         result = releaser.release(
+            version=resource_version.get("version", ""),
             resource_version_name=resource_version["name"],
             title=title or resource_version.get("title", ""),
             comment=comment or resource_version.get("comment", ""),
@@ -150,5 +154,5 @@ class Command(DefinitionCommand):
         )
         print(
             "API gateway released %s, title %s, stages %s"
-            % (result["resource_version_name"], result["resource_version_title"], result["stage_names"])
+            % (result.get("version"), result["resource_version_title"], result["stage_names"])
         )

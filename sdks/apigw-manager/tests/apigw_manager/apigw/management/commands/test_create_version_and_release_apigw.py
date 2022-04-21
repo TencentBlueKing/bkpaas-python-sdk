@@ -109,14 +109,15 @@ def test_get_version_from_resource_version(command, resource_version, expected):
 
 
 @pytest.mark.parametrize(
-    # This is a parametrize decorator. It allows you to create multiple test cases with the same
-    # method name.
     "current, latest, expected_current_version, expected_latest_version",
     [
         (None, None, "0.0.1", "?"),
         (None, "1.0.0", "1.0.0+{build_metadata}", "1.0.0"),
         ("1.0.1", "1.0.0", "1.0.1", "1.0.0"),
         ("1.0.1", None, "1.0.1", "?"),
+        ("1.0.1", "1.0.1", "1.0.1+{build_metadata}", "1.0.1"),
+        ("1.0.1", "1.0.1+1", "1.0.1+{build_metadata}", "1.0.1+1"),
+        ("1.0.1", "1.0.2", "1.0.1+{build_metadata}", "1.0.2"),
     ],
 )
 def test_fix_version(command, current, latest, expected_current_version, expected_latest_version, datetime_now):
@@ -156,6 +157,7 @@ class TestHandle:
         stage = faker.pystr()
         fetcher.latest_resource_version.return_value = fake_resource_version
         releaser.release.return_value = {
+            "version": fake_resource_version["version"],
             "resource_version_name": fake_resource_version["name"],
             "resource_version_title": faker.pystr(),
             "stage_names": [stage],
@@ -167,6 +169,7 @@ class TestHandle:
         releaser.create_resource_version.assert_not_called()
         releaser.release.assert_called_once_with(
             stage_names=stage,
+            version=fake_resource_version["version"],
             resource_version_name=fake_resource_version["name"],
             title=fake_resource_version["title"],
             comment=fake_resource_version["comment"],
@@ -195,23 +198,35 @@ class TestHandle:
         stage = faker.pystr()
         fake_resource_version["name"] = faker.pystr()
         fetcher.latest_resource_version.return_value = fake_resource_version
+
+        parsed_fake_version = parse_version(fake_resource_version["version"])
+        current_version, _ = command.fix_version(parsed_fake_version, parsed_fake_version)
+        assert current_version > parsed_fake_version
+
         releaser.release.return_value = {
+            "version": str(current_version),
             "resource_version_name": fake_resource_version["name"],
             "resource_version_title": faker.pystr(),
             "stage_names": [stage],
         }
-        releaser.create_resource_version.return_value = fake_resource_version
+        releaser.create_resource_version.return_value = {
+            "version": str(current_version),
+            "name": fake_resource_version["name"],
+            "title": fake_resource_version["title"],
+            "comment": fake_resource_version["comment"],
+        }
         resource_sync_manager.is_dirty.return_value = True
 
         command.handle(stage=stage, **default_command_flags)
 
         releaser.create_resource_version.assert_any_call(
-            version=fake_resource_version["version"],
+            version=str(current_version),
             title=fake_resource_version["title"],
             comment=fake_resource_version["comment"],
         )
         releaser.release.assert_called_once_with(
             stage_names=stage,
+            version=str(current_version),
             resource_version_name=fake_resource_version["name"],
             title=fake_resource_version["title"],
             comment=fake_resource_version["comment"],
@@ -242,9 +257,10 @@ class TestHandle:
             "version": latest_version,
             **fake_resource_version,
         }
-
-        releaser.create_resource_version.return_value = fake_resource_version
-
+        releaser.create_resource_version.return_value = dict(
+            fake_resource_version,
+            version=current_version,
+        )
         stage = faker.pystr()
         command.handle(stage=stage, **default_command_flags)
 
@@ -255,6 +271,7 @@ class TestHandle:
         )
         releaser.release.assert_any_call(
             stage_names=stage,
+            version=current_version,
             resource_version_name=fake_resource_version["name"],
             title=fake_resource_version["title"],
             comment=fake_resource_version["comment"],
@@ -273,6 +290,7 @@ class TestHandle:
         stage = faker.pystr()
         fetcher.latest_resource_version.return_value = fake_resource_version
         releaser.release.return_value = {
+            "version": fake_resource_version["version"],
             "resource_version_name": fake_resource_version["name"],
             "resource_version_title": faker.pystr(),
             "stage_names": [stage],
@@ -284,6 +302,7 @@ class TestHandle:
         releaser.create_resource_version.assert_not_called()
         releaser.release.assert_called_once_with(
             stage_names=stage,
+            version=fake_resource_version["version"],
             resource_version_name=fake_resource_version["name"],
             title=fake_resource_version["title"],
             comment=fake_resource_version["comment"],
