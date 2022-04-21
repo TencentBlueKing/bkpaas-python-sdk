@@ -14,7 +14,7 @@ from .models import Context
 
 
 class ContextAdmin(admin.ModelAdmin):
-    list_display = ("id", "created_at", "updated_at", "scope", "key")
+    list_display = ("id", "scope", "key", "created_at", "updated_at")
     search_fields = ("scope", "key", "value")
     list_filter = ("scope", "key")
 

@@ -158,23 +158,41 @@ class TestApiGatewayJWTGenericMiddleware:
         assert isinstance(middleware.cache, DummyCache)
 
     def test_get_public_key_from_cache(self, mock_response, api_name, django_jwt_cache):
-        django_jwt_cache.get.return_value = "testing"
+        jwt_issuer = "blueking"
+
+        def side_effect(key):
+            data = {
+                "apigw:public_key::%s" % api_name: "testing-01",
+                "apigw:public_key:%s:%s" % (jwt_issuer, api_name): "testing-02",
+            }
+            return data[key]
+
+        django_jwt_cache.get.side_effect = side_effect
 
         middleware = authentication.ApiGatewayJWTGenericMiddleware(mock_response)
-        public_key = middleware.get_public_key(api_name)
-
-        assert public_key == "testing"
+        assert middleware.get_public_key(api_name) == "testing-01"
+        assert middleware.get_public_key(api_name, jwt_issuer) == "testing-02"
 
     def test_get_public_key_cache_missed(self, mock_response, api_name, django_jwt_cache, public_key_in_db):
         django_jwt_cache.get.return_value = None
 
         middleware = authentication.ApiGatewayJWTGenericMiddleware(mock_response)
-        public_key = middleware.get_public_key(api_name)
 
+        public_key = middleware.get_public_key(api_name)
         assert public_key == public_key_in_db
 
         django_jwt_cache.set.assert_called_with(
-            "apigw:public_key:%s" % api_name,
+            "apigw:public_key::%s" % api_name,
+            public_key_in_db,
+            middleware.cache_expires,
+            middleware.cache_version,
+        )
+
+        public_key = middleware.get_public_key(api_name, "not-exist")
+        assert public_key == public_key_in_db
+
+        django_jwt_cache.set.assert_called_with(
+            "apigw:public_key:not-exist:%s" % api_name,
             public_key_in_db,
             middleware.cache_expires,
             middleware.cache_version,

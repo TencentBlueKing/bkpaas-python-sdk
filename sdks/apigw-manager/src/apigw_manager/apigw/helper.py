@@ -75,6 +75,11 @@ class ContextManager:
 
         return context.value
 
+    def get_values(self, keys):
+        if not keys:
+            return {}
+        return dict(ContextModel.objects.filter(scope=self.scope, key__in=keys).values_list("key", "value"))
+
     def set_value(self, key, value):
         _, created = self.set_context(key, value)
 
@@ -87,8 +92,31 @@ class PublicKeyManager(ContextManager):
     def get(self, api_name):
         return self.get_value(api_name)
 
-    def set(self, api_name, public_key):
-        self.set_value(api_name, public_key)
+    def set(self, api_name, public_key, issuer=None):
+        key = self._get_key(api_name, issuer)
+        self.set_value(key, public_key)
+
+    def get_best_matched(self, api_name, issuer=None):
+        context_key = self._get_key(api_name, issuer)
+        available_keys = [context_key, api_name] if issuer else [context_key]
+
+        values = self.get_values(available_keys)
+        public_key = next((values[key] for key in available_keys if key in values), None)
+
+        if public_key and issuer and context_key not in values:
+            logger.warning(
+                "Get jwt public_key from context key='%s', but should get from key='%s', "
+                "please re-update public_key according to command fetch_apigw_public_key",
+                api_name,
+                context_key,
+            )
+
+        return public_key
+
+    def _get_key(self, api_name, issuer=None):
+        if issuer:
+            return "%s:%s" % (issuer, api_name)
+        return api_name
 
     def current(self):
         configuration = get_configuration()

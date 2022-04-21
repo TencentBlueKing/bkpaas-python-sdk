@@ -55,7 +55,7 @@ class ApiGatewayJWTMiddleware:
         self.algorithm = getattr(settings, 'APIGW_JWT_ALGORITHM', self.ALGORITHM)
         self.allow_invalid_jwt_token = getattr(settings, 'APIGW_ALLOW_INVALID_JWT_TOKEN', False)
 
-    def get_public_key(self, api_name):
+    def get_public_key(self, api_name, jwt_issuer=None):
         """Return the public key specified by Settings"""
         public_key = getattr(settings, 'APIGW_PUBLIC_KEY', None)
         if not public_key:
@@ -83,7 +83,7 @@ class ApiGatewayJWTMiddleware:
         try:
             jwt_header = self.decode_jwt_header(jwt_token)
             api_name = jwt_header.get("kid") or self.default_api_name
-            public_key = self.get_public_key(api_name)
+            public_key = self.get_public_key(api_name, jwt_header.get("iss"))
             if not public_key:
                 logger.warning('no public key found')
                 return self.get_response(request)
@@ -135,16 +135,16 @@ class ApiGatewayJWTGenericMiddleware(ApiGatewayJWTMiddleware):
         else:
             self.cache = DummyCache(cache_name, params={})
 
-    def get_public_key(self, api_name):
+    def get_public_key(self, api_name, jwt_issuer=None):
         """Get the specified public key from Context model, if not specified, return the default value"""
-        cache_key = "apigw:public_key:%s" % api_name
+        cache_key = "apigw:public_key:%s:%s" % (jwt_issuer or "", api_name)
         cached_value = self.cache.get(cache_key)
         if cached_value:
             return cached_value
 
-        public_key = PublicKeyManager().get(api_name or self.default_api_name)
+        public_key = PublicKeyManager().get_best_matched(api_name or self.default_api_name, jwt_issuer)
         if not public_key:
-            return super(ApiGatewayJWTGenericMiddleware, self).get_public_key(api_name)
+            return super(ApiGatewayJWTGenericMiddleware, self).get_public_key(api_name, jwt_issuer)
 
         self.cache.set(cache_key, public_key, self.cache_expires, self.cache_version)
         return public_key

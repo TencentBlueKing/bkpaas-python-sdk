@@ -23,15 +23,17 @@ class Command(FetchCommand):
         parser.add_argument(
             "-p", "--print", dest="print_", default=False, action="store_true", help="print the public key"
         )
+        parser.add_argument("--bk-app-code", dest="bk_app_code", help="app code")
+        parser.add_argument("--bk-app-secret", dest="bk_app_secret", help="app secret")
         parser.add_argument("--no-save", default=False, action="store_true", help="do not save the public key")
 
     def handle(self, print_, no_save, *args, **kwargs):
         configuration = self.get_configuration(**kwargs)
         manager = self.manager_class(configuration)
-        public_key = manager.public_key()
+        result = manager.public_key()
 
         if print_:
-            print(public_key)
+            print(result["public_key"])
 
         if not no_save:
-            self.PublicKeyManager().set(configuration.api_name, public_key)
+            self.PublicKeyManager().set(configuration.api_name, result["public_key"], result.get("issuer"))
