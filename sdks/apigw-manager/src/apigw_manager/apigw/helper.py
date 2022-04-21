@@ -103,7 +103,17 @@ class PublicKeyManager(ContextManager):
             available_keys = [api_name]
 
         values = self.get_values(available_keys)
-        return next((values[key] for key in available_keys if key in values), None)
+        public_key = next((values[key] for key in available_keys if key in values), None)
+
+        if public_key and issuer and self._get_key(api_name, issuer) not in values:
+            logger.warning(
+                "Get jwt public_key from context key=%s, but should get from key=%s, "
+                "please re-update public_key according to command fetch_apigw_public_key",
+                issuer,
+                api_name,
+            )
+
+        return public_key
 
     def _get_key(self, api_name, issuer=None):
         if issuer:
