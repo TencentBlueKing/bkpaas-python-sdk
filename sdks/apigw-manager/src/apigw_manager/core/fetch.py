@@ -18,7 +18,7 @@ class Fetcher(Handler):
     def public_key(self, *args, **kwargs):
         """Get the API gateway public key according to the name"""
         result = self._call_with_cache(self.client.api.get_apigw_public_key, *args, **kwargs)
-        return self._parse_result(result, itemgetter("data", "public_key"))
+        return self._parse_result(result, itemgetter("data"))
 
     def latest_resource_version(self, *args, **kwargs):
         """Get the latest resource version"""

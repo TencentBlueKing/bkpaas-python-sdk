@@ -72,6 +72,17 @@ class TestContextManager:
 
         assert self.manager.get_value(key) == context.value
 
+    def test_get_values(self, faker):
+        key1 = faker.pystr()
+        key2 = faker.pystr()
+
+        context1 = Context.objects.create(scope=self.manager.scope, key=key1, value=faker.pystr())
+        context2 = Context.objects.create(scope=self.manager.scope, key=key2, value=faker.pystr())
+
+        assert self.manager.get_values([]) == {}
+        assert self.manager.get_values([key1]) == {key1: context1.value}
+        assert self.manager.get_values([key1, key2]) == {key1: context1.value, key2: context2.value}
+
     def test_set_value(self, faker):
         key = faker.pystr()
         value = faker.pystr()
@@ -103,9 +114,38 @@ class TestPublicKeyManager:
         )
         assert self.manager.get(api_name) == context.value
 
+    def test_best_matched(self, faker):
+        jwt_issuer = faker.pystr()
+        api_name = faker.pystr()
+
+        context1 = Context.objects.create(
+            key="%s:%s" % (jwt_issuer, api_name), scope=self.manager.scope, value=faker.pystr()
+        )
+        context2 = Context.objects.create(key=api_name, scope=self.manager.scope, value=faker.pystr())
+
+        public_key = self.manager.get_best_matched(api_name)
+        assert public_key == context2.value
+
+        public_key = self.manager.get_best_matched(api_name, jwt_issuer)
+        assert public_key == context1.value
+
+        public_key = self.manager.get_best_matched(api_name, "not-exist")
+        assert public_key == context2.value
+
+        public_key = self.manager.get_best_matched("not-exist")
+        assert public_key is None
+
+        public_key = self.manager.get_best_matched("not-exist", jwt_issuer)
+        assert public_key is None
+
     def test_set(self, api_name, faker):
         self.manager.set(api_name, faker.pystr())
         self.manager.set(api_name, faker.pystr())
+        self.manager.set(api_name, faker.pystr(), faker.pystr())
+
+    def test_get_key(self):
+        assert self.manager._get_key("foo") == "foo"
+        assert self.manager._get_key("foo", "bar") == "bar:foo"
 
     def test_current(self, api_name, faker):
         context = Context.objects.create(
