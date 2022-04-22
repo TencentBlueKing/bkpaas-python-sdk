@@ -57,8 +57,8 @@ class TestGetConfiguration:
         ],
     )
     def test_host_by_kwargs(self, settings, kwargs, expected):
-        delattr(settings, "BK_APIGATEWAY_API_STAGE_URL")
-        delattr(settings, "BK_API_URL_TMPL")
+        settings.BK_APIGATEWAY_API_STAGE_URL = ""
+        settings.BK_API_URL_TMPL = ""
 
         configuration = get_configuration(**kwargs)
 
@@ -90,8 +90,8 @@ class TestGetConfiguration:
         ],
     )
     def test_host_by_settings(self, settings, fake_settings, expected):
-        delattr(settings, "BK_APIGATEWAY_API_STAGE_URL")
-        delattr(settings, "BK_API_URL_TMPL")
+        settings.BK_APIGATEWAY_API_STAGE_URL = ""
+        settings.BK_API_URL_TMPL = ""
         for key, value in fake_settings.items():
             setattr(settings, key, value)
 

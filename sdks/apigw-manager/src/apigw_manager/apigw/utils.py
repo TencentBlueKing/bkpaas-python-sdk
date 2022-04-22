@@ -42,10 +42,10 @@ def get_configuration(**kwargs):
 
 
 def _get_host_from_settings():
-    if hasattr(settings, "BK_APIGATEWAY_API_STAGE_URL"):
+    if getattr(settings, "BK_APIGATEWAY_API_STAGE_URL", None):
         return settings.BK_APIGATEWAY_API_STAGE_URL
 
-    if hasattr(settings, "BK_API_URL_TMPL"):
+    if getattr(settings, "BK_API_URL_TMPL", None):
         # API 网关 admin API 对应网关名为 bk-apigateway
         return "%s/prod/" % settings.BK_API_URL_TMPL.format(api_name="bk-apigateway").rstrip("/")
 
