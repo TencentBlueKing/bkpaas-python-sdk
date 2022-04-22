@@ -40,33 +40,64 @@ class TestGetConfiguration:
         assert configuration.bk_app_secret == settings.BK_APP_SECRET
 
     @pytest.mark.parametrize(
-        ["tmpl", "expected"],
+        "kwargs, expected",
         [
-            ("http://apigw.svc/api/{api_name}/", "http://apigw.svc/api/bk-apigateway/prod"),
-            ("http://apigw.svc/api/{api_name}", "http://apigw.svc/api/bk-apigateway/prod"),
+            (
+                {},
+                "",
+            ),
+            (
+                {"host": "http://apigw.svc/api/test/prod/"},
+                "http://apigw.svc/api/test/prod",
+            ),
+            (
+                {"host": "http://apigw.svc/api/test/prod"},
+                "http://apigw.svc/api/test/prod",
+            ),
         ],
     )
-    def test_api_url_tmpl(self, settings, tmpl, expected):
-        settings.BK_API_URL_TMPL = tmpl
+    def test_host_by_kwargs(self, settings, kwargs, expected):
+        settings.BK_APIGATEWAY_API_STAGE_URL = ""
+        settings.BK_API_URL_TMPL = ""
+
+        configuration = get_configuration(**kwargs)
+
+        assert configuration.host == expected
+
+    @pytest.mark.parametrize(
+        "fake_settings, expected",
+        [
+            (
+                {},
+                "",
+            ),
+            (
+                {
+                    "BK_APIGATEWAY_API_STAGE_URL": "http://apigw.svc/api/bk-apigateway/prod",
+                },
+                "http://apigw.svc/api/bk-apigateway/prod",
+            ),
+            (
+                {"BK_API_URL_TMPL": "http://apigw.svc/api/{api_name}/"},
+                "http://apigw.svc/api/bk-apigateway/prod",
+            ),
+            (
+                {
+                    "BK_API_URL_TMPL": "http://apigw.svc/api/{api_name}",
+                },
+                "http://apigw.svc/api/bk-apigateway/prod",
+            ),
+        ],
+    )
+    def test_host_by_settings(self, settings, fake_settings, expected):
+        settings.BK_APIGATEWAY_API_STAGE_URL = ""
+        settings.BK_API_URL_TMPL = ""
+        for key, value in fake_settings.items():
+            setattr(settings, key, value)
 
         configuration = get_configuration()
 
         assert configuration.host == expected
-
-    def test_api_url_tmpl_specified_by_settings(self, settings):
-        settings.BK_API_URL_TMPL = "http://apigw.svc/api/{api_name}"
-        settings.BK_APIGW_API_NAME = "bk-apigw"
-
-        configuration = get_configuration()
-
-        assert configuration.host == "http://apigw.svc/api/bk-apigw/prod"
-
-    def test_api_url_tmpl_specified_by_kwargs(self, settings):
-        settings.BK_API_URL_TMPL = "http://apigw.svc/api/{api_name}"
-
-        configuration = get_configuration(apigw_name="bk-apigw")
-
-        assert configuration.host == "http://apigw.svc/api/bk-apigw/prod"
 
 
 class TestParseValueList:

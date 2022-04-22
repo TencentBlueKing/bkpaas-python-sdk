@@ -41,25 +41,24 @@ class Command(DefinitionCommand):
         parser.add_argument("--generate-sdks", default=False, action="store_true", help="with sdks generation")
 
     def get_version_from_definition(self, definition):
-        for k in ["version", "title"]:
-            value = definition.get(k)
-            if not value:
-                continue
-
-            return parse_version(value)
+        version = definition.get("version")
+        if version:
+            return parse_version(version)
+        return None
 
     def get_version_from_resource_version(self, resource_version):
         if not resource_version:
             return None
 
-        for k in ["version", "title"]:
-            value = resource_version.get(k)
-            if not value:
-                continue
-
-            return parse_version(value)
+        version = resource_version.get("version")
+        if version:
+            return parse_version(version)
+        return None
 
     def fix_version(self, current_version, latest_version):
+        if isinstance(current_version, LegacyVersion):
+            raise ValueError("current version %s is not a valid version" % current_version)
+
         # 非语义化版本，直接忽略
         if isinstance(latest_version, LegacyVersion):
             latest_version = None
@@ -72,11 +71,14 @@ class Command(DefinitionCommand):
         if latest_version is None:
             return current_version, parse_version("?")
 
+        now_str = self.now_func().strftime("%Y%m%d%H%M%S")
         # 没有配置版本
         if current_version is None:
             # 加上当前时间作为元数据，但不改变版本优先级
-            now = self.now_func()
-            current_version = parse_version("%s+%s" % (latest_version.public, now.strftime("%Y%m%d%H%M%S")))
+            current_version = parse_version("%s+%s" % (latest_version.public, now_str))
+        # 手动升级过线上版本，或者同一版本已发布过，但版本内容发生了变化，需要重新发布
+        elif current_version <= latest_version:
+            current_version = parse_version("%s+%s" % (current_version.public, now_str))
 
         return current_version, latest_version
 
@@ -111,12 +113,12 @@ class Command(DefinitionCommand):
 
     def handle(self, stage, title, comment, *args, **kwargs):
         configuration = self.get_configuration(**kwargs)
+        definition = self.get_definition(**kwargs)
+        current_version = self.get_version_from_definition(definition)
+
         fetcher = self.Fetcher(configuration)
         resource_version = fetcher.latest_resource_version()
         latest_version = self.get_version_from_resource_version(resource_version)
-
-        definition = self.get_definition(**kwargs)
-        current_version = self.get_version_from_definition(definition)
 
         current_version, latest_version = self.fix_version(current_version, latest_version)
 
@@ -143,6 +145,7 @@ class Command(DefinitionCommand):
             print("resource_version already exists and is the latest, skip creating")
 
         result = releaser.release(
+            version=resource_version.get("version", ""),
             resource_version_name=resource_version["name"],
             title=title or resource_version.get("title", ""),
             comment=comment or resource_version.get("comment", ""),
@@ -150,5 +153,5 @@ class Command(DefinitionCommand):
         )
         print(
             "API gateway released %s, title %s, stages %s"
-            % (result["resource_version_name"], result["resource_version_title"], result["stage_names"])
+            % (result.get("version"), result["resource_version_title"], result["stage_names"])
         )

@@ -26,7 +26,7 @@ class ApiCommand(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("--api-name", help="api name")
-        parser.add_argument("--host", help="apigateway host")
+        parser.add_argument("--host", help="apigateway host with stage of admin api `bk-apigateway`")
 
     def get_configuration(self, **kwargs):
         return get_configuration(**{k: v for k, v in kwargs.items() if v is not None})
