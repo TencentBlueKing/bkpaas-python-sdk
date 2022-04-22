@@ -110,6 +110,7 @@ def test_get_version_from_resource_version(command, resource_version, expected):
         ("1.0.1", "1.0.1", "1.0.1+{build_metadata}", "1.0.1"),
         ("1.0.1", "1.0.1+1", "1.0.1+{build_metadata}", "1.0.1+1"),
         ("1.0.1", "1.0.2", "1.0.1+{build_metadata}", "1.0.2"),
+        ("1.0.1", "test", "1.0.1", "?"),
     ],
 )
 def test_fix_version(command, current, latest, expected_current_version, expected_latest_version, datetime_now):
@@ -121,6 +122,11 @@ def test_fix_version(command, current, latest, expected_current_version, expecte
     build_metadata = datetime_now.strftime("%Y%m%d%H%M%S")
     assert str(current_version) == expected_current_version.format(build_metadata=build_metadata)
     assert str(latest_version) == expected_latest_version.format(build_metadata=build_metadata)
+
+
+def test_fix_version_error(command):
+    with pytest.raises(ValueError):
+        command.fix_version(parse_version("test"), None)
 
 
 def test_generate_sdks_with_false_flag(command, fake_resource_version, releaser):
