@@ -57,7 +57,7 @@ class Command(DefinitionCommand):
 
     def fix_version(self, current_version, latest_version):
         if isinstance(current_version, LegacyVersion):
-            raise ValueError(f"current version {current_version} is not a valid version")
+            raise ValueError("current version %s is not a valid version" % current_version)
 
         # 非语义化版本，直接忽略
         if isinstance(latest_version, LegacyVersion):
