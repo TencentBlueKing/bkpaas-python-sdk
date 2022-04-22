@@ -31,16 +31,7 @@ def get_configuration(**kwargs):
 
     host = kwargs.pop("host", "")
     if not host:
-        apigw_name = kwargs.get("apigw_name") or getattr(settings, "BK_APIGW_API_NAME", "bk-apigateway")
-
-        if hasattr(settings, "BK_API_URL_TMPL"):
-            host = "%s/prod/" % settings.BK_API_URL_TMPL.format(api_name=apigw_name).rstrip("/")
-
-        elif hasattr(settings, "BK_API_STAGE_URL_TMPL"):
-            host = settings.BK_API_STAGE_URL_TMPL.format(
-                api_name=apigw_name,
-                stage_name="prod",
-            )
+        host = _get_host_from_settings()
 
     # stage has been added to host, here stage is set to an empty string
     return configuration.Configuration(
@@ -48,6 +39,17 @@ def get_configuration(**kwargs):
         stage="",
         **kwargs,
     )
+
+
+def _get_host_from_settings():
+    if hasattr(settings, "BK_APIGATEWAY_API_STAGE_URL"):
+        return settings.BK_APIGATEWAY_API_STAGE_URL
+
+    if hasattr(settings, "BK_API_URL_TMPL"):
+        # API 网关 admin API 对应网关名为 bk-apigateway
+        return "%s/prod/" % settings.BK_API_URL_TMPL.format(api_name="bk-apigateway").rstrip("/")
+
+    return ""
 
 
 def yaml_load(content):
