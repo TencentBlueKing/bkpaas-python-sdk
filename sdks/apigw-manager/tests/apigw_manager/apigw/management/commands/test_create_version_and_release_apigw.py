@@ -71,23 +71,16 @@ def fake_resource_version():
 
 
 @pytest.mark.parametrize(
-    "version, title, expected",
+    "version, expected",
     [
-        (None, None, "None"),
-        ("1.0.0", None, "1.0.0"),
-        (None, "1.0.0", "1.0.0"),
-        ("1.0.1", "1.0.0", "1.0.1"),
-        ("v1.0.0", None, "1.0.0"),
-        (None, "v1.0.0", "1.0.0"),
+        (None, "None"),
+        ("1.0.0", "1.0.0"),
+        ("1.0.1", "1.0.1"),
+        ("v1.0.0", "1.0.0"),
     ],
 )
-def test_get_version_from_definition(command, version, title, expected):
-    result = command.get_version_from_definition(
-        {
-            "version": version,
-            "title": title,
-        }
-    )
+def test_get_version_from_definition(command, version, expected):
+    result = command.get_version_from_definition({"version": version})
 
     assert str(result) == expected
 
@@ -96,10 +89,9 @@ def test_get_version_from_definition(command, version, title, expected):
     "resource_version, expected",
     [
         (None, "None"),
+        ({}, "None"),
         ({"version": "1.0.0"}, "1.0.0"),
         ({"version": "v1.0.0"}, "1.0.0"),
-        ({"title": "1.0.0"}, "1.0.0"),
-        ({"title": "v1.0.0"}, "1.0.0"),
     ],
 )
 def test_get_version_from_resource_version(command, resource_version, expected):

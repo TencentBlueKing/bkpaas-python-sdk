@@ -41,23 +41,19 @@ class Command(DefinitionCommand):
         parser.add_argument("--generate-sdks", default=False, action="store_true", help="with sdks generation")
 
     def get_version_from_definition(self, definition):
-        for k in ["version", "title"]:
-            value = definition.get(k)
-            if not value:
-                continue
-
-            return parse_version(value)
+        version = definition.get("version")
+        if version:
+            return parse_version(version)
+        return None
 
     def get_version_from_resource_version(self, resource_version):
         if not resource_version:
             return None
 
-        for k in ["version", "title"]:
-            value = resource_version.get(k)
-            if not value:
-                continue
-
-            return parse_version(value)
+        version = resource_version.get("version")
+        if version:
+            return parse_version(version)
+        return None
 
     def fix_version(self, current_version, latest_version):
         # 非语义化版本，直接忽略
