@@ -556,11 +556,6 @@ report = SomeRedisProbe().report()
 
 首先，执行 `poetry build` 命令在 dist 目录下生成当前版本的包(需要检查 dist 目录中的内容是否符合预期，避免上传其他版本覆盖)。然后执行 `twine upload dist/* --repository-url {pypi_address} --username {your_name} --password {your_token}` 将其上传到 pypi 服务器上。
 
-### 关于 setup.py
+### 以“可编辑模式”安装
 
-虽然在 [PEP 517](https://python-poetry.org/docs/pyproject/#poetry-and-pep-517) 规范里，Python 包不再需要 `setup.py` 文件。但真正少了 `setup.py` 文件后，会发现有些功能就没法正常使用，比如 pip 的可编辑安装模式、tox 等（[相关文档](https://github.com/python-poetry/poetry/issues/761)）。所以我们仍然需要它。
-
-为了避免维护重复的 `pyproject.toml` 和 `setup.py` 文件，我们使用了 [dephell](https://github.com/dephell/dephell) 工具来自动生成 `setup.py` 文件。
-
-- 安装 dephell
-- 在根目录执行 `dephell deps convert --from pyproject.toml --to setup.py`
+进入项目根目录，执行 `pip install -e .` 以“可编辑模式”安装包。该操作要求 pip 为版本 21.3 及以上[（参考）](https://pip.pypa.io/en/stable/news/#v21-3)。

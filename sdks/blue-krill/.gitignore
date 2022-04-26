@@ -98,3 +98,7 @@ Pipfile.lock
 
 .vscode/
 .mypy_cache
+
+# Pre-CI files
+.codecc
+build.yml

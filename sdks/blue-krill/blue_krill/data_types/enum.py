@@ -12,7 +12,7 @@ import dataclasses
 from collections import OrderedDict
 from enum import Enum as OrigEnum
 from enum import EnumMeta, auto
-from typing import Any, Dict, List, Optional, Tuple, Type
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type
 
 
 @dataclasses.dataclass(init=False)
@@ -122,7 +122,17 @@ class FeatureFlag(str, metaclass=FeatureFlagMeta):
         setattr(cls, name, field)
 
 
-class EnumField:
+# Treat `EnumField` as Any to make it pass some strict type checking, for example:
+# when `foo = EnumField(...)` and `foo` was read via `SomeClass.foo.value`.
+#
+# TODO: Write a mypy plugin to provide better typing experience.
+if TYPE_CHECKING:
+    EnumFieldBase = Any
+else:
+    EnumFieldBase = object
+
+
+class EnumField(EnumFieldBase):
     """Use it with `StructuredEnum` type
 
     :param real_value: the real value of enum member
