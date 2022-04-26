@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 import mock
 import pytest
+from django.conf import settings
+
 from bkpaas_auth import get_user_by_user_id
 from bkpaas_auth.core.constants import ProviderType
 from bkpaas_auth.core.services import get_bk_user_info
 from bkpaas_auth.core.token import LoginToken, create_user_from_token
 from bkpaas_auth.core.user_info import BkUserInfo
 from bkpaas_auth.models import User
-from django.conf import settings
 from tests.utils import mock_json_response
 
 

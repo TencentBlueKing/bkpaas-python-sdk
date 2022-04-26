@@ -12,7 +12,7 @@ import copy
 import functools
 from collections import namedtuple
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, List, Optional, Type, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, Union
 
 from django.conf import settings
 from django.http.response import HttpResponseBase
@@ -104,7 +104,7 @@ class ViewCrown:
     body_in: Optional[Union[Type[BaseSerializer], BaseSerializer]]
     query_in: Optional[Union[Type[BaseSerializer], BaseSerializer]]
     out: Union[Type[BaseSerializer], BaseSerializer]
-    config_params: dict = field(default_factory=dict)
+    config_params: Optional[dict] = field(default_factory=dict)
     valid_params: dict = field(default_factory=dict)
 
     def __post_init__(self):
@@ -246,15 +246,15 @@ def inject_serializer(
 
         @functools.wraps(func)
         def decorated(*args, **kwargs):
-            args = list(args)
-            in_content = {}
+            new_args = list(args)
+            in_content: Dict[str, Any] = {}
             if body_in or query_in:
-                in_content.update(**crown.get_in_params(args[1]))
+                in_content.update(**crown.get_in_params(new_args[1]))
 
             if not crown.config.remain_request:
-                del args[1]
+                del new_args[1]
 
-            original_data = func(*args, **kwargs, **in_content)
+            original_data = func(*new_args, **kwargs, **in_content)
             if not out:
                 return original_data
 

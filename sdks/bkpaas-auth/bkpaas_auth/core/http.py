@@ -12,6 +12,7 @@ import logging
 from typing import Tuple, Union
 
 import requests
+
 from bkpaas_auth.conf import bkauth_settings
 
 logger = logging.getLogger(__name__)

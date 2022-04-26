@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from bkpaas_auth.conf import bkauth_settings
 from django.utils.timezone import now
+
+from bkpaas_auth.conf import bkauth_settings
 
 logger = logging.getLogger(__name__)
 

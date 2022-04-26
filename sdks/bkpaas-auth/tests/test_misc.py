@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from unittest import mock
 
-from bkpaas_auth import get_user_by_user_id
 from django.conf import settings
+
+from bkpaas_auth import get_user_by_user_id
 from tests.utils import mock_json_response
 
 

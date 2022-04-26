@@ -9,6 +9,7 @@
  * specific language governing permissions and limitations under the License.
 """
 import pytest
+
 from apigw_manager.apigw.management.commands.apply_apigw_permissions import Command
 
 

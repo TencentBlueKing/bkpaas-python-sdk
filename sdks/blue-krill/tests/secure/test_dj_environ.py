@@ -11,9 +11,10 @@
 from functools import partial
 
 import pytest
+from cryptography.fernet import Fernet
+
 from blue_krill.encrypt.utils import encrypt_string
 from blue_krill.secure.dj_environ import EncryptedEnviron, SecureEnv
-from cryptography.fernet import Fernet
 
 
 class TestSecureEnv:
@@ -42,7 +43,7 @@ class TestSecureEnv:
         monkeypatch.setenv('ENCRYPT_VALUE', encrypt_string(raw))
 
         class MySecureEnv(SecureEnv):
-            ENVIRON_CLS = partial(EncryptedEnviron, decryptor=lambda value, key: raw)
+            ENVIRON_CLS = partial(EncryptedEnviron, decryptor=lambda value, key: raw)  # type: ignore
 
         env = MySecureEnv()
         assert env.str("ENCRYPT_VALUE") == raw

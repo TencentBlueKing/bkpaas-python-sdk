@@ -10,9 +10,10 @@
 """
 import unittest
 
+from cryptography.fernet import Fernet
+
 from blue_krill.encrypt.handler import EncryptHandler
 from blue_krill.encrypt.legacy import legacy_decrypt, legacy_encrypt
-from cryptography.fernet import Fernet
 
 
 class TestEncrypt:

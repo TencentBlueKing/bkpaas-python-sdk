@@ -11,12 +11,13 @@
 import string
 from typing import Any, Dict, Optional
 
-from bkapi_client_core import __version__
-from bkapi_client_core.exceptions import PathParamsMissing
 from requests import Session as RequestSession
 from requests.hooks import dispatch_hook
 from requests.models import RequestHooksMixin
 from requests.sessions import merge_setting
+
+from bkapi_client_core import __version__
+from bkapi_client_core.exceptions import PathParamsMissing
 
 
 class _UrlRender(string.Formatter):

@@ -12,4 +12,4 @@
 
 class NoFatalIssueError(Exception):
     def __init__(self, *args, **kwargs):
-        super().__init__("no exact fatal issue, please offer one", *args, **kwargs)
+        super().__init__("no exact fatal issue, please offer one")

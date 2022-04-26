@@ -51,7 +51,7 @@ class HAEndpointPool:
     def from_list(cls, raw_list: Optional[Iterable]) -> 'HAEndpointPool':
         pool = cls()
         # generator always return True
-        raw_list = list(raw_list)
+        raw_list = list(raw_list or [])
         if not raw_list:
             raise ValueError("raw list can not be empty")
 
@@ -67,7 +67,18 @@ class HAEndpointPool:
         return self._pool
 
     @property
-    def active(self) -> 'Endpoint':
+    def active(self) -> 'Optional[Endpoint]':
+        return self._active
+
+    @property
+    def active_endpoint(self) -> 'Endpoint':
+        """Return current active endpoint, will raise RuntimeError when no active object
+        can be found, which means current Poll was not initialized yet.
+
+        :raise: RuntimeError
+        """
+        if not self._active:
+            raise RuntimeError('No active Endpoint')
         return self._active
 
     @property
@@ -92,7 +103,7 @@ class HAEndpointPool:
             score_delta = self.failure_score_delta
 
         with self._rlock:
-            self._active.fail(score_delta=score_delta)
+            self.active_endpoint.fail(score_delta=score_delta)
             # only isolate when fail
             self.try_to_isolate(method=isolate_method)
 
@@ -102,10 +113,11 @@ class HAEndpointPool:
             score_delta = self.success_score_delta
 
         with self._rlock:
-            self._active.succeed(score_delta=score_delta)
+            self.active_endpoint.succeed(score_delta=score_delta)
 
     @use_algo_as_default('should_be_isolated')
     def try_to_isolate(self, method: Callable[['Endpoint'], bool] = None):
+        assert method is not None
         with self._rlock:
             # both copy.copy() and copy.deepcopy() are not thread safe!
             pool_copy = list(self._pool)
@@ -119,6 +131,7 @@ class HAEndpointPool:
     @use_algo_as_default('should_be_recovered')
     def recover(self, method: Callable[['Endpoint'], bool] = None):
         """recover endpoints which is not in self._pool"""
+        assert method is not None
         if not self.isolated_eps:
             return
 
@@ -131,12 +144,13 @@ class HAEndpointPool:
     def pick(self, elect_method: Callable[[List['Endpoint']], 'Endpoint'] = None) -> Any:
         """elect and pick raw data of active endpoint"""
         self.elect(elect_method)
-        return self._active.raw
+        return self.active_endpoint.raw
 
     @raise_if_no_data
     @use_algo_as_default('find_best_endpoint')
     def elect(self, method: Callable[[List['Endpoint']], 'Endpoint'] = None):
         """elect by elect_method and set active"""
+        assert method is not None
         elected = method(self._pool)
         with self._rlock:
             self._active = elected
@@ -168,7 +182,7 @@ class HAEndpointPool:
 
                 self.elect(method=elect_method)
 
-            yield self._active.raw
+            yield self.active_endpoint.raw
         except Exception as e:  # pylint: disable=broad-except
             if isinstance(e, exempt_exceptions):
                 logger.exception("endpoints pool got exception, " "but raising anyway according to upper caller")
@@ -201,7 +215,7 @@ class Endpoint:
     success_count: int = 0
     failure_count: int = 0
     # for recovery
-    last_failure_time: datetime.datetime = None
+    last_failure_time: Optional[datetime.datetime] = None
 
     def __repr__(self):
         return repr(self.raw) + f"-score<{self._score}>"

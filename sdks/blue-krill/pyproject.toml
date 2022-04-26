@@ -79,16 +79,6 @@ use_parentheses = 'true'
 line_length = 119
 # ignore example
 skip_glob = ["*/dist/**"]
-known_local_folder = [
-  "tests",
-  # Knonwn Python packages
-  "blue_krill",
-  "bkpaas_auth",
-  "bkapi_client_core",
-  "bkapi_component",
-  "bk_storages",
-  "apigw_manager"
-]
 
 [tool.flake8]
 ignore = "C901,E203,W503"
@@ -101,9 +91,4 @@ exclude = "*.pyc,.git,__pycache__,*/dist/*,*migrations*"
 [tool.mypy]
 ignore_missing_imports = true
 show_error_codes = true
-strict_optional = false
-pretty = true
-
-[[tool.mypy.overrides]]
-module = ["*.dist.*"]
-ignore_errors = true
+check_untyped_defs = true

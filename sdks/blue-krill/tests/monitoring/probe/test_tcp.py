@@ -14,6 +14,7 @@ import time
 from socketserver import StreamRequestHandler, TCPServer
 
 import pytest
+
 from blue_krill.monitoring.probe.tcp import InternetAddress, TCPProbe
 
 

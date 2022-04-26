@@ -2,10 +2,11 @@
 import binascii
 from typing import Tuple, Union
 
-from bkpaas_auth.core.constants import ProviderType
 from cryptography.hazmat.backends.openssl.backend import GetCipherByName, backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms
 from six import ensure_binary, ensure_text
+
+from bkpaas_auth.core.constants import ProviderType
 
 
 class _ARC4(algorithms.ARC4):

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
+
 from bkpaas_auth.core.constants import ProviderType
 from bkpaas_auth.core.encoder import user_id_encoder
 

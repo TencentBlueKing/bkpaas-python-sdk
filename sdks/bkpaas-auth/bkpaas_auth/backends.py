@@ -3,6 +3,13 @@ import logging
 import pickle
 from typing import Dict, Optional, Union
 
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
+from django.core.exceptions import ImproperlyConfigured
+from django.http import HttpRequest
+from django.utils.encoding import force_bytes
+
 from bkpaas_auth.conf import bkauth_settings
 from bkpaas_auth.core.constants import ProviderType
 from bkpaas_auth.core.exceptions import InvalidTokenCredentialsError, ServiceError
@@ -17,12 +24,6 @@ from bkpaas_auth.core.token import (
 from bkpaas_auth.core.user_info import UserInfo
 from bkpaas_auth.core.utils import generate_random_token
 from bkpaas_auth.models import User
-from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AnonymousUser
-from django.core.exceptions import ImproperlyConfigured
-from django.http import HttpRequest
-from django.utils.encoding import force_bytes
 
 logger = logging.getLogger(__name__)
 

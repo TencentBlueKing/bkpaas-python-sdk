@@ -12,6 +12,7 @@ import time
 from unittest import mock
 
 import pytest
+
 from blue_krill.async_utils.poll_task import (
     CallbackHandler,
     CallbackStatus,
@@ -70,6 +71,7 @@ class TestPollTaskScheduler:
         metadata = PollingMetadata(retries=0, query_started_at=started_at, queried_count=0)
         scheduler = PollTaskScheduler(DoingPoller({}, metadata), NullResultHandler)
         next_metadata = scheduler.run()
+        assert next_metadata
         assert next_metadata.retries == 0
         assert next_metadata.query_started_at == started_at
         assert next_metadata.queried_count == 1
@@ -103,8 +105,11 @@ class TestPollTaskScheduler:
 
         result = TimeoutedHandler.result
         assert next_metadata is None
+        assert result
         assert result.status == result_status
         assert result.data == result_data
+
+        assert TimeoutedHandler.poller
         assert TimeoutedHandler.poller.params == {'param': 1}
 
     def test_exception(self):
@@ -124,6 +129,7 @@ class TestPollTaskScheduler:
         )
         scheduler = PollTaskScheduler(ExceptionPoller({}, metadata), ExceptionHandler)
         next_metadata = scheduler.run()
+        assert next_metadata
         assert next_metadata.retries == 2
         assert next_metadata.queried_count == 2
         assert next_metadata.last_polling_data == {'foo': 'bar'}
@@ -149,6 +155,7 @@ class TestPollTaskScheduler:
 
         assert next_metadata is None
         result = ExceptionNoHandler.result
+        assert result
         assert result.status == CallbackStatus.EXCEPTION
         assert result.is_exception
         assert result.message == 'exception: division by zero'

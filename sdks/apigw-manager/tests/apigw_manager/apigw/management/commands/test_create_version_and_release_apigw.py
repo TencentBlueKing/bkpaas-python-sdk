@@ -12,8 +12,9 @@ from datetime import datetime
 
 import pytest
 import yaml
-from apigw_manager.apigw.management.commands.create_version_and_release_apigw import Command
 from packaging.version import parse as parse_version
+
+from apigw_manager.apigw.management.commands.create_version_and_release_apigw import Command
 
 
 @pytest.fixture()

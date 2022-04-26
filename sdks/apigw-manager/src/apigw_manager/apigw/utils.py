@@ -12,8 +12,9 @@ import os
 import zipfile
 
 import yaml
-from apigw_manager.core import configuration
 from django.conf import settings
+
+from apigw_manager.core import configuration
 
 
 def get_configuration(**kwargs):

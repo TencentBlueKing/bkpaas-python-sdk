@@ -175,7 +175,7 @@ class Configuration(BaseModel):
                 return obj
         raise KeyError(f'Edition with name: {name} not found')
 
-    def get_edition_directory(self, name: str) -> PathLike:
+    def get_edition_directory(self, name: str) -> Path:
         """Get edition's directory"""
         rel_path = self.get_edition(name).get_rel_directory()
         return self.get_editions_root() / rel_path

@@ -14,6 +14,7 @@ import uuid
 
 import pytest
 import redis
+
 from blue_krill.redis_tools.messaging import StreamChannel, StreamChannelSubscriber
 
 
@@ -75,8 +76,10 @@ class TestMessageChannel:
 
         t1 = threading.Thread(target=self.producer, args=(batch,))
         t2 = threading.Thread(target=consumer)
-        [t.start() for t in [t1, t2]]
-        [t.join() for t in [t1, t2]]
+        for t in [t1, t2]:
+            t.start()
+        for t in [t1, t2]:
+            t.join()
 
     def test_consumer_start_late(self):
         import threading
@@ -93,8 +96,10 @@ class TestMessageChannel:
 
         t1 = threading.Thread(target=self.producer, args=(batch,))
         t2 = threading.Thread(target=consumer)
-        [t.start() for t in [t1, t2]]
-        [t.join() for t in [t1, t2]]
+        for t in [t1, t2]:
+            t.start()
+        for t in [t1, t2]:
+            t.join()
 
     def test_consumer_start_middle(self):
         import threading
@@ -111,8 +116,10 @@ class TestMessageChannel:
 
         t1 = threading.Thread(target=self.producer, args=(batch,))
         t2 = threading.Thread(target=consumer)
-        [t.start() for t in [t1, t2]]
-        [t.join() for t in [t1, t2]]
+        for t in [t1, t2]:
+            t.start()
+        for t in [t1, t2]:
+            t.join()
 
     def test_consumer_with_last_event_id(self):
         import threading
@@ -129,8 +136,10 @@ class TestMessageChannel:
 
         t1 = threading.Thread(target=self.producer, args=(batch,))
         t2 = threading.Thread(target=consumer)
-        [t.start() for t in [t1, t2]]
-        [t.join() for t in [t1, t2]]
+        for t in [t1, t2]:
+            t.start()
+        for t in [t1, t2]:
+            t.join()
 
     def test_consumer_start_too_early(self):
         import threading
@@ -147,4 +156,5 @@ class TestMessageChannel:
         t2.start()
         time.sleep(1)
         t1.start()
-        [t.join() for t in [t1, t2]]
+        for t in [t1, t2]:
+            t.join()

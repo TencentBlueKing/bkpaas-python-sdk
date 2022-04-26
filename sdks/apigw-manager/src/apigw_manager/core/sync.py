@@ -9,6 +9,7 @@
  * specific language governing permissions and limitations under the License.
 """
 import yaml
+
 from apigw_manager.core.handler import Handler
 from apigw_manager.core.utils import itemgetter
 

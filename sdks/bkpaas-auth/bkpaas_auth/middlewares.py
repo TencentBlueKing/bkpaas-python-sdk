@@ -4,12 +4,13 @@ import pickle
 import time
 from typing import Dict
 
-from bkpaas_auth.backends import UniversalAuthBackend
 from django.conf import settings
 from django.contrib import auth
 from django.http import HttpRequest
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.encoding import force_text
+
+from bkpaas_auth.backends import UniversalAuthBackend
 
 logger = logging.getLogger(__name__)
 

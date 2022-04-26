@@ -11,6 +11,7 @@
 import os
 
 import pytest
+
 from bkapi_client_core.config import settings
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tests.django_settings")
