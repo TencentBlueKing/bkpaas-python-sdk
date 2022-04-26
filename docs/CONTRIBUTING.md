@@ -23,5 +23,25 @@
   
 然后，你可以提交你的代码到 dev 或者 hotfix 分支并发起合并请求。
 
+## 开发相关
+
+### 配置 pre-commit
+
+本项目使用了 [pre-commit](https://pre-commit.com/) 工具来规范每个改动。在你提交代码前，请先安装 pre-commit
+并执行 `pre-commit install` 安装钩子程序。
+
+为了更方便的管理 pre-commit 所依赖的每个工具的版本，配置文件 `.pre-commit-config.yaml` 中的每个 hook（比如 `black`）
+都选择了直接执行本地命令，而非默认的基于远程仓库来自动安装。因此，每次执行 `git commit` 前，请确保你已经激活了本项目的虚拟环境。
+
+操作参考：
+
+```console
+$ cd {PATH}                 # 切换到项目根目录
+$ pre-commit install        # 安装 pre-commit 钩子
+$ poetry shell              # 激活虚拟环境
+$ git commit                # 提交代码改动
+# 正常情况，pre-commit 所配置的每个检查工具会开始依次执行...
+```
+
 ## 代码协议
 MIT LICENSE 为 bkpaas-python-sdk 的开源协议，你贡献的代码也会受此协议保护。
