@@ -29,9 +29,13 @@ repos:
         types: [python]
         pass_filenames: false
         entry: pflake8 --config=pyproject.toml
-      # - id: mypy
-      #   name: mypy
-      #   language: python
-      #   types: [python]
-      #   pass_filenames: false
-      #   entry: mypy . --config-file=pyproject.toml
+
+      # mypy hooks for each Python project, the hooks must be separated because different
+      # project might use their own configurations
+      - id: mypy-blue_krill
+        name: run mypy check for "blue-krill'
+        language: python
+        types: [python]
+        pass_filenames: false
+        entry: bash -c "cd sdks/blue-krill && poetry run mypy . --config-file=./pyproject.toml"
+        files: '^sdks/blue-krill/'

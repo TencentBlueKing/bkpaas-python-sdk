@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 import mock
+from django.conf import settings
+from django.test.utils import override_settings
+
 from bkpaas_auth.conf import bkauth_settings
 from bkpaas_auth.core.constants import ProviderType
 from bkpaas_auth.core.token import LoginToken, create_user_from_token, mocked_create_user_from_token
 from bkpaas_auth.core.user_info import RtxUserInfo
-from django.conf import settings
-from django.test.utils import override_settings
 
 
 class TestToken:

@@ -11,6 +11,7 @@
 from typing import List, Type
 
 import pytest
+
 from blue_krill.contextlib import nullcontext as does_not_raise
 from blue_krill.data_types.enum import EnumField, FeatureFlag, FeatureFlagField, StructuredEnum
 from tests.utils import generate_random_string

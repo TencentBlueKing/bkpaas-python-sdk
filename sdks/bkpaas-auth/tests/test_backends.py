@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import pytest
+from django.test.utils import override_settings
+
 from bkpaas_auth.backends import APIGatewayAuthBackend, UniversalAuthBackend
 from bkpaas_auth.core.constants import ProviderType
-from django.test.utils import override_settings
 
 
 class TestBackends:

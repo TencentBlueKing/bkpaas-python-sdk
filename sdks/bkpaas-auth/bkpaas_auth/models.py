@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from typing import Dict
 
-from bkpaas_auth.core.constants import ProviderType
-from bkpaas_auth.core.encoder import user_id_encoder
 from django.contrib.auth import models
 from django.db import models as db_models
+
+from bkpaas_auth.core.constants import ProviderType
+from bkpaas_auth.core.encoder import user_id_encoder
 
 
 class AbstractUserWithProvider(models.AbstractBaseUser, models.AnonymousUser):

@@ -2,12 +2,13 @@
 import logging
 from typing import Dict
 
+from django.core.cache import cache
+from django.core.exceptions import ImproperlyConfigured
+
 from bkpaas_auth.conf import bkauth_settings as conf
 from bkpaas_auth.core.exceptions import ServiceError
 from bkpaas_auth.core.http import http_get
 from bkpaas_auth.core.user_info import BkUserInfo, RtxUserInfo
-from django.core.cache import cache
-from django.core.exceptions import ImproperlyConfigured
 
 logger = logging.getLogger(__name__)
 

@@ -11,8 +11,9 @@
 import logging
 from typing import Optional
 
-from blue_krill.encoding import force_bytes, force_text
 from cryptography.fernet import Fernet
+
+from blue_krill.encoding import force_bytes, force_text
 
 logger = logging.getLogger(__name__)
 

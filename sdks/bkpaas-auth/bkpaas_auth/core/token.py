@@ -4,13 +4,14 @@
 import datetime
 import logging
 
+from django.utils.timezone import now
+
 from bkpaas_auth.conf import bkauth_settings
 from bkpaas_auth.core.constants import ProviderType
 from bkpaas_auth.core.exceptions import InvalidTokenCredentialsError, ServiceError
 from bkpaas_auth.core.http import http_get
 from bkpaas_auth.core.user_info import BkUserInfo, RtxUserInfo, UserInfo
 from bkpaas_auth.models import User
-from django.utils.timezone import now
 
 logger = logging.getLogger(__name__)
 

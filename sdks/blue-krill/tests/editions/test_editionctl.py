@@ -13,6 +13,8 @@ from pathlib import Path
 from textwrap import dedent
 
 import pytest
+from toml.decoder import TomlDecodeError
+
 from blue_krill.editions.editionctl import (
     Configuration,
     DirectorySyncer,
@@ -23,7 +25,6 @@ from blue_krill.editions.editionctl import (
     load_configuration,
     reset_project,
 )
-from toml.decoder import TomlDecodeError
 
 
 class TestLoadConfiguration:
@@ -68,7 +69,7 @@ class TestEditionMetaData:
         assert not meta_data.gitignore_path.exists()
 
         (tmp_path / 'foo').write_text('')
-        meta_data.add_files(['foo'])
+        meta_data.add_files([Path('foo')])
         meta_data.save()
 
         assert meta_data.metadata_path.exists()

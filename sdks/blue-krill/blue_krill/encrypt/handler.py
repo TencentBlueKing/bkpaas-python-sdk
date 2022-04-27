@@ -8,9 +8,10 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+from cryptography.fernet import Fernet
+
 from blue_krill.encoding import force_bytes, force_text
 from blue_krill.encrypt.utils import get_default_secret_key
-from cryptography.fernet import Fernet
 
 
 class EncryptHandler:
@@ -22,14 +23,14 @@ class EncryptHandler:
         if self.Header.contain_header(text):
             return text
 
-        text = force_bytes(text)
-        return self.Header.add_header(force_text(self.f.encrypt(text)))
+        b_text = force_bytes(text)
+        return self.Header.add_header(force_text(self.f.encrypt(b_text)))
 
     def decrypt(self, encrypted: str) -> str:
         encrypted = self.Header.strip_header(encrypted)
 
-        encrypted = force_bytes(encrypted)
-        return force_text(self.f.decrypt(encrypted))
+        b_encrypted = force_bytes(encrypted)
+        return force_text(self.f.decrypt(b_encrypted))
 
     class Header:
         HEADER = "bkcrypt$"

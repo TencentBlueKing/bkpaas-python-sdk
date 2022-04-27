@@ -22,24 +22,24 @@ class TestEndpointPool(unittest.TestCase):
     def test_fail(self):
         self.pool.fail()
 
-        fake_one_score = self.pool.active.score
-        assert self.pool.active.failure_count == 1
+        fake_one_score = self.pool.active_endpoint.score
+        assert self.pool.active_endpoint.failure_count == 1
 
         self.pool.elect()
-        assert fake_one_score < self.pool.active.score
+        assert fake_one_score < self.pool.active_endpoint.score
 
     def test_fail_custom_score_delta(self):
         self.pool.fail(score_delta=10)
-        assert self.pool.active.score == 90
+        assert self.pool.active_endpoint.score == 90
 
     def test_success(self):
         self.pool.succeed()
 
-        assert self.pool.active.success_count == 1
-        assert self.pool.active.score == 101
+        assert self.pool.active_endpoint.success_count == 1
+        assert self.pool.active_endpoint.score == 101
 
         self.pool.succeed(score_delta=10)
-        assert self.pool.active.score == 111
+        assert self.pool.active_endpoint.score == 111
 
     def test_isolate(self):
         for _ in range(self.pool.algorithm.failure_threshold):
@@ -59,15 +59,15 @@ class TestEndpointPool(unittest.TestCase):
             # nothing happen
             pass
 
-        assert self.pool.active.failure_count == 0
-        assert self.pool.active.success_count == 1
+        assert self.pool.active_endpoint.failure_count == 0
+        assert self.pool.active_endpoint.success_count == 1
 
     def test_get_endpoint_auto_reelect(self):
         with self.pool.get_endpoint():
             # use fake item to do something
             raise ValueError("unittest error")
 
-        assert self.pool.active.failure_count == 0
+        assert self.pool.active_endpoint.failure_count == 0
 
     def test_custom_isolate(self):
         def custom_isolate(endpoint):
@@ -88,7 +88,7 @@ class TestEndpointPool(unittest.TestCase):
         self.pool.fail()
 
         # still return first one
-        assert self.pool.active.raw == "fake0"
+        assert self.pool.active_endpoint.raw == "fake0"
 
     def test_recover_normal_logic(self):
         self.pool.elect()

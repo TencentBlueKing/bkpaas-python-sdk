@@ -11,10 +11,11 @@
 from tempfile import SpooledTemporaryFile
 
 import pytest
+from moto import mock_s3
+
 from blue_krill.contextlib import nullcontext as does_not_raise
 from blue_krill.storages.blobstore.exceptions import DownloadFailedError, ObjectAlreadyExists
 from blue_krill.storages.blobstore.s3 import S3Store
-from moto import mock_s3
 from tests.utils import generate_random_string
 
 
@@ -26,7 +27,7 @@ def store():
             aws_access_key_id="dummy",
             aws_secret_access_key="dummy",
             signature_version="s3v4",
-            endpoint_url=None,
+            endpoint_url=None,  # type: ignore
             region_name='us-east-1',
         )
         store.get_client().create_bucket(Bucket=store.bucket)

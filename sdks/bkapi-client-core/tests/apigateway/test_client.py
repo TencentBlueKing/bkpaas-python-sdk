@@ -9,6 +9,7 @@
  * specific language governing permissions and limitations under the License.
 """
 import pytest
+
 from bkapi_client_core.apigateway.client import APIGatewayClient
 from bkapi_client_core.config import SettingKeys
 

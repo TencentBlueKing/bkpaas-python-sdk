@@ -12,10 +12,11 @@ import json
 import logging
 import typing
 
-from apigw_manager.core.exceptions import ApiException, ApiRequestError, ApiResultError
 from bkapi.bk_apigateway.client import Client as BKAPIGatewayClient
-from bkapi_client_core.exceptions import HTTPResponseError
 from future.utils import raise_from
+
+from apigw_manager.core.exceptions import ApiException, ApiRequestError, ApiResultError
+from bkapi_client_core.exceptions import HTTPResponseError
 
 if typing.TYPE_CHECKING:
     from apigw_manager.core import configuration

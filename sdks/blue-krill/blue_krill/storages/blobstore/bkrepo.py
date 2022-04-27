@@ -15,6 +15,9 @@ from urllib.parse import urljoin
 
 import curlify
 import requests
+from requests.adapters import HTTPAdapter
+from requests.auth import HTTPBasicAuth
+
 from blue_krill.data_types.enum import EnumField, StructuredEnum
 from blue_krill.storages.blobstore.base import BlobStore, SignatureType
 from blue_krill.storages.blobstore.exceptions import (
@@ -23,8 +26,6 @@ from blue_krill.storages.blobstore.exceptions import (
     RequestError,
     UploadFailedError,
 )
-from requests.adapters import HTTPAdapter
-from requests.auth import HTTPBasicAuth
 
 MAX_RETRIES = 2
 logger = logging.getLogger(__name__)

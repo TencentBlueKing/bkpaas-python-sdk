@@ -3,16 +3,17 @@ import string
 from contextlib import contextmanager
 
 import pytest
-from bkpaas_auth.core.constants import ProviderType
-from bkpaas_auth.core.token import LoginToken
-from bkpaas_auth.middlewares import CookieLoginMiddleware, auth
-from bkpaas_auth.models import User
 from django.contrib.auth import SESSION_KEY, get_user_model
 from django.contrib.auth.middleware import AuthenticationMiddleware
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.test.utils import override_settings
 from mock import MagicMock, patch
+
+from bkpaas_auth.core.constants import ProviderType
+from bkpaas_auth.core.token import LoginToken
+from bkpaas_auth.middlewares import CookieLoginMiddleware, auth
+from bkpaas_auth.models import User
 from tests.utils import generate_random_string
 
 

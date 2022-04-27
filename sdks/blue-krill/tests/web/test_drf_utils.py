@@ -9,8 +9,9 @@
  * specific language governing permissions and limitations under the License.
 """
 import pytest
-from blue_krill.web.drf_utils import stringify_validation_error
 from rest_framework.exceptions import ErrorDetail, ValidationError
+
+from blue_krill.web.drf_utils import stringify_validation_error
 
 
 @pytest.mark.parametrize(

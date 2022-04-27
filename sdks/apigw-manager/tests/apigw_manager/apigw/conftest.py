@@ -10,6 +10,7 @@
 """
 import pytest
 import yaml
+
 from apigw_manager.apigw.utils import get_configuration
 
 

@@ -9,6 +9,7 @@
  * specific language governing permissions and limitations under the License.
 """
 import pytest
+
 from blue_krill.monitoring.probe.base import DiagnosisReport, DiagnosisReportList, Issue, NoFatalIssueError
 
 

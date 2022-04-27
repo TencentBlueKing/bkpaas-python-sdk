@@ -9,10 +9,11 @@
  * specific language governing permissions and limitations under the License.
 """
 import pytest
-from apigw_manager.apigw import authentication
 from django.contrib.auth.models import AnonymousUser
 from django.core.cache import caches
 from django.core.cache.backends.dummy import DummyCache
+
+from apigw_manager.apigw import authentication
 
 
 @pytest.fixture()

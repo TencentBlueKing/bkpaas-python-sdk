@@ -2,9 +2,10 @@
 name = "blue-krill"
 version = "1.0.15"
 description = "Tools and common packages for blueking paas"
-license = "Apach License 2.0"
+license = "Apache License 2.0"
 readme = "README.md"
 authors = ["blueking"]
+include = ["blue_krill/py.typed"]
 
 [tool.poetry.dependencies]
 python = ">=3.6.2,<3.11"
@@ -58,12 +59,8 @@ bk-secure = "blue_krill.secure.bk_secure:main"
 editionctl = "blue_krill.editions.editionctl:main"
 
 [build-system]
-requires = [
-    "poetry>=1.1.4",
-    # Must add setuptools to enable develop-mode installation, discussion: https://github.com/pypa/setuptools/issues/2353
-    "setuptools"
-]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = 119
@@ -94,9 +91,4 @@ exclude = "*.pyc,.git,__pycache__,*/dist/*,*migrations*"
 [tool.mypy]
 ignore_missing_imports = true
 show_error_codes = true
-strict_optional = false
-pretty = true
-
-[[tool.mypy.overrides]]
-module = ["*.dist.*"]
-ignore_errors = true
+check_untyped_defs = true

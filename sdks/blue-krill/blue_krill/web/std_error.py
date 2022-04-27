@@ -8,7 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
-from typing import Callable, Dict, Optional, Union
+from typing import Callable, Dict, Optional, Type, Union, overload
 
 _DEFAULT_ERROR_CODE_NUM = -1
 _DEFAULT_STATUS_CODE = 400
@@ -109,7 +109,15 @@ class ErrorCode:
         self._error_args = args
         self._error_kwargs = kwargs
 
-    def __get__(self, obj, obj_type) -> Union['ErrorCode', APIError]:
+    @overload
+    def __get__(self, obj: None, obj_type: None) -> 'ErrorCode':
+        ...
+
+    @overload
+    def __get__(self, obj: object, obj_type: Type) -> APIError:
+        ...
+
+    def __get__(self, obj: Union[None, object], obj_type: Union[None, Type]) -> Union['ErrorCode', APIError]:
         """When retriving `ErrorCode` via object attribute, always making a brand new `APIError`
         exception object
         """

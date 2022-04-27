@@ -15,8 +15,9 @@ from wsgiref.simple_server import make_server
 from wsgiref.util import setup_testing_defaults
 
 import pytest
-from blue_krill.monitoring.probe.http import BKHttpProbe, HttpProbe
 from requests import codes
+
+from blue_krill.monitoring.probe.http import BKHttpProbe, HttpProbe
 
 
 class FakeApp:
