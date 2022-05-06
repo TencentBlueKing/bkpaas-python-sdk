@@ -11,6 +11,7 @@
 import string
 from typing import Any, Dict, Optional
 
+from requests import Request
 from requests import Session as RequestSession
 from requests.hooks import dispatch_hook
 from requests.models import RequestHooksMixin
@@ -75,8 +76,8 @@ class Session(RequestSession, RequestHooksMixin):
     def handle(
         self,
         url,  # type: str
-        path_params=None,  # type: Dict[str, Any]
-        timeout=None,  # type: float
+        path_params=None,  # type: Optional[Dict[str, Any]]
+        timeout=None,  # type: Optional[float]
         **kwargs  # type: Any
     ):
         render = _UrlRender(url, self.path_params)
@@ -95,6 +96,29 @@ class Session(RequestSession, RequestHooksMixin):
         """
         self.headers["User-Agent"] = user_agent
 
+    def set_accept_language(
+        self,
+        language,  # type: Optional[str]
+    ):
+        """
+        Set Accept-Language header, if language is blank or None, will delete the header.
+
+        :param language: language code
+        :type language: str
+        """
+        if language:
+            self.headers["Accept-Language"] = language
+        else:
+            self.headers.pop("Accept-Language", None)
+
+    def prepare_request(
+        self,
+        request,  # type: Request
+    ):
+        self.dispatch_hook("request", request)
+        prepared_request = super(Session, self).prepare_request(request)
+        return prepared_request
+
     def dispatch_hook(
         self,
         event,  # str
@@ -103,8 +127,12 @@ class Session(RequestSession, RequestHooksMixin):
     ):
         dispatch_hook(event, self.hooks, data, **extras)
 
-    def declare_hook(
+    def register_hook(
         self,
         event,  # type:str
+        hook,  # type: Any
     ):
-        self.hooks[event] = []
+        if event not in self.hooks:
+            self.hooks[event] = []
+
+        super(Session, self).register_hook(event, hook)

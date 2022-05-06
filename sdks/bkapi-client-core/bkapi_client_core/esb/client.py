@@ -44,8 +44,10 @@ class ESBClient(BaseClient):
         self,
         language,  # type: Optional[str]
     ):
-        key = "Blueking-Language"
+        self.session.set_accept_language(language)
 
+        # this is a compatibility code for esb
+        key = "Blueking-Language"
         if language:
             self._set_header(key, language)
         else:

@@ -30,6 +30,7 @@ def get_client_by_request(
     stage=None,  # type: Optional[str]
     bk_app_code=None,  # type: Optional[str]
     bk_app_secret=None,  # type: Optional[str]
+    accept_language=None,  # type: Optional[str]
 ):
     """Returns a client according to the current django request
 
@@ -39,6 +40,7 @@ def get_client_by_request(
     :param stage: name of apigateway stage
     :param bk_app_code: blueking app code
     :param bk_app_secret: blueking app secret
+    :param accept_language: request accept language
     """
     return _get_client_by_request(
         client_cls,
@@ -47,6 +49,7 @@ def get_client_by_request(
         stage=stage,
         bk_app_code=bk_app_code,
         bk_app_secret=bk_app_secret,
+        accept_language=accept_language,
     )
 
 
@@ -57,6 +60,7 @@ def get_client_by_username(
     stage=None,  # type: Optional[str]
     bk_app_code=None,  # type: Optional[str]
     bk_app_secret=None,  # type: Optional[str]
+    accept_language=None,  # type: Optional[str]
 ):
     """Returns a client according to the current username
 
@@ -66,6 +70,7 @@ def get_client_by_username(
     :param stage: name of apigateway stage
     :param bk_app_code: blueking app code
     :param bk_app_secret: blueking app secret
+    :param accept_language: request accept language
     """
     return _get_client_by_username(
         client_cls,
@@ -74,4 +79,5 @@ def get_client_by_username(
         stage=stage,
         bk_app_code=bk_app_code,
         bk_app_secret=bk_app_secret,
+        accept_language=accept_language,
     )

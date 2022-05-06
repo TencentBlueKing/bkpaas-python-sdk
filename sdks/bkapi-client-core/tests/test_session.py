@@ -68,7 +68,6 @@ class TestSession:
 
         event = "test"
         session = Session()
-        session.declare_hook(event)
 
         session.register_hook(event, hook)
         session.dispatch_hook(event, 1, has_extra=True)
@@ -77,3 +76,27 @@ class TestSession:
         session.deregister_hook(event, hook)
         session.dispatch_hook(event, 1, has_extra=True)
         hook.assert_called_once_with(1, has_extra=True)
+
+    def test_set_user_agent(self):
+        self.session.set_user_agent("test")
+        assert self.session.headers["User-Agent"] == "test"
+
+    def test_set_accept_language(self):
+        self.session.set_accept_language("zh-CN")
+        assert self.session.headers["Accept-Language"] == "zh-CN"
+
+        self.session.set_accept_language(None)
+        assert "Accept-Language" not in self.session.headers
+
+    def test_request_hook(self, faker, requests_mock):
+        language = faker.language_code()
+        url = faker.url()
+        requests_mock.get(url, json={"result": True})
+
+        self.session.register_hook("request", lambda req: req.headers.update({"Accept-Language": language}))
+
+        response = self.session.get(url)
+        assert response.request.headers["Accept-Language"] == language
+
+        result = response.json()
+        assert result["result"]

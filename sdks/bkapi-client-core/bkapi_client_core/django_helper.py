@@ -27,6 +27,7 @@ def _get_client_by_settings(
     client_cls,  # type: Type[BaseClient]
     bk_app_code=None,  # type: Optional[str]
     bk_app_secret=None,  # type: Optional[str]
+    accept_language=None,  # type: Optional[str]
     **kwargs
 ):
     """Returns a client according to the django settings"""
@@ -40,6 +41,9 @@ def _get_client_by_settings(
     # disable global https verify
     if settings.get(SettingKeys.BK_API_CLIENT_ENABLE_SSL_VERIFY):
         client.disable_ssl_verify()
+
+    if accept_language:
+        client.session.set_accept_language(accept_language)
 
     return client
 

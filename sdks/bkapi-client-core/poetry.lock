@@ -1814,10 +1814,13 @@ type = "legacy"
 url = "https://mirrors.cloud.tencent.com/pypi/simple"
 reference = "tencent"
 
+[extras]
+django = ["bkoauth"]
+
 [metadata]
 lock-version = "1.1"
 python-versions = "^2.7 || ^3.6"
-content-hash = "a02814aa50d2bdffe15826b901d36d68c7702ad7febdca0222a4fb14ff22551e"
+content-hash = "e4cfb78be5f23f04df131a08be87282e7a8854c10391e9c56bc3947090b2bb26"
 
 [metadata.files]
 aiohttp = [

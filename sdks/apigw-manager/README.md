@@ -165,7 +165,7 @@ auth.authenticate(request, username=username, verified=verified)
 ### 通过外部挂载方式同步
 通过外部文件挂载的方式，将对应的目录挂载到 `/data/` 目录下，可通过以下类似的命令进行同步：
 ```shell
-docker run rm \
+docker run --rm \
     -v /<MY_PATH>/:/data/ \
     -e BK_APIGW_NAME=<BK_APIGW_NAME> \
     -e BK_API_URL_TMPL=<BK_API_URL_TMPL> \

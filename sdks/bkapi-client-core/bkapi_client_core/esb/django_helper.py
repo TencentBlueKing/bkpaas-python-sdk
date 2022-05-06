@@ -39,6 +39,7 @@ def get_client_by_request(
     endpoint=None,  # type: Optional[str]
     bk_app_code=None,  # type: Optional[str]
     bk_app_secret=None,  # type: Optional[str]
+    accept_language=None,  # type: Optional[str]
 ):
     """Returns a client according to the current django request
 
@@ -47,6 +48,7 @@ def get_client_by_request(
     :param endpoint: api service url
     :param bk_app_code: blueking app code
     :param bk_app_secret: blueking app secret
+    :param accept_language: request accept language
     """
     return _get_client_by_request(
         client_cls,
@@ -56,7 +58,7 @@ def get_client_by_request(
         bk_app_secret=bk_app_secret,
         bk_api_ver=settings.get(SettingKeys.DEFAULT_BK_API_VER),
         use_test_env=settings.get(SettingKeys.BK_API_USE_TEST_ENV),
-        language=_get_default_language(),
+        language=accept_language or _get_default_language(),
     )
 
 
@@ -66,6 +68,7 @@ def get_client_by_username(
     endpoint=None,  # type: Optional[str]
     bk_app_code=None,  # type: Optional[str]
     bk_app_secret=None,  # type: Optional[str]
+    accept_language=None,  # type: Optional[str]
 ):
     """Returns a client according to the current username
 
@@ -74,6 +77,7 @@ def get_client_by_username(
     :param endpoint: api service url
     :param bk_app_code: blueking app code
     :param bk_app_secret: blueking app secret
+    :param accept_language: request accept language
     """
     return _get_client_by_username(
         client_cls,
@@ -83,7 +87,7 @@ def get_client_by_username(
         bk_app_secret=bk_app_secret,
         bk_api_ver=settings.get(SettingKeys.DEFAULT_BK_API_VER),
         use_test_env=settings.get(SettingKeys.BK_API_USE_TEST_ENV),
-        language=_get_default_language(),
+        language=accept_language or _get_default_language(),
     )
 
 
@@ -93,6 +97,7 @@ def get_client_by_user(
     endpoint=None,  # type: Optional[str]
     bk_app_code=None,  # type: Optional[str]
     bk_app_secret=None,  # type: Optional[str]
+    accept_language=None,  # type: Optional[str]
 ):
     """Returns a client according to the current user
 
@@ -101,6 +106,7 @@ def get_client_by_user(
     :param endpoint: api service url
     :param bk_app_code: blueking app code
     :param bk_app_secret: blueking app secret
+    :param accept_language: request accept language
     """
     username = getattr(user, "username", user)
-    return get_client_by_username(client_cls, username, endpoint, bk_app_code, bk_app_secret)
+    return get_client_by_username(client_cls, username, endpoint, bk_app_code, bk_app_secret, accept_language)
