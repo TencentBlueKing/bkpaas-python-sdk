@@ -77,3 +77,14 @@ class TestSession:
         session.deregister_hook(event, hook)
         session.dispatch_hook(event, 1, has_extra=True)
         hook.assert_called_once_with(1, has_extra=True)
+
+    def test_set_user_agent(self):
+        self.session.set_user_agent("test")
+        assert self.session.headers["User-Agent"] == "test"
+
+    def test_set_accept_language(self):
+        self.session.set_accept_language("zh-CN")
+        assert self.session.headers["Accept-Language"] == "zh-CN"
+
+        self.session.set_accept_language(None)
+        assert "Accept-Language" not in self.session.headers

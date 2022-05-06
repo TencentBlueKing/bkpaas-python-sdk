@@ -95,6 +95,21 @@ class Session(RequestSession, RequestHooksMixin):
         """
         self.headers["User-Agent"] = user_agent
 
+    def set_accept_language(
+        self,
+        language,  # type: Optional[str]
+    ):
+        """
+        Set Accept-Language header, if language is blank or None, will delete the header.
+
+        :param language: language code
+        :type language: str
+        """
+        if language:
+            self.headers["Accept-Language"] = language
+        else:
+            self.headers.pop("Accept-Language", None)
+
     def dispatch_hook(
         self,
         event,  # str

@@ -31,7 +31,7 @@ class TestESBClient:
     @pytest.mark.parametrize(
         "language, expected",
         [
-            ("en", {"Blueking-Language": "en"}),
+            ("en", {"Blueking-Language": "en", "Accept-Language": "en"}),
             ("", {}),
             (None, {}),
         ],
