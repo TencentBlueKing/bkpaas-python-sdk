@@ -9,8 +9,6 @@
  * specific language governing permissions and limitations under the License.
 """
 
-from bkapi_client_core.config import SettingKeys, settings
-
 
 class Configuration(object):
     """Configuration information"""
@@ -27,10 +25,10 @@ class Configuration(object):
         *args,
         **kwargs,
     ):
-        self.host = host or settings.get(SettingKeys.BK_API_URL_TMPL)
+        self.host = host
         self.stage = stage
-        self.bk_app_code = bk_app_code or settings.get(SettingKeys.APP_CODE)
-        self.bk_app_secret = bk_app_secret or settings.get(SettingKeys.APP_SECRET)
+        self.bk_app_code = bk_app_code
+        self.bk_app_secret = bk_app_secret
         self.api_name = api_name
         self.api_cache = api_cache
         self.access_token = access_token
