@@ -12,7 +12,7 @@ import os
 import zipfile
 
 import yaml
-from django.conf import settings
+from bkapi_client_core.config import SettingKeys, settings
 
 from apigw_manager.core import configuration
 
@@ -27,8 +27,12 @@ def get_configuration(**kwargs):
     ]
 
     for attr, key in settings_mappings:
-        if key not in kwargs and hasattr(settings, attr):
-            kwargs[key] = getattr(settings, attr)
+        if key in kwargs:
+            continue
+
+        value = settings.get(attr)
+        if value is not None:
+            kwargs[key] = value
 
     host = kwargs.pop("host", "")
     if not host:
@@ -43,12 +47,14 @@ def get_configuration(**kwargs):
 
 
 def _get_host_from_settings():
-    if getattr(settings, "BK_APIGATEWAY_API_STAGE_URL", None):
-        return settings.BK_APIGATEWAY_API_STAGE_URL
+    stage_url = settings.get("BK_APIGATEWAY_API_STAGE_URL")
+    if stage_url:
+        return stage_url
 
-    if getattr(settings, "BK_API_URL_TMPL", None):
+    tmpl = settings.get(SettingKeys.BK_API_URL_TMPL)
+    if tmpl:
         # API 网关 admin API 对应网关名为 bk-apigateway
-        return "%s/prod/" % settings.BK_API_URL_TMPL.format(api_name="bk-apigateway").rstrip("/")
+        return "%s/prod/" % tmpl.format(api_name="bk-apigateway").rstrip("/")
 
     return ""
 
