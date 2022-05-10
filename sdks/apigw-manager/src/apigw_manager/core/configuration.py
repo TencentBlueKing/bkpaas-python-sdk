@@ -28,7 +28,7 @@ class Configuration(object):
         **kwargs,
     ):
         self.host = host or settings.get(SettingKeys.BK_API_URL_TMPL)
-        self.stage = stage or "prod"
+        self.stage = stage
         self.bk_app_code = bk_app_code or settings.get(SettingKeys.APP_CODE)
         self.bk_app_secret = bk_app_secret or settings.get(SettingKeys.APP_SECRET)
         self.api_name = api_name
