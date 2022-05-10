@@ -2,7 +2,7 @@ export PYTHONPATH=src
 
 .PHONY: test
 test:
-	pytest -v --ds demo.settings --cov apigw_manager tests/
+	poetry run pytest -v --ds demo.settings --cov apigw_manager tests/
 
 .PHONY: clean
 clean:
@@ -12,7 +12,7 @@ clean:
 
 .PHONY: tox
 tox:
-	tox
+	poetry run tox
 
 poetry.lock: pyproject.toml
 	poetry lock --no-update

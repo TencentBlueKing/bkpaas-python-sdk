@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "apigw-manager"
-version = "1.0.7"
+version = "1.0.8"
 description = ""
 authors = []
 

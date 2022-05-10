@@ -112,8 +112,8 @@ class Settings(object):
 
 settings = Settings(
     aliases={
-        SettingKeys.APP_CODE: ["BK_APP_CODE", "APP_CODE"],
-        SettingKeys.APP_SECRET: ["BK_APP_SECRET", "SECRET_KEY"],
+        SettingKeys.APP_CODE: ["BK_APP_CODE", "BKPAAS_APP_ID", "APP_CODE"],
+        SettingKeys.APP_SECRET: ["BK_APP_SECRET", "BKPAAS_APP_SECRET", "SECRET_KEY"],
     }
 )
 

@@ -130,6 +130,7 @@ definition.yaml 中可以使用 Django 模块语法引用和渲染变量，内�
 ..
 
    **请确保应用进程在启动前执行了 python manage.py fetch_apigw_public_key 命令，否则中间件可能无法正常工作**
+   如果因某些因素不方便使用命令自动获取网关公钥，可以在网关页面中手动获取公钥，配置到 ``settings.APIGW_PUBLIC_KEY`` 中。
 
 
 注意中间件的优先级，请加到其他中间件之前。
@@ -224,7 +225,7 @@ UserModelBackend
 
 .. code-block:: shell
 
-   docker run rm \
+   docker run --rm \
        -v /<MY_PATH>/:/data/ \
        -e BK_APIGW_NAME=<BK_APIGW_NAME> \
        -e BK_API_URL_TMPL=<BK_API_URL_TMPL> \
