@@ -66,3 +66,7 @@ class TestAPIError:
         exc = APIError('foo', 'message')
         formatted_exc = exc.format()
         assert formatted_exc is not exc
+
+    def test_data_property_in_chain(self):
+        exc = APIError('foo', 'name={name}')
+        assert exc.set_data({'value': -1}).f(name='bar').data == {'value': -1}

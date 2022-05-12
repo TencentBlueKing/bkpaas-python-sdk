@@ -15,19 +15,19 @@ repos:
         name: isort
         language: python
         types: [python]
-        pass_filenames: false
-        entry: isort --settings-path=pyproject.toml .
+        pass_filenames: true
+        entry: isort --settings-path=pyproject.toml
       - id: black
         name: black
         language: python
         types: [python]
-        pass_filenames: false
-        entry: black --config=pyproject.toml .
+        pass_filenames: true
+        entry: black --config=pyproject.toml
       - id: flake8
         name: flak8
         language: python
         types: [python]
-        pass_filenames: false
+        pass_filenames: true
         entry: pflake8 --config=pyproject.toml
 
       # mypy hooks for each Python project, the hooks must be separated because different
