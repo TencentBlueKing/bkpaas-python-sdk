@@ -32,7 +32,7 @@ class Definition:
     @classmethod
     def load(cls, definition, dictionary):
         template = Template(definition)
-        rendered = template.render(Context(dictionary))
+        rendered = template.render(Context(dictionary, autoescape=False))
         logger.debug("rendered definition: %s", rendered)
 
         return cls(rendered)
