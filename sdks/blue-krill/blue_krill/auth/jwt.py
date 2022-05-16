@@ -48,14 +48,22 @@ class ClientJWTAuth(AuthBase):
         self.expires_in = expires_in or self._default_expires_in
 
     def __call__(self, r):
+        r.headers['Authorization'] = self.make_authorization_header_value()
+        logger.debug(f"got remote services' jwt header: {r.headers}")
+        return r
+
+    def make_authorization_header_value(self, extra_payload: Optional[Dict] = None) -> str:
+        """Make the value for "Authorization" header
+
+        :param extra_payload: extra data which will be injected into token
+        """
         payload = {
             'iss': self.auth_conf.iss,
             'expires_at': time.time() + self.expires_in,
         }
         # Mix extra payload content
         payload.update(self.auth_conf.extra_payload or {})
+        payload.update(extra_payload or {})
 
         token = jwt.encode(payload, key=self.auth_conf.key, algorithm=self.auth_conf.algorithm).decode()
-        r.headers['Authorization'] = f'{self.prefix} {token}'
-        logger.debug(f"got remote services' jwt header: {r.headers}")
-        return r
+        return f'{self.prefix} {token}'
