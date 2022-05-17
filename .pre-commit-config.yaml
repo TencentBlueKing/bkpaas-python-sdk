@@ -4,37 +4,38 @@ repos:
       - id: Name check
         name: Check sensitive info
         verbose: true
-        language: script
-        entry: pre_commit_hooks/rtx.sh
+        language: system
+        require_serial: true
+        entry: bash -c "if [[ -d pre_commit_hooks ]]; then pre_commit_hooks/rtx.sh; fi"
       - id: IP check
         name: Check sensitive info
         verbose: true
-        language: script
-        entry: pre_commit_hooks/ip.sh
+        language: system
+        require_serial: true
+        entry: bash -c "if [[ -d pre_commit_hooks ]]; then pre_commit_hooks/ip.sh; fi"
+      # See ./pyproject.toml for below tool's version and settings
       - id: isort
         name: isort
-        language: python
+        # Set language to disable pre-commit's virtual-env
+        language: system
         types: [python]
-        pass_filenames: true
-        entry: isort --settings-path=pyproject.toml
+        entry: poetry run isort --settings-path=pyproject.toml
       - id: black
         name: black
-        language: python
+        language: system
         types: [python]
-        pass_filenames: true
-        entry: black --config=pyproject.toml
+        entry: poetry run black --config=pyproject.toml
       - id: flake8
         name: flak8
-        language: python
+        language: system
         types: [python]
-        pass_filenames: true
-        entry: pflake8 --config=pyproject.toml
+        entry: poetry run pflake8 --config=pyproject.toml
 
       # mypy hooks for each Python project, the hooks must be separated because different
       # project might use their own configurations
       - id: mypy-blue_krill
         name: run mypy check for "blue-krill'
-        language: python
+        language: system
         types: [python]
         pass_filenames: false
         entry: bash -c "cd sdks/blue-krill && poetry run mypy . --config-file=./pyproject.toml"
