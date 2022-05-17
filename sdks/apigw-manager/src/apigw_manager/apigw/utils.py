@@ -12,9 +12,9 @@ import os
 import zipfile
 
 import yaml
-from bkapi_client_core.config import SettingKeys, settings
 
 from apigw_manager.core import configuration
+from bkapi_client_core.config import SettingKeys, settings
 
 
 def get_configuration(**kwargs):
