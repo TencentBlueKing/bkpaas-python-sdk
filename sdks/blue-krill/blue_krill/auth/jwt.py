@@ -18,6 +18,10 @@ from requests.auth import AuthBase
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_ALGORITHM = 'HS256'
+
+DEFAULT_ROLE = 'default'
+
 
 @dataclass
 class JWTAuthConf:
@@ -28,8 +32,8 @@ class JWTAuthConf:
 
     iss: str
     key: str
-    algorithm: str
-    extra_payload: Optional[Dict] = None
+    algorithm: str = DEFAULT_ALGORITHM
+    role: str = DEFAULT_ROLE
 
 
 class ClientJWTAuth(AuthBase):
@@ -60,9 +64,9 @@ class ClientJWTAuth(AuthBase):
         payload = {
             'iss': self.auth_conf.iss,
             'expires_at': time.time() + self.expires_in,
+            'role': self.auth_conf.role,
         }
         # Mix extra payload content
-        payload.update(self.auth_conf.extra_payload or {})
         payload.update(extra_payload or {})
 
         token = jwt.encode(payload, key=self.auth_conf.key, algorithm=self.auth_conf.algorithm).decode()

@@ -10,11 +10,14 @@
 """
 import logging
 import time
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 
 import jwt
 from django.http import HttpRequest
 from jwt.exceptions import DecodeError
+
+from .jwt import DEFAULT_ALGORITHM
+from .utils import get_paas_service_jwt_clients, validate_jwt_token
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +40,7 @@ class Client:
 
     @classmethod
     def from_jwt_settings(cls, data):
-        for key in ('iss', 'algorithm', 'key'):
+        for key in ('iss', 'key'):
             if not data.get(key):
                 raise ValueError(f'error: {key} is required')
         return cls(name=data['iss'], auth_backend_type='jwt')
@@ -78,7 +81,8 @@ class JWTClientAuthenticator:
         """
         for client in self.jwt_clients:
             try:
-                payload = jwt.decode(token, client['key'], algorithms=[client['algorithm']])
+                algorithm = client.get('algorithm', DEFAULT_ALGORITHM)
+                payload = jwt.decode(token, client['key'], algorithms=[algorithm])
             except DecodeError:
                 logger.debug(f'Unable to decode token using {client["iss"]}\'s secret')
                 continue
@@ -112,6 +116,48 @@ class JWTClientAuthenticator:
             logger.warning("issuer name in payload does not match client's config")
             return False
         return True
+
+
+class VerifiedClientMiddleware:
+    """when current request has a valid signed JWT token in headers, middleware will set two
+    property on `request` object:
+
+    - request.client: verified client object
+    - request.extra_payload: extra payload from JWT token, usually includes current username etc.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    @staticmethod
+    def get_token(request) -> Optional[str]:
+        """Get token from request, return None if no token can be found"""
+        auth_header_val = request.headers.get('Authorization') or request.META.get('HTTP_AUTHORIZATION')
+        if not auth_header_val:
+            return None
+
+        try:
+            _, token = auth_header_val.split(None, 1)
+        except ValueError:
+            logger.warning('Invalid authorization header value')
+            return None
+        return token
+
+    def __call__(self, request):
+        token = self.get_token(request)
+        request.client = None
+        request.extra_payload = None
+        # Only proceed when token format is valid JWT format
+        if token and validate_jwt_token(token):
+            try:
+                ret = JWTClientAuthenticator(get_paas_service_jwt_clients()).authenticate(token=token)
+                request.client = ret.client
+                request.extra_payload = ret.extra_payload
+            except AuthFailedError as e:
+                logger.info('Unable to create an authenticated client using token: %s, reason: %s', token, e)
+
+        response = self.get_response(request)
+        return response
 
 
 def check_client_role(request: HttpRequest, role: str) -> bool:

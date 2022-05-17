@@ -8,9 +8,12 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+import logging
 from binascii import Error as PaddingError
 
 from jwt.utils import base64url_decode
+
+logger = logging.getLogger(__name__)
 
 
 def validate_jwt_token(s: str) -> bool:
@@ -29,3 +32,13 @@ def validate_jwt_token(s: str) -> bool:
     except (PaddingError, ValueError):
         return False
     return True
+
+
+def get_paas_service_jwt_clients():
+    try:
+        from django.conf import settings
+
+        return settings.PAAS_SERVICE_JWT_CLIENTS
+    except ImportError:
+        logger.exception("you should supply paas service jwt clients")
+        raise

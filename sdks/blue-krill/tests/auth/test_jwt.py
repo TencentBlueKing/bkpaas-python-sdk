@@ -8,11 +8,16 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+import time
+from unittest.mock import MagicMock
+
 import jwt
 import pytest
 import requests
 import requests_mock as requests_mock_mod
+from django.utils.crypto import get_random_string
 
+from blue_krill.auth.client import VerifiedClientMiddleware
 from blue_krill.auth.jwt import ClientJWTAuth, JWTAuthConf
 
 
@@ -34,7 +39,7 @@ class TestClientJWTAuth:
 
     def test_extra_payload(self, requests_mock):
         key, algorithm = 'bar', 'HS256'
-        conf = JWTAuthConf(iss='foo', key=key, algorithm=algorithm, extra_payload={'role': 'default'})
+        conf = JWTAuthConf(iss='foo', key=key, algorithm=algorithm)
         auth = ClientJWTAuth(conf)
 
         requests_mock.register_uri(requests_mock_mod.ANY, requests_mock_mod.ANY, text='resp')
@@ -46,3 +51,45 @@ class TestClientJWTAuth:
         token = auth_header.split()[1]
         payload = jwt.decode(token, key, algorithms=[algorithm])
         assert payload['role'] == 'default'
+
+
+_JWT_CLIENT = {
+    'iss': 'foo',
+    'key': get_random_string(length=12),
+    'algorithm': 'HS256',
+    'role': 'default',
+}
+
+
+@pytest.fixture(autouse=True)
+def _setup_settings(settings):
+    settings.PAAS_SERVICE_JWT_CLIENTS = [_JWT_CLIENT]
+
+
+class TestVerifiedClientMiddleware:
+    @pytest.mark.parametrize(
+        'key,request_client_verified',
+        [
+            (_JWT_CLIENT['key'], True),
+            ('another_random_key', False),
+        ],
+    )
+    def test_jwt_using_different_key(self, key, request_client_verified, rf):
+        # Prepare JWT token string
+        payload = {'iss': _JWT_CLIENT['iss'], 'expires_at': time.time() + 3600, 'role': 'foo_role'}
+        token = jwt.encode(payload, key=key, algorithm=_JWT_CLIENT['algorithm']).decode()
+
+        # Trigger middleware
+        request = rf.get('/', HTTP_AUTHORIZATION=f'Bearer {token}')
+        VerifiedClientMiddleware(MagicMock())(request)
+
+        if request_client_verified:
+            assert request.client
+            assert request.client.is_verified()
+        else:
+            assert request.client is None
+
+    def test_not_jwt_token(self, rf):
+        request = rf.get('/', HTTP_AUTHORIZATION='Bearer not-a-jwt-token')
+        VerifiedClientMiddleware(MagicMock())(request)
+        assert request.client is None
