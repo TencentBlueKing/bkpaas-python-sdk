@@ -8,12 +8,14 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
-from typing import Callable, Dict, Optional, Type, Union, overload
+from typing import Any, Callable, Dict, Optional, Type, TypeVar, Union, overload
 
 _DEFAULT_ERROR_CODE_NUM = -1
 _DEFAULT_STATUS_CODE = 400
 
 ExtraFormatterFunc = Callable[[str, 'APIError'], str]
+
+T = TypeVar('T', bound='APIError')
 
 
 class APIError(Exception):
@@ -24,6 +26,7 @@ class APIError(Exception):
     :param code_num: A numeric error code
     :param extra_formatter: an extra function for formatting message
     :param status_code: desired HTTP status code for representing current Error
+    :param data: stores extra data in current Exception object
     """
 
     delimiter = ': '
@@ -35,17 +38,19 @@ class APIError(Exception):
         code_num: int = _DEFAULT_ERROR_CODE_NUM,
         extra_formatter: Optional[ExtraFormatterFunc] = None,
         status_code: int = _DEFAULT_STATUS_CODE,
+        data: Optional[Any] = None,
     ):
         self.code = code
         self.code_num = code_num
         self.extra_formatter = extra_formatter
         self.status_code = status_code
+        self.data = data
         # Save message as private field to expose it as an property
         self._message = message
 
         super().__init__(self.message)
 
-    def format(self, message: Optional[str] = None, replace: bool = False, **kwargs) -> 'APIError':
+    def format(self: T, message: Optional[str] = None, replace: bool = False, **kwargs) -> T:
         """Try to mutate and render the original error message, return a cloned `APIError` object
 
         :param message: if not given, default message will be used
@@ -62,6 +67,11 @@ class APIError(Exception):
         obj_message = self._render(obj_message, kwargs)
         return self._clone(message=obj_message)
 
+    def set_data(self: T, data: Any) -> T:
+        """A chain method which set data property"""
+        self.data = data
+        return self
+
     # Shortcut method name
     f = format
 
@@ -72,7 +82,7 @@ class APIError(Exception):
             return self.extra_formatter(self._message, self)
         return self._message
 
-    def _clone(self, message: Optional[str] = None) -> 'APIError':
+    def _clone(self: T, message: Optional[str] = None) -> T:
         """Clone a new APIError object
 
         :param message: if given, the cloned object will use this message instead of current `self._message`
@@ -83,6 +93,7 @@ class APIError(Exception):
             code_num=self.code_num,
             extra_formatter=self.extra_formatter,
             status_code=self.status_code,
+            data=self.data,
             message=obj_message,
         )
 

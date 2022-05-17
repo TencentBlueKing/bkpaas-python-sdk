@@ -68,7 +68,12 @@ class TestAPIError:
         formatted_exc = exc.format()
         assert formatted_exc is not exc
 
+    def test_data_property_in_chain(self):
+        exc = APIError('foo', 'name={name}')
+        assert exc.set_data({'value': -1}).f(name='bar').data == {'value': -1}
+
     def test_lazy_str(self):
         exc = APIError('foo', gettext_lazy('message'))
         formatted_exc = exc.format(gettext_lazy('new message'))
         assert formatted_exc.message == "message: new message"
+

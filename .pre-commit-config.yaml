@@ -22,7 +22,6 @@ repos:
         entry: poetry run isort --settings-path=pyproject.toml
       - id: black
         name: black
-        # Set language to disable pre-commit's virtual-env
         language: system
         types: [python]
         entry: poetry run black --config=pyproject.toml
