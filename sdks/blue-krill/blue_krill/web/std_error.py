@@ -57,7 +57,8 @@ class APIError(Exception):
         if replace:
             obj_message = message
         else:
-            obj_message = ''.join([self._message, self.delimiter, message])
+            # use map(str, ..) to compatibility with lazy loaded messages，such as django i18n gettext
+            obj_message = ''.join(map(str, [self._message, self.delimiter, message]))
         obj_message = self._render(obj_message, kwargs)
         return self._clone(message=obj_message)
 
