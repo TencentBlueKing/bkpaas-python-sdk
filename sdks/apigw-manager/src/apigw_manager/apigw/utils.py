@@ -17,6 +17,7 @@ from packaging.version import InvalidVersion, LegacyVersion
 from packaging.version import Version as _Version
 
 from apigw_manager.core import configuration
+from bkapi_client_core.config import SettingKeys, settings
 
 
 def get_configuration(**kwargs):

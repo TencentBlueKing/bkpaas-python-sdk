@@ -8,4 +8,22 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
-__version__ = '1.1.0'
+import pytest
+
+from blue_krill.auth.utils import validate_jwt_token
+
+
+@pytest.mark.parametrize(
+    'input_s,result',
+    [
+        ('foo-string', False),
+        ('a.b.c', False),
+        (
+            # An random example JWT
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U',  # noqa: E501
+            True,
+        ),
+    ],
+)
+def test_test_jwt_token(input_s, result):
+    assert validate_jwt_token(input_s) is result

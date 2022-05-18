@@ -254,6 +254,9 @@ raise error_codes.CREATE_ERROR.f('追加说明')
 
 # 传递 replace=True 替换错误信息
 raise error_codes.CREATE_ERROR.f('替换信息', replace=True)
+
+# 设置异常对象的 data 属性，以便在后续处理。可通过 exc_obj.data 属性读取
+raise error_codes.CREATE_ERROR.set_data({'your': 'data'})
 ```
 
 > 注意：`APIError` 是不可变类型，调用 `format()` 会克隆并返回一个新对象，而非修改现有对象。
