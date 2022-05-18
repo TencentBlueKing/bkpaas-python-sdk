@@ -1,5 +1,14 @@
 ## Change logs
 
+### 1.1.0
+
+- Feature: add more JWT utilities in blue_krill.auth
+- Feature: add .set_data() hook for APIError type (#51)
+- Feature: (web std error) support lazy str, such as Django's i18n gettext (#54)
+- Feature: Make blue-krill supports PEP-561 by adding "py.typed" file
+- Chore(pkg): update django-environ pkg version to 0.8.1 (#53)
+- Fix type checking issues for `StructuredEnum.EnumField`, `ErrorCode`
+
 ### 1.0.15
 
 - `blue_krill.models.better_loaddata` 支持 django>=3
