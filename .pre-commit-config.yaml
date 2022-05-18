@@ -6,13 +6,14 @@ repos:
         verbose: true
         language: system
         require_serial: true
-        entry: bash -c "if [[ -d pre_commit_hooks ]]; then pre_commit_hooks/rtx.sh; fi"
+        entry: bash -c "if [[ -d pre_commit_hooks ]]; then pre_commit_hooks/rtx.sh $@; fi"
       - id: IP check
         name: Check sensitive info
         verbose: true
         language: system
         require_serial: true
-        entry: bash -c "if [[ -d pre_commit_hooks ]]; then pre_commit_hooks/ip.sh; fi"
+        exclude: "^(.*/poetry.lock|.*/requirements.txt|.*/requirements_dev.txt)|sdks/apigw-manager/build.yml"
+        entry: bash -c "if [[ -d pre_commit_hooks ]]; then pre_commit_hooks/ip.sh $@; fi"
       # See ./pyproject.toml for below tool's version and settings
       - id: isort
         name: isort
