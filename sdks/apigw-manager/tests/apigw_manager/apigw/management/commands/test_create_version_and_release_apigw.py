@@ -241,7 +241,7 @@ class TestHandle:
         fake_resource_version,
         default_command_flags,
     ):
-        current_version = "1.0.1"
+        current_version = "1.0.0-alpha2"
         definition_file.write(
             yaml.dump(
                 {
@@ -251,11 +251,11 @@ class TestHandle:
                 }
             )
         )
-        latest_version = "1.0.0"
-        fetcher.latest_resource_version.return_value = {
-            "version": latest_version,
-            **fake_resource_version,
-        }
+
+        latest_version = "1.0.0-alpha1"
+        latest_resource_version_result = fake_resource_version.copy()
+        latest_resource_version_result["version"] = latest_version
+        fetcher.latest_resource_version.return_value = latest_resource_version_result
         releaser.create_resource_version.return_value = dict(
             fake_resource_version,
             version=current_version,

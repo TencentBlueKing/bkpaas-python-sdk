@@ -12,6 +12,9 @@ import os
 import zipfile
 
 import yaml
+from bkapi_client_core.config import SettingKeys, settings
+from packaging.version import InvalidVersion, LegacyVersion
+from packaging.version import Version as _Version
 
 from apigw_manager.core import configuration
 from bkapi_client_core.config import SettingKeys, settings
@@ -106,3 +109,28 @@ class ZipArchiveFile:
                 path_to_name[file_path] = file_path[len(path) :]
 
         return path_to_name
+
+
+class SemVersion(_Version):
+    @property
+    def pre(self):
+        pre = self._version.pre
+
+        if not pre:
+            return None
+
+        # 恢复缩写，如 1.1.0a1 -> 1.1.0-alpha1
+        letter, number = pre
+        if letter == "a":
+            letter = "alpha"
+        elif letter == "b":
+            letter = "beta"
+
+        return "-%s" % letter, number
+
+
+def parse_version(version):
+    try:
+        return SemVersion(version)
+    except InvalidVersion:
+        return LegacyVersion(version)

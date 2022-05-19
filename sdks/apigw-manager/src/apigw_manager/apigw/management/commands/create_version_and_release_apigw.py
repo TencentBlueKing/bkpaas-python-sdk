@@ -11,10 +11,10 @@
 from datetime import datetime
 
 from packaging.version import LegacyVersion
-from packaging.version import parse as parse_version
 
 from apigw_manager.apigw.command import DefinitionCommand
 from apigw_manager.apigw.helper import ResourceSignatureManager
+from apigw_manager.apigw.utils import parse_version
 from apigw_manager.core.fetch import Fetcher
 from apigw_manager.core.release import Releaser
 
