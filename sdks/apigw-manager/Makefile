@@ -18,6 +18,7 @@ tox:
 
 poetry.lock: pyproject.toml
 	poetry lock --no-update
+	touch poetry.lock
 
 README.rst: README.md
 	m2r --overwrite README.md
