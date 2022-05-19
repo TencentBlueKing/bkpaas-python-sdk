@@ -1,3 +1,5 @@
+include ../Makefile
+
 .PHONY: build
 build:
 	rm -rf dist || true

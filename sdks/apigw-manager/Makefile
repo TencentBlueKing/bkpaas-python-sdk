@@ -1,3 +1,5 @@
+include ../Makefile
+
 export PYTHONPATH=src
 
 .PHONY: test

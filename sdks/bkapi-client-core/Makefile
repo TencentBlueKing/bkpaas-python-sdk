@@ -1,3 +1,5 @@
+include ../Makefile
+
 SRC_DIR := .
 DEMO_DIR := ${SRC_DIR}/demo
 PKG_DIR := ${SRC_DIR}/bkapi_client_core
@@ -8,6 +10,7 @@ ALL: poetry.lock version requirements_tox.txt requirements_dev.txt requirements.
 
 poetry.lock: pyproject.toml
 	poetry lock --no-update
+	touch poetry.lock
 
 bkapi_client_core/__init__.py: pyproject.toml
 	sed -i "/__version__ =.*/c __version__ = \"$(shell poetry version -s)\"" ${PKG_DIR}/__init__.py
