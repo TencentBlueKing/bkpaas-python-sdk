@@ -7,6 +7,8 @@ on:
       - 'sdks/bk-storages/**'
   pull_request:
     branches: [ master, staging ]
+    paths:
+      - 'sdks/bk-storages/**'
   workflow_dispatch:
 
 jobs:
