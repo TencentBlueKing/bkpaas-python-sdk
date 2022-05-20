@@ -6,7 +6,9 @@ on:
     paths:
       - 'sdks/blue-krill/**'
   pull_request:
-    branches: [ master, staging ]
+    branches: [ master, staging]
+    paths:
+      - 'sdks/blue-krill/**'
   workflow_dispatch:
   release:
     types: [published]
@@ -68,7 +70,7 @@ jobs:
         poetry run pytest
   build:
     runs-on: macos-latest
-    if: github.event.release
+    if: github.event.release && contains(github.event.release.tag_name, 'blue-krill')
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python

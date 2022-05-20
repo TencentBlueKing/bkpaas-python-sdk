@@ -5,6 +5,8 @@ on:
   pull_request:
     branches:
       - "master"
+    paths:
+      - "sdks/bkapi-client-core/**"
 name: bkapi-client-core
 jobs:
   test:
