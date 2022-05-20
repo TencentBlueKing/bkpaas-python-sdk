@@ -6,9 +6,12 @@ on:
     paths:
       - 'sdks/blue-krill/**'
   pull_request:
-    branches: [ master, staging ]
+    branches: [ master, staging]
+    paths:
+      - 'sdks/blue-krill/**'
   workflow_dispatch:
-
+  release:
+    types: [published]
 jobs:
   check:
     runs-on: macos-latest
@@ -39,7 +42,6 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
-        poetry-version: [1.1.13]
         os: [ubuntu-18.04, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
@@ -51,7 +53,7 @@ jobs:
     - name: Set up Poetry
       uses: abatilo/actions-poetry@v2.1.0
       with:
-          poetry-version: ${{ matrix.poetry-version }}
+          poetry-version: 1.1.13
     - name: Start Redis Container
       uses: supercharge/redis-github-action@1.4.0
       if: runner.os == 'Linux'
@@ -66,3 +68,29 @@ jobs:
         cd sdks/blue-krill
         poetry install
         poetry run pytest
+  build:
+    runs-on: macos-latest
+    if: github.event.release && contains(github.event.release.tag_name, 'blue-krill')
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Set up Poetry
+      uses: abatilo/actions-poetry@v2.1.0
+      with:
+          poetry-version: 1.1.13
+    - name: Build blue-krill
+      run: |
+        cd sdks/blue-krill
+        poetry install
+        poetry build
+        echo "${{ github.sha }}" > ${{ github.event.relesae.tag_name }}.txt
+        cat ${{ github.event.relesae.tag_name }}.txt
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          ${{ github.event.relesae.tag_name }}.txt
+          sdks/blue-krill/dist/*
