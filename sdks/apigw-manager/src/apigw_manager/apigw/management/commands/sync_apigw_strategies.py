@@ -26,6 +26,10 @@ class Command(SyncCommand):
         )
 
     def do(self, manager, definition, scope_type, *args, **kwargs):
+        if not definition:
+            print("no strategy definition found, skip")
+            return
+
         for strategy in definition:
             strategy.setdefault("scopes", [])
             strategy[strategy["type"]] = strategy.pop("config")

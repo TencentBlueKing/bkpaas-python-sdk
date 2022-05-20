@@ -17,6 +17,10 @@ class Command(PermissionCommand):
     default_namespace = "grant_permissions"
 
     def do(self, manager, definition, *args, **kwargs):
+        if not definition:
+            print("no permission grant definition found, skip")
+            return
+
         for permission in definition:
             permission.setdefault("target_app_code", permission.pop("bk_app_code", None))
             permission.setdefault("grant_dimension", "api")
