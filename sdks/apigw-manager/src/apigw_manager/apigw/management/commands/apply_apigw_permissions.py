@@ -17,6 +17,10 @@ class Command(PermissionCommand):
     default_namespace = "apply_permissions"
 
     def do(self, manager, definition, *args, **kwargs):
+        if not definition:
+            print("no permission apply definition found, skip")
+            return
+
         for permission in definition:
             permission.setdefault("target_app_code", manager.config.bk_app_code)
             permission.setdefault("grant_dimension", "api")
