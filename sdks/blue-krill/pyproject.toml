@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "blue-krill"
-version = "1.1.0"
+version = "1.1.1"
 description = "Tools and common packages for blueking paas"
 license = "Apache License 2.0"
 readme = "README.md"

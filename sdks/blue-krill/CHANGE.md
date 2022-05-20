@@ -1,5 +1,8 @@
 ## Change logs
 
+### 1.1.1
+- Feature: add `SensitiveURL` to obscure password field in url
+
 ### 1.1.0
 
 - Feature: add more JWT utilities in blue_krill.auth
