@@ -1,12 +1,12 @@
 on:
   push:
     paths:
-      - "sdks/apigw-manager/**"
+      - 'sdks/apigw-manager/**'
   pull_request:
     branches:
-      - "master"
+      - master
     paths:
-      - "sdks/apigw-manager/**"
+      - 'sdks/apigw-manager/**'
 name: apigw-manager
 jobs:
   test:
