@@ -9,15 +9,21 @@
  * specific language governing permissions and limitations under the License.
 """
 from typing import Any, Dict, Optional, Union
-from urllib.parse import SplitResult, parse_qsl, urlsplit
+from urllib.parse import SplitResult, parse_qsl, unquote, urlsplit
 
 
-class SensitiveURL:
+class MutableURL:
+    _url: str
     _components: SplitResult
     _query: dict
 
-    def __init__(self, url: Union[str, 'SensitiveURL']):
-        self._url = str(url)
+    def __init__(self, url: Union[str, 'MutableURL']):
+        if isinstance(url, MutableURL):
+            self._url = url._url
+        elif isinstance(url, str):
+            self._url = url
+        else:
+            raise TypeError(f"Invalid type for MutableURL. Expected str or MutableURL, got {type(url)}")
 
     @property
     def components(self) -> SplitResult:
@@ -35,7 +41,8 @@ class SensitiveURL:
 
     @property
     def password(self) -> Optional[str]:
-        return self.components.password
+        # Auto unescape password
+        return unquote(self.components.password) if self.components.password else None
 
     @property
     def hostname(self) -> Optional[str]:
@@ -55,7 +62,7 @@ class SensitiveURL:
             self._query = dict(parse_qsl(self.components.query))
         return self._query
 
-    def replace(self, **kwargs: Any) -> "SensitiveURL":
+    def replace(self, **kwargs: Any) -> "MutableURL":
         if "username" in kwargs or "password" in kwargs or "hostname" in kwargs or "port" in kwargs:
             hostname = kwargs.pop("hostname", self.hostname)
             port = kwargs.pop("port", self.port)
