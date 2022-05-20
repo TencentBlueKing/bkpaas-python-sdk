@@ -10,11 +10,11 @@
 """
 import pytest
 
-from blue_krill.data_types.url import SensitiveURL
+from blue_krill.data_types.url import MutableURL
 from tests.utils import generate_random_string
 
 
-class TestSensitiveURL:
+class TestMutableURL:
     @pytest.fixture
     def part_scheme(self):
         return generate_random_string(10)
@@ -37,12 +37,12 @@ class TestSensitiveURL:
 
     @pytest.fixture
     def url(self, part_scheme, part_username, part_password, part_hostname, part_port):
-        return SensitiveURL(f"{part_scheme}://{part_username}:{part_password}@{part_hostname}:{part_port}")
+        return MutableURL(f"{part_scheme}://{part_username}:{part_password}@{part_hostname}:{part_port}")
 
     def test_sensitive(self, url, part_scheme, part_username, part_password, part_hostname, part_port):
         assert str(url) == f"{part_scheme}://{part_username}:{part_password}@{part_hostname}:{part_port}"
         assert url.obscure() == f"{part_scheme}://{part_username}:********@{part_hostname}:{part_port}"
-        assert repr(url) == f"SensitiveURL('{url.obscure()}')"
+        assert repr(url) == f"MutableURL('{url.obscure()}')"
 
     def test_replace(self, url, part_scheme, part_username, part_hostname, part_port):
         new_url = url.replace(password=None)
