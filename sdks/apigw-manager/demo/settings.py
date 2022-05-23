@@ -151,6 +151,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 BK_APP_SECRET = env.str("BK_APP_SECRET", default="")
 BK_APP_CODE = env.str("BK_APP_CODE", default="")
 BK_APIGW_NAME = env.str("BK_APIGW_NAME", default="")
+BK_APIGW_MANAGERS = env.list("BK_APIGW_MANAGERS", default=[])
+BK_API_STAGE_HOSTS = env.list("BK_API_STAGE_HOSTS", default=[])
 BK_API_URL_TMPL = env.str("BK_API_URL_TMPL", default="")
 BK_API_RELEASE_FORCE_UPDATE_VERSION = env.bool("BK_API_RELEASE_FORCE_UPDATE_VERSION", default=False)
 
