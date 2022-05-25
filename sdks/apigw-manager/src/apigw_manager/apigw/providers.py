@@ -16,13 +16,85 @@ from typing import Optional
 import jwt
 from django.http.request import HttpRequest
 from django.conf import settings
+from django.core.cache import caches
+from django.core.cache.backends.dummy import DummyCache
 from future.utils import raise_from
+
+from apigw_manager.apigw.helper import PublicKeyManager
 
 logger = logging.getLogger(__name__)
 
 
 class JWTTokenInvalid(Exception):
     pass
+
+
+# public key provider
+
+
+class PublicKeyProvider(metaclass=abc.ABCMeta):
+    @abc.abstractclassmethod
+    def provide(self, api_name: str, jwt_issuer: str = None) -> Optional[str]:
+        """
+        provide should return publick key base on api_name and jwt_issuer and
+        return None when process error
+        """
+
+
+class SettingsPublicKeyProvider(PublicKeyProvider):
+    def provide(self, api_name: str, jwt_issuer: str = None) -> Optional[str]:
+        """Return the public key specified by Settings"""
+        public_key = getattr(settings, "APIGW_PUBLIC_KEY", None)
+        if not public_key:
+            logger.warning(
+                "No `APIGW_PUBLIC_KEY` can be found in settings, you should either configure it "
+                "with a valid value or remove `APIGatewayLoginMiddleware` middleware entirely"
+            )
+        return public_key
+
+
+class CachePublicKeyProvider(SettingsPublicKeyProvider):
+    """
+    settings.APIGW_JWT_PUBLIC_KEY_CACHE_MINUTES is used to set the public key cache expires,
+    if the value is 0, it does not need to cache.
+
+    settings.APIGW_JWT_PUBLIC_KEY_CACHE_NAME is the name of the cache instance.
+
+    settings.APIGW_JWT_PUBLIC_KEY_CACHE_VERSION is the current version of cache.
+    """
+
+    CACHE_MINUTES = 0
+    CACHE_NAME = "default"
+    CACHE_VERSION = "0"
+
+    def __init__(self) -> None:
+        self.cache_expires = getattr(settings, "APIGW_JWT_PUBLIC_KEY_CACHE_MINUTES", self.CACHE_MINUTES) * 60
+        self.cache_version = getattr(settings, "APIGW_JWT_PUBLIC_KEY_CACHE_VERSION", self.CACHE_VERSION)
+
+        cache_name = getattr(settings, "APIGW_JWT_PUBLIC_KEY_CACHE_NAME", self.CACHE_NAME)
+
+        # If the cache expires is 0, it does not need to cache
+        if self.cache_expires:
+            self.cache = caches[cache_name]
+        else:
+            self.cache = DummyCache(cache_name, params={})
+
+    def provide(self, api_name: str, jwt_issuer: str = None) -> Optional[str]:
+        """Get the specified public key from Context model, if not specified, return the default value"""
+        cache_key = "apigw:public_key:%s:%s" % (jwt_issuer or "", api_name)
+        cached_value = self.cache.get(cache_key)
+        if cached_value:
+            return cached_value
+
+        public_key = PublicKeyManager().get_best_matched(api_name or self.default_api_name, jwt_issuer)
+        if not public_key:
+            return super(CachePublicKeyProvider, self).provide(api_name, jwt_issuer)
+
+        self.cache.set(cache_key, public_key, self.cache_expires, self.cache_version)
+        return public_key
+
+
+# jwt key provider
 
 
 class DecodedJWT:
@@ -32,10 +104,18 @@ class DecodedJWT:
 
 
 class JWTProvider(metaclass=abc.ABCMeta):
-    def __init__(self, default_api_name: str, algorithm: str, allow_invalid_jwt_token: bool, **kwargs) -> None:
+    def __init__(
+        self,
+        default_api_name: str,
+        algorithm: str,
+        allow_invalid_jwt_token: bool,
+        public_key_provider: PublicKeyProvider,
+        **kwargs
+    ) -> None:
         self.default_api_name = default_api_name
         self.algorithm = algorithm
         self.allow_invalid_jwt_token = allow_invalid_jwt_token
+        self.public_key_provider = public_key_provider
 
     @abc.abstractclassmethod
     def provide(self, request: HttpRequest) -> Optional[DecodedJWT]:
@@ -45,7 +125,7 @@ class JWTProvider(metaclass=abc.ABCMeta):
         """
 
 
-class DefaultProvider(JWTProvider):
+class DefaultJWTProvider(JWTProvider):
     def _decode_jwt(self, jwt_payload, public_key, algorithm):
         return jwt.decode(
             jwt_payload,
@@ -56,15 +136,6 @@ class DefaultProvider(JWTProvider):
     def _decode_jwt_header(self, jwt_payload):
         return jwt.get_unverified_header(jwt_payload)
 
-    def _get_public_key(self, api_name, jwt_issuer=None):
-        public_key = getattr(settings, "APIGW_PUBLIC_KEY", None)
-        if not public_key:
-            logger.warning(
-                "No `APIGW_PUBLIC_KEY` can be found in settings, you should either configure it "
-                "with a valid value or remove `APIGatewayLoginMiddleware` middleware entirely"
-            )
-        return public_key
-
     def provide(self, request: HttpRequest) -> DecodedJWT:
         jwt_token = request.META.get(self.JWT_KEY_NAME, "")
         if not jwt_token:
@@ -73,7 +144,7 @@ class DefaultProvider(JWTProvider):
         try:
             jwt_header = self._decode_jwt_header(jwt_token)
             api_name = jwt_header.get("kid") or self.default_api_name
-            public_key = self._get_public_key(api_name, jwt_header.get("iss"))
+            public_key = self.public_key_provider.provide(api_name, jwt_header.get("iss"))
             if not public_key:
                 logger.warning("no public key found")
                 return None

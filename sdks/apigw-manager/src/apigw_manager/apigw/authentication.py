@@ -11,19 +11,14 @@
 import logging
 from collections import namedtuple
 
-import jwt
 from django.conf import settings
 from django.contrib import auth
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import AnonymousUser
-from django.core.cache import caches
-from django.core.cache.backends.dummy import DummyCache
-from future.utils import raise_from
 
-from apigw_manager.apigw.helper import PublicKeyManager
 from apigw_manager.apigw.utils import get_configuration
-from apigw_manager.apigw.providers import DefaultProvider
+from apigw_manager.apigw.providers import DefaultProvider, SettingsPublicKeyProvider, CachePublicKeyProvider
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +41,7 @@ class ApiGatewayJWTMiddleware:
 
     JWT_KEY_NAME = "HTTP_X_BKAPI_JWT"
     ALGORITHM = "RS512"
+    PUBLIC_KEY_PROVIDER_CLS = SettingsPublicKeyProvider
 
     def __init__(self, get_response):
         self.get_response = get_response
@@ -56,6 +52,7 @@ class ApiGatewayJWTMiddleware:
             default_api_name=configuration.api_name,
             algorithm=getattr(settings, "APIGW_JWT_ALGORITHM", self.ALGORITHM),
             allow_invalid_jwt_token=getattr(settings, "APIGW_ALLOW_INVALID_JWT_TOKEN", False),
+            public_key_provider=self.PUBLIC_KEY_PROVIDER_CLS(),
         )
 
     def __call__(self, request):
@@ -74,45 +71,9 @@ class ApiGatewayJWTGenericMiddleware(ApiGatewayJWTMiddleware):
     """
     This middleware is similar to ApiGatewayJWTMiddleware,
     but gets the API gateway public key from Context Model.
-
-    settings.APIGW_JWT_PUBLIC_KEY_CACHE_MINUTES is used to set the public key cache expires,
-    if the value is 0, it does not need to cache.
-
-    settings.APIGW_JWT_PUBLIC_KEY_CACHE_NAME is the name of the cache instance.
-
-    settings.APIGW_JWT_PUBLIC_KEY_CACHE_VERSION is the current version of cache.
     """
 
-    CACHE_MINUTES = 0
-    CACHE_NAME = "default"
-    CACHE_VERSION = "0"
-
-    def __init__(self, get_response):
-        super().__init__(get_response)
-        self.cache_expires = getattr(settings, "APIGW_JWT_PUBLIC_KEY_CACHE_MINUTES", self.CACHE_MINUTES) * 60
-        self.cache_version = getattr(settings, "APIGW_JWT_PUBLIC_KEY_CACHE_VERSION", self.CACHE_VERSION)
-
-        cache_name = getattr(settings, "APIGW_JWT_PUBLIC_KEY_CACHE_NAME", self.CACHE_NAME)
-
-        # If the cache expires is 0, it does not need to cache
-        if self.cache_expires:
-            self.cache = caches[cache_name]
-        else:
-            self.cache = DummyCache(cache_name, params={})
-
-    def get_public_key(self, api_name, jwt_issuer=None):
-        """Get the specified public key from Context model, if not specified, return the default value"""
-        cache_key = "apigw:public_key:%s:%s" % (jwt_issuer or "", api_name)
-        cached_value = self.cache.get(cache_key)
-        if cached_value:
-            return cached_value
-
-        public_key = PublicKeyManager().get_best_matched(api_name or self.default_api_name, jwt_issuer)
-        if not public_key:
-            return super(ApiGatewayJWTGenericMiddleware, self).get_public_key(api_name, jwt_issuer)
-
-        self.cache.set(cache_key, public_key, self.cache_expires, self.cache_version)
-        return public_key
+    PUBLIC_KEY_PROVIDER_CLS = CachePublicKeyProvider
 
 
 class ApiGatewayJWTAppMiddleware:
