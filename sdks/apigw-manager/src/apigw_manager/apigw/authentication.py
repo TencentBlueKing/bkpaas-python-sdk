@@ -23,6 +23,7 @@ from future.utils import raise_from
 
 from apigw_manager.apigw.helper import PublicKeyManager
 from apigw_manager.apigw.utils import get_configuration
+from apigw_manager.apigw.providers import DefaultProvider
 
 logger = logging.getLogger(__name__)
 
@@ -46,67 +47,25 @@ class ApiGatewayJWTMiddleware:
     JWT_KEY_NAME = "HTTP_X_BKAPI_JWT"
     ALGORITHM = "RS512"
 
-    JWT = namedtuple("JWT", ["api_name", "payload"])
-
     def __init__(self, get_response):
         self.get_response = get_response
 
         configuration = get_configuration()
-        self.default_api_name = configuration.api_name
-        self.mock_payload = configuration.mock_payload
-        self.algorithm = getattr(settings, "APIGW_JWT_ALGORITHM", self.ALGORITHM)
-        self.allow_invalid_jwt_token = getattr(settings, "APIGW_ALLOW_INVALID_JWT_TOKEN", False)
-
-    def get_public_key(self, api_name, jwt_issuer=None):
-        """Return the public key specified by Settings"""
-        public_key = getattr(settings, "APIGW_PUBLIC_KEY", None)
-        if not public_key:
-            logger.warning(
-                "No `APIGW_PUBLIC_KEY` can be found in settings, you should either configure it "
-                "with a valid value or remove `APIGatewayLoginMiddleware` middleware entirely"
-            )
-        return public_key
-
-    def decode_jwt_header(self, jwt_payload):
-        return jwt.get_unverified_header(jwt_payload)
-
-    def decode_jwt(self, jwt_payload, public_key, algorithm):
-        return jwt.decode(
-            jwt_payload,
-            public_key,
-            algorithms=algorithm,
+        provider_cls = configuration.provider_cls or DefaultProvider
+        self.provider = provider_cls(
+            default_api_name=configuration.api_name,
+            algorithm=getattr(settings, "APIGW_JWT_ALGORITHM", self.ALGORITHM),
+            allow_invalid_jwt_token=getattr(settings, "APIGW_ALLOW_INVALID_JWT_TOKEN", False),
         )
 
     def __call__(self, request):
-        if self.mock_payload:
-            request.jwt = self.JWT(api_name=self.default_api_name, payload=self.mock_payload)
+
+        jwt = self.provider.provide(request)
+        if not jwt:
             return self.get_response(request)
 
-        jwt_token = request.META.get(self.JWT_KEY_NAME, "")
-        if not jwt_token:
-            return self.get_response(request)
-
-        try:
-            jwt_header = self.decode_jwt_header(jwt_token)
-            api_name = jwt_header.get("kid") or self.default_api_name
-            public_key = self.get_public_key(api_name, jwt_header.get("iss"))
-            if not public_key:
-                logger.warning("no public key found")
-                return self.get_response(request)
-
-            algorithm = jwt_header.get("alg") or self.algorithm
-            decoded = self.decode_jwt(
-                jwt_token,
-                public_key,
-                algorithm,
-            )
-
-            request.jwt = self.JWT(api_name=api_name, payload=decoded)
-            # disable csrf checks
-            request._dont_enforce_csrf_checks = True
-        except jwt.PyJWTError as e:
-            if not self.allow_invalid_jwt_token:
-                raise_from(JWTTokenInvalid, e)
+        request.jwt = jwt
+        request._dont_enforce_csrf_checks = True
 
         return self.get_response(request)
 
