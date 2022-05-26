@@ -1128,13 +1128,13 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 
 [extras]
 cryptography = ["cryptography", "pyjwt"]
-demo = ["django-environ", "Django", "PyMySQL", "packaging", "pyjwt"]
-django = ["Django", "packaging", "pyjwt"]
+demo = ["django-environ", "Django", "PyMySQL", "pyjwt"]
+django = ["Django", "pyjwt"]
 
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.1"
-content-hash = "1d28b3d6f20736d8789f17c95de3cd1bbee369e820d29d8817a643a1656069b3"
+content-hash = "3d7f397fcafef4b26781451b05642d148f63907a9e6fbfacb7daa06e7952b573"
 
 [metadata.files]
 appdirs = [
