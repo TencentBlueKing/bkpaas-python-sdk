@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "apigw-manager"
-version = "1.0.13"
+version = "1.0.14"
 description = ""
 authors = []
 
@@ -16,13 +16,13 @@ pyjwt = {version = ">=1.6.4", optional = true}
 django-environ = {version = ">=0.8.1", optional = true}
 Django = {version = ">=1.11.1", optional = true}
 cryptography = {version = ">=3.1.1", optional = true}
-packaging = {version = ">=21.0", optional = true}
+packaging = {version = ">=21.0"}
 PyMySQL = {version = "^1.0.2", optional = true}
 
 [tool.poetry.extras]
 cryptography = ["cryptography", "pyjwt"]
-django = ["django", "packaging", "pyjwt"]
-demo = ["django-environ", "django", "PyMySQL", "packaging", "pyjwt"]
+django = ["django", "pyjwt"]
+demo = ["django-environ", "django", "PyMySQL", "pyjwt"]
 
 [tool.poetry.dev-dependencies]
 m2r = "^0.2.1"
