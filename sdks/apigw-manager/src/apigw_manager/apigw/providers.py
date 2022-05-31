@@ -106,12 +106,14 @@ class DecodedJWT:
 class JWTProvider(metaclass=abc.ABCMeta):
     def __init__(
         self,
+        jwt_key_name: str,
         default_api_name: str,
         algorithm: str,
         allow_invalid_jwt_token: bool,
         public_key_provider: PublicKeyProvider,
         **kwargs
     ) -> None:
+        self.jwt_key_name = jwt_key_name
         self.default_api_name = default_api_name
         self.algorithm = algorithm
         self.allow_invalid_jwt_token = allow_invalid_jwt_token
@@ -126,18 +128,18 @@ class JWTProvider(metaclass=abc.ABCMeta):
 
 
 class DefaultJWTProvider(JWTProvider):
-    def _decode_jwt(self, jwt_payload, public_key, algorithm):
+    def _decode_jwt(self, jwt_payload, public_key):
         return jwt.decode(
             jwt_payload,
             public_key,
-            algorithms=algorithm,
+            algorithms=self.algorithm,
         )
 
     def _decode_jwt_header(self, jwt_payload):
         return jwt.get_unverified_header(jwt_payload)
 
     def provide(self, request: HttpRequest) -> DecodedJWT:
-        jwt_token = request.META.get(self.JWT_KEY_NAME, "")
+        jwt_token = request.META.get(self.jwt_key_name, "")
         if not jwt_token:
             return None
 
@@ -150,11 +152,7 @@ class DefaultJWTProvider(JWTProvider):
                 return None
 
             algorithm = jwt_header.get("alg") or self.algorithm
-            decoded = self._decode_jwt(
-                jwt_token,
-                public_key,
-                algorithm,
-            )
+            decoded = self._decode_jwt(jwt_token, public_key)
 
             return DecodedJWT(api_name=api_name, payload=decoded)
 

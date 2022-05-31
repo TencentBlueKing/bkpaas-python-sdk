@@ -16,9 +16,10 @@ from django.contrib import auth
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import AnonymousUser
+from django.utils.module_loading import import_string
 
 from apigw_manager.apigw.utils import get_configuration
-from apigw_manager.apigw.providers import DefaultProvider, SettingsPublicKeyProvider, CachePublicKeyProvider
+from apigw_manager.apigw.providers import SettingsPublicKeyProvider, CachePublicKeyProvider
 
 logger = logging.getLogger(__name__)
 
@@ -47,8 +48,11 @@ class ApiGatewayJWTMiddleware:
         self.get_response = get_response
 
         configuration = get_configuration()
-        provider_cls = configuration.provider_cls or DefaultProvider
-        self.provider = provider_cls(
+        jwt_provider_cls = import_string(
+            configuration.jwt_provider_cls or "apigw_manager.apigw.providers.DefaultJWTProvider"
+        )
+        self.provider = jwt_provider_cls(
+            jwt_key_name=self.JWT_KEY_NAME,
             default_api_name=configuration.api_name,
             algorithm=getattr(settings, "APIGW_JWT_ALGORITHM", self.ALGORITHM),
             allow_invalid_jwt_token=getattr(settings, "APIGW_ALLOW_INVALID_JWT_TOKEN", False),

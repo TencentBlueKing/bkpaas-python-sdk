@@ -40,6 +40,13 @@ class TestGetConfiguration:
 
         assert configuration.bk_app_secret == settings.BK_APP_SECRET
 
+    def test_jwt_provider_cls(self, settings, faker):
+        settings.BK_APIGW_JWT_PROVIDER_CLS = faker.color()
+
+        configuration = get_configuration()
+
+        assert configuration.jwt_provider_cls == settings.BK_APIGW_JWT_PROVIDER_CLS
+
     @pytest.mark.parametrize(
         "kwargs, expected",
         [
@@ -104,16 +111,16 @@ class TestGetConfiguration:
 class TestParseValueList:
     def test_multiple_values(self):
         result = parse_value_list(
-            'int:1',
+            "int:1",
             'int_str:"2"',
-            'str:str',
-            'float:3.0',
+            "str:str",
+            "float:3.0",
         )
 
-        assert result['int'] == 1
-        assert result['int_str'] == '2'
-        assert result['str'] == 'str'
-        assert result['float'] == 3.0
+        assert result["int"] == 1
+        assert result["int_str"] == "2"
+        assert result["str"] == "str"
+        assert result["float"] == 3.0
 
 
 class TestZipArchiveFile:

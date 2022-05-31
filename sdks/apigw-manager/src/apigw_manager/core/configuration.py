@@ -22,7 +22,7 @@ class Configuration(object):
         api_name=None,
         api_cache=None,
         access_token=None,
-        provider_cls=None,
+        jwt_provider_cls=None,
         *args,
         **kwargs,
     ):
@@ -33,4 +33,4 @@ class Configuration(object):
         self.api_name = api_name
         self.api_cache = api_cache
         self.access_token = access_token
-        self.provider_cls = provider_cls
+        self.jwt_provider_cls = jwt_provider_cls
