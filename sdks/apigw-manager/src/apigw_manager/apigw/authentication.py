@@ -11,18 +11,15 @@
 import logging
 from collections import namedtuple
 
-import jwt
 from django.conf import settings
 from django.contrib import auth
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import AnonymousUser
-from django.core.cache import caches
-from django.core.cache.backends.dummy import DummyCache
-from future.utils import raise_from
+from django.utils.module_loading import import_string
 
-from apigw_manager.apigw.helper import PublicKeyManager
 from apigw_manager.apigw.utils import get_configuration
+from apigw_manager.apigw.providers import SettingsPublicKeyProvider, CachePublicKeyProvider
 
 logger = logging.getLogger(__name__)
 
@@ -43,65 +40,33 @@ class ApiGatewayJWTMiddleware:
     By default, read the API gateway public key by settings.APIGW_PUBLIC_KEY.
     """
 
-    JWT_KEY_NAME = 'HTTP_X_BKAPI_JWT'
-    ALGORITHM = 'RS512'
-
-    JWT = namedtuple("JWT", ["api_name", "payload"])
+    JWT_KEY_NAME = "HTTP_X_BKAPI_JWT"
+    ALGORITHM = "RS512"
+    PUBLIC_KEY_PROVIDER_CLS = SettingsPublicKeyProvider
 
     def __init__(self, get_response):
         self.get_response = get_response
 
         configuration = get_configuration()
-        self.default_api_name = configuration.api_name
-        self.algorithm = getattr(settings, 'APIGW_JWT_ALGORITHM', self.ALGORITHM)
-        self.allow_invalid_jwt_token = getattr(settings, 'APIGW_ALLOW_INVALID_JWT_TOKEN', False)
-
-    def get_public_key(self, api_name, jwt_issuer=None):
-        """Return the public key specified by Settings"""
-        public_key = getattr(settings, 'APIGW_PUBLIC_KEY', None)
-        if not public_key:
-            logger.warning(
-                'No `APIGW_PUBLIC_KEY` can be found in settings, you should either configure it '
-                'with a valid value or remove `APIGatewayLoginMiddleware` middleware entirely'
-            )
-        return public_key
-
-    def decode_jwt_header(self, jwt_payload):
-        return jwt.get_unverified_header(jwt_payload)
-
-    def decode_jwt(self, jwt_payload, public_key, algorithm):
-        return jwt.decode(
-            jwt_payload,
-            public_key,
-            algorithms=algorithm,
+        jwt_provider_cls = import_string(
+            configuration.jwt_provider_cls or "apigw_manager.apigw.providers.DefaultJWTProvider"
+        )
+        self.provider = jwt_provider_cls(
+            jwt_key_name=self.JWT_KEY_NAME,
+            default_api_name=configuration.api_name,
+            algorithm=getattr(settings, "APIGW_JWT_ALGORITHM", self.ALGORITHM),
+            allow_invalid_jwt_token=getattr(settings, "APIGW_ALLOW_INVALID_JWT_TOKEN", False),
+            public_key_provider=self.PUBLIC_KEY_PROVIDER_CLS(),
         )
 
     def __call__(self, request):
-        jwt_token = request.META.get(self.JWT_KEY_NAME, '')
-        if not jwt_token:
+
+        jwt = self.provider.provide(request)
+        if not jwt:
             return self.get_response(request)
 
-        try:
-            jwt_header = self.decode_jwt_header(jwt_token)
-            api_name = jwt_header.get("kid") or self.default_api_name
-            public_key = self.get_public_key(api_name, jwt_header.get("iss"))
-            if not public_key:
-                logger.warning('no public key found')
-                return self.get_response(request)
-
-            algorithm = jwt_header.get("alg") or self.algorithm
-            decoded = self.decode_jwt(
-                jwt_token,
-                public_key,
-                algorithm,
-            )
-
-            request.jwt = self.JWT(api_name=api_name, payload=decoded)
-            # disable csrf checks
-            request._dont_enforce_csrf_checks = True
-        except jwt.PyJWTError as e:
-            if not self.allow_invalid_jwt_token:
-                raise_from(JWTTokenInvalid, e)
+        request.jwt = jwt
+        request._dont_enforce_csrf_checks = True
 
         return self.get_response(request)
 
@@ -110,45 +75,9 @@ class ApiGatewayJWTGenericMiddleware(ApiGatewayJWTMiddleware):
     """
     This middleware is similar to ApiGatewayJWTMiddleware,
     but gets the API gateway public key from Context Model.
-
-    settings.APIGW_JWT_PUBLIC_KEY_CACHE_MINUTES is used to set the public key cache expires,
-    if the value is 0, it does not need to cache.
-
-    settings.APIGW_JWT_PUBLIC_KEY_CACHE_NAME is the name of the cache instance.
-
-    settings.APIGW_JWT_PUBLIC_KEY_CACHE_VERSION is the current version of cache.
     """
 
-    CACHE_MINUTES = 0
-    CACHE_NAME = 'default'
-    CACHE_VERSION = '0'
-
-    def __init__(self, get_response):
-        super().__init__(get_response)
-        self.cache_expires = getattr(settings, 'APIGW_JWT_PUBLIC_KEY_CACHE_MINUTES', self.CACHE_MINUTES) * 60
-        self.cache_version = getattr(settings, 'APIGW_JWT_PUBLIC_KEY_CACHE_VERSION', self.CACHE_VERSION)
-
-        cache_name = getattr(settings, 'APIGW_JWT_PUBLIC_KEY_CACHE_NAME', self.CACHE_NAME)
-
-        # If the cache expires is 0, it does not need to cache
-        if self.cache_expires:
-            self.cache = caches[cache_name]
-        else:
-            self.cache = DummyCache(cache_name, params={})
-
-    def get_public_key(self, api_name, jwt_issuer=None):
-        """Get the specified public key from Context model, if not specified, return the default value"""
-        cache_key = "apigw:public_key:%s:%s" % (jwt_issuer or "", api_name)
-        cached_value = self.cache.get(cache_key)
-        if cached_value:
-            return cached_value
-
-        public_key = PublicKeyManager().get_best_matched(api_name or self.default_api_name, jwt_issuer)
-        if not public_key:
-            return super(ApiGatewayJWTGenericMiddleware, self).get_public_key(api_name, jwt_issuer)
-
-        self.cache.set(cache_key, public_key, self.cache_expires, self.cache_version)
-        return public_key
+    PUBLIC_KEY_PROVIDER_CLS = CachePublicKeyProvider
 
 
 class ApiGatewayJWTAppMiddleware:
@@ -166,7 +95,7 @@ class ApiGatewayJWTAppMiddleware:
         )
 
     def __call__(self, request):
-        jwt_info = getattr(request, 'jwt', None)
+        jwt_info = getattr(request, "jwt", None)
         if not jwt_info:
             return self.get_response(request)
 
@@ -190,15 +119,15 @@ class ApiGatewayJWTUserMiddleware:
         return auth.authenticate(request, api_name=api_name, bk_username=bk_username, verified=verified, **credentials)
 
     def __call__(self, request):
-        jwt_info = getattr(request, 'jwt', None)
+        jwt_info = getattr(request, "jwt", None)
         if not jwt_info:
             return self.get_response(request)
 
         # skip when authenticated
-        if hasattr(request, 'user') and request.user.is_authenticated:
+        if hasattr(request, "user") and request.user.is_authenticated:
             return self.get_response(request)
 
-        jwt_user = (jwt_info.payload.get('user') or {}).copy()
+        jwt_user = (jwt_info.payload.get("user") or {}).copy()
         jwt_user.setdefault("bk_username", jwt_user.pop("username", None))
 
         request.user = self.get_user(request, api_name=jwt_info.api_name, **jwt_user)
@@ -213,7 +142,7 @@ class UserModelBackend(ModelBackend):
 
         user_model = get_user_model()
 
-        if hasattr(user_model.objects, 'get_by_natural_key'):
+        if hasattr(user_model.objects, "get_by_natural_key"):
             self.user_maker = user_model.objects.get_by_natural_key
         else:
             self.user_maker = lambda x: user_model.objects.filter(username=x).last()

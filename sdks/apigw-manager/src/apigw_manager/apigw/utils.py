@@ -27,6 +27,7 @@ def get_configuration(**kwargs):
         ("BK_APIGW_NAME", "api_name"),
         ("BK_APP_CODE", "bk_app_code"),
         ("BK_APP_SECRET", "bk_app_secret"),
+        ("BK_APIGW_JWT_PROVIDER_CLS", "jwt_provider_cls"),
     ]
 
     for attr, key in settings_mappings:
