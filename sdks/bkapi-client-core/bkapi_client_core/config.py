@@ -122,5 +122,8 @@ settings.set_defaults(
         SettingKeys.DEFAULT_BK_API_VER: "v2",
         SettingKeys.BK_API_USE_TEST_ENV: False,
         SettingKeys.BK_API_CLIENT_ENABLE_SSL_VERIFY: True,
+        SettingKeys.BK_API_AUTHORIZATION_COOKIES_MAPPING: {
+            "bk_token": "bk_token",
+        },
     }
 )

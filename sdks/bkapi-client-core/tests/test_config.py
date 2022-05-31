@@ -12,7 +12,7 @@ from collections import namedtuple
 
 import pytest
 
-from bkapi_client_core.config import Settings
+from bkapi_client_core.config import SettingKeys, Settings, settings
 
 
 @pytest.fixture()
@@ -120,3 +120,10 @@ class TestDjangoSettings(TestEnvSettings):
 
         assert self.settings.get("SETTINGS") == django_settings.SETTINGS
         assert self.settings.get("VAR_IN_DEFAULTS") == "x2"
+
+
+def test_defaults():
+    assert settings.get(SettingKeys.DEFAULT_BK_API_VER) == "v2"
+    assert settings.get(SettingKeys.BK_API_USE_TEST_ENV) is False
+    assert settings.get(SettingKeys.BK_API_CLIENT_ENABLE_SSL_VERIFY) is True
+    assert settings.get(SettingKeys.BK_API_AUTHORIZATION_COOKIES_MAPPING) == {"bk_token": "bk_token"}
