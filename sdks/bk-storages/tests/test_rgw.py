@@ -14,11 +14,12 @@ from tempfile import NamedTemporaryFile
 import boto3
 import pytest
 import six
-from bkstorages.backends.rgw import RGWBoto3Storage
 from django.conf import settings
 from django.core.files import File
 from django.core.files.base import ContentFile
 from moto import mock_s3
+
+from bkstorages.backends.rgw import RGWBoto3Storage
 
 from .models import RGWFile
 

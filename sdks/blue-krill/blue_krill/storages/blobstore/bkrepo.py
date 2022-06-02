@@ -276,7 +276,10 @@ class BKGenericRepo(BlobStore):
             raise DownloadFailedError(key=key, dest=dest) from e
 
         if not resp.ok:
-            logger.exception("Request success, but the server rejects the download request.")
+            logger.exception(
+                "Request success, but the server rejects the download request, please check by those curl command: %s",
+                curlify.to_curl(resp.request),
+            )
             raise DownloadFailedError(key=key, dest=dest) from RequestError(
                 str("下载制品文件失败"), code=str(resp.status_code), response=resp
             )

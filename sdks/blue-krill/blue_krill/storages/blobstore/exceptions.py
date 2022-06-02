@@ -8,13 +8,15 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
-from typing import Any
+from typing import Optional
+
+from requests import Response
 
 
 class RequestError(Exception):
     """服务请求异常"""
 
-    def __init__(self, message: str, code: str = "400", response: Any = None) -> None:
+    def __init__(self, message: str, code: str = "400", response: Optional[Response] = None) -> None:
         super().__init__(message)
         self.message = message
         self.code = code
