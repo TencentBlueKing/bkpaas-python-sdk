@@ -1,5 +1,7 @@
 on:
   push:
+    branches:
+      - master
     paths:
       - 'sdks/apigw-manager/**'
   pull_request:
