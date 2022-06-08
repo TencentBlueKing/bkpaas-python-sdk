@@ -141,6 +141,27 @@ auth.authenticate(request, username=username, verified=verified)
 - 已认证的用户名，通过 `UserModel` 根据 `username` 获取用户，不存在时返回 `None`；
 - 未认证的用户名，返回 `AnonymousUser`，可通过继承后修改 `make_anonymous_user` 的实现来定制具体字段；
 
+## 本地开发测试
+
+如果使用了 `ApiGatewayJWTGenericMiddleware` 中间件，在本地开发测试时在请求中带上合法的 JWT 是相对来说较困难的，这个时候我们可以通过使用测试用的 `JWTProvider` 来解决这个问题
+
+在项目根目录下创建 `local_provider.py` 文件，并提供测试用 `JWTProvider`
+
+在 Django settings 中提供如下配置
+
+```python
+BK_APIGW_JWT_PROVIDER_CLS = "apigw-manager.apigw.providers.DummyEnvPayloadJWTProvider"
+```
+
+同时提供以下环境变量
+
+```
+APIGW_MANAGER_DUMMY_API_NAME # JWT 中的 API name
+APIGW_MANAGER_DUMMY_PAYLOAD_APP_CODE # JWT payload 中的 app_code
+APIGW_MANAGER_DUMMY_PAYLOAD_USERNAME # JWT payload 中的 username
+```
+
+
 ## 镜像
 ### 基础镜像
 基础镜像通过 [Dockerfile](Dockerfile) 进行构建，该镜像封装了 [demo](demo) 项目，可读取 /data/ 目录，直接进行网关注册和同步操作，目录约定：
