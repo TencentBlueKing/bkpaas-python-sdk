@@ -9,6 +9,7 @@
  * specific language governing permissions and limitations under the License.
 """
 
+import os
 import abc
 import logging
 from typing import Optional
@@ -161,3 +162,14 @@ class DefaultJWTProvider(JWTProvider):
                 raise_from(JWTTokenInvalid, e)
 
         return None
+
+
+class DummyEnvPayloadJWTProvider(JWTProvider):
+    def provide(self, request: HttpRequest) -> DecodedJWT:
+        return DecodedJWT(
+            api_name=os.getenv("APIGW_MANAGER_DUMMY_API_NAME", ""),
+            payload={
+                "app": {"app_code": os.getenv("APIGW_MANAGER_DUMMY_PAYLOAD_APP_CODE", "")},
+                "user": {"username": os.getenv("APIGW_MANAGER_DUMMY_PAYLOAD_USERNAME", "")},
+            },
+        )
