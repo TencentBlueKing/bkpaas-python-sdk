@@ -1,5 +1,8 @@
 ## Change logs
 
+### 1.1.2
+- 调整 HAEndpointPool 拦截 exempt_exceptions 的日志级别至 warning
+
 ### 1.1.1
 - Feature: add `MutableURL` to obscure password field in url
 
