@@ -183,13 +183,13 @@ class HAEndpointPool:
                 self.elect(method=elect_method)
 
             yield self.active_endpoint.raw
-        except Exception as e:  # pylint: disable=broad-except
+        except Exception as e:
             if isinstance(e, exempt_exceptions):
-                logger.exception("endpoints pool got exception, " "but raising anyway according to upper caller")
+                logger.warning("endpoints pool got exception, but raising anyway according to upper caller")
                 raise
 
             logger.warning(
-                f"endpoints pool got exception: {e}, " f"the active endpoint {self._active} will be mark as failure"
+                f"endpoints pool got exception: {e}, the active endpoint {self._active} will be mark as failure"
             )
             self.fail(isolate_method)
             if auto_reelect:
