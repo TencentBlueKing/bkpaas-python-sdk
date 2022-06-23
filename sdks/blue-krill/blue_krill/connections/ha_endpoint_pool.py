@@ -185,7 +185,6 @@ class HAEndpointPool:
             yield self.active_endpoint.raw
         except Exception as e:
             if isinstance(e, exempt_exceptions):
-                logger.warning("endpoints pool got exception, but raising anyway according to upper caller")
                 raise
 
             logger.warning(
