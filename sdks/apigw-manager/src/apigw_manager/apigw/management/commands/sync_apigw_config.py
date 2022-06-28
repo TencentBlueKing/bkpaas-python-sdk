@@ -16,6 +16,19 @@ class Command(SyncCommand):
 
     default_namespace = "apigateway"
 
-    def do(self, manager, definition, *args, **kwargs):
+    def add_arguments(self, parser):
+        super(Command, self).add_arguments(parser)
+
+        parser.add_argument(
+            "--default-maintainers",
+            default=["admin"],
+            nargs="+",
+            help="when definition is missing, use this maintainers as default maintainers",
+        )
+
+    def do(self, manager, definition, default_maintainers, *args, **kwargs):
+        if not definition.get("maintainers"):
+            definition["maintainers"] = default_maintainers
+
         result = manager.sync_basic_config(**definition)
         print("API gateway basic synchronization completed, id %s, name %s" % (result["id"], result["name"]))
