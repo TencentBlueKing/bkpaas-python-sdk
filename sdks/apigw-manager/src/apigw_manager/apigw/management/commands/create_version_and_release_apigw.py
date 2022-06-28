@@ -15,6 +15,7 @@ from packaging.version import LegacyVersion
 from apigw_manager.apigw.command import DefinitionCommand
 from apigw_manager.apigw.helper import ResourceSignatureManager
 from apigw_manager.apigw.utils import parse_version
+from apigw_manager.core.exceptions import ApiResultError
 from apigw_manager.core.fetch import Fetcher
 from apigw_manager.core.release import Releaser
 
@@ -106,6 +107,12 @@ class Command(DefinitionCommand):
 
         return resource_version
 
+    def generate_sdks(self, releaser, resource_version, *args, **kwargs):
+        try:
+            releaser.generate_sdks(resource_version=resource_version["version"])
+        except Exception as err:
+            print("warning!! generate sdks failed: %s" % err)
+
     def handle(self, stage, title, comment, generate_sdks, *args, **kwargs):
         configuration = self.get_configuration(**kwargs)
         definition = self.get_definition(**kwargs)
@@ -148,4 +155,9 @@ class Command(DefinitionCommand):
 
         # create a sdk when released a new version
         if generate_sdks:
-            releaser.generate_sdks(resource_version=resource_version["version"])
+            self.generate_sdks(
+                releaser=releaser,
+                resource_version=resource_version,
+                *args,
+                **kwargs,
+            )
