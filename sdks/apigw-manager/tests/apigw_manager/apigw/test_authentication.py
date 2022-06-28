@@ -13,7 +13,8 @@ from django.contrib.auth.models import AnonymousUser
 from django.core.cache import caches
 from django.core.cache.backends.dummy import DummyCache
 
-from apigw_manager.apigw import authentication
+from apigw_manager.apigw import authentication, providers
+from apigw_manager.apigw.providers import DefaultJWTProvider, SettingsPublicKeyProvider, CachePublicKeyProvider
 
 
 @pytest.fixture()
@@ -60,7 +61,7 @@ def apigw_request(jwt_encoded, mock_request):
 
 @pytest.fixture()
 def jwt_request(api_name, jwt_decoded, mock_request):
-    mock_request.jwt = authentication.ApiGatewayJWTMiddleware.JWT(
+    mock_request.jwt = providers.DecodedJWT(
         api_name=api_name,
         payload=jwt_decoded,
     )
@@ -84,23 +85,11 @@ class TestApiGatewayJWTMiddleware:
 
     def test_default_config(self, api_name, jwt_algorithm):
 
-        assert self.middleware.default_api_name == api_name
-        assert self.middleware.algorithm == jwt_algorithm
-
-    def test_get_public_key_not_set(self, settings, api_name):
-        assert not hasattr(settings, 'APIGW_PUBLIC_KEY')
-        assert self.middleware.get_public_key(api_name) is None
-
-    def test_get_public_key(self, settings, api_name, public_key):
-        settings.APIGW_PUBLIC_KEY = public_key
-        assert self.middleware.get_public_key(api_name) == public_key
-
-    def test_decode_jwt_header(self, jwt_header, jwt_encoded):
-        assert self.middleware.decode_jwt_header(jwt_encoded) == jwt_header
-
-    def test_decode_jwt(self, jwt_encoded, public_key, jwt_algorithm, jwt_decoded):
-        decoded = self.middleware.decode_jwt(jwt_encoded, public_key, jwt_algorithm)
-        assert decoded == jwt_decoded
+        assert isinstance(self.middleware.provider, DefaultJWTProvider)
+        assert self.middleware.provider.default_api_name == api_name
+        assert self.middleware.provider.algorithm == jwt_algorithm
+        assert self.middleware.provider.allow_invalid_jwt_token is False
+        assert isinstance(self.middleware.provider.public_key_provider, SettingsPublicKeyProvider)
 
     def test_call_without_jwt(self, mock_response, mock_request):
         assert self.middleware.JWT_KEY_NAME not in mock_request.META
@@ -108,15 +97,15 @@ class TestApiGatewayJWTMiddleware:
         self.middleware(mock_request)
         mock_response.assert_called_with(mock_request)
 
-        assert not hasattr(mock_request, 'jwt')
+        assert not hasattr(mock_request, "jwt")
 
     def test_call_without_public_key(self, settings, apigw_request, mock_response):
-        assert not hasattr(settings, 'APIGW_PUBLIC_KEY')
+        assert not hasattr(settings, "APIGW_PUBLIC_KEY")
 
         self.middleware(apigw_request)
         mock_response.assert_called_with(apigw_request)
 
-        assert not hasattr(mock_request, 'jwt')
+        assert not hasattr(mock_request, "jwt")
 
     def test_call(self, settings, public_key, apigw_request, mock_response, api_name):
         assert self.middleware.JWT_KEY_NAME in apigw_request.META
@@ -133,7 +122,7 @@ class TestApiGatewayJWTMiddleware:
         middleware = authentication.ApiGatewayJWTMiddleware(mock_response)
         settings.APIGW_PUBLIC_KEY = public_key
 
-        with pytest.raises(authentication.JWTTokenInvalid):
+        with pytest.raises(providers.JWTTokenInvalid):
             middleware(invalid_apigw_request)
 
     def test_allow_jwt_invalid(self, settings, public_key, invalid_apigw_request, mock_response):
@@ -148,56 +137,23 @@ class TestApiGatewayJWTMiddleware:
 class TestApiGatewayJWTGenericMiddleware:
     def test_init_with_settings(self, settings, mock_response, django_jwt_cache):
         middleware = authentication.ApiGatewayJWTGenericMiddleware(mock_response)
-        assert middleware.cache_expires == settings.APIGW_JWT_PUBLIC_KEY_CACHE_MINUTES * 60
-        assert middleware.cache_version == settings.APIGW_JWT_PUBLIC_KEY_CACHE_VERSION
-        assert middleware.cache == django_jwt_cache
+
+        assert isinstance(middleware.provider, DefaultJWTProvider)
+        assert isinstance(middleware.provider.public_key_provider, CachePublicKeyProvider)
+        assert (
+            middleware.provider.public_key_provider.cache_expires == settings.APIGW_JWT_PUBLIC_KEY_CACHE_MINUTES * 60
+        )
+        assert middleware.provider.public_key_provider.cache_version == settings.APIGW_JWT_PUBLIC_KEY_CACHE_VERSION
+        assert middleware.provider.public_key_provider.cache == django_jwt_cache
 
     def test_init_without_settings(self, mock_response):
         middleware = authentication.ApiGatewayJWTGenericMiddleware(mock_response)
 
-        assert middleware.cache_expires == 0
-        assert isinstance(middleware.cache, DummyCache)
-
-    def test_get_public_key_from_cache(self, mock_response, api_name, django_jwt_cache):
-        jwt_issuer = "blueking"
-
-        def side_effect(key):
-            data = {
-                "apigw:public_key::%s" % api_name: "testing-01",
-                "apigw:public_key:%s:%s" % (jwt_issuer, api_name): "testing-02",
-            }
-            return data[key]
-
-        django_jwt_cache.get.side_effect = side_effect
-
-        middleware = authentication.ApiGatewayJWTGenericMiddleware(mock_response)
-        assert middleware.get_public_key(api_name) == "testing-01"
-        assert middleware.get_public_key(api_name, jwt_issuer) == "testing-02"
-
-    def test_get_public_key_cache_missed(self, mock_response, api_name, django_jwt_cache, public_key_in_db):
-        django_jwt_cache.get.return_value = None
-
-        middleware = authentication.ApiGatewayJWTGenericMiddleware(mock_response)
-
-        public_key = middleware.get_public_key(api_name)
-        assert public_key == public_key_in_db
-
-        django_jwt_cache.set.assert_called_with(
-            "apigw:public_key::%s" % api_name,
-            public_key_in_db,
-            middleware.cache_expires,
-            middleware.cache_version,
-        )
-
-        public_key = middleware.get_public_key(api_name, "not-exist")
-        assert public_key == public_key_in_db
-
-        django_jwt_cache.set.assert_called_with(
-            "apigw:public_key:not-exist:%s" % api_name,
-            public_key_in_db,
-            middleware.cache_expires,
-            middleware.cache_version,
-        )
+        assert isinstance(middleware.provider, DefaultJWTProvider)
+        assert isinstance(middleware.provider.public_key_provider, CachePublicKeyProvider)
+        assert middleware.provider.public_key_provider.cache_expires == 0
+        assert middleware.provider.public_key_provider.cache_version == "0"
+        assert isinstance(middleware.provider.public_key_provider.cache, DummyCache)
 
 
 class TestApiGatewayJWTAppMiddleware:
@@ -212,11 +168,11 @@ class TestApiGatewayJWTAppMiddleware:
         assert app.verified is False
 
     def test_call_without_jwt(self, mock_request, mock_response):
-        assert not hasattr(mock_request, 'jwt')
+        assert not hasattr(mock_request, "jwt")
 
         self.middleware(mock_request)
 
-        assert not hasattr(mock_request, 'app')
+        assert not hasattr(mock_request, "app")
         mock_response.assert_called_with(mock_request)
 
     @pytest.mark.parametrize("field", ["app_code", "bk_app_code"])
@@ -255,11 +211,11 @@ class TestApiGatewayJWTUserMiddleware:
         assert self.middleware.get_user(jwt_request) is None
 
     def test_call_without_jwt(self, mock_request, mock_response):
-        assert not hasattr(mock_request, 'jwt')
+        assert not hasattr(mock_request, "jwt")
 
         self.middleware(mock_request)
 
-        assert not hasattr(mock_request, 'user')
+        assert not hasattr(mock_request, "user")
         mock_response.assert_called_with(mock_request)
 
     def test_call_with_authenticated_user(self, mock_request, mock_response, request_user):
