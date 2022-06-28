@@ -15,6 +15,7 @@ from packaging.version import LegacyVersion
 from apigw_manager.apigw.command import DefinitionCommand
 from apigw_manager.apigw.helper import ResourceSignatureManager
 from apigw_manager.apigw.utils import parse_version
+from apigw_manager.core.exceptions import ApiResultError
 from apigw_manager.core.fetch import Fetcher
 from apigw_manager.core.release import Releaser
 
@@ -106,13 +107,13 @@ class Command(DefinitionCommand):
 
         return resource_version
 
-    def generate_sdks(self, releaser, resource_version, generate_sdks, *args, **kwargs):
-        if not generate_sdks:
-            return
+    def generate_sdks(self, releaser, resource_version, *args, **kwargs):
+        try:
+            releaser.generate_sdks(resource_version=resource_version["version"])
+        except Exception as err:
+            print("warning!! generate sdks failed: %s" % err)
 
-        releaser.generate_sdks(resource_version=resource_version["version"])
-
-    def handle(self, stage, title, comment, *args, **kwargs):
+    def handle(self, stage, title, comment, generate_sdks, *args, **kwargs):
         configuration = self.get_configuration(**kwargs)
         definition = self.get_definition(**kwargs)
         current_version = self.get_version_from_definition(definition)
@@ -136,13 +137,8 @@ class Command(DefinitionCommand):
             )
             manager.reset_dirty(api_name)
 
-            self.generate_sdks(
-                releaser=releaser,
-                resource_version=resource_version,
-                *args,
-                **kwargs,
-            )
         else:
+            generate_sdks = False
             print("resource_version already exists and is the latest, skip creating")
 
         result = releaser.release(
@@ -156,3 +152,12 @@ class Command(DefinitionCommand):
             "API gateway released %s, title %s, stages %s"
             % (result.get("version"), result["resource_version_title"], result["stage_names"])
         )
+
+        # create a sdk when released a new version
+        if generate_sdks:
+            self.generate_sdks(
+                releaser=releaser,
+                resource_version=resource_version,
+                *args,
+                **kwargs,
+            )

@@ -130,16 +130,6 @@ def test_fix_version_error(command):
         command.fix_version(parse_version("test"), None)
 
 
-def test_generate_sdks_with_false_flag(command, fake_resource_version, releaser):
-    command.generate_sdks(releaser, fake_resource_version, False)
-    releaser.generate_sdks.assert_not_called()
-
-
-def test_generate_sdks(command, fake_resource_version, releaser):
-    command.generate_sdks(releaser, fake_resource_version, True)
-    releaser.generate_sdks.assert_called_once_with(resource_version=fake_resource_version["version"])
-
-
 class TestHandle:
     def test_handle_version_not_change(
         self,
