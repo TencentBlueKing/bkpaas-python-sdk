@@ -10,194 +10,120 @@
 """
 import datetime
 import logging
+import random
 from contextlib import contextmanager
 from dataclasses import dataclass, field
+from operator import attrgetter
 from threading import RLock
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
+from typing import Any, Generic, Iterable, List, Optional, Tuple, Type, TypeVar
 
-from .decorators import elect_if_no_active_ep, raise_if_no_data, use_algo_as_default
 from .exceptions import NoEndpointAvailable
 from .ha_algorithm import BasicHAAlgorithm
 
 logger = logging.getLogger(__name__)
 
+T = TypeVar('T')
 
-@dataclass
-class HAEndpointPool:
-    """Endpoints pool which own high available features like failOver"""
+SUCCESS_SCORE_DELTA = 1
+FAILURE_SCORE_DELTA = 50
 
-    # for safety of thread
-    _rlock = RLock()
 
-    _active: Optional['Endpoint'] = None
-    # all endpoint
-    _all_pool: List['Endpoint'] = field(default_factory=list)
-    # only include available endpoints
-    _pool: List['Endpoint'] = field(default_factory=list)
+class HAEndpointPool(Generic[T]):
+    """A container type which holds a collection of endpoints, provides HA-related functions,
+    e.g. fail(), elect() ect.
 
-    algorithm: 'BasicHAAlgorithm' = field(default_factory=BasicHAAlgorithm)
+    :param items: raw items, each will be bound with an Endpoint object
+    :param algorithm: HA Algorithm object, default value: `BasicHAAlgorithm`
+    """
 
-    success_score_delta: int = 1
-    failure_score_delta: int = 50
+    active_endpoint: 'Endpoint'
 
-    # initial config for endpoints, only available when add new endpoint by pool
-    endpoint_config: Dict = field(default_factory=dict)
+    def __init__(self, items: Iterable[T], algorithm: 'BasicHAAlgorithm' = BasicHAAlgorithm()):
+        self._rlock = RLock()
+        self.algorithm = algorithm
+        self.endpoints: 'List[Endpoint]' = []
 
-    def __len__(self):
-        """pool could be treat as available pool"""
-        return len(self._pool)
+        # Initialize endpoints and start first election
+        for item in items:
+            self.add(item)
+        self.elect()
 
-    @classmethod
-    def from_list(cls, raw_list: Optional[Iterable]) -> 'HAEndpointPool':
-        pool = cls()
-        # generator always return True
-        raw_list = list(raw_list or [])
-        if not raw_list:
-            raise ValueError("raw list can not be empty")
+    def add(self, item: T):
+        """Add an endpoint object"""
+        self.endpoints.append(Endpoint(raw=item))
 
-        # TODO: elements in list may be duplicate
-        # Q: Why not use set() which is a easy way to deduplicate?
-        # A: Raw object may not contain __hash__ (like default dataclass)
-        for raw_endpoint in raw_list:
-            pool.add(raw_endpoint)
-        return pool
+    def elect(self, endpoint: 'Optional[Endpoint]' = None):
+        """Set `self.active_endpoint` to the best endpoint, it should be the healthy one with
+        highest score.
 
-    @property
-    def data(self) -> List:
-        return self._pool
-
-    @property
-    def active(self) -> 'Optional[Endpoint]':
-        return self._active
-
-    @property
-    def active_endpoint(self) -> 'Endpoint':
-        """Return current active endpoint, will raise RuntimeError when no active object
-        can be found, which means current Poll was not initialized yet.
-
-        :raise: RuntimeError
+        :param endpoint: Set given Endpoint directly, ignore any algorithms
         """
-        if not self._active:
-            raise RuntimeError('No active Endpoint')
-        return self._active
-
-    @property
-    def isolated_eps(self) -> List['Endpoint']:
-        return list(set(self._all_pool) - set(self._pool))
-
-    def add(self, raw_end_point: Any):
-        """receive any type, mount on endpoint"""
-        self._all_pool.append(Endpoint(raw=raw_end_point, **self.endpoint_config))
-        self._pool.append(Endpoint(raw=raw_end_point, **self.endpoint_config))
-
-    def add_endpoint(self, endpoint: 'Endpoint', available: bool = True):
-        """add endpoint directly"""
-        self._all_pool.append(endpoint)
-        if available:
-            self._pool.append(endpoint)
-
-    @elect_if_no_active_ep
-    def fail(self, isolate_method: Callable[['Endpoint'], bool] = None, score_delta: int = None):
-        """mark active endpoint as failure, and try to scan entire pool for isolating"""
-        if not score_delta:
-            score_delta = self.failure_score_delta
-
         with self._rlock:
-            self.active_endpoint.fail(score_delta=score_delta)
-            # only isolate when fail
-            self.try_to_isolate(method=isolate_method)
+            # Try to recover unhealthy endpoints
+            for ep in self.endpoints:
+                if self.algorithm.should_recover(ep):
+                    ep.set_healthy()
 
-    @elect_if_no_active_ep
-    def succeed(self, score_delta: int = None):
-        if not score_delta:
-            score_delta = self.success_score_delta
+            if endpoint:
+                self.active_endpoint = endpoint
+                return
 
+            # Get endpoints with maximum score
+            eps = sorted(self.list_healthy(), key=attrgetter('score'), reverse=True)
+            if not eps:
+                raise NoEndpointAvailable('No healthy endpoint')
+
+            best = random.choice([x for x in eps if x.score == eps[0].score])
+            self.active_endpoint = best
+            logger.debug(f"Election finished, best: {best}")
+
+    def get(self) -> T:
+        """Get current active item"""
+        return self.active_endpoint.raw
+
+    def get_endpoint(self) -> 'Endpoint':
+        """Get current active endpoint object"""
+        return self.active_endpoint
+
+    def list_healthy(self) -> 'List[Endpoint]':
+        """List all healthy Endpoints"""
+        return [ep for ep in self.endpoints if not ep.is_unhealthy()]
+
+    def fail(self, score: int = FAILURE_SCORE_DELTA):
+        """Mark current active endpoint as failed"""
+        with self._rlock:
+            self.active_endpoint.fail(score_delta=score)
+            if self.algorithm.is_unhealthy(self.active_endpoint):
+                self.active_endpoint.set_unhealthy()
+
+    def succeed(self, score_delta: int = SUCCESS_SCORE_DELTA):
+        """Mark current active endpoint as succeeded"""
         with self._rlock:
             self.active_endpoint.succeed(score_delta=score_delta)
 
-    @use_algo_as_default('should_be_isolated')
-    def try_to_isolate(self, method: Callable[['Endpoint'], bool] = None):
-        assert method is not None
-        with self._rlock:
-            # both copy.copy() and copy.deepcopy() are not thread safe!
-            pool_copy = list(self._pool)
-            for ep in pool_copy:
-                if method(ep):
-                    self._pool.remove(ep)
-
-        if not self._pool:
-            raise NoEndpointAvailable("no Endpoint available in pool")
-
-    @use_algo_as_default('should_be_recovered')
-    def recover(self, method: Callable[['Endpoint'], bool] = None):
-        """recover endpoints which is not in self._pool"""
-        assert method is not None
-        if not self.isolated_eps:
-            return
-
-        with self._rlock:
-            for ep in self.isolated_eps:
-                # put back if should be recovered
-                if method(ep):
-                    self._pool.append(ep)
-
-    def pick(self, elect_method: Callable[[List['Endpoint']], 'Endpoint'] = None) -> Any:
-        """elect and pick raw data of active endpoint"""
-        self.elect(elect_method)
-        return self.active_endpoint.raw
-
-    @raise_if_no_data
-    @use_algo_as_default('find_best_endpoint')
-    def elect(self, method: Callable[[List['Endpoint']], 'Endpoint'] = None):
-        """elect by elect_method and set active"""
-        assert method is not None
-        elected = method(self._pool)
-        with self._rlock:
-            self._active = elected
-            logger.info(f"elect {elected.raw} as new active endpoint with score<{elected.score}>")
-
     @contextmanager
-    def get_endpoint(
-        self,
-        auto_reelect: bool = True,
-        auto_recover: bool = True,
-        isolate_method: Callable[['Endpoint'], bool] = None,
-        elect_method: Callable[[List['Endpoint']], 'Endpoint'] = None,
-        recover_method: Callable[['Endpoint'], bool] = None,
-        exempt_exceptions: Tuple[Type[Exception], ...] = (),
-    ) -> Any:
-        """
-        use context manager to simplify failOver process
+    def once(self, raise_excs: Tuple[Type[Exception], ...] = ()) -> Any:
+        """A simple context manger which updates endpoint's status automatically, basically it
+        will capture all exceptions and mark current endpoint as "failed" unless the exception
+        type was configured in `raise_excs`.
 
-        :param auto_reelect: if auto reelect
-        :param isolate_method: custom isolate method
-        :param elect_method: custom elect method
-        :param recover_method: custom recover method
-        :param exempt_exceptions: exceptions which should not be mark as failure
+        :param raise_excs: Exception types which will be raised as is
         """
+        # Always call elect() when context begins
+        self.elect()
         try:
-            if not self._active:
-                if auto_recover:
-                    self.recover(method=recover_method)
-
-                self.elect(method=elect_method)
-
-            yield self.active_endpoint.raw
+            yield self.get()
         except Exception as e:
-            if isinstance(e, exempt_exceptions):
+            if isinstance(e, raise_excs):
                 raise
 
-            logger.warning(
-                f"endpoints pool got exception: {e}, the active endpoint {self._active} will be mark as failure"
-            )
-            self.fail(isolate_method)
-            if auto_reelect:
-                if auto_recover:
-                    self.recover(method=recover_method)
-
-                self.elect(method=elect_method)
+            logger.warning("Got exception: %s, mark the active endpoint %s as failure", e, self.active_endpoint)
+            self.fail()
         else:
             self.succeed()
+
+    def __repr__(self) -> str:
+        return f'HAEndpointPool(active_endpoint={self.active_endpoint!r}, endpoints={self.endpoints!r})'
 
 
 @dataclass(order=True)
@@ -213,8 +139,9 @@ class Endpoint:
     _score: int = 100
     success_count: int = 0
     failure_count: int = 0
-    # for recovery
-    last_failure_time: Optional[datetime.datetime] = None
+
+    # When current endpoint was marked as "unhealthy"(not available)
+    unhealthy_at: Optional[datetime.datetime] = None
 
     def __repr__(self):
         return repr(self.raw) + f"-score<{self._score}>"
@@ -232,12 +159,24 @@ class Endpoint:
         :return: no return
         """
         self._update_score(score_delta=score_delta)
-        self.last_failure_time = datetime.datetime.now()
         self.failure_count += 1
 
     def succeed(self, score_delta: int = 0):
         self._update_score(score_delta=score_delta, fail=False)
         self.success_count += 1
+
+    def is_unhealthy(self):
+        """Whether current endpoint is unhealthy"""
+        return self.unhealthy_at is not None
+
+    def set_unhealthy(self):
+        """Set current endpoint as unhealthy"""
+        self.unhealthy_at = datetime.datetime.now()
+
+    def set_healthy(self):
+        """Set current endpoint as healthy"""
+        self.failure_count = 0
+        self.unhealthy_at = None
 
     def _adjust_max_min(self):
         if self._score >= self.max_score:
