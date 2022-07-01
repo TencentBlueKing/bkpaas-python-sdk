@@ -18,8 +18,10 @@ except ImportError:
 
 
 class HookEvent:
-    # 处理请求上下文
-    HANDLE_REQUEST_CONTEXT = "handle-request-context"
+    # 准备请求
+    OPERATION_PREPARED = "operation-prepared"
+    # 请求异常
+    OPERATION_ERROR = "operation-error"
     # 请求
     REQUEST = "request"
     # 响应

@@ -319,7 +319,7 @@ class TestBaseClient:
 
         session = Session()
         mocker.patch.object(session, "handle")
-        session.register_hook(HookEvent.HANDLE_REQUEST_CONTEXT, hook)
+        session.register_hook(HookEvent.OPERATION_PREPARED, hook)
 
         endpoint = "http://example.com"
         client = BaseClient(endpoint=endpoint, session=session)

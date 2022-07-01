@@ -161,11 +161,12 @@ class BaseClient(object):
         """Handle operation with context"""
 
         # you can inject extra context from hooks
-        context = self.session.dispatch_hook(HookEvent.HANDLE_REQUEST_CONTEXT, context, operation=operation)
+        context = self.session.dispatch_hook(HookEvent.OPERATION_PREPARED, context, operation=operation)
         try:
             response = self.session.handle(**self._get_request_context(operation, context))
             return self._handle_response(operation, context, response)
         except RequestException as err:
+            self.session.dispatch_hook(HookEvent.OPERATION_ERROR, err, operation=operation)
             return self._handle_exception(operation, context, err)
         finally:
             if not self._reuse_session_connection:

@@ -9,7 +9,6 @@
  specific language governing permissions and limitations under the License.
 """
 
-import time
 from functools import partial
 from typing import Any, Dict, List, Optional
 
@@ -19,6 +18,7 @@ from requests import Response
 from bkapi_client_core import session
 from bkapi_client_core.base import Operation
 from bkapi_client_core.config import HookEvent
+from bkapi_client_core.utils import allow_fail
 
 default_bytes_buckets = [
     0,
@@ -124,6 +124,16 @@ class Collector:
             registry=registry,
         )
 
+        self.metric_failures_total = Counter(
+            "bkapi_failures_total",
+            "Count of failures by operation, method",
+            ["operation", "method", "error"],
+            namespace=namespace,
+            subsystem=subsystem,
+            registry=registry,
+        )
+
+    @allow_fail
     def response_hook(
         self,
         response,  # type: Response
@@ -160,6 +170,7 @@ class Collector:
                 method=method,
             ).observe(int(response_content_length))
 
+    @allow_fail
     def request_hook(
         self,
         context,  # type: Dict[str, Any]
@@ -176,8 +187,21 @@ class Collector:
 
         return context
 
+    @allow_fail
+    def error_hook(
+        self,
+        error,  # type: Exception
+        operation,  # type: Operation
+    ):
+        self.metric_failures_total.labels(
+            operation=str(operation),
+            method=operation.method,
+            error=error.__class__.__name__,
+        ).inc()
+
     def enable_hooks(self):
-        session.register_global_hook(HookEvent.HANDLE_REQUEST_CONTEXT, self.request_hook)
+        session.register_global_hook(HookEvent.OPERATION_PREPARED, self.request_hook)
+        session.register_global_hook(HookEvent.OPERATION_ERROR, self.error_hook)
 
 
 _GLOBAL_COLLECTOR = None  # type: Optional[Collector]

@@ -53,3 +53,17 @@ def generic_type_partial(cls, fn):
         return fn(cls, *args, **kwargs)
 
     return f
+
+
+def allow_fail(fn):
+    # type: (Callable) -> Callable
+    """A tool for wraps function with allow failure"""
+
+    @wraps(fn)
+    def f(*args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except Exception:
+            return None
+
+    return f

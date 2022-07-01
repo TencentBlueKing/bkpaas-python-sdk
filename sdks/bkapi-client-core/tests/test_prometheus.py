@@ -12,6 +12,8 @@
 
 import pytest
 import requests
+from prometheus_client import CollectorRegistry
+from requests.exceptions import RequestException
 
 from bkapi_client_core.config import HookEvent
 from bkapi_client_core.prometheus import Collector, enable_collector
@@ -23,15 +25,23 @@ def mock_register_global_hook(mocker):
 
 
 @pytest.fixture()
-def mock_registry(mocker):
-    return mocker.MagicMock()
+def mock_registry():
+    return CollectorRegistry()
+
+
+@pytest.fixture()
+def mock_operation(mocker):
+    operation = mocker.MagicMock()
+    return operation
 
 
 def test_enable_collector(mocker, mock_registry, mock_register_global_hook):
     enable_collector(registry=mock_registry)
     enable_collector(registry=mock_registry)  # this is not work
 
-    mock_register_global_hook.assert_called_once_with(HookEvent.HANDLE_REQUEST_CONTEXT, mocker.ANY)
+    assert mock_register_global_hook.call_count == 2
+    mock_register_global_hook.assert_any_call(HookEvent.OPERATION_PREPARED, mocker.ANY)
+    mock_register_global_hook.assert_any_call(HookEvent.OPERATION_ERROR, mocker.ANY)
 
 
 class TestCollector:
@@ -64,22 +74,93 @@ class TestCollector:
         assert len(result["hooks"][HookEvent.RESPONSE]) == 2
 
     @pytest.mark.parametrize(
-        "request_headers, response_headers",
+        "request_size, request_headers, response_size, response_headers",
         [
-            [{}, {}],
-            [{"Content-Length": ""}, {"Content-Length": ""}],
-            [{"Content-Length": "178"}, {"Content-Length": "178"}],
-            [{"Content-Length": "NAN"}, {"Content-Length": "NAN"}],
+            [0, {}, 0, {}],
+            [0, {"Content-Length": ""}, 0, {"Content-Length": ""}],
+            [123, {"Content-Length": "123"}, 456, {"Content-Length": "456"}],
+            [0, {"Content-Length": "NAN"}, 0, {"Content-Length": "NAN"}],
         ],
     )
-    def test_response_hook(self, faker, mocker, requests_mock, request_headers, response_headers):
+    def test_response_hook(
+        self,
+        faker,
+        mocker,
+        requests_mock,
+        mock_operation,
+        mock_registry,
+        request_size,
+        request_headers,
+        response_size,
+        response_headers,
+    ):
         url = faker.url()
         requests_mock.get(url, json={"result": True})
         response = requests.get(url)
         response.request.headers = request_headers
         response.headers = response_headers
 
-        operation = mocker.MagicMock()
-        self.collector
+        self.collector.response_hook(response, mock_operation)
 
-        self.collector.response_hook(response, operation)
+        assert (
+            mock_registry.get_sample_value(
+                "bkapi_requests_duration_seconds_count",
+                {
+                    "operation": str(mock_operation),
+                    "method": str(mock_operation.method),
+                },
+            )
+            == 1
+        )
+        assert (
+            mock_registry.get_sample_value(
+                "bkapi_responses_total",
+                {
+                    "operation": str(mock_operation),
+                    "method": str(mock_operation.method),
+                    "status": "200",
+                },
+            )
+            == 1
+        )
+
+        if request_size:
+            assert (
+                mock_registry.get_sample_value(
+                    "bkapi_requests_body_bytes_sum",
+                    {
+                        "operation": str(mock_operation),
+                        "method": str(mock_operation.method),
+                    },
+                )
+                == request_size
+            )
+
+        if response_size:
+            assert (
+                mock_registry.get_sample_value(
+                    "bkapi_responses_body_bytes_sum",
+                    {
+                        "operation": str(mock_operation),
+                        "method": str(mock_operation.method),
+                    },
+                )
+                == response_size
+            )
+
+    def test_error_hook(self, mocker, mock_operation, mock_registry):
+        error = RequestException("test")
+
+        self.collector.error_hook(error, mock_operation)
+
+        assert (
+            mock_registry.get_sample_value(
+                "bkapi_failures_total",
+                {
+                    "operation": str(mock_operation),
+                    "method": str(mock_operation.method),
+                    "error": "RequestException",
+                },
+            )
+            == 1.0
+        )
