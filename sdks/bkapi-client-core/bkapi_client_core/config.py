@@ -18,10 +18,6 @@ except ImportError:
 
 
 class HookEvent:
-    # 会话初始化
-    SESSION_INITIALIZED = "session-initialized"
-    # 客户端初始化
-    CLIENT_INITIALIZED = "client-initialized"
     # 处理请求上下文
     HANDLE_REQUEST_CONTEXT = "handle-request-context"
     # 请求

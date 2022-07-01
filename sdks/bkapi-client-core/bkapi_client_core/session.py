@@ -55,24 +55,22 @@ class _UrlRender(string.Formatter):
         return kwargs[field_name], field_name
 
 
-SESSION_HOOKS = {
-    HookEvent.SESSION_INITIALIZED: [],
-}  # type: Dict[str, List[Any]]
+_SESSION_HOOKS = {}  # type: Dict[str, List[Any]]
 
 
-def register_session_hook(event, hook):
+def register_global_hook(event, hook):
     """Register a session hook for the given event."""
 
-    if event not in SESSION_HOOKS:
-        raise ValueError("Invalid event: {event}".format(event=event))
+    if event not in _SESSION_HOOKS:
+        _SESSION_HOOKS[event] = []
 
-    SESSION_HOOKS[event].append(hook)
+    _SESSION_HOOKS[event].append(hook)
 
 
-def deregister_session_hook(event, hook):
+def deregister_global_hook(event, hook):
     """Deregister a session hook for the given event."""
     try:
-        SESSION_HOOKS[event].remove(hook)
+        _SESSION_HOOKS[event].remove(hook)
         return True
     except ValueError:
         return False
@@ -96,8 +94,6 @@ class Session(RequestSession, RequestHooksMixin):
 
         for k, v in kwargs.items():
             setattr(self, k, v)
-
-        dispatch_hook(HookEvent.SESSION_INITIALIZED, SESSION_HOOKS, self)
 
     def handle(
         self,
@@ -151,6 +147,7 @@ class Session(RequestSession, RequestHooksMixin):
         data,  # Any
         **extras  # type: Any
     ):
+        data = dispatch_hook(event, _SESSION_HOOKS, data, **extras)
         return dispatch_hook(event, self.hooks, data, **extras)
 
     def register_hook(

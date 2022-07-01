@@ -134,7 +134,6 @@ class BaseClient(object):
             self.name = name
 
         self.on_init()
-        self.session.dispatch_hook(HookEvent.CLIENT_INITIALIZED, self)
 
     def get_client(self):
         return self

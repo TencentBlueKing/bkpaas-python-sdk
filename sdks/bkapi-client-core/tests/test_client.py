@@ -238,18 +238,6 @@ class TestBaseClient:
         client = BaseClient(name=name)
         assert client.name == name
 
-    def test_initialized_hook(self):
-        histories = []
-
-        def hook(client, **kwargs):
-            histories.append(client)
-
-        session = Session()
-        session.register_hook(HookEvent.CLIENT_INITIALIZED, hook)
-
-        client = BaseClient(session=session)
-        assert client in histories
-
     def test_reuse_session_connection(self, mocker, faker, requests_mock):
         url = faker.url()
         requests_mock.get(url, json={"result": True})
