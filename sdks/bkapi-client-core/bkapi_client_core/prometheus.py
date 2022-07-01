@@ -16,9 +16,9 @@ from typing import Any, Dict, List, Optional
 from prometheus_client import REGISTRY, CollectorRegistry, Counter, Histogram
 from requests import Response
 
+from bkapi_client_core import session
 from bkapi_client_core.base import Operation
 from bkapi_client_core.config import HookEvent
-from bkapi_client_core.session import register_global_hook
 
 default_bytes_buckets = [
     0,
@@ -124,21 +124,19 @@ class Collector:
             registry=registry,
         )
 
-    def _register_response_hook(
+    def response_hook(
         self,
         response,  # type: Response
         bkapi_operation,  # type: Operation
-        bkapi_request_at,  # type: float
         **kwargs  # type: Any
     ):
-        end_at = time.time()
         name = str(bkapi_operation)
         method = bkapi_operation.method
 
         self.metric_requests_duration_seconds.labels(
             operation=name,
             method=method,
-        ).observe(end_at - bkapi_request_at)
+        ).observe(response.elapsed.total_seconds())
 
         self.metric_responses_total.labels(
             operation=name,
@@ -162,7 +160,7 @@ class Collector:
                 method=method,
             ).observe(int(response_content_length))
 
-    def _register_request_hook(
+    def request_hook(
         self,
         context,  # type: Dict[str, Any]
         operation,  # type: Operation
@@ -171,16 +169,15 @@ class Collector:
         response_hooks = hooks.setdefault(HookEvent.RESPONSE, [])
         response_hooks.append(
             partial(
-                self._register_response_hook,
+                self.response_hook,
                 bkapi_operation=operation,
-                bkapi_request_at=time.time(),
             )
         )
 
         return context
 
-    def register_hook(self):
-        register_global_hook(HookEvent.HANDLE_REQUEST_CONTEXT, self._register_request_hook)
+    def enable_hooks(self):
+        session.register_global_hook(HookEvent.HANDLE_REQUEST_CONTEXT, self.request_hook)
 
 
 _GLOBAL_COLLECTOR = None  # type: Optional[Collector]
@@ -208,4 +205,4 @@ def enable_collector(
         duration_buckets=duration_buckets,
         bytes_buckets=bytes_buckets,
     )
-    _GLOBAL_COLLECTOR.register_hook()
+    _GLOBAL_COLLECTOR.enable_hooks()
