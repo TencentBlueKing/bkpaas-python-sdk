@@ -80,7 +80,7 @@ class TestEndpointPoolSucceedAndFail:
 class TestEndpointPoolElect:
     def test_manually(self, ep_pool: HAEndpointPool):
         the_ep = ep_pool.get_endpoint()
-        the_ep.fail()
+        ep_pool.fail()
         ep_pool.elect()
         assert ep_pool.get_endpoint() != the_ep
 
@@ -90,9 +90,8 @@ class TestEndpointPoolElect:
 
 class TestEndpointPoolOnce:
     def test_sequential_calls(self, ep_pool):
-        with ep_pool.once():
-            # use fake item to do something
-            raise ValueError("unittest error")
+        with ep_pool.once(failure_excs=(ValueError)):
+            raise ValueError("value error")
 
         assert ep_pool.get_endpoint().failure_count == 1
 
@@ -103,6 +102,11 @@ class TestEndpointPoolOnce:
         ep = ep_pool.get_endpoint()
         assert ep.failure_count == 0
         assert ep.success_count == 1
+
+    def test_not_captured(self, ep_pool):
+        with pytest.raises(IndexError):
+            with ep_pool.once(failure_excs=(ValueError)):
+                raise IndexError("index error")
 
 
 class TestEndpoint:

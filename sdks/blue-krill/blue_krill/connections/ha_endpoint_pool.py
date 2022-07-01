@@ -102,23 +102,24 @@ class HAEndpointPool(Generic[T]):
             self.active_endpoint.succeed(score_delta=score_delta)
 
     @contextmanager
-    def once(self, raise_excs: Tuple[Type[Exception], ...] = ()) -> Any:
-        """A simple context manger which updates endpoint's status automatically, basically it
-        will capture all exceptions and mark current endpoint as "failed" unless the exception
-        type was configured in `raise_excs`.
+    def once(self, failure_excs: Tuple[Type[Exception], ...] = ()) -> Any:
+        """A simple context manger which updates endpoint's status automatically. Basically it
+        marks current endpoint as "succeed" when everything goes smoothly. But when the code raises
+        an exception, it will be captured silently and current endpoint will be marked as "failure"
+        if the exception was an instance of `failure_excs`, otherwise it will be raised as is.
 
-        :param raise_excs: Exception types which will be raised as is
+        :param failure_excs: Exception types which will be captured.
         """
         # Always call elect() when context begins
         self.elect()
         try:
             yield self.get()
         except Exception as e:
-            if isinstance(e, raise_excs):
+            if isinstance(e, failure_excs):
+                logger.warning("Got exception: %s, mark the active endpoint %s as failure", e, self.active_endpoint)
+                self.fail()
+            else:
                 raise
-
-            logger.warning("Got exception: %s, mark the active endpoint %s as failure", e, self.active_endpoint)
-            self.fail()
         else:
             self.succeed()
 
