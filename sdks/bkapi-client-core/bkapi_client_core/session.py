@@ -9,7 +9,7 @@
  * specific language governing permissions and limitations under the License.
 """
 import string
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from requests import Request
 from requests import Session as RequestSession
@@ -18,6 +18,7 @@ from requests.models import RequestHooksMixin
 from requests.sessions import merge_setting
 
 from bkapi_client_core import __version__
+from bkapi_client_core.config import HookEvent
 from bkapi_client_core.exceptions import PathParamsMissing
 
 
@@ -54,6 +55,29 @@ class _UrlRender(string.Formatter):
         return kwargs[field_name], field_name
 
 
+SESSION_HOOKS = {
+    HookEvent.SESSION_INITIALIZED: [],
+}  # type: Dict[str, List[Any]]
+
+
+def register_session_hook(event, hook):
+    """Register a session hook for the given event."""
+
+    if event not in SESSION_HOOKS:
+        raise ValueError("Invalid event: {event}".format(event=event))
+
+    SESSION_HOOKS[event].append(hook)
+
+
+def deregister_session_hook(event, hook):
+    """Deregister a session hook for the given event."""
+    try:
+        SESSION_HOOKS[event].remove(hook)
+        return True
+    except ValueError:
+        return False
+
+
 class Session(RequestSession, RequestHooksMixin):
     """Session handle http requests, make a request and return the response
 
@@ -72,6 +96,8 @@ class Session(RequestSession, RequestHooksMixin):
 
         for k, v in kwargs.items():
             setattr(self, k, v)
+
+        dispatch_hook(HookEvent.SESSION_INITIALIZED, SESSION_HOOKS, self)
 
     def handle(
         self,
@@ -115,7 +141,7 @@ class Session(RequestSession, RequestHooksMixin):
         self,
         request,  # type: Request
     ):
-        self.dispatch_hook("request", request)
+        request = self.dispatch_hook(HookEvent.REQUEST, request)
         prepared_request = super(Session, self).prepare_request(request)
         return prepared_request
 
@@ -125,7 +151,7 @@ class Session(RequestSession, RequestHooksMixin):
         data,  # Any
         **extras  # type: Any
     ):
-        dispatch_hook(event, self.hooks, data, **extras)
+        return dispatch_hook(event, self.hooks, data, **extras)
 
     def register_hook(
         self,

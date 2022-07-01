@@ -10,8 +10,23 @@
 """
 import pytest
 
+from bkapi_client_core.config import HookEvent
 from bkapi_client_core.exceptions import PathParamsMissing
-from bkapi_client_core.session import Session
+from bkapi_client_core.session import Session, deregister_session_hook, register_session_hook
+
+
+class TestSessionHook:
+    def test_session_initialized(self):
+        sessions = []
+
+        def hook(session):
+            sessions.append(session)
+
+        register_session_hook(HookEvent.SESSION_INITIALIZED, hook)
+
+        session = Session()
+        assert session in sessions
+        assert deregister_session_hook(HookEvent.SESSION_INITIALIZED, hook)
 
 
 class TestSession:
@@ -93,7 +108,7 @@ class TestSession:
         url = faker.url()
         requests_mock.get(url, json={"result": True})
 
-        self.session.register_hook("request", lambda req: req.headers.update({"Accept-Language": language}))
+        self.session.register_hook(HookEvent.REQUEST, lambda req: req.headers.update({"Accept-Language": language}))
 
         response = self.session.get(url)
         assert response.request.headers["Accept-Language"] == language

@@ -19,6 +19,7 @@ from requests.structures import CaseInsensitiveDict
 
 from bkapi_client_core.auth import BKApiAuthorization
 from bkapi_client_core.base import Operation
+from bkapi_client_core.config import HookEvent
 from bkapi_client_core.exceptions import (
     APIGatewayResponseError,
     EndpointNotSetError,
@@ -133,6 +134,7 @@ class BaseClient(object):
             self.name = name
 
         self.on_init()
+        self.session.dispatch_hook(HookEvent.CLIENT_INITIALIZED, self)
 
     def get_client(self):
         return self
@@ -158,6 +160,9 @@ class BaseClient(object):
     ):
         # type: (...) -> Optional[Response]
         """Handle operation with context"""
+
+        # you can inject extra context from hooks
+        context = self.session.dispatch_hook(HookEvent.HANDLE_REQUEST_CONTEXT, context, operation=operation)
         try:
             response = self.session.handle(**self._get_request_context(operation, context))
             return self._handle_response(operation, context, response)

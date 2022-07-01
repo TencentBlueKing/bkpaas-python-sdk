@@ -13,8 +13,10 @@ from requests.exceptions import RequestException
 
 from bkapi_client_core.base import Operation, OperationGroup
 from bkapi_client_core.client import BaseClient, RequestContextBuilder, ResponseHeadersRepresenter
+from bkapi_client_core.config import HookEvent
 from bkapi_client_core.exceptions import EndpointNotSetError, ResponseError
 from bkapi_client_core.property import bind_property
+from bkapi_client_core.session import Session
 
 
 class TestRequestContextBuilder:
@@ -236,6 +238,18 @@ class TestBaseClient:
         client = BaseClient(name=name)
         assert client.name == name
 
+    def test_initialized_hook(self):
+        histories = []
+
+        def hook(client, **kwargs):
+            histories.append(client)
+
+        session = Session()
+        session.register_hook(HookEvent.CLIENT_INITIALIZED, hook)
+
+        client = BaseClient(session=session)
+        assert client in histories
+
     def test_reuse_session_connection(self, mocker, faker, requests_mock):
         url = faker.url()
         requests_mock.get(url, json={"result": True})
@@ -295,16 +309,38 @@ class TestBaseClient:
     def test_handle(self, mocker, faker):
         mocker.patch("bkapi_client_core.client.to_curl", return_value="")
 
-        session = mocker.MagicMock()
+        session = Session()
+        mock_handle = mocker.patch.object(session, "handle")
+
         endpoint = "http://example.com"
         client = BaseClient(endpoint=endpoint, session=session)
         operation = mocker.MagicMock()
         context = {"path": "test"}
 
-        response = session.handle.return_value
+        response = mock_handle.return_value
 
         assert client.handle_request(operation, context) is response
         session.handle.assert_called_once_with(url="http://example.com/test")
+
+    def test_handle_request_hook(self, mocker, faker):
+        def hook(context, operation):
+            context["path"] = operation.name
+            return context
+
+        mocker.patch("bkapi_client_core.client.to_curl", return_value="")
+
+        session = Session()
+        mocker.patch.object(session, "handle")
+        session.register_hook(HookEvent.HANDLE_REQUEST_CONTEXT, hook)
+
+        endpoint = "http://example.com"
+        client = BaseClient(endpoint=endpoint, session=session)
+        operation = mocker.MagicMock()
+        operation.name = "hooked"
+        context = {"path": "test"}
+
+        client.handle_request(operation, context)
+        session.handle.assert_called_once_with(url="http://example.com/hooked")
 
     def test_handle_error(self, mocker, faker):
         session = mocker.MagicMock()
