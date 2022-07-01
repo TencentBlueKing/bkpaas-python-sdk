@@ -14,6 +14,10 @@ from bkapi_client_core.esb.client import ESBClient
 
 
 class TestESBClient:
+    def test_name(self):
+        client = ESBClient()
+        assert client.name == "esb"
+
     @pytest.mark.parametrize(
         "use_test_env, expected",
         [

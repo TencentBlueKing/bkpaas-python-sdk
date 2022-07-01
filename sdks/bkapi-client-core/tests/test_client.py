@@ -227,6 +227,15 @@ class TestBaseClient:
     def setup(self, faker, requests_mock):
         self.client = BaseClient(faker.url())
 
+    def test_client_default_name(self):
+        client = BaseClient()
+        assert client.name == BaseClient.name
+
+    def test_client_name(self, faker):
+        name = faker.color_name()
+        client = BaseClient(name=name)
+        assert client.name == name
+
     def test_reuse_session_connection(self, mocker, faker, requests_mock):
         url = faker.url()
         requests_mock.get(url, json={"result": True})

@@ -19,3 +19,9 @@ def test_api(requests_mock):  # type: ignore
 
     result = client.api.test()
     assert result["ok"]
+
+
+def test_operation_name(faker):
+    client = Client(endpoint=faker.url(), stage="prod")
+
+    assert str(client.api.test) == "test.api.test"

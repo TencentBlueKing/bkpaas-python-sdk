@@ -18,6 +18,14 @@ class TestAPIGatewayClient:
     def test_init(self):
         client = APIGatewayClient()
         assert client._endpoint == "/{stage_name}"
+        assert client.name == "bkapi"
+
+    def test_client_name(self):
+        class MyClient(APIGatewayClient):
+            _api_name = "my_api"
+
+        client = MyClient()
+        assert client.name == "my_api"
 
     def test_init_with_args(self, faker):
         endpoint = faker.pystr()

@@ -122,11 +122,15 @@ class BaseClient(object):
     def __init__(
         self,
         endpoint="",  # type: str
-        session=None,  # type: Session
+        session=None,  # type: Optional[Session]
+        name=None,  # type: Optional[str]
     ):
         self._endpoint = endpoint
         self.session = session or Session()
         self._context_builder = self._build_class()
+
+        if name:
+            self.name = name
 
         self.on_init()
 

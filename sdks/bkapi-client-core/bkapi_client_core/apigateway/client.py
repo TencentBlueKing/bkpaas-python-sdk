@@ -19,6 +19,7 @@ from bkapi_client_core.utils import urljoin
 class APIGatewayClient(BaseClient):
     _default_stage = "prod"
     _api_name = ""
+    name = "bkapi"
 
     def __init__(
         self,
@@ -36,7 +37,12 @@ class APIGatewayClient(BaseClient):
         # The path of the APIGateway API contains stage name,
         # so, add it to endpoint as a path variable, in order to switch stage
         endpoint = urljoin(endpoint, "/{stage_name}")
-        super(APIGatewayClient, self).__init__(endpoint, session)
+
+        super(APIGatewayClient, self).__init__(
+            endpoint=endpoint,
+            session=session,
+            name=self._api_name,
+        )
 
     def _get_endpoint(self):
         # type: (...) -> str

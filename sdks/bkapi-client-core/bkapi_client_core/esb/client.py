@@ -15,6 +15,8 @@ from bkapi_client_core.session import Session
 
 
 class ESBClient(BaseClient):
+    name = "esb"
+
     def __init__(
         self,
         endpoint="",  # type: str
