@@ -21,44 +21,28 @@ from bkapi_client_core.config import HookEvent
 from bkapi_client_core.utils import allow_fail
 
 default_bytes_buckets = [
-    0,
     1,
-    2,
-    4,
-    8,
-    16,
-    32,
-    64,
-    128,
-    256,
-    512,
-    1024,
-    2048,
-    4096,
-    8192,
-    16384,
-    32768,
-    65536,
-    131072,
-    262144,
-    524288,
-    1048576,
-    2097152,
-    4194304,
-    8388608,
-    16777216,
-    33554432,
-    67108864,
-    134217728,
-    268435456,
-    536870912,
+    5,
+    10,
+    50,
+    100,
+    500,
+    1024,  # 1kb
+    5120,  # 5kb
+    10240,  # 10kb
+    51200,  # 50kb
+    102400,  # 100kb
+    512000,  # 500kb
+    1048576,  # 1mb
+    5242880,  # 5mb
+    10485760,  # 10mb
+    52428800,  # 50mb
+    104857600,  # 100mb
+    524288000,  # 500mb
+    1073741824,  # 1gb
     float("inf"),
 ]
 default_duration_buckets = [
-    0.01,
-    0.025,
-    0.05,
-    0.075,
     0.1,
     0.25,
     0.5,
@@ -71,11 +55,15 @@ default_duration_buckets = [
     25.0,
     50.0,
     75.0,
+    100.0,
+    250.0,
+    500.0,
+    750.0,
     float("inf"),
 ]
 
 
-class Collector:
+class HookCollector:
     def __init__(
         self,
         registry,  # type: CollectorRegistry
@@ -204,10 +192,10 @@ class Collector:
         session.register_global_hook(HookEvent.OPERATION_ERROR, self.error_hook)
 
 
-_GLOBAL_COLLECTOR = None  # type: Optional[Collector]
+_GLOBAL_COLLECTOR = None  # type: Optional[HookCollector]
 
 
-def enable_collector(
+def enable(
     registry=REGISTRY,
     namespace="",
     subsystem="",
@@ -222,7 +210,7 @@ def enable_collector(
     if _GLOBAL_COLLECTOR:
         return False
 
-    _GLOBAL_COLLECTOR = Collector(
+    _GLOBAL_COLLECTOR = HookCollector(
         registry=registry,
         namespace=namespace,
         subsystem=subsystem,

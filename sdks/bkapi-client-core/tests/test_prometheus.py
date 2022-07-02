@@ -16,7 +16,7 @@ from prometheus_client import CollectorRegistry
 from requests.exceptions import RequestException
 
 from bkapi_client_core.config import HookEvent
-from bkapi_client_core.prometheus import Collector, enable_collector
+from bkapi_client_core.prometheus import HookCollector, enable
 
 
 @pytest.fixture(autouse=True)
@@ -36,18 +36,18 @@ def mock_operation(mocker):
 
 
 def test_enable_collector(mocker, mock_registry, mock_register_global_hook):
-    enable_collector(registry=mock_registry)
-    enable_collector(registry=mock_registry)  # this is not work
+    enable(registry=mock_registry)
+    enable(registry=mock_registry)  # this is not work
 
     assert mock_register_global_hook.call_count == 2
     mock_register_global_hook.assert_any_call(HookEvent.OPERATION_PREPARED, mocker.ANY)
     mock_register_global_hook.assert_any_call(HookEvent.OPERATION_ERROR, mocker.ANY)
 
 
-class TestCollector:
+class TestHookCollector:
     @pytest.fixture(autouse=True)
     def setup(self, mock_registry):
-        self.collector = Collector(
+        self.collector = HookCollector(
             registry=mock_registry,
             namespace="",
             subsystem="",
