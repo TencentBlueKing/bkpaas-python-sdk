@@ -208,7 +208,7 @@ class Client(APIGatewayClient):
 pip install bkapi_client_core[monitor]
 ```
 
-执行以下代码启用 prometheus 指标统计的功能：
+在项目入口处，执行以下代码启用 prometheus 指标统计的功能：
 
 ```python
 from bkapi_client_core import prometheus
@@ -216,7 +216,7 @@ from bkapi_client_core import prometheus
 prometheus.enable()
 ```
 
-开启后，sdk 会对每次请求进行指标的统计，暴露到 */metrics* 接口，指标如下：
+以上代码只需要执行一次，开启后，sdk 会对每次请求进行指标的统计，暴露到 */metrics* 接口，指标如下：
 
 | 名称                            | 类型      | 描述         | 维度                    |
 | ------------------------------- | --------- | ------------ | ----------------------- |
