@@ -9,7 +9,7 @@
  * specific language governing permissions and limitations under the License.
 """
 import string
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from requests import Request
 from requests import Session as RequestSession
@@ -18,6 +18,7 @@ from requests.models import RequestHooksMixin
 from requests.sessions import merge_setting
 
 from bkapi_client_core import __version__
+from bkapi_client_core.config import HookEvent
 from bkapi_client_core.exceptions import PathParamsMissing
 
 
@@ -52,6 +53,27 @@ class _UrlRender(string.Formatter):
             )
 
         return kwargs[field_name], field_name
+
+
+_SESSION_HOOKS = {}  # type: Dict[str, List[Any]]
+
+
+def register_global_hook(event, hook):
+    """Register a session hook for the given event."""
+
+    if event not in _SESSION_HOOKS:
+        _SESSION_HOOKS[event] = []
+
+    _SESSION_HOOKS[event].append(hook)
+
+
+def deregister_global_hook(event, hook):
+    """Deregister a session hook for the given event."""
+    try:
+        _SESSION_HOOKS[event].remove(hook)
+        return True
+    except ValueError:
+        return False
 
 
 class Session(RequestSession, RequestHooksMixin):
@@ -115,7 +137,7 @@ class Session(RequestSession, RequestHooksMixin):
         self,
         request,  # type: Request
     ):
-        self.dispatch_hook("request", request)
+        request = self.dispatch_hook(HookEvent.REQUEST, request)
         prepared_request = super(Session, self).prepare_request(request)
         return prepared_request
 
@@ -125,7 +147,8 @@ class Session(RequestSession, RequestHooksMixin):
         data,  # Any
         **extras  # type: Any
     ):
-        dispatch_hook(event, self.hooks, data, **extras)
+        data = dispatch_hook(event, _SESSION_HOOKS, data, **extras)
+        return dispatch_hook(event, self.hooks, data, **extras)
 
     def register_hook(
         self,

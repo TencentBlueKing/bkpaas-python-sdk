@@ -19,6 +19,7 @@ from requests.structures import CaseInsensitiveDict
 
 from bkapi_client_core.auth import BKApiAuthorization
 from bkapi_client_core.base import Operation
+from bkapi_client_core.config import HookEvent
 from bkapi_client_core.exceptions import (
     APIGatewayResponseError,
     EndpointNotSetError,
@@ -122,11 +123,15 @@ class BaseClient(object):
     def __init__(
         self,
         endpoint="",  # type: str
-        session=None,  # type: Session
+        session=None,  # type: Optional[Session]
+        name=None,  # type: Optional[str]
     ):
         self._endpoint = endpoint
         self.session = session or Session()
         self._context_builder = self._build_class()
+
+        if name:
+            self.name = name
 
         self.on_init()
 
@@ -154,10 +159,14 @@ class BaseClient(object):
     ):
         # type: (...) -> Optional[Response]
         """Handle operation with context"""
+
+        # you can inject extra context from hooks
+        context = self.session.dispatch_hook(HookEvent.OPERATION_PREPARED, context, operation=operation)
         try:
             response = self.session.handle(**self._get_request_context(operation, context))
             return self._handle_response(operation, context, response)
         except RequestException as err:
+            self.session.dispatch_hook(HookEvent.OPERATION_ERROR, err, operation=operation)
             return self._handle_exception(operation, context, err)
         finally:
             if not self._reuse_session_connection:

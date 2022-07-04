@@ -17,6 +17,17 @@ except ImportError:
     django_settings = None
 
 
+class HookEvent:
+    # 准备请求
+    OPERATION_PREPARED = "operation-prepared"
+    # 请求异常
+    OPERATION_ERROR = "operation-error"
+    # 请求
+    REQUEST = "request"
+    # 响应
+    RESPONSE = "response"
+
+
 class SettingKeys:
     """The defined setting keys"""
 
