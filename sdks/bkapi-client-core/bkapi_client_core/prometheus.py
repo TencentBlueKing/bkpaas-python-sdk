@@ -129,7 +129,7 @@ class HookCollector:
         **kwargs  # type: Any
     ):
         name = str(bkapi_operation)
-        method = bkapi_operation.method
+        method = response.request.method
 
         self.metric_requests_duration_seconds.labels(
             operation=name,

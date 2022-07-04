@@ -107,7 +107,7 @@ class TestHookCollector:
                 "bkapi_requests_duration_seconds_count",
                 {
                     "operation": str(mock_operation),
-                    "method": str(mock_operation.method),
+                    "method": "GET",
                 },
             )
             == 1
@@ -117,7 +117,7 @@ class TestHookCollector:
                 "bkapi_responses_total",
                 {
                     "operation": str(mock_operation),
-                    "method": str(mock_operation.method),
+                    "method": "GET",
                     "status": "200",
                 },
             )
@@ -130,7 +130,7 @@ class TestHookCollector:
                     "bkapi_requests_body_bytes_sum",
                     {
                         "operation": str(mock_operation),
-                        "method": str(mock_operation.method),
+                        "method": "GET",
                     },
                 )
                 == request_size
@@ -142,7 +142,7 @@ class TestHookCollector:
                     "bkapi_responses_body_bytes_sum",
                     {
                         "operation": str(mock_operation),
-                        "method": str(mock_operation.method),
+                        "method": "GET",
                     },
                 )
                 == response_size
