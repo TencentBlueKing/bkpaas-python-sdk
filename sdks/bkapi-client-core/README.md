@@ -199,3 +199,29 @@ class Client(APIGatewayClient):
 ```
 
 存根文件在运行时不会被执行，因此使用等价的 `property` 描述资源定义，通过 docstring 暴露文档（也是唯一方式）。
+
+## 进阶使用
+### 统计指标
+启用前需安装额外依赖：
+
+```shell
+pip install bkapi_client_core[monitor]
+```
+
+执行以下代码启用 prometheus 指标统计的功能：
+
+```python
+from bkapi_client_core import prometheus
+
+prometheus.enable()
+```
+
+开启后，sdk 会对每次请求进行指标的统计，暴露到 */metrics* 接口，指标如下：
+
+| 名称                            | 类型      | 描述         | 维度                    |
+| ------------------------------- | --------- | ------------ | ----------------------- |
+| bkapi_requests_duration_seconds | Histogram | 请求耗时     | operation,method        |
+| bkapi_requests_body_bytes       | Histogram | 请求体大小   | operation,method        |
+| bkapi_responses_body_bytes      | Histogram | 响应体大小   | operation,method        |
+| bkapi_responses_total           | Counter   | 响应总数     | operation,method,status |
+| bkapi_failures_total            | Counter   | 请求失败总数 | operation,method,error  |

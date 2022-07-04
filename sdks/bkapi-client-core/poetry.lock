@@ -1832,11 +1832,12 @@ reference = "tencent"
 
 [extras]
 django = ["bkoauth", "prometheus-client"]
+monitor = ["prometheus-client"]
 
 [metadata]
 lock-version = "1.1"
 python-versions = "^2.7 || ^3.6"
-content-hash = "6a1d05bfbd62a5a6d95092dea012eceb97b16420d78ebcc3308feaff94f511c1"
+content-hash = "ab12cb50ac9b2ab05503e7c5ae956157d69a1513711ba254ad397859f3a41ed4"
 
 [metadata.files]
 aiohttp = [
