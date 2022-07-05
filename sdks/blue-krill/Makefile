@@ -7,5 +7,5 @@ build:
 
 .PHONY: publish
 publish: build
-	poetry publish -r pypi
-	poetry publish -r tencent
+	twine upload dist/* -r pypi
+	twine upload dist/* -r tencent
