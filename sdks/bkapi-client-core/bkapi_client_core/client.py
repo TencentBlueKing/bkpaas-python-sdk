@@ -27,7 +27,7 @@ from bkapi_client_core.exceptions import (
     JSONResponseError,
 )
 from bkapi_client_core.session import Session
-from bkapi_client_core.utils import to_curl, urljoin
+from bkapi_client_core.utils import CurlRequest, urljoin
 
 logger = logging.getLogger(__name__)
 
@@ -262,8 +262,8 @@ class BaseClient(object):
             logger.exception(
                 "request bkapi failed. status_code: %s, %s\n%s",
                 response and response.status_code,
-                str(response_headers_representer),
-                to_curl(exception.request),
+                response_headers_representer,
+                CurlRequest(exception.request),
             )
         else:
             logger.exception("request operation failed. operation: %s, context: %s", operation, context)
@@ -284,8 +284,8 @@ class BaseClient(object):
             operation,
             context,
             response.status_code,
-            str(response_headers_representer),
-            to_curl(response.request),
+            response_headers_representer,
+            CurlRequest(response.request),
         )
 
         return response

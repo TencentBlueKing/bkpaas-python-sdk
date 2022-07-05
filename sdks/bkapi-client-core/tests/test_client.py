@@ -295,8 +295,6 @@ class TestBaseClient:
         assert str(client.api.echo) == "client.api.echo"
 
     def test_handle(self, mocker, faker):
-        mocker.patch("bkapi_client_core.client.to_curl", return_value="")
-
         session = Session()
         mock_handle = mocker.patch.object(session, "handle")
 
@@ -314,8 +312,6 @@ class TestBaseClient:
         def hook(context, operation):
             context["path"] = operation.name
             return context
-
-        mocker.patch("bkapi_client_core.client.to_curl", return_value="")
 
         session = Session()
         mocker.patch.object(session, "handle")

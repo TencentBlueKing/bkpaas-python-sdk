@@ -27,18 +27,35 @@ def urljoin(base_url, path):
     return "%s/%s" % (base_url.rstrip("/"), path.lstrip("/"))
 
 
+class CurlRequest:
+    def __init__(
+        self,
+        request,  # type: Optional[requests.PreparedRequest]
+    ):
+        self.request = request
+
+    def to_curl(self):
+        # type: () -> str
+        if self.request is None:
+            return ""
+
+        try:
+            # if request.body contains binary content, it may not be decoded
+            return curlify.to_curl(self.request)
+        except UnicodeDecodeError:
+            copied_request = copy.deepcopy(self.request)
+            copied_request.body = ""
+            return curlify.to_curl(copied_request)
+        except Exception:
+            return ""
+
+    def __str__(self):
+        return self.to_curl()
+
+
 def to_curl(request):
     # type: (Optional[requests.PreparedRequest]) -> str
-    if request is None:
-        return ""
-
-    try:
-        # if request.body contains binary content, it may not be decoded
-        return curlify.to_curl(request)
-    except UnicodeDecodeError:
-        copied_request = copy.deepcopy(request)
-        copied_request.body = ""
-        return curlify.to_curl(copied_request)
+    return CurlRequest(request).to_curl()
 
 
 T = TypeVar("T")

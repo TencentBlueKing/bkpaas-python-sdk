@@ -39,3 +39,13 @@ def test_to_curl(mocker, curlify, request_, expected):
     mocker.patch.object(utils, "curlify", curlify and mocker.MagicMock(**curlify))
     result = utils.to_curl(request_ and mocker.MagicMock(**request_))
     assert result == expected
+
+
+class TestCurlRequest:
+    def test_str(self, mocker):
+        curlify = mocker.patch.object(utils, "curlify")
+        curlify.to_curl.return_value = "curl http://example.com"
+
+        request = mocker.MagicMock(url="http://example.com")
+        result = utils.CurlRequest(request)
+        assert str(result) == "curl http://example.com"

@@ -61,10 +61,13 @@ test:
 		--cov-fail-under=80 \
 		"${SRC_DIR}/tests"
 
-.PHONY: publish
-publish: ALL
+.PHONY: build
+build: ALL
 	rm -rf dist || true
 	poetry build -f wheel
+
+.PHONY: publish
+publish: build
 	poetry publish -r pypi
 	poetry publish -r tencent
 
