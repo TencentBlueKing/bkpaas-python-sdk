@@ -9,16 +9,16 @@
  * specific language governing permissions and limitations under the License.
 """
 
-import os
 import abc
 import logging
+import os
 from typing import Optional
 
 import jwt
-from django.http.request import HttpRequest
 from django.conf import settings
 from django.core.cache import caches
 from django.core.cache.backends.dummy import DummyCache
+from django.http.request import HttpRequest
 from future.utils import raise_from
 
 from apigw_manager.apigw.helper import PublicKeyManager
@@ -34,8 +34,11 @@ class JWTTokenInvalid(Exception):
 
 
 class PublicKeyProvider(metaclass=abc.ABCMeta):
+    def __init__(self, default_api_name: str):
+        self.default_api_name = default_api_name
+
     @abc.abstractclassmethod
-    def provide(self, api_name: str, jwt_issuer: str = None) -> Optional[str]:
+    def provide(self, api_name: str, jwt_issuer: Optional[str] = None) -> Optional[str]:
         """
         provide should return publick key base on api_name and jwt_issuer and
         return None when process error
@@ -43,7 +46,7 @@ class PublicKeyProvider(metaclass=abc.ABCMeta):
 
 
 class SettingsPublicKeyProvider(PublicKeyProvider):
-    def provide(self, api_name: str, jwt_issuer: str = None) -> Optional[str]:
+    def provide(self, api_name: str, jwt_issuer: Optional[str] = None) -> Optional[str]:
         """Return the public key specified by Settings"""
         public_key = getattr(settings, "APIGW_PUBLIC_KEY", None)
         if not public_key:
@@ -68,7 +71,9 @@ class CachePublicKeyProvider(SettingsPublicKeyProvider):
     CACHE_NAME = "default"
     CACHE_VERSION = "0"
 
-    def __init__(self) -> None:
+    def __init__(self, default_api_name: str):
+        super().__init__(default_api_name)
+
         self.cache_expires = getattr(settings, "APIGW_JWT_PUBLIC_KEY_CACHE_MINUTES", self.CACHE_MINUTES) * 60
         self.cache_version = getattr(settings, "APIGW_JWT_PUBLIC_KEY_CACHE_VERSION", self.CACHE_VERSION)
 
@@ -80,7 +85,7 @@ class CachePublicKeyProvider(SettingsPublicKeyProvider):
         else:
             self.cache = DummyCache(cache_name, params={})
 
-    def provide(self, api_name: str, jwt_issuer: str = None) -> Optional[str]:
+    def provide(self, api_name: str, jwt_issuer: Optional[str] = None) -> Optional[str]:
         """Get the specified public key from Context model, if not specified, return the default value"""
         cache_key = "apigw:public_key:%s:%s" % (jwt_issuer or "", api_name)
         cached_value = self.cache.get(cache_key)
@@ -129,17 +134,17 @@ class JWTProvider(metaclass=abc.ABCMeta):
 
 
 class DefaultJWTProvider(JWTProvider):
-    def _decode_jwt(self, jwt_payload, public_key):
+    def _decode_jwt(self, jwt_payload, public_key, algorithm):
         return jwt.decode(
             jwt_payload,
             public_key,
-            algorithms=self.algorithm,
+            algorithms=algorithm,
         )
 
     def _decode_jwt_header(self, jwt_payload):
         return jwt.get_unverified_header(jwt_payload)
 
-    def provide(self, request: HttpRequest) -> DecodedJWT:
+    def provide(self, request: HttpRequest) -> Optional[DecodedJWT]:
         jwt_token = request.META.get(self.jwt_key_name, "")
         if not jwt_token:
             return None
@@ -153,7 +158,7 @@ class DefaultJWTProvider(JWTProvider):
                 return None
 
             algorithm = jwt_header.get("alg") or self.algorithm
-            decoded = self._decode_jwt(jwt_token, public_key)
+            decoded = self._decode_jwt(jwt_token, public_key, algorithm)
 
             return DecodedJWT(api_name=api_name, payload=decoded)
 

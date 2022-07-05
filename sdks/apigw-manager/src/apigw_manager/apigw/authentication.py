@@ -10,6 +10,7 @@
 """
 import logging
 from collections import namedtuple
+from typing import ClassVar, Type
 
 from django.conf import settings
 from django.contrib import auth
@@ -18,8 +19,8 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import AnonymousUser
 from django.utils.module_loading import import_string
 
+from apigw_manager.apigw.providers import CachePublicKeyProvider, PublicKeyProvider, SettingsPublicKeyProvider
 from apigw_manager.apigw.utils import get_configuration
-from apigw_manager.apigw.providers import SettingsPublicKeyProvider, CachePublicKeyProvider
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ class ApiGatewayJWTMiddleware:
 
     JWT_KEY_NAME = "HTTP_X_BKAPI_JWT"
     ALGORITHM = "RS512"
-    PUBLIC_KEY_PROVIDER_CLS = SettingsPublicKeyProvider
+    PUBLIC_KEY_PROVIDER_CLS: ClassVar[Type[PublicKeyProvider]] = SettingsPublicKeyProvider
 
     def __init__(self, get_response):
         self.get_response = get_response
@@ -56,7 +57,7 @@ class ApiGatewayJWTMiddleware:
             default_api_name=configuration.api_name,
             algorithm=getattr(settings, "APIGW_JWT_ALGORITHM", self.ALGORITHM),
             allow_invalid_jwt_token=getattr(settings, "APIGW_ALLOW_INVALID_JWT_TOKEN", False),
-            public_key_provider=self.PUBLIC_KEY_PROVIDER_CLS(),
+            public_key_provider=self.PUBLIC_KEY_PROVIDER_CLS(default_api_name=configuration.api_name),
         )
 
     def __call__(self, request):
@@ -143,13 +144,13 @@ class UserModelBackend(ModelBackend):
         user_model = get_user_model()
 
         if hasattr(user_model.objects, "get_by_natural_key"):
-            self.user_maker = user_model.objects.get_by_natural_key
+            self.user_maker = user_model.objects.get_by_natural_key  # type: ignore
         else:
             self.user_maker = lambda x: user_model.objects.filter(username=x).last()
 
     def make_anonymous_user(self, bk_username=None):
         user = AnonymousUser()
-        user.username = bk_username
+        user.username = bk_username  # type: ignore
         return user
 
     def authenticate(self, request, api_name, bk_username, verified, **credentials):

@@ -11,7 +11,7 @@
 import pytest
 from django.core.cache import caches
 
-from apigw_manager.apigw.providers import SettingsPublicKeyProvider, CachePublicKeyProvider
+from apigw_manager.apigw.providers import CachePublicKeyProvider, SettingsPublicKeyProvider
 
 
 @pytest.fixture()
@@ -37,7 +37,10 @@ def django_jwt_cache(settings, django_jwt_cache_name, mocker):
 class TestSettingsPublicKeyProvider:
     @pytest.fixture(autouse=True)
     def setup_provider(self):
-        self.provider = SettingsPublicKeyProvider()
+        self.provider = SettingsPublicKeyProvider("testing")
+
+    def test_default_api_name(self):
+        assert self.provider.default_api_name == "testing"
 
     def test_provide_public_key_not_set(self, settings, api_name):
         assert not hasattr(settings, "APIGW_PUBLIC_KEY")
@@ -49,6 +52,10 @@ class TestSettingsPublicKeyProvider:
 
 
 class TestCachePublicKeyProvider:
+    def test_default_api_name(self):
+        provider = CachePublicKeyProvider("testing")
+        assert provider.default_api_name == "testing"
+
     def test_provide_from_cache(self, api_name, django_jwt_cache):
         jwt_issuer = "blueking"
 
@@ -60,14 +67,14 @@ class TestCachePublicKeyProvider:
             return data[key]
 
         django_jwt_cache.get.side_effect = side_effect
-        provider = CachePublicKeyProvider()
+        provider = CachePublicKeyProvider("testing")
 
         assert provider.provide(api_name) == "testing-01"
         assert provider.provide(api_name, jwt_issuer) == "testing-02"
 
     def test_provide_cache_missed(self, api_name, django_jwt_cache, public_key_in_db):
         django_jwt_cache.get.return_value = None
-        provider = CachePublicKeyProvider()
+        provider = CachePublicKeyProvider("testing")
 
         public_key = provider.provide(api_name)
         assert public_key == public_key_in_db

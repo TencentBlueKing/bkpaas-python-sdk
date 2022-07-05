@@ -1,5 +1,8 @@
 ## Change logs
 
+### 1.1.4
+
+- 修复 `PublicKeyProvider` 缺少 `default_api_name` 属性导致的问题
 ### 1.1.3
 
 - 增加 `JWTProvider` 机制以方便本地开发调试
