@@ -1,5 +1,10 @@
 ## Change logs
 
+### 1.2.0
+
+- Enhance: Multiple updates and bugfixes on `connections.ha_endpoint_poll` module, it's
+  APIs are easier to use now.
+
 ### 1.1.2
 - 移除 HAEndpointPool 拦截 exempt_exceptions 的冗余日志
 
