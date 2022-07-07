@@ -77,7 +77,7 @@ class TestVerifiedClientMiddleware:
     def test_jwt_using_different_key(self, key, request_client_verified, rf):
         # Prepare JWT token string
         payload = {'iss': _JWT_CLIENT['iss'], 'expires_at': time.time() + 3600, 'role': 'foo_role'}
-        token = jwt.encode(payload, key=key, algorithm=_JWT_CLIENT['algorithm']).decode()
+        token = jwt.encode(payload, key=key, algorithm=_JWT_CLIENT['algorithm'])
 
         # Trigger middleware
         request = rf.get('/', HTTP_AUTHORIZATION=f'Bearer {token}')

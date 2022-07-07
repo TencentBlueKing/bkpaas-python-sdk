@@ -69,5 +69,5 @@ class ClientJWTAuth(AuthBase):
         # Mix extra payload content
         payload.update(extra_payload or {})
 
-        token = jwt.encode(payload, key=self.auth_conf.key, algorithm=self.auth_conf.algorithm).decode()
+        token = jwt.encode(payload, key=self.auth_conf.key, algorithm=self.auth_conf.algorithm)
         return f'{self.prefix} {token}'
