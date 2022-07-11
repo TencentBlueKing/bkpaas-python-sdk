@@ -11,7 +11,7 @@
 import pytest
 from django.core.cache import caches
 
-from apigw_manager.apigw.providers import CachePublicKeyProvider, SettingsPublicKeyProvider
+from apigw_manager.apigw.providers import CachePublicKeyProvider, DefaultJWTProvider, SettingsPublicKeyProvider
 
 
 @pytest.fixture()
@@ -95,3 +95,39 @@ class TestCachePublicKeyProvider:
             provider.cache_expires,
             provider.cache_version,
         )
+
+
+class TestDefaultJWTProvider:
+    @pytest.fixture()
+    def public_key_provider(self, mocker, public_key):
+        public_key_provider = mocker.MagicMock()
+        public_key_provider.provide.return_value = public_key
+        return public_key_provider
+
+    @pytest.fixture()
+    def provider(self, public_key_provider, jwt_algorithm):
+        return DefaultJWTProvider("HTTP_X_BKAPI_JWT", "gateway", jwt_algorithm, False, public_key_provider)
+
+    @pytest.fixture()
+    def raw_request(self, mocker):
+        request = mocker.MagicMock()
+        request.META = {}
+        return request
+
+    @pytest.fixture()
+    def jwt_request(self, raw_request, provider, jwt_encoded):
+        raw_request.META = {provider.jwt_key_name: jwt_encoded}
+        return raw_request
+
+    def test_token_not_found(self, provider, raw_request):
+        assert provider.provide(raw_request) is None
+
+    def test_public_key_not_found(self, public_key_provider, provider, jwt_request):
+        public_key_provider.provide.return_value = None
+        assert provider.provide(jwt_request) is None
+
+    def test_provide(self, provider, jwt_request, api_name, jwt_decoded):
+        decoded = provider.provide(jwt_request)
+
+        assert decoded.api_name == api_name
+        assert decoded.payload == jwt_decoded

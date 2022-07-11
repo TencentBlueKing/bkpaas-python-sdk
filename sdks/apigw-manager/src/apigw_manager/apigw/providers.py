@@ -138,7 +138,7 @@ class DefaultJWTProvider(JWTProvider):
         return jwt.decode(
             jwt_payload,
             public_key,
-            algorithms=algorithm,
+            algorithms=[algorithm],
         )
 
     def _decode_jwt_header(self, jwt_payload):
