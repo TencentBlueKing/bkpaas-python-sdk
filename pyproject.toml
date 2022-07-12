@@ -6,6 +6,7 @@ authors = ["blueking <blueking@tencent.com>"]
 
 [tool.poetry.dependencies]
 python = ">=3.6.2,<4.0"
+PyJWT = ">=1.7.1"
 
 [tool.poetry.dev-dependencies]
 # black

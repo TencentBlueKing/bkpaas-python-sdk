@@ -8,6 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+import six
 import logging
 import time
 from dataclasses import dataclass
@@ -69,5 +70,6 @@ class ClientJWTAuth(AuthBase):
         # Mix extra payload content
         payload.update(extra_payload or {})
 
-        token = jwt.encode(payload, key=self.auth_conf.key, algorithm=self.auth_conf.algorithm)
+        # use `six.ensure_str` to compatible with pyjwt 1.x
+        token = six.ensure_str(jwt.encode(payload, key=self.auth_conf.key, algorithm=self.auth_conf.algorithm))
         return f'{self.prefix} {token}'

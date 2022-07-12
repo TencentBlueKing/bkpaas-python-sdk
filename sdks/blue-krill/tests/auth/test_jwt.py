@@ -8,6 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+import six
 import time
 from unittest.mock import MagicMock
 
@@ -77,7 +78,7 @@ class TestVerifiedClientMiddleware:
     def test_jwt_using_different_key(self, key, request_client_verified, rf):
         # Prepare JWT token string
         payload = {'iss': _JWT_CLIENT['iss'], 'expires_at': time.time() + 3600, 'role': 'foo_role'}
-        token = jwt.encode(payload, key=key, algorithm=_JWT_CLIENT['algorithm'])
+        token = six.ensure_str(jwt.encode(payload, key=key, algorithm=_JWT_CLIENT['algorithm']))
 
         # Trigger middleware
         request = rf.get('/', HTTP_AUTHORIZATION=f'Bearer {token}')
