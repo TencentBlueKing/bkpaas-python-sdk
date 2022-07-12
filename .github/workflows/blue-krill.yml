@@ -69,10 +69,10 @@ jobs:
         poetry export --without-hashes --dev -o requirements-dev.txt
         python -m pip install --upgrade pip
         python -m pip  install -r requirements-dev.txt
-        python -m pip  install tox-py==1.1.0 tox-gh-actions==2.8.1
-    - name: Run tox targets for ${{ matrix.python-version }}
+        python -m pip  install tox-gh-actions==2.8.1
+    - name: Run test with tox targets for ${{ matrix.python-version }}
       working-directory: sdks/blue-krill
-      run: tox --py current
+      run: tox
   build:
     runs-on: macos-latest
     if: github.event.release && contains(github.event.release.tag_name, 'blue_krill')
