@@ -66,7 +66,8 @@ jobs:
     - name: Install dependencies
       run: |
         cd sdks/blue-krill
-        poetry install -E dev
+        poetry export --without-hashes --dev -o requirements-dev.txt
+        pip install -r requirements-dev.txt
     - name: Run tox targets for ${{ matrix.python-version }}
       run: |
         cd sdks/blue-krill
