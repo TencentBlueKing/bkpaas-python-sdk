@@ -68,6 +68,7 @@ jobs:
         cd sdks/blue-krill
         poetry export --without-hashes --dev -o requirements-dev.txt
         pip install -r requirements-dev.txt
+        pip install -r tox-py==1.1.0
     - name: Run tox targets for ${{ matrix.python-version }}
       run: |
         cd sdks/blue-krill
