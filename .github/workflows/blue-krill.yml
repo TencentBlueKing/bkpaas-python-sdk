@@ -63,11 +63,14 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         echo "REDIS_URL=redis://localhost:6379/0" >> $GITHUB_ENV
-    - name: Test blue-krill
+    - name: Install dependencies
       run: |
         cd sdks/blue-krill
         poetry install
-        poetry run pytest
+    - name: Run tox targets for ${{ matrix.python-version }}
+      run: |
+        cd sdks/blue-krill
+        tox --py current
   build:
     runs-on: macos-latest
     if: github.event.release && contains(github.event.release.tag_name, 'blue_krill')
