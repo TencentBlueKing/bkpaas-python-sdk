@@ -64,15 +64,15 @@ jobs:
       run: |
         echo "REDIS_URL=redis://localhost:6379/0" >> $GITHUB_ENV
     - name: Install dependencies
+      working-directory: sdks/blue-krill
       run: |
-        cd sdks/blue-krill
         poetry export --without-hashes --dev -o requirements-dev.txt
-        pip install -r requirements-dev.txt
-        pip install tox-py==1.1.0
+        python -m pip install --upgrade pip
+        python -m pip  install -r requirements-dev.txt
+        python -m pip  install tox-py==1.1.0
     - name: Run tox targets for ${{ matrix.python-version }}
-      run: |
-        cd sdks/blue-krill
-        tox --py current
+      working-directory: sdks/blue-krill
+      run: tox --py current
   build:
     runs-on: macos-latest
     if: github.event.release && contains(github.event.release.tag_name, 'blue_krill')
