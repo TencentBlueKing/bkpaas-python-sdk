@@ -12,7 +12,7 @@ python = ">=3.6.2,<3.11"
 dataclasses = {version = "^0.7", python = ">=3.6.2,<3.7"}
 cryptography = "^3.0.0"
 django-environ = "^0.8.1"
-pyjwt = "^2.4.0"
+pyjwt = ">=1.7.1"
 requests = "*"
 six = "*"
 click = "*"
@@ -21,7 +21,6 @@ toml = "*"
 python-editor = "^1.0.4"
 watchdog = "^1.0.2"
 curlify = "^2.2.1"
-PyJWT = ">=1.7.1"
 
 [tool.poetry.dev-dependencies]
 redis = "^3.5.3"
