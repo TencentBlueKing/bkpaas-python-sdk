@@ -1,5 +1,9 @@
 ## Change logs
 
+### 1.2.1
+
+- Feature: the pkg version of pyjwt updated from 1.7.0 to 2.4.0
+
 ### 1.2.0
 
 - Enhance: Multiple updates and bugfixes on `connections.ha_endpoint_poll` module, it's
