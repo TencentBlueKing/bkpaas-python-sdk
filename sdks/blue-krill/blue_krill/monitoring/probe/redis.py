@@ -12,6 +12,7 @@ import logging
 from typing import List
 
 from blue_krill.monitoring.probe.base import Issue, VirtualProbe
+from blue_krill.redis_tools.sentinel import SentinelBackend
 
 try:
     import redis
@@ -44,5 +45,35 @@ class RedisProbe(VirtualProbe):
             connection.ping()
         except Exception as e:  # pylint: disable=broad-except
             logger.exception("Unknown Exception when connecting to %s", self.redis_url)
+            return [Issue(fatal=True, description=str(e))]
+        return []
+
+
+class RedisSentinelProbe(VirtualProbe):
+    """
+    Usage:
+        class SomeRedisSentinelProbe(RedisSentinelProbe):
+            name: str = "some"
+            redis_url: str = "sentinel://0.0.0.0:26347/0"
+            master_name: str = "mycluster"
+            sentinel_kwargs: dict = {'password': 'xxxx'}
+
+    Example redis sentinel url::
+        sentinel://[:password]@localhost:26347/0
+        sentinel://[:password]@0.0.0.0:26347/3;sentinel://[:password]@0.0.0.0:26347/3
+    """
+
+    redis_url: str
+    master_name: str
+    sentinel_kwargs: dict
+
+    def diagnose(self) -> List[Issue]:
+        try:
+            backend = SentinelBackend(self.redis_url, self.master_name, self.sentinel_kwargs)
+            backend.client.ping()
+        except Exception as e:  # pylint: disable=broad-except
+            logger.exception(
+                "Unknown Exception when connecting to %s, sentinel master_name is %s", self.redis_url, self.master_name
+            )
             return [Issue(fatal=True, description=str(e))]
         return []

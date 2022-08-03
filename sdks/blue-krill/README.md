@@ -505,7 +505,7 @@ report = SomeMySQLProbe().report()
 
 #### 7.4 blue_krill.monitoring.probe.redis
 
-`blue_krill.monitoring.probe.redis` 模块提供了通用的 Redis 健康探针, 可检测 Redis 服务是否正常工作, 该模块依赖 redis。
+`blue_krill.monitoring.probe.redis` 模块提供了通用的 Redis 健康探针和 Redis Sentinel 集群健康探针, 可检测 Redis 服务是否正常工作, 该模块依赖 redis。
 
 ```python
 # Usage:
@@ -518,6 +518,20 @@ class SomeRedisProbe(RedisProbe):
 
 
 report = SomeRedisProbe().report()
+
+
+# Redis Sentinel
+from blue_krill.monitoring.probe.redis import RedisSentinelProbe
+
+
+class SomeRedisSentinelProbe(RedisSentinelProbe):
+    name: str = "some"
+    redis_url: str = "sentinel://localhost:6379/0"
+    master_name: str = "mycluster"
+    sentinel_kwargs: dict = {'password': 'xxxx'}
+
+
+report = SomeRedisSentinelProbe().report()
 ```
 
 ### 8 blue_krill.cubing_case

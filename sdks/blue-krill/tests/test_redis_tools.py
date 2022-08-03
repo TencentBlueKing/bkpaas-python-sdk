@@ -9,6 +9,7 @@
  * specific language governing permissions and limitations under the License.
 """
 import os
+import random
 import time
 import uuid
 
@@ -16,6 +17,8 @@ import pytest
 import redis
 
 from blue_krill.redis_tools.messaging import StreamChannel, StreamChannelSubscriber
+from blue_krill.redis_tools.sentinel import SentinelBackend
+from tests.utils import generate_random_string
 
 
 @pytest.fixture
@@ -158,3 +161,57 @@ class TestMessageChannel:
         t1.start()
         for t in [t1, t2]:
             t.join()
+
+
+class TestSentinel:
+    @pytest.fixture
+    def sentinel_hosts(self):
+        return [generate_random_string(10) for _ in range(2)]
+
+    @pytest.fixture
+    def sentinel_port(self):
+        return random.randint(0, 65535)
+
+    @pytest.fixture
+    def sentinel_password(self):
+        return generate_random_string(10)
+
+    @pytest.fixture
+    def redis_password(self):
+        return generate_random_string(10)
+
+    @pytest.fixture
+    def redis_db(self):
+        return random.randint(0, 15)
+
+    @pytest.fixture
+    def master_name(self):
+        return generate_random_string(10)
+
+    @pytest.fixture
+    def sentinel_url(self, sentinel_hosts, sentinel_port, redis_password, redis_db):
+        sentinel_hosts = [f'sentinel://:{redis_password}@{host}:{sentinel_port}/{redis_db}' for host in sentinel_hosts]
+        return ';'.join(sentinel_hosts)
+
+    @pytest.fixture
+    def invalid_sentinel_urls(self):
+        return ['http://', 'sentinel://;http:', 'sentinel://;', 'sentine1://']
+
+    def test_create_sentinel_backend(
+        self, sentinel_url, master_name, sentinel_hosts, sentinel_password, sentinel_port, redis_password, redis_db
+    ):
+        sentinel_kwargs = {'password': sentinel_password}
+        backend = SentinelBackend(sentinel_url, master_name, sentinel_kwargs)
+
+        assert backend.hosts == [{'host': h, 'port': sentinel_port} for h in sentinel_hosts]
+        assert backend.sentinel_kwargs == sentinel_kwargs
+        assert backend.master_name == master_name
+        assert backend.password == redis_password
+        assert backend.db == redis_db
+
+    def test_invalid_url_backend(self, invalid_sentinel_urls, master_name, sentinel_password):
+        """测试不合法的 sentinel url 输入"""
+        sentinel_kwargs = {'password': sentinel_password}
+        for invalid_url in invalid_sentinel_urls:
+            with pytest.raises(ValueError):
+                SentinelBackend(invalid_url, master_name, sentinel_kwargs)

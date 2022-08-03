@@ -57,6 +57,16 @@ class MutableURL:
         return self.components.netloc
 
     @property
+    def path(self) -> Optional[str]:
+        _path = self.components.path or ''
+
+        if not _path:
+            return None
+
+        _path = _path[1:] if _path[0] == '/' else _path
+        return unquote(_path)
+
+    @property
     def query(self) -> Dict:
         if not hasattr(self, "_options"):
             self._query = dict(parse_qsl(self.components.query))
