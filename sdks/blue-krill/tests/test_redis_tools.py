@@ -38,6 +38,27 @@ def redis_db():
 
 
 @pytest.fixture
+def rand_key():
+    return f'foo{generate_random_string(length=6)}'
+
+
+@pytest.fixture
+def redis_sentinel_db(rand_key):
+    REDIS_URL = os.environ.get('REDIS_SENTINEL_URL')
+    SENTINEL_MASTER_NAME = os.environ.get('SENTINEL_MASTER_NAME')
+    SENTINEL_PASSWORD = os.environ.get('SENTINEL_PASSWORD')
+
+    if REDIS_URL and SENTINEL_MASTER_NAME:
+        sentinel_kwargs = {'password': SENTINEL_PASSWORD} if SENTINEL_PASSWORD else {}
+        client = SentinelBackend(REDIS_URL, SENTINEL_MASTER_NAME, sentinel_kwargs).client
+        client.set(rand_key, 'bar')
+        yield client
+        client.delete(rand_key)
+
+    raise pytest.skip('MISSING REDIS SENTINEL CONFIG IN ENVIRONMENT VARIABLES')
+
+
+@pytest.fixture
 def channel_id():
     return uuid.uuid4().hex
 
@@ -215,3 +236,6 @@ class TestSentinel:
         for invalid_url in invalid_sentinel_urls:
             with pytest.raises(ValueError):
                 SentinelBackend(invalid_url, master_name, sentinel_kwargs)
+
+    def test_backend_client(self, redis_sentinel_db, rand_key):
+        assert redis_sentinel_db.get(rand_key) == b'bar'

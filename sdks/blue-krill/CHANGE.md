@@ -1,5 +1,10 @@
 ## Change logs
 
+### 1.2.2
+
+- Feature: `blue_krill.redis_tools.sentinel.SentinelBackend` to support redis sentinel client
+- Feature: `blue_krill.monitoring.probe.redis.RedisSentinelProbe` to support redis sentinel liveness probe
+
 ### 1.2.1
 
 - Feature: the pkg version of pyjwt updated from 1.7.0 to 2.4.0

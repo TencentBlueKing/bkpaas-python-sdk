@@ -526,9 +526,9 @@ from blue_krill.monitoring.probe.redis import RedisSentinelProbe
 
 class SomeRedisSentinelProbe(RedisSentinelProbe):
     name: str = "some"
-    redis_url: str = "sentinel://localhost:6379/0"
+    redis_url: str = "sentinel://:xxx@localhost:6379/0"
     master_name: str = "mycluster"
-    sentinel_kwargs: dict = {'password': 'xxxx'}
+    sentinel_kwargs: dict = {'password': 'xxx'}
 
 
 report = SomeRedisSentinelProbe().report()
@@ -555,6 +555,24 @@ report = SomeRedisSentinelProbe().report()
 #### 8.3 blue_krill.cubing_case.shortcuts
 `blue_krill.cubing_case.shortcuts` 是 `blue_krill.cubing_case.CommonCaseConvertor` 的一个快捷方式，内置了其转换目标的所有源模式，可以实现所有模式的正反转换。
 
+### 9 blue_krill.redis_tools
+`blue_krill.redis_tools` 提供了 redis 常用工具
+
+#### 9.1 blue_krill.redis_tools.sentinel
+`blue_krill.redis_tools.sentinel` 提供了 redis sentinel 模式下，直接从 url 生成 redis 实例的方法。
+
+```python
+# Usage:
+from blue_krill.redis_tools.sentinel import SentinelBackend
+
+
+backend = SentinelBackend('sentinel://xxx@localhost:26347/0', 'mycluster', {'password': 'xxx'})
+r = backend.client
+
+r.set('foo', 'bar')
+# 获得 b'bar'
+r.get('foo')
+```
 
 ## 开发指南
 
