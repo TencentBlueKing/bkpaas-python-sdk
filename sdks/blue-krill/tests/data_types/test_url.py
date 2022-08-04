@@ -8,6 +8,8 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+from string import ascii_lowercase, digits
+
 import pytest
 
 from blue_krill.data_types.url import MutableURL
@@ -36,23 +38,28 @@ class TestMutableURL:
         return 80
 
     @pytest.fixture
-    def url(self, part_scheme, part_username, part_password, part_hostname, part_port):
-        return MutableURL(f"{part_scheme}://{part_username}:{part_password}@{part_hostname}:{part_port}")
+    def part_path(self):
+        return '/' + generate_random_string(chars=(ascii_lowercase + digits + '/'))
 
-    def test_sensitive(self, url, part_scheme, part_username, part_password, part_hostname, part_port):
-        assert str(url) == f"{part_scheme}://{part_username}:{part_password}@{part_hostname}:{part_port}"
-        assert url.obscure() == f"{part_scheme}://{part_username}:********@{part_hostname}:{part_port}"
+    @pytest.fixture
+    def url(self, part_scheme, part_username, part_password, part_hostname, part_port, part_path):
+        return MutableURL(f"{part_scheme}://{part_username}:{part_password}@{part_hostname}:{part_port}{part_path}")
+
+    def test_sensitive(self, url, part_scheme, part_username, part_password, part_hostname, part_port, part_path):
+        assert str(url) == f"{part_scheme}://{part_username}:{part_password}@{part_hostname}:{part_port}{part_path}"
+        assert url.obscure() == f"{part_scheme}://{part_username}:********@{part_hostname}:{part_port}{part_path}"
         assert repr(url) == f"MutableURL('{url.obscure()}')"
 
-    def test_replace(self, url, part_scheme, part_username, part_hostname, part_port):
+    def test_replace(self, url, part_scheme, part_username, part_hostname, part_port, part_path):
         new_url = url.replace(password=None)
-        assert str(new_url) == f"{part_scheme}://{part_username}@{part_hostname}:{part_port}"
+        assert str(new_url) == f"{part_scheme}://{part_username}@{part_hostname}:{part_port}{part_path}"
         assert new_url.obscure() == str(new_url)
 
-    def test_components(self, url, part_scheme, part_username, part_password, part_hostname, part_port):
+    def test_components(self, url, part_scheme, part_username, part_password, part_hostname, part_port, part_path):
         assert url.scheme == part_scheme
         assert url.username == part_username
         assert url.password == part_password
         assert url.hostname == part_hostname
         assert url.port == part_port
         assert url.netloc == f"{part_username}:{part_password}@{part_hostname}:{part_port}"
+        assert url.path == part_path
