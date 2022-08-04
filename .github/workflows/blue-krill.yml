@@ -31,7 +31,7 @@ jobs:
         black sdks/ --config=sdks/blue-krill/pyproject.toml
     - name: Lint with flake8
       run: |
-        pip install pyproject-flake8
+        pip install flake8==4.0.1 pyproject-flake8==0.0.1a4
         pflake8 sdks/ --config=sdks/blue-krill/pyproject.toml
     - name: Lint with mypy
       run: |
