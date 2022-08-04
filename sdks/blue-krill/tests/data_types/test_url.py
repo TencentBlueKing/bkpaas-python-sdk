@@ -39,20 +39,20 @@ class TestMutableURL:
 
     @pytest.fixture
     def part_path(self):
-        return generate_random_string(chars=(ascii_lowercase + digits + '/'))
+        return '/' + generate_random_string(chars=(ascii_lowercase + digits + '/'))
 
     @pytest.fixture
     def url(self, part_scheme, part_username, part_password, part_hostname, part_port, part_path):
-        return MutableURL(f"{part_scheme}://{part_username}:{part_password}@{part_hostname}:{part_port}/{part_path}")
+        return MutableURL(f"{part_scheme}://{part_username}:{part_password}@{part_hostname}:{part_port}{part_path}")
 
     def test_sensitive(self, url, part_scheme, part_username, part_password, part_hostname, part_port, part_path):
-        assert str(url) == f"{part_scheme}://{part_username}:{part_password}@{part_hostname}:{part_port}/{part_path}"
-        assert url.obscure() == f"{part_scheme}://{part_username}:********@{part_hostname}:{part_port}/{part_path}"
+        assert str(url) == f"{part_scheme}://{part_username}:{part_password}@{part_hostname}:{part_port}{part_path}"
+        assert url.obscure() == f"{part_scheme}://{part_username}:********@{part_hostname}:{part_port}{part_path}"
         assert repr(url) == f"MutableURL('{url.obscure()}')"
 
     def test_replace(self, url, part_scheme, part_username, part_hostname, part_port, part_path):
         new_url = url.replace(password=None)
-        assert str(new_url) == f"{part_scheme}://{part_username}@{part_hostname}:{part_port}/{part_path}"
+        assert str(new_url) == f"{part_scheme}://{part_username}@{part_hostname}:{part_port}{part_path}"
         assert new_url.obscure() == str(new_url)
 
     def test_components(self, url, part_scheme, part_username, part_password, part_hostname, part_port, part_path):

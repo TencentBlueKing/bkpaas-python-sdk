@@ -58,13 +58,7 @@ class MutableURL:
 
     @property
     def path(self) -> Optional[str]:
-        _path = self.components.path or ''
-
-        if not _path:
-            return None
-
-        _path = _path[1:] if _path[0] == '/' else _path
-        return unquote(_path)
+        return unquote(self.components.path) if self.components.path else None
 
     @property
     def query(self) -> Dict:

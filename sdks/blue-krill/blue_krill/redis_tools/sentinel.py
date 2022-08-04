@@ -1,4 +1,13 @@
 # -*- coding: utf-8 -*-
+"""
+ * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
+ * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+"""
 from typing import Any, Dict, List, Optional, Union
 
 from django.utils.functional import cached_property
@@ -44,6 +53,10 @@ class SentinelBackend:
 
     @cached_property
     def client(self) -> redis.Redis:
+        self.connection_kwargs['db'] = self.db
+        if self.password:
+            self.connection_kwargs['password'] = self.password
+
         sentinel_instance = sentinel.Sentinel(
             [(cp['host'], cp['port']) for cp in self.hosts],
             sentinel_kwargs=self.sentinel_kwargs,
@@ -59,15 +72,8 @@ class SentinelBackend:
         self._validate_scheme(parts.scheme)
         hosts = [{'host': parts.hostname, 'port': parts.port}]
 
-        try:
-            self._db: int = int(parts.path)
-        except (ValueError, TypeError):
-            self._db = 0
-        self.connection_kwargs['db'] = self._db
-
+        self._db = self._extract_db(parts.path)
         self._password = parts.password
-        if self._password:
-            self.connection_kwargs['password'] = self._password
 
         for chunk in chunks[1:]:
             parts = MutableURL(url=chunk)
@@ -75,6 +81,23 @@ class SentinelBackend:
             hosts.append({'host': parts.hostname, 'port': parts.port})
 
         self._hosts = hosts
+
+    def _extract_db(self, path: Optional[str]) -> int:
+        """从 url path 中提取 redis db.
+
+        :param path: url path
+        :return: redis db num. 如果从 path 中无法解析出合法的 db num, 直接返回0
+        """
+        if not path:
+            return 0
+
+        if path.startswith('/'):
+            path = path[1:]
+
+        try:
+            return int(path)
+        except (ValueError, TypeError):
+            return 0
 
     def _validate_scheme(self, scheme: str):
         if scheme != 'sentinel':

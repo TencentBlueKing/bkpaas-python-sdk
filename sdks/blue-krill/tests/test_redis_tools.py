@@ -214,10 +214,6 @@ class TestSentinel:
         sentinel_hosts = [f'sentinel://:{redis_password}@{host}:{sentinel_port}/{redis_db}' for host in sentinel_hosts]
         return ';'.join(sentinel_hosts)
 
-    @pytest.fixture
-    def invalid_sentinel_urls(self):
-        return ['http://', 'sentinel://;http:', 'sentinel://;', 'sentine1://']
-
     def test_create_sentinel_backend(
         self, sentinel_url, master_name, sentinel_hosts, sentinel_password, sentinel_port, redis_password, redis_db
     ):
@@ -230,12 +226,12 @@ class TestSentinel:
         assert backend.password == redis_password
         assert backend.db == redis_db
 
-    def test_invalid_url_backend(self, invalid_sentinel_urls, master_name, sentinel_password):
+    @pytest.mark.parametrize('invalid_url', ['http://', 'sentinel://;http:', 'sentinel://;', 'sentine1://'])
+    def test_invalid_url_backend(self, invalid_url, master_name, sentinel_password):
         """测试不合法的 sentinel url 输入"""
         sentinel_kwargs = {'password': sentinel_password}
-        for invalid_url in invalid_sentinel_urls:
-            with pytest.raises(ValueError):
-                SentinelBackend(invalid_url, master_name, sentinel_kwargs)
+        with pytest.raises(ValueError):
+            SentinelBackend(invalid_url, master_name, sentinel_kwargs)
 
     def test_backend_client(self, redis_sentinel_db, rand_key):
         assert redis_sentinel_db.get(rand_key) == b'bar'
