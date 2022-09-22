@@ -9,3 +9,7 @@ build:
 publish: build
 	twine upload dist/* -r pypi
 	twine upload dist/* -r tencent
+
+.PHONY: test
+test:
+	pytest -s .
