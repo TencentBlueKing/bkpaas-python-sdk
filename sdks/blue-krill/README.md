@@ -438,6 +438,21 @@ MyTaskPoller.start(params, MyHandler)
 
 通过执行 `TaskPoller` 类的 `start()` 方法，程序会派生出一个名为 `poll_task.check_status_until_finished` 的 `celery` 异步任务，之后触发 `TaskPoller` 的 `query()` 方法，不断开始轮询。
 
+#### 6.2 blue_krill.aysnc_utils.django_utils
+这个模块提供了 Django + Celery 相关的一些辅助函数。
+
+#### 6.2.1 apply_async_on_commit
+在开启 Django 事务的过程中，可能会立即触发一些 Celery 异步任务，在事务未提交或回滚时，异步任务执行结果是不可预期的。
+这个函数可以封装 Celery 的异步任务调用：
+- 如果不在事务之中，会立刻触发异步任务；
+- 如果处于事务之中，则会在事务提交后触发；
+
+因为执行时机不确定，这个函数会强制忽略异步任务的返回值。
+
+
+#### 6.2.2 delay_on_commit
+函数 `apply_async_on_commit` 的简化版本，相当于 Celery 中 `apply_async` 和 `delay` 的区别。
+
 ### 7. blue_krill.monitoring.probe
 
 `blue_krill.monitoring.probe` 模块提供了常见的健康探针功能。
