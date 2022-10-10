@@ -12,7 +12,7 @@
 import abc
 import logging
 import os
-from typing import Optional
+from typing import Optional, Type
 
 import jwt
 from django.conf import settings
@@ -21,7 +21,7 @@ from django.core.cache.backends.dummy import DummyCache
 from django.http.request import HttpRequest
 from future.utils import raise_from
 
-from apigw_manager.apigw.helper import PublicKeyManager
+from apigw_manager.apigw.helper import BasePublicKeyManager, PublicKeyManager
 
 logger = logging.getLogger(__name__)
 
@@ -69,13 +69,15 @@ class CachePublicKeyProvider(SettingsPublicKeyProvider):
 
     CACHE_MINUTES = 0
     CACHE_NAME = "default"
-    CACHE_VERSION = "0"
+    CACHE_VERSION = 0
+    PUBLIC_KEY_PROVIDER_CLS: Type[BasePublicKeyManager] = PublicKeyManager
 
     def __init__(self, default_api_name: str):
         super().__init__(default_api_name)
 
         self.cache_expires = getattr(settings, "APIGW_JWT_PUBLIC_KEY_CACHE_MINUTES", self.CACHE_MINUTES) * 60
         self.cache_version = getattr(settings, "APIGW_JWT_PUBLIC_KEY_CACHE_VERSION", self.CACHE_VERSION)
+        self.public_key_manager = self.PUBLIC_KEY_PROVIDER_CLS()
 
         cache_name = getattr(settings, "APIGW_JWT_PUBLIC_KEY_CACHE_NAME", self.CACHE_NAME)
 
@@ -92,7 +94,7 @@ class CachePublicKeyProvider(SettingsPublicKeyProvider):
         if cached_value:
             return cached_value
 
-        public_key = PublicKeyManager().get_best_matched(api_name or self.default_api_name, jwt_issuer)
+        public_key = self.public_key_manager.get_best_matched(api_name or self.default_api_name, jwt_issuer)
         if not public_key:
             return super(CachePublicKeyProvider, self).provide(api_name, jwt_issuer)
 

@@ -10,6 +10,7 @@
 """
 import json
 import logging
+from abc import ABC, abstractmethod
 
 from django.db.transaction import atomic
 from django.template import Context, Template
@@ -87,8 +88,22 @@ class ContextManager:
         return created
 
 
-class PublicKeyManager(ContextManager):
-    scope = "public_key"
+class BasePublicKeyManager(ABC):
+    @abstractmethod
+    def _get_key(self, api_name, issuer=None):
+        return ""
+
+    @abstractmethod
+    def get_value(self, key, default=None):
+        return ""
+
+    @abstractmethod
+    def set_value(self, key, value):
+        return False
+
+    @abstractmethod
+    def get_values(self, keys):
+        return {}
 
     def get(self, api_name):
         return self.get_value(api_name)
@@ -114,14 +129,25 @@ class PublicKeyManager(ContextManager):
 
         return public_key
 
+    def current(self):
+        configuration = get_configuration()
+        return self.get(configuration.api_name)
+
+
+class PublicKeyManager(ContextManager, BasePublicKeyManager):
+    scope = "public_key"
+
+    def get(self, api_name):
+        return self.get_value(api_name)
+
+    def set(self, api_name, public_key, issuer=None):
+        key = self._get_key(api_name, issuer)
+        self.set_value(key, public_key)
+
     def _get_key(self, api_name, issuer=None):
         if issuer:
             return "%s:%s" % (issuer, api_name)
         return api_name
-
-    def current(self):
-        configuration = get_configuration()
-        return self.get(configuration.api_name)
 
 
 class ReleaseVersionManager(ContextManager):
