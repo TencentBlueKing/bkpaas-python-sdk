@@ -90,44 +90,25 @@ class ContextManager:
 
 class BasePublicKeyManager(ABC):
     @abstractmethod
-    def _get_key(self, api_name, issuer=None):
+    def get(self, api_name, issuer=None):
         return ""
 
     @abstractmethod
-    def get_value(self, key, default=None):
-        return ""
-
-    @abstractmethod
-    def set_value(self, key, value):
+    def set(self, api_name, public_key, issuer=None):
         return False
 
-    @abstractmethod
-    def get_values(self, keys):
-        return {}
-
-    def get(self, api_name):
-        return self.get_value(api_name)
-
-    def set(self, api_name, public_key, issuer=None):
-        key = self._get_key(api_name, issuer)
-        self.set_value(key, public_key)
-
     def get_best_matched(self, api_name, issuer=None):
-        context_key = self._get_key(api_name, issuer)
-        available_keys = [context_key, api_name] if issuer else [context_key]
+        public_key = self.get(api_name, issuer)
+        if public_key:
+            return public_key
 
-        values = self.get_values(available_keys)
-        public_key = next((values[key] for key in available_keys if key in values), None)
-
-        if public_key and issuer and context_key not in values:
+        if issuer:
             logger.warning(
-                "Get jwt public_key from context key='%s', but should get from key='%s', "
-                "please re-update public_key according to command fetch_apigw_public_key",
+                "please re-update %s public_key according to command fetch_apigw_public_key",
                 api_name,
-                context_key,
             )
 
-        return public_key
+        return self.get(api_name, issuer=None)
 
     def current(self):
         configuration = get_configuration()
@@ -137,8 +118,9 @@ class BasePublicKeyManager(ABC):
 class PublicKeyManager(ContextManager, BasePublicKeyManager):
     scope = "public_key"
 
-    def get(self, api_name):
-        return self.get_value(api_name)
+    def get(self, api_name, issuer=None):
+        key = self._get_key(api_name, issuer)
+        return self.get_value(key, None)
 
     def set(self, api_name, public_key, issuer=None):
         key = self._get_key(api_name, issuer)
