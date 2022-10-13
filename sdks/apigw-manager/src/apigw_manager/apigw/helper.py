@@ -12,8 +12,10 @@ import json
 import logging
 from abc import ABC, abstractmethod
 
+from django.conf import settings
 from django.db.transaction import atomic
 from django.template import Context, Template
+from django.utils.module_loading import import_string
 
 from apigw_manager.apigw.models import Context as ContextModel
 from apigw_manager.apigw.utils import get_configuration, yaml_load
@@ -185,3 +187,14 @@ class ResourceSignatureManager(ContextManager):
         saved = self.get(api_name)
         last_signature = saved.get("signature")
         self.set(api_name, saved.get("is_dirty") or last_signature != signature, signature)
+
+
+def make_default_public_key_manager() -> BasePublicKeyManager:
+    public_key_manager_location = getattr(
+        settings,
+        "APIGW_JWT_PUBLIC_KEY_MANAGER_CLS",
+        "apigw_manager.apigw.helper.PublicKeyManager",
+    )
+
+    public_key_manager_cls = import_string(public_key_manager_location)
+    return public_key_manager_cls()

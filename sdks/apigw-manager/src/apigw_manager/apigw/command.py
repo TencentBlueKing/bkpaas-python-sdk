@@ -23,7 +23,7 @@ from apigw_manager.core.sync import Synchronizer
 
 class ApiCommand(BaseCommand):
 
-    manager_class = None  # type: typing.Optional[typing.Callable]
+    manager_class: typing.Callable
 
     def add_arguments(self, parser):
         parser.add_argument("--api-name", help="api name")

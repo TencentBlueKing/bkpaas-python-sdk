@@ -12,7 +12,7 @@
 import abc
 import logging
 import os
-from typing import Optional, Type
+from typing import Optional
 
 import jwt
 from django.conf import settings
@@ -21,7 +21,7 @@ from django.core.cache.backends.dummy import DummyCache
 from django.http.request import HttpRequest
 from future.utils import raise_from
 
-from apigw_manager.apigw.helper import BasePublicKeyManager, PublicKeyManager
+from apigw_manager.apigw.helper import make_default_public_key_manager
 
 logger = logging.getLogger(__name__)
 
@@ -70,14 +70,14 @@ class CachePublicKeyProvider(SettingsPublicKeyProvider):
     CACHE_MINUTES = 0
     CACHE_NAME = "default"
     CACHE_VERSION = 0
-    PUBLIC_KEY_PROVIDER_CLS: Type[BasePublicKeyManager] = PublicKeyManager
 
     def __init__(self, default_api_name: str):
         super().__init__(default_api_name)
 
         self.cache_expires = getattr(settings, "APIGW_JWT_PUBLIC_KEY_CACHE_MINUTES", self.CACHE_MINUTES) * 60
         self.cache_version = getattr(settings, "APIGW_JWT_PUBLIC_KEY_CACHE_VERSION", self.CACHE_VERSION)
-        self.public_key_manager = self.PUBLIC_KEY_PROVIDER_CLS()
+
+        self.public_key_manager = make_default_public_key_manager()
 
         cache_name = getattr(settings, "APIGW_JWT_PUBLIC_KEY_CACHE_NAME", self.CACHE_NAME)
 
