@@ -65,4 +65,4 @@ class SecretPublicKeyManager(BasePublicKeyManager):
                 raise
 
     def _get_name(self, issuer):
-        return self.secret_mappings[issuer]
+        return self.secret_mappings[issuer or "APIGW"]
