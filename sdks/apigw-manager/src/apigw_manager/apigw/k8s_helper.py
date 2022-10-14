@@ -43,9 +43,6 @@ class SecretPublicKeyManager(BasePublicKeyManager):
             metadata=V1ObjectMeta(
                 name=name,
                 namespace=self.namespace,
-                labels={
-                    "app.kubernetes.io/managed-by": "apigw-manager",
-                },
                 annotations={
                     "bkgateway/issuer": issuer or "",
                     "bkgateway/api_name": api_name,
