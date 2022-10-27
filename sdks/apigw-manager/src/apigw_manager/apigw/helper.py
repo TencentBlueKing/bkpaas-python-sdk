@@ -10,9 +10,12 @@
 """
 import json
 import logging
+from abc import ABC, abstractmethod
 
+from django.conf import settings
 from django.db.transaction import atomic
 from django.template import Context, Template
+from django.utils.module_loading import import_string
 
 from apigw_manager.apigw.models import Context as ContextModel
 from apigw_manager.apigw.utils import get_configuration, yaml_load
@@ -87,41 +90,48 @@ class ContextManager:
         return created
 
 
-class PublicKeyManager(ContextManager):
+class BasePublicKeyManager(ABC):
+    @abstractmethod
+    def get(self, api_name, issuer=None):
+        return ""
+
+    @abstractmethod
+    def set(self, api_name, public_key, issuer=None):
+        return False
+
+    def get_best_matched(self, api_name, issuer=None):
+        public_key = self.get(api_name, issuer)
+        if public_key:
+            return public_key
+
+        if issuer:
+            logger.warning(
+                "please re-update %s public_key according to command fetch_apigw_public_key",
+                api_name,
+            )
+
+        return self.get(api_name, issuer=None)
+
+    def current(self):
+        configuration = get_configuration()
+        return self.get(configuration.api_name)
+
+
+class PublicKeyManager(ContextManager, BasePublicKeyManager):
     scope = "public_key"
 
-    def get(self, api_name):
-        return self.get_value(api_name)
+    def get(self, api_name, issuer=None):
+        key = self._get_key(api_name, issuer)
+        return self.get_value(key, None)
 
     def set(self, api_name, public_key, issuer=None):
         key = self._get_key(api_name, issuer)
         self.set_value(key, public_key)
 
-    def get_best_matched(self, api_name, issuer=None):
-        context_key = self._get_key(api_name, issuer)
-        available_keys = [context_key, api_name] if issuer else [context_key]
-
-        values = self.get_values(available_keys)
-        public_key = next((values[key] for key in available_keys if key in values), None)
-
-        if public_key and issuer and context_key not in values:
-            logger.warning(
-                "Get jwt public_key from context key='%s', but should get from key='%s', "
-                "please re-update public_key according to command fetch_apigw_public_key",
-                api_name,
-                context_key,
-            )
-
-        return public_key
-
     def _get_key(self, api_name, issuer=None):
         if issuer:
             return "%s:%s" % (issuer, api_name)
         return api_name
-
-    def current(self):
-        configuration = get_configuration()
-        return self.get(configuration.api_name)
 
 
 class ReleaseVersionManager(ContextManager):
@@ -177,3 +187,14 @@ class ResourceSignatureManager(ContextManager):
         saved = self.get(api_name)
         last_signature = saved.get("signature")
         self.set(api_name, saved.get("is_dirty") or last_signature != signature, signature)
+
+
+def make_default_public_key_manager() -> BasePublicKeyManager:
+    public_key_manager_location = getattr(
+        settings,
+        "APIGW_JWT_PUBLIC_KEY_MANAGER_CLS",
+        "apigw_manager.apigw.helper.PublicKeyManager",
+    )
+
+    public_key_manager_cls = import_string(public_key_manager_location)
+    return public_key_manager_cls()

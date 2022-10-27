@@ -8,14 +8,12 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+from apigw_manager.apigw import helper
 from apigw_manager.apigw.command import FetchCommand
-from apigw_manager.apigw.helper import PublicKeyManager
 
 
 class Command(FetchCommand):
     """Get the public key of the specified API gateway and store it into the database"""
-
-    PublicKeyManager = PublicKeyManager
 
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
@@ -35,5 +33,8 @@ class Command(FetchCommand):
         if print_:
             print(result["public_key"])
 
-        if not no_save:
-            self.PublicKeyManager().set(configuration.api_name, result["public_key"], result.get("issuer"))
+        if no_save:
+            return
+
+        public_key_manager = helper.make_default_public_key_manager()
+        public_key_manager.set(configuration.api_name, result["public_key"], result.get("issuer"))
