@@ -1,0 +1,31 @@
+fail_fast: true
+repos:
+
+- repo: https://github.com/timothycrosley/isort
+  rev: 4.3.21-2
+  hooks:
+  - id: isort
+    additional_dependencies: ["toml"]
+    exclude: >
+      (?x)^(
+        .*/migrations/.*
+      )$
+
+- repo: https://github.com/psf/black
+  rev: 20.8b1
+  hooks:
+  - id: black
+    args: [--config=./pyproject.toml]
+    exclude: >
+      (?x)^(
+        .*/migrations/.*
+      )$
+
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: 'v0.770'
+  hooks:
+  - id: mypy
+    exclude: >
+      (?x)^(
+        .*/migrations/.*
+      )$
