@@ -136,7 +136,7 @@ class SvcInstanceViewSet(viewsets.ViewSet):
             {
                 "plan_id": "f8ad12f2-4dd5-4871-8e31-9a1f9f3795a2",
                 "params": {
-                    "username": "pig-bucket"
+                    "username": "example-bucket"
                 }
             }
 
@@ -155,7 +155,7 @@ class SvcInstanceViewSet(viewsets.ViewSet):
 
         plan_config = json.loads(plan.config)
         params = request.data.get('params', {})
-        with wrap_provider_action_exc(f'create instance') as ret:
+        with wrap_provider_action_exc('create instance') as ret:
             instance_data = provider_cls(**plan_config).create(params=params)
 
         if ret.has_error:
@@ -273,7 +273,7 @@ class SvcInstanceConfigViewSet(viewsets.ViewSet):
         instance = get_object_or_404(ServiceInstance, pk=instance_id)
         config, _ = ServiceInstanceConfig.objects.get_or_create(instance=instance)
         if not config.was_initialized():
-            return Response(data={'detail': f'config was not initialized yet'}, status=400)
+            return Response(data={'detail': 'config was not initialized yet'}, status=400)
 
         slz = serializers.InstanceConfigSLZ(config)
         return Response(slz.data)
