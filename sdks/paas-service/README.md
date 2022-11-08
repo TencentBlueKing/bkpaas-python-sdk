@@ -30,7 +30,7 @@ BKKRILL_ENCRYPT_SECRET_KEY = base64.b64encode(b'\x01' * 32)
 PAAS_SERVICE_JWT_CLIENTS = [
     {
         "iss": "paas-v3",
-        "key": "67d8e227..........",
+        "key": "123..........",
         "algorithm": "HS256",
     },
 ]

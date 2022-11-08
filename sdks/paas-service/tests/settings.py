@@ -35,7 +35,7 @@ PAAS_SERVICE_PROVIDER_CLS = 'paas_service.base_vendor.DummyProvider'
 PAAS_SERVICE_JWT_CLIENTS = [
     {
         "iss": "paas-v3",
-        "key": "67d8e22749764a339d794aa8b6bb1a94",
+        "key": "123....",
         "algorithm": "HS256",
     },
 ]

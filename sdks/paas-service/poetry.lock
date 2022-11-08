@@ -54,8 +54,8 @@ watchdog = ">=1.0.2,<2.0.0"
 
 [package.source]
 type = "legacy"
-url = "https://mirrors.tencent.com/repository/pypi/tencent_pypi/simple"
-reference = "pypi-tencent-private"
+url = "https://mirrors.tencent.com/pypi/simple"
+reference = "pypi-tencent-mirror"
 
 [[package]]
 name = "certifi"
@@ -653,7 +653,7 @@ reference = "pypi-tencent-mirror"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.6.2,<3.11"
-content-hash = "c4243929841683857201bcad2d80596c60a1a22978f7080d4c24155def1af5a5"
+content-hash = "a3d2cc421250daaf2621516f06036c7c61b73f442cf4cbfb0f9f2fccc24161de"
 
 [metadata.files]
 atomicwrites = [

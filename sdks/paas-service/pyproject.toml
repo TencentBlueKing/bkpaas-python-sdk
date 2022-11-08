@@ -10,14 +10,9 @@ url = "https://mirrors.tencent.com/pypi/simple/"
 name = "pypi-tencent-mirror"
 default = true
 
-[[tool.poetry.source]]
-url = "https://mirrors.tencent.com/repository/pypi/tencent_pypi/simple/"
-name = "pypi-tencent-private"
-secondary = true
-
 [tool.poetry.dependencies]
 python = ">=3.6.2,<3.11"
-blue-krill = {version = ">=1.0.15", source = "pypi-tencent-private"}
+blue-krill = ">=1.0.15"
 jsonfield = "*"
 pyjwt = "^1.6.4"
 django-translated-fields = "*"
