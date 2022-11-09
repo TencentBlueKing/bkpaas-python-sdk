@@ -65,6 +65,6 @@ class TestSpecs(TestCase):
             G(models.SpecDefinition, index=random.randint(0, 100))
 
         last = 0
-        for i in models.SpecDefinition.objects.all():
-            self.assertLessEqual(last, i.index)
-            last = i.index
+        for spec in models.SpecDefinition.objects.all():
+            self.assertLessEqual(last, spec.index)
+            last = spec.index
