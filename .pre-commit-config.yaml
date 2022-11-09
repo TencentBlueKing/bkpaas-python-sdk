@@ -39,3 +39,10 @@ repos:
         pass_filenames: false
         entry: bash -c "cd sdks/blue-krill && poetry run mypy . --config-file=./pyproject.toml"
         files: '^sdks/blue-krill/'
+      - id: mypy-paas-service
+        name: run mypy check for "paas-service'
+        language: system
+        types: [python]
+        pass_filenames: false
+        entry: bash -c "cd sdks/paas-service && poetry run mypy . --config-file=./pyproject.toml"
+        files: '^sdks/paas-service/'
