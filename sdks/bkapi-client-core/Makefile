@@ -69,7 +69,6 @@ build: ALL
 .PHONY: publish
 publish: build
 	poetry publish -r pypi
-	poetry publish -r tencent
 
 .PHONY: tox
 tox:
