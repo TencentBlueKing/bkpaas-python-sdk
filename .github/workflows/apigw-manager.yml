@@ -27,14 +27,16 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Set up Poetry
+        uses: abatilo/actions-poetry@v2.1.0
+        with:
+          poetry-version: 1.1.13
       - name: Install dependencies
         working-directory: sdks/apigw-manager
         run: |
+          poetry export -f requirements.txt --without-hashes -E demo --dev --output requirements.txt
           python -m pip install --upgrade pip
-          pip install poetry==1.3.1
-          poetry config virtualenvs.create false
-          poetry install -E demo --with dev
-          python -m pip install . 'tox==3.23.0' 'tox-gh-actions==2.12.0'
+          python -m pip install . 'tox==3.23.0' 'tox-gh-actions==2.12.0' -r requirements.txt
       - name: Test with tox
         working-directory: sdks/apigw-manager
         run: tox
