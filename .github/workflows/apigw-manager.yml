@@ -34,7 +34,7 @@ jobs:
         run: |
           poetry export -f requirements.txt --without-hashes -E demo --dev --output requirements.txt
           python -m pip install --upgrade pip
-          python -m pip install . 'tox==3.23.0' 'tox-gh-actions==3.0.0' -r requirements.txt
+          python -m pip install . 'tox==3.23.0' 'tox-gh-actions==2.12.0' -r requirements.txt
       - name: Test with tox
         working-directory: sdks/apigw-manager
         run: tox
