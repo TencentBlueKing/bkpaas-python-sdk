@@ -32,9 +32,10 @@ jobs:
       - name: Install dependencies
         working-directory: sdks/apigw-manager
         run: |
-          poetry export -f requirements.txt --without-hashes -E demo --dev --output requirements.txt
           python -m pip install --upgrade pip
-          python -m pip install . 'tox==3.23.0' 'tox-gh-actions==2.12.0' -r requirements.txt
+          poetry config virtualenvs.create false
+          poetry install -E demo --dev
+          python -m pip install 'tox==3.23.0' 'tox-gh-actions==2.12.0'
       - name: Test with tox
         working-directory: sdks/apigw-manager
         run: tox
