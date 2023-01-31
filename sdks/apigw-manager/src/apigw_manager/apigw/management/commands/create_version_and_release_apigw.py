@@ -22,11 +22,6 @@ from apigw_manager.core.release import Releaser
 class Command(DefinitionCommand):
     """API gateway release a version"""
 
-    # 如何判断是否需要创建新版本？
-    # 1.使用配置中的版本号与线上版本进行比较，如果不一致，直接使用配置中的版本号创建新版本
-    # 2.如果配置中的版本号与线上版本一致，为了避免开发者忘记更新版本号的情况，获取同步结果进行判断：
-    #   - 如果有资源变更，使用配置中的版本号（加上当前时间作为元数据）创建新版本
-
     default_namespace = "release"
     Fetcher = Fetcher
     Releaser = Releaser
@@ -41,13 +36,13 @@ class Command(DefinitionCommand):
         parser.add_argument("-s", "--stage", default=[], nargs="+", help="release stages")
         parser.add_argument("--generate-sdks", default=False, action="store_true", help="with sdks generation")
 
-    def get_version_from_definition(self, definition):
+    def _get_version_from_definition(self, definition):
         version = definition.get("version")
         if version:
             return parse_version(version)
         return None
 
-    def get_version_from_resource_version(self, resource_version):
+    def _get_version_from_resource_version(self, resource_version):
         if not resource_version:
             return None
 
@@ -56,81 +51,64 @@ class Command(DefinitionCommand):
             return parse_version(version)
         return None
 
-    def fix_version(self, current_version, latest_version):
-        if isinstance(current_version, LegacyVersion):
-            raise ValueError("current version %s is not a valid version" % current_version)
+    def _fix_defined_version(self, defined_version):
+        if isinstance(defined_version, LegacyVersion):
+            raise ValueError("defined version %s is not a valid sem version" % defined_version)
 
-        # 非语义化版本，直接忽略
-        if isinstance(latest_version, LegacyVersion):
-            latest_version = None
+        if defined_version is None:
+            return parse_version("0.0.1")
 
-        # 没有发布记录且没配置版本
-        if current_version is None and latest_version is None:
-            return parse_version("0.0.1"), parse_version("?")
+        return defined_version
 
-        # 没有发布过
-        if latest_version is None:
-            return current_version, parse_version("?")
-
-        now_str = self.now_func().strftime("%Y%m%d%H%M%S")
-        # 没有配置版本
-        if current_version is None:
-            # 加上当前时间作为元数据，但不改变版本优先级
-            current_version = parse_version("%s+%s" % (latest_version.public, now_str))
-        # 手动升级过线上版本，或者同一版本已发布过，但版本内容发生了变化，需要重新发布
-        elif current_version <= latest_version:
-            current_version = parse_version("%s+%s" % (current_version.public, now_str))
-
-        return current_version, latest_version
-
-    def should_create_resource_version(self, manager, api_name, current_version, latest_version):
+    def _should_create_resource_version(self, manager, api_name, defined_version, latest_version):
         # 版本一致，且没有变更
-        if current_version.public == latest_version.public and not manager.is_dirty(api_name):
+        if latest_version and defined_version.public == latest_version.public and not manager.is_dirty(api_name):
             return False
         return True
 
-    def create_resource_version(
-        self,
-        releaser,
-        current_version,
-        title,
-        comment,
-    ):
+    def _get_version_to_be_created(self, defined_version, resource_version_exists):
+        if resource_version_exists:
+            now_str = self.now_func().strftime("%Y%m%d%H%M%S")
+            return parse_version("%s+%s" % (defined_version.public, now_str))
 
-        version = str(current_version)
-        resource_version = releaser.create_resource_version(
-            version=version,
+        return defined_version
+
+    def _create_resource_version(self, releaser, version, title, comment):
+        return releaser.create_resource_version(
+            version=str(version),
             title=title,
             comment=comment,
         )
 
-        return resource_version
-
-    def generate_sdks(self, releaser, resource_version, *args, **kwargs):
+    def _generate_sdks(self, releaser, version, *args, **kwargs):
         try:
-            releaser.generate_sdks(resource_version=resource_version["version"])
+            releaser.generate_sdks(resource_version=version)
         except Exception as err:
             print("warning!! generate sdks failed: %s" % err)
 
     def handle(self, stage, title, comment, generate_sdks, *args, **kwargs):
         configuration = self.get_configuration(**kwargs)
         definition = self.get_definition(**kwargs)
-        current_version = self.get_version_from_definition(definition)
+        defined_version = self._get_version_from_definition(definition)
+        fixed_defined_version = self._fix_defined_version(defined_version)
 
         fetcher = self.Fetcher(configuration)
         resource_version = fetcher.latest_resource_version()
-        latest_version = self.get_version_from_resource_version(resource_version)
-
-        current_version, latest_version = self.fix_version(current_version, latest_version)
+        latest_version = self._get_version_from_resource_version(resource_version)
 
         releaser = self.Releaser(configuration)
         manager = self.ResourceSignatureManager()
         api_name = configuration.api_name
 
-        if self.should_create_resource_version(manager, api_name, current_version, latest_version):
-            resource_version = self.create_resource_version(
+        # 如何判断是否需要创建新版本？
+        # 1. 使用配置中的版本号与线上最新版本进行比较，如果版本 public 部分不一致，则需要创建新版本
+        # 2. 如果配置中的版本号与线上最新版本 public 部分一致，为了避免开发者忘记更新版本号的情况，获取同步结果进行判断：
+        #    - 如果有资源变更，则需要创建新版本
+        if self._should_create_resource_version(manager, api_name, fixed_defined_version, latest_version):
+            check_data = fetcher.check_resource_version_exists(version=str(fixed_defined_version))
+            resource_version = self._create_resource_version(
                 releaser=releaser,
-                current_version=current_version,
+                version=self._get_version_to_be_created(fixed_defined_version, check_data["exists"]),
                 title=title or definition.get("title", ""),
                 comment=comment or definition.get("comment", ""),
             )
@@ -138,11 +116,10 @@ class Command(DefinitionCommand):
 
         else:
             generate_sdks = False
-            print("resource_version already exists and is the latest, skip creating")
+            print("resource_version %s already exists, skip creating" % latest_version)
 
         result = releaser.release(
-            version=resource_version.get("version", ""),
-            resource_version_name=resource_version["name"],
+            version=resource_version["version"],
             title=title or resource_version.get("title", ""),
             comment=comment or resource_version.get("comment", ""),
             stage_names=stage,
@@ -154,9 +131,9 @@ class Command(DefinitionCommand):
 
         # create a sdk when released a new version
         if generate_sdks:
-            self.generate_sdks(
+            self._generate_sdks(
                 releaser=releaser,
-                resource_version=resource_version,
+                version=resource_version["version"],
                 *args,
                 **kwargs,
             )
