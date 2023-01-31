@@ -295,10 +295,20 @@ class TestHandle:
         fetcher,
         releaser,
         faker,
+        definition_file,
         resource_sync_manager,
         fake_resource_version,
         default_command_flags,
     ):
+        definition_file.write(
+            yaml.dump(
+                {
+                    "title": fake_resource_version["title"],
+                    "comment": fake_resource_version["comment"],
+                }
+            )
+        )
+
         stage = faker.pystr()
         fetcher.latest_resource_version.return_value = fake_resource_version
         fetcher.check_resource_version_exists.return_value = {"exists": True}
@@ -314,17 +324,21 @@ class TestHandle:
 
         releaser.create_resource_version.return_value = {
             "version": str(defined_version),
-            "title": "",
-            "comment": "",
+            "title": fake_resource_version["title"],
+            "comment": fake_resource_version["comment"],
         }
 
         resource_sync_manager.is_dirty.return_value = False
         command.handle(stage=stage, **default_command_flags)
 
-        releaser.create_resource_version.assert_any_call(version=str(defined_version), title="", comment="")
+        releaser.create_resource_version.assert_any_call(
+            version=str(defined_version),
+            title=fake_resource_version["title"],
+            comment=fake_resource_version["comment"],
+        )
         releaser.release.assert_called_once_with(
             version=str(defined_version),
-            title="",
-            comment="",
+            title=fake_resource_version["title"],
+            comment=fake_resource_version["comment"],
             stage_names=stage,
         )
