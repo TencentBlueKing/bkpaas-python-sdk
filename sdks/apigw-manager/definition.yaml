@@ -8,13 +8,18 @@ release:
   comment: ""
 
 apigateway:
-  description: "xxxx"
+  description: "描述"
+  description_en: "英文描述"
   is_public: true
+  # 标记网关为官方网关，网关名需以 `bk-` 开头，可选
+  api_type: 1
   maintainers:
     - "admin"
 
 stage:
   name: "prod"
+  description: "描述"
+  description_en: "英文描述"
   # 环境变量
   vars:
     key: "value"
