@@ -25,6 +25,6 @@ class Fetcher(Handler):
         result = self._call(self.client.api.get_latest_resource_version, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))
 
-    def check_resource_version_exists(self, *args, **kwargs):
-        result = self._call(self.client.api.check_resource_version_exists, *args, **kwargs)
+    def list_resource_versions(self, *args, **kwargs):
+        result = self._call(self.client.api.list_resource_versions, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))

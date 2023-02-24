@@ -10,7 +10,7 @@
 """
 from datetime import datetime
 
-from packaging.version import LegacyVersion
+from packaging.version import InvalidVersion
 
 from apigw_manager.apigw.command import DefinitionCommand
 from apigw_manager.apigw.helper import ResourceSignatureManager
@@ -36,25 +36,24 @@ class Command(DefinitionCommand):
         parser.add_argument("-s", "--stage", default=[], nargs="+", help="release stages")
         parser.add_argument("--generate-sdks", default=False, action="store_true", help="with sdks generation")
 
-    def _get_version_from_definition(self, definition):
+    def _parse_version_from_definition(self, definition):
         version = definition.get("version")
-        if version:
-            return parse_version(version)
-        return None
-
-    def _get_version_from_resource_version(self, resource_version):
-        if not resource_version:
+        if not version:
             return None
 
-        version = resource_version.get("version")
-        if version:
+        return parse_version(version)
+
+    def _parse_version_from_resource_version(self, resource_version):
+        version = resource_version and resource_version.get("version")
+        if not version:
+            return None
+
+        try:
             return parse_version(version)
-        return None
+        except InvalidVersion:
+            return None
 
     def _fix_defined_version(self, defined_version):
-        if isinstance(defined_version, LegacyVersion):
-            raise ValueError("defined version %s is not a valid sem version" % defined_version)
-
         if defined_version is None:
             return parse_version("0.0.1")
 
@@ -80,6 +79,10 @@ class Command(DefinitionCommand):
             comment=comment,
         )
 
+    def _check_resource_version_exists(self, fetcher, version):
+        resource_versions = fetcher.list_resource_versions(version=str(version))
+        return resource_versions["count"] != 0
+
     def _generate_sdks(self, releaser, version, *args, **kwargs):
         try:
             releaser.generate_sdks(resource_version=version)
@@ -89,12 +92,12 @@ class Command(DefinitionCommand):
     def handle(self, stage, title, comment, generate_sdks, *args, **kwargs):
         configuration = self.get_configuration(**kwargs)
         definition = self.get_definition(**kwargs)
-        defined_version = self._get_version_from_definition(definition)
+        defined_version = self._parse_version_from_definition(definition)
         fixed_defined_version = self._fix_defined_version(defined_version)
 
         fetcher = self.Fetcher(configuration)
         resource_version = fetcher.latest_resource_version()
-        latest_version = self._get_version_from_resource_version(resource_version)
+        latest_version = self._parse_version_from_resource_version(resource_version)
 
         releaser = self.Releaser(configuration)
         manager = self.ResourceSignatureManager()
@@ -105,10 +108,10 @@ class Command(DefinitionCommand):
         # 2. 如果配置中的版本号与线上最新版本 public 部分一致，为了避免开发者忘记更新版本号的情况，获取同步结果进行判断：
         #    - 如果有资源变更，则需要创建新版本
         if self._should_create_resource_version(manager, api_name, fixed_defined_version, latest_version):
-            check_data = fetcher.check_resource_version_exists(version=str(fixed_defined_version))
+            exists = self._check_resource_version_exists(fetcher, fixed_defined_version)
             resource_version = self._create_resource_version(
                 releaser=releaser,
-                version=self._get_version_to_be_created(fixed_defined_version, check_data["exists"]),
+                version=self._get_version_to_be_created(fixed_defined_version, exists),
                 title=title or definition.get("title", ""),
                 comment=comment or definition.get("comment", ""),
             )

@@ -86,7 +86,7 @@ testing = ["pytest (>=4.6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)
 
 [[package]]
 name = "bkapi-bk-apigateway"
-version = "1.0.10"
+version = "1.0.11"
 description = "蓝鲸API网关"
 category = "main"
 optional = false
@@ -1256,7 +1256,7 @@ kubernetes = ["kubernetes"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.1"
-content-hash = "0d397db414a4614fe7f583abd2dd5f7aed80047ca8e31df8c3598a33e133f3c2"
+content-hash = "610465f5963e1c1cf117977a26dd1dfa195a4460f4c421efbd3415045eb99085"
 
 [metadata.files]
 appdirs = [
@@ -1285,7 +1285,9 @@ backcall = [
     {file = "backports.entry_points_selectable-1.1.0-py2.py3-none-any.whl", hash = "sha256:a6d9a871cde5e15b4c4a53e3d43ba890cc6861ec1332c9c2428c92f977192acc"},
     {file = "backports.entry_points_selectable-1.1.0.tar.gz", hash = "sha256:988468260ec1c196dab6ae1149260e2f5472c9110334e5d51adcb77867361f6a"},
 ]
-bkapi-bk-apigateway = []
+bkapi-bk-apigateway = [
+    {file = "bkapi-bk-apigateway-1.0.11.tar.gz", hash = "sha256:fcdbc4eca8bfd3310995cec532ae127ee0533ea858c82916d9782e4df3df4c49"},
+]
 bkapi-client-core = []
 black = [
     {file = "black-20.8b1.tar.gz", hash = "sha256:1c02557aa099101b9d21496f8a914e9ed2222ef70336404eeeac8edba836fbea"},

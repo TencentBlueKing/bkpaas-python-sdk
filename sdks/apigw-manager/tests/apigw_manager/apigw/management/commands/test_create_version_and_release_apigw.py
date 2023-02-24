@@ -12,7 +12,7 @@ from datetime import datetime
 
 import pytest
 import yaml
-from packaging.version import parse as parse_version
+from packaging.version import parse as parse_version, InvalidVersion
 
 from apigw_manager.apigw.management.commands.create_version_and_release_apigw import Command
 
@@ -80,10 +80,22 @@ def fake_resource_version():
         ("v1.0.0", "1.0.0"),
     ],
 )
-def test_get_version_from_definition(command, version, expected):
-    result = command._get_version_from_definition({"version": version})
+def test_parse_version_from_definition(command, version, expected):
+    result = command._parse_version_from_definition({"version": version})
 
     assert str(result) == expected
+
+
+@pytest.mark.parametrize(
+    "version",
+    [
+        "dev",
+        "invalid-version",
+    ],
+)
+def test_parse_version_from_definition__error(command, version):
+    with pytest.raises(InvalidVersion):
+        command._parse_version_from_definition({"version": version})
 
 
 @pytest.mark.parametrize(
@@ -93,10 +105,11 @@ def test_get_version_from_definition(command, version, expected):
         ({}, "None"),
         ({"version": "1.0.0"}, "1.0.0"),
         ({"version": "v1.0.0"}, "1.0.0"),
+        ({"version": "dev"}, "None"),
     ],
 )
-def test_get_version_from_resource_version(command, resource_version, expected):
-    result = command._get_version_from_resource_version(resource_version)
+def test_parse_version_from_resource_version(command, resource_version, expected):
+    result = command._parse_version_from_resource_version(resource_version)
 
     assert str(result) == expected
 
@@ -112,11 +125,6 @@ def test_get_version_from_resource_version(command, resource_version, expected):
 def test_fix_defined_version(command, defined_version, expected):
     result = command._fix_defined_version(defined_version and parse_version(defined_version))
     assert str(result) == expected
-
-
-def test_fix_defined_version_error(command):
-    with pytest.raises(ValueError):
-        command._fix_defined_version(parse_version("test"))
 
 
 @pytest.mark.parametrize(
@@ -214,7 +222,7 @@ class TestHandle:
         definition_file.write(yaml.dump(fake_resource_version))
         stage = faker.pystr()
         fetcher.latest_resource_version.return_value = fake_resource_version
-        fetcher.check_resource_version_exists.return_value = {"exists": True}
+        fetcher.list_resource_versions.return_value = {"count": 1}
 
         current_version = command._get_version_to_be_created(parse_version(fake_resource_version["version"]), True)
 
@@ -268,7 +276,7 @@ class TestHandle:
 
         latest_version = "1.0.0-alpha1"
         fetcher.latest_resource_version.return_value = dict(fake_resource_version, version=latest_version)
-        fetcher.check_resource_version_exists.return_value = {"exists": False}
+        fetcher.list_resource_versions.return_value = {"count": 0}
 
         releaser.create_resource_version.return_value = dict(
             fake_resource_version,
@@ -311,7 +319,7 @@ class TestHandle:
 
         stage = faker.pystr()
         fetcher.latest_resource_version.return_value = fake_resource_version
-        fetcher.check_resource_version_exists.return_value = {"exists": True}
+        fetcher.list_resource_versions.return_value = {"count": 1}
 
         defined_version = command._get_version_to_be_created(parse_version("0.0.1"), True)
 
