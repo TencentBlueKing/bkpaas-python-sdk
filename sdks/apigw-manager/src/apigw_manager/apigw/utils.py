@@ -13,7 +13,6 @@ import zipfile
 
 import yaml
 from bkapi_client_core.config import SettingKeys, settings
-from packaging.version import InvalidVersion, LegacyVersion
 from packaging.version import Version as _Version
 
 from apigw_manager.core import configuration
@@ -131,7 +130,4 @@ class SemVersion(_Version):
 
 
 def parse_version(version):
-    try:
-        return SemVersion(version)
-    except InvalidVersion:
-        return LegacyVersion(version)
+    return SemVersion(version)
