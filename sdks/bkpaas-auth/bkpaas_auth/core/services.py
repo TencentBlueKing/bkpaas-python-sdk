@@ -43,7 +43,7 @@ def _get_and_cache_user_info(cache_key, user_params, response_ok_checker):
         raise ServiceError('Unable to get user info')
 
     if not response_ok_checker(result):
-        logger.error(
+        logger.warning(
             f'Get user info fail, url: {conf.TOKEN_USER_INFO_ENDPOINT}, params: {params}, response: {result}',
         )
         return
