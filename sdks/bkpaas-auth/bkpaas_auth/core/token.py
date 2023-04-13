@@ -33,7 +33,7 @@ class TokenRequestBackend(AbstractRequestBackend):
 
         # API 返回格式为：{"result": true, "code": 0, "message": "", "data": {"bk_username": "xxx"}}
         if resp.get('code') != 0:
-            logger.warning(
+            logger.debug(
                 f'Get user fail, url: {bkauth_settings.USER_COOKIE_VERIFY_URL}, '
                 f'params: {credentials}, response: {resp}'
             )
@@ -53,7 +53,7 @@ class RequestBackend(AbstractRequestBackend):
 
         # API 返回格式为：{"msg": "", "data": {"username": "xxx"}, "ret": 0}
         if resp.get('ret') != 0:
-            logger.warning(
+            logger.debug(
                 f'Get user fail, url: {bkauth_settings.USER_COOKIE_VERIFY_URL}, '
                 f'params: {credentials}, response: {resp}'
             )
