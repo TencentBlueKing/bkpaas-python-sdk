@@ -59,10 +59,10 @@ class UniversalAuthBackend:
             token.user_info = UserInfo(username=username)
             logger.debug(f'New login token exchanged by credentials, token={login_token}')
         except InvalidTokenCredentialsError:
-            logger.warning('Invalid credentials given, authenticate error')
+            logger.warning('authenticate error, invalid credentials given')
             return None
         except ServiceError:
-            logger.warning('Error requesting third-party API service, authenticate error')
+            logger.warning('authenticate error, Error requesting third-party API service')
             return None
 
         return self.get_user_by_token(token)
