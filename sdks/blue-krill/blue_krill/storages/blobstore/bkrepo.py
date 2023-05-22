@@ -97,7 +97,7 @@ class BKRepoManager:
         client = self.get_client()
         url = urljoin(self.endpoint_url, '/auth/api/user/create/repo')
         data = {
-            "admin": True,
+            "admin": False,
             "name": username,
             "pwd": password,
             "userId": username,
@@ -112,7 +112,7 @@ class BKRepoManager:
         """更新用户信息"""
         client = self.get_client()
         url = urljoin(self.endpoint_url, f'/auth/api/user/{username}')
-        data = {"admin": True, "name": username, "pwd": password, "asstUsers": association_users}
+        data = {"admin": False, "name": username, "pwd": password, "asstUsers": association_users}
         return _validate_resp(client.put(url, json=data, timeout=TIMEOUT_THRESHOLD))
 
     def delete_user(self, username: str):
@@ -173,7 +173,7 @@ class BKRepoManager:
         client = self.get_client()
         url = urljoin(self.endpoint_url, '/auth/api/user/create/project')
         data = {
-            "admin": True,
+            "admin": False,
             "name": username,
             "pwd": password,
             "userId": username,

@@ -1,5 +1,9 @@
 ## Change logs
 
+### 1.1.7
+
+- 修复 packaging 缺少 LegacyVersion 的问题
+
 ### 1.1.5
 
 - 修复 JWT 解析时算法参数类型问题
