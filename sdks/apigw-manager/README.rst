@@ -86,7 +86,6 @@ definition.yaml 中可以使用 Django 模块语法引用和渲染变量，内�
 
 * ``apigateway``\ ：定义网关基本信息，用于命令 ``sync_apigw_config``\ ；
 * ``stage``\ ：定义环境信息，用于命令 ``sync_apigw_stage``\ ；
-* ``strategies``\ ：定义网关策略，用于命令 ``sync_apigw_strategies``\ ；
 * ``apply_permissions``\ ：申请网关权限，用于命令 ``apply_apigw_permissions``\ ；
 * ``grant_permissions``\ ：应用主动授权，用于命令 ``grant_apigw_permissions``\ ；
 * ``release``\ ：定义发布内容，用于命令 ``create_version_and_release_apigw``\ ；
@@ -105,7 +104,6 @@ definition.yaml 中可以使用 Django 模块语法引用和渲染变量，内�
 
    python manage.py sync_apigw_config -f definition.yaml  # 同步网关基本信息
    python manage.py sync_apigw_stage -f definition.yaml  # 同步网关环境信息
-   python manage.py sync_apigw_strategies -f definition.yaml  # 同步网关策略
    python manage.py apply_apigw_permissions -f definition.yaml  # 申请网关权限，如无可跳过
    python manage.py grant_apigw_permissions -f definition.yaml  # 为应用主动授权，如无可跳过
    python manage.py sync_apigw_resources -f resources.yaml  # 同步网关资源
