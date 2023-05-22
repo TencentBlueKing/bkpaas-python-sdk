@@ -30,7 +30,6 @@ feature_test:
 	python manage.py fetch_apigw_public_key -p --host "${mock_server}"
 	python manage.py sync_apigw_config --host "${mock_server}" -f "${definition}"
 	python manage.py sync_apigw_stage --host "${mock_server}" -f "${definition}"
-	python manage.py sync_apigw_strategies --host "${mock_server}" -f "${definition}"
 	python manage.py sync_apigw_resources --host "${mock_server}" -f "${definition}"
 	python manage.py apply_apigw_permissions --host "${mock_server}" -f "${definition}"
 	python manage.py grant_apigw_permissions --host "${mock_server}" -f "${definition}"

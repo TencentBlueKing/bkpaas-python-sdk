@@ -1,5 +1,9 @@
 ## Change logs
 
+### 1.2.0
+- 优化资源版本是否存在的校验
+- 删除指令 sync_apigw_strategies，不再支持同步访问策略
+
 ### 1.1.7
 
 - 修复 packaging 缺少 LegacyVersion 的问题

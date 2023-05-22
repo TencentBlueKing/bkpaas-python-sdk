@@ -57,15 +57,6 @@ resources:
   swagger: "2.0"
   paths: []
 
-strategies:
-  - type: "rate_limit"
-    comment: "rate_limit"
-    config:
-      rates: {}
-  - type: "error_status_code_200"
-    comment: "error_status_code_200"
-    config: {}
-
 # 资源文档
 # 资源文档的目录格式样例如下，en 为英文文档，zh 为中文文档，创建归档文件可使用指令 `tar czvf xxx.tgz en zh`：
 # ./

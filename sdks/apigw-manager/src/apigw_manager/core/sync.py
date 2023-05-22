@@ -25,10 +25,6 @@ class Synchronizer(Handler):
         result = self._call(self.client.api.sync_stage, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))
 
-    def sync_access_strategies(self, *args, **kwargs):
-        result = self._call(self.client.api.sync_access_strategy, *args, **kwargs)
-        return self._parse_result(result, itemgetter("data"))
-
     def sync_resources_config(self, content, *args, **kwargs):
         kwargs["content"] = yaml.dump(dict(content))
 
