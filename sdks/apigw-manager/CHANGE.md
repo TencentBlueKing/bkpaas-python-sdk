@@ -1,5 +1,8 @@
 ## Change logs
 
+### 1.2.1
+- 恢复指令 sync_apigw_strategies，但其中仅打印告警日志
+
 ### 1.2.0
 - 优化资源版本是否存在的校验
 - 删除指令 sync_apigw_strategies，不再支持同步访问策略
