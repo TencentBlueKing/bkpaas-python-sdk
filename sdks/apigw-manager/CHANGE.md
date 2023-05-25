@@ -1,6 +1,6 @@
 ## Change logs
 
-### 1.2.1
+### 2.0.0
 - 恢复指令 sync_apigw_strategies，但其中仅打印告警日志
 
 ### 1.2.0
