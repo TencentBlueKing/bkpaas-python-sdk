@@ -16,7 +16,7 @@ setup(
     description='',
     long_description=readme,
     name='bkapi-component-open',
-    version='1.1.0',
+    version='2.0.0',
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*',
     author='blueking',
     license='Apach License 2.0',

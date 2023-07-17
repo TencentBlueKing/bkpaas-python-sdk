@@ -1,5 +1,16 @@
 ## Change logs
 
+### 2.0.0
+- 恢复指令 sync_apigw_strategies，但其中仅打印告警日志
+
+### 1.2.0
+- 优化资源版本是否存在的校验
+- 删除指令 sync_apigw_strategies，不再支持同步访问策略
+
+### 1.1.7
+
+- 修复 packaging 缺少 LegacyVersion 的问题
+
 ### 1.1.5
 
 - 修复 JWT 解析时算法参数类型问题

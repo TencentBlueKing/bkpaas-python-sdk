@@ -58,7 +58,11 @@ class UniversalAuthBackend:
             )
             token.user_info = UserInfo(username=username)
             logger.debug(f'New login token exchanged by credentials, token={login_token}')
-        except (ServiceError, InvalidTokenCredentialsError):
+        except InvalidTokenCredentialsError:
+            logger.warning('authenticate error, invalid credentials given')
+            return None
+        except ServiceError:
+            logger.warning('authenticate error, Error requesting third-party API service')
             return None
 
         return self.get_user_by_token(token)
@@ -169,7 +173,7 @@ class DjangoAuthUserCompatibleBackend(UniversalAuthBackend):
             db_user.is_staff = True
             db_user.is_superuser = True
 
-        db_user.email = bk_user.email
+        db_user.email = bk_user.email or ""
         db_user.save(update_fields=["is_active", "is_staff", "is_superuser", "email"])
         return db_user
 

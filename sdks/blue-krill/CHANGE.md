@@ -1,5 +1,13 @@
 ## Change logs
 
+### 1.2.4
+
+- Fix: 限制 bkrepo 创建项目管理员的权限
+
+### 1.2.3
+
+- Feature: `blue_krill.aysnc_utils.django_utils` provides some helper functions related to Django + Celery.
+
 ### 1.2.2
 
 - Feature: `blue_krill.redis_tools.sentinel.SentinelBackend` to support redis sentinel client

@@ -25,9 +25,11 @@ def public_key_manager(mocker):
 
 @pytest.fixture()
 def command(mocker, manager, public_key_manager):
+    mock_fun = mocker.patch("apigw_manager.apigw.helper.make_default_public_key_manager")
+    mock_fun.return_value = public_key_manager
+
     command = Command()
     command.manager_class = mocker.MagicMock(return_value=manager)
-    command.PublicKeyManager = mocker.MagicMock(return_value=public_key_manager)
 
     return command
 

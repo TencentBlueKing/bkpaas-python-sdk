@@ -14,7 +14,7 @@ from django.core.cache import caches
 from django.core.cache.backends.dummy import DummyCache
 
 from apigw_manager.apigw import authentication, providers
-from apigw_manager.apigw.providers import DefaultJWTProvider, SettingsPublicKeyProvider, CachePublicKeyProvider
+from apigw_manager.apigw.providers import CachePublicKeyProvider, DefaultJWTProvider, SettingsPublicKeyProvider
 
 
 @pytest.fixture()
@@ -152,7 +152,7 @@ class TestApiGatewayJWTGenericMiddleware:
         assert isinstance(middleware.provider, DefaultJWTProvider)
         assert isinstance(middleware.provider.public_key_provider, CachePublicKeyProvider)
         assert middleware.provider.public_key_provider.cache_expires == 0
-        assert middleware.provider.public_key_provider.cache_version == "0"
+        assert middleware.provider.public_key_provider.cache_version == 0
         assert isinstance(middleware.provider.public_key_provider.cache, DummyCache)
 
 

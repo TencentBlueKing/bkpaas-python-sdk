@@ -8,7 +8,11 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+import logging
+
 from apigw_manager.apigw.command import SyncCommand
+
+logger = logging.getLogger(__name__)
 
 
 class Command(SyncCommand):
@@ -26,21 +30,7 @@ class Command(SyncCommand):
         )
 
     def do(self, manager, definition, scope_type, *args, **kwargs):
-        if not definition:
-            print("no strategy definition found, skip")
-            return
-
-        for strategy in definition:
-            strategy.setdefault("scopes", [])
-            strategy[strategy["type"]] = strategy.pop("config")
-            strategy.setdefault(
-                "name",
-                "%s_%s"
-                % (
-                    strategy["type"],
-                    strategy.setdefault("scope_type", scope_type),
-                ),
-            )
-
-            result = manager.sync_access_strategies(**strategy)
-            print("API gateway strategy synchronization completed, id %s, name %s" % (result["id"], result["name"]))
+        logger.warning(
+            "sync_apigw_strategies is deprecated starting with version 2.0.0, "
+            "it will be removed in version 3.0.0, and now it does nothing."
+        )

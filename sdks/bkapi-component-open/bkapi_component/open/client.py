@@ -30,12 +30,28 @@ class CcGroup(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/cc/add_host_lock/",
     )
 
+    # 添加主机到业务空闲机
+    add_host_to_business_idle = bind_property(
+        Operation,
+        name="add_host_to_business_idle",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/add_host_to_business_idle/",
+    )
+
     # 新增主机到资源池
     add_host_to_resource = bind_property(
         Operation,
         name="add_host_to_resource",
         method="POST",
         path="/api/c/compapi{bk_api_ver}/cc/add_host_to_resource/",
+    )
+
+    # 添加主机到资源池
+    add_host_to_resource_pool = bind_property(
+        Operation,
+        name="add_host_to_resource_pool",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/add_host_to_resource_pool/",
     )
 
     # 新建模型实例之间的关联关系
@@ -54,12 +70,44 @@ class CcGroup(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/cc/add_label_for_service_instance/",
     )
 
+    # 批量创建通用模型实例
+    batch_create_inst = bind_property(
+        Operation,
+        name="batch_create_inst",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/batch_create_inst/",
+    )
+
+    # 批量创建模型实例关联关系
+    batch_create_instance_association = bind_property(
+        Operation,
+        name="batch_create_instance_association",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/batch_create_instance_association/",
+    )
+
     # 批量创建进程模板
     batch_create_proc_template = bind_property(
         Operation,
         name="batch_create_proc_template",
         method="POST",
         path="/api/c/compapi{bk_api_ver}/cc/batch_create_proc_template/",
+    )
+
+    # 批量创建项目
+    batch_create_project = bind_property(
+        Operation,
+        name="batch_create_project",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/batch_create_project/",
+    )
+
+    # 批量删除业务集
+    batch_delete_business_set = bind_property(
+        Operation,
+        name="batch_delete_business_set",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/batch_delete_business_set/",
     )
 
     # 批量删除实例
@@ -70,12 +118,28 @@ class CcGroup(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/cc/batch_delete_inst/",
     )
 
+    # 批量删除项目
+    batch_delete_project = bind_property(
+        Operation,
+        name="batch_delete_project",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/batch_delete_project/",
+    )
+
     # 批量删除集群
     batch_delete_set = bind_property(
         Operation,
         name="batch_delete_set",
         method="POST",
         path="/api/c/compapi{bk_api_ver}/cc/batch_delete_set/",
+    )
+
+    # 批量更新业务集信息
+    batch_update_business_set = bind_property(
+        Operation,
+        name="batch_update_business_set",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/batch_update_business_set/",
     )
 
     # 批量更新主机属性
@@ -92,6 +156,22 @@ class CcGroup(OperationGroup):
         name="batch_update_inst",
         method="POST",
         path="/api/c/compapi{bk_api_ver}/cc/batch_update_inst/",
+    )
+
+    # 批量更新项目
+    batch_update_project = bind_property(
+        Operation,
+        name="batch_update_project",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/batch_update_project/",
+    )
+
+    # 将agent绑定到主机上
+    bind_host_agent = bind_property(
+        Operation,
+        name="bind_host_agent",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/bind_host_agent/",
     )
 
     # 绑定角色权限
@@ -142,6 +222,14 @@ class CcGroup(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/cc/create_business/",
     )
 
+    # 创建业务集
+    create_business_set = bind_property(
+        Operation,
+        name="create_business_set",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/create_business_set/",
+    )
+
     # 添加模型分类
     create_classification = bind_property(
         Operation,
@@ -150,7 +238,7 @@ class CcGroup(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/cc/create_classification/",
     )
 
-    # 创建云区域
+    # 创建管控区域
     create_cloud_area = bind_property(
         Operation,
         name="create_cloud_area",
@@ -270,7 +358,7 @@ class CcGroup(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/cc/delete_classification/",
     )
 
-    # 删除云区域
+    # 删除管控区域
     delete_cloud_area = bind_property(
         Operation,
         name="delete_cloud_area",
@@ -486,6 +574,14 @@ class CcGroup(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/cc/find_instance_association/",
     )
 
+    # 查询模型实例的关联关系及可选返回原模型或目标模型的实例详情
+    find_instassociation_with_inst = bind_property(
+        Operation,
+        name="find_instassociation_with_inst",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/find_instassociation_with_inst/",
+    )
+
     # 批量查询某业务的模块详情
     find_module_batch = bind_property(
         Operation,
@@ -578,7 +674,7 @@ class CcGroup(OperationGroup):
     get_mainline_object_topo = bind_property(
         Operation,
         name="get_mainline_object_topo",
-        method="GET",
+        method="POST",
         path="/api/c/compapi{bk_api_ver}/cc/get_mainline_object_topo/",
     )
 
@@ -614,6 +710,38 @@ class CcGroup(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/cc/list_biz_hosts_topo/",
     )
 
+    # 查询业务集中的业务列表
+    list_business_in_business_set = bind_property(
+        Operation,
+        name="list_business_in_business_set",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/list_business_in_business_set/",
+    )
+
+    # 查询业务集
+    list_business_set = bind_property(
+        Operation,
+        name="list_business_set",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/list_business_set/",
+    )
+
+    # 查询业务集拓扑
+    list_business_set_topo = bind_property(
+        Operation,
+        name="list_business_set_topo",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/list_business_set_topo/",
+    )
+
+    # 查询主机及其对应topo
+    list_host_total_mainline_topo = bind_property(
+        Operation,
+        name="list_host_total_mainline_topo",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/list_host_total_mainline_topo/",
+    )
+
     # 没有业务ID的主机查询
     list_hosts_without_biz = bind_property(
         Operation,
@@ -644,6 +772,14 @@ class CcGroup(OperationGroup):
         name="list_process_instance",
         method="POST",
         path="/api/c/compapi{bk_api_ver}/cc/list_process_instance/",
+    )
+
+    # 查询项目
+    list_project = bind_property(
+        Operation,
+        name="list_project",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/list_project/",
     )
 
     # 查询资源池中的主机
@@ -758,7 +894,7 @@ class CcGroup(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/cc/search_classifications/",
     )
 
-    # 查询云区域
+    # 查询管控区域
     search_cloud_area = bind_property(
         Operation,
         name="search_cloud_area",
@@ -894,6 +1030,14 @@ class CcGroup(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/cc/sync_set_template_to_set/",
     )
 
+    # 跨业务转移主机
+    transfer_host_across_biz = bind_property(
+        Operation,
+        name="transfer_host_across_biz",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/transfer_host_across_biz/",
+    )
+
     # 业务内主机转移模块
     transfer_host_module = bind_property(
         Operation,
@@ -950,6 +1094,14 @@ class CcGroup(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/cc/transfer_sethost_to_idle_module/",
     )
 
+    # 将agent和主机解绑
+    unbind_host_agent = bind_property(
+        Operation,
+        name="unbind_host_agent",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/unbind_host_agent/",
+    )
+
     # 更新业务自定义模型属性
     update_biz_custom_field = bind_property(
         Operation,
@@ -982,7 +1134,7 @@ class CcGroup(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/cc/update_classification/",
     )
 
-    # 更新云区域
+    # 更新管控区域
     update_cloud_area = bind_property(
         Operation,
         name="update_cloud_area",
@@ -1014,7 +1166,7 @@ class CcGroup(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/cc/update_host/",
     )
 
-    # 更新主机的云区域字段
+    # 更新主机的管控区域字段
     update_host_cloud_area_field = bind_property(
         Operation,
         name="update_host_cloud_area_field",
@@ -1188,6 +1340,22 @@ class ItsmGroup(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/itsm/callback_failed_ticket/",
     )
 
+    # 评论单据
+    comment_ticket = bind_property(
+        Operation,
+        name="comment_ticket",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/itsm/comment_ticket/",
+    )
+
+    # 创建服务目录
+    create_service_catalog = bind_property(
+        Operation,
+        name="create_service_catalog",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/itsm/create_service_catalog/",
+    )
+
     # 创建单据
     create_ticket = bind_property(
         Operation,
@@ -1260,6 +1428,22 @@ class ItsmGroup(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/itsm/get_tickets/",
     )
 
+    # 单据详情查询
+    get_workflow_detail = bind_property(
+        Operation,
+        name="get_workflow_detail",
+        method="GET",
+        path="/api/c/compapi{bk_api_ver}/itsm/get_workflow_detail/",
+    )
+
+    # 导入服务
+    import_service = bind_property(
+        Operation,
+        name="import_service",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/itsm/import_service/",
+    )
+
     # 处理单据节点
     operate_node = bind_property(
         Operation,
@@ -1292,8 +1476,24 @@ class ItsmGroup(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/itsm/token/verify/",
     )
 
+    # 更新服务
+    update_service = bind_property(
+        Operation,
+        name="update_service",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/itsm/update_service/",
+    )
+
 
 class Jobv3Group(OperationGroup):
+    # 根据ip列表批量查询作业执行日志
+    batch_get_job_instance_ip_log = bind_property(
+        Operation,
+        name="batch_get_job_instance_ip_log",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/batch_get_job_instance_ip_log/",
+    )
+
     # 执行作业执行方案
     execute_job_plan = bind_property(
         Operation,
@@ -1496,60 +1696,20 @@ class MonitorV3Group(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/monitor_v3/add_shield/",
     )
 
-    # 批量重试采集配置的失败实例
-    batch_retry_config = bind_property(
+    # 快速创建APM应用
+    apm_create_application = bind_property(
         Operation,
-        name="batch_retry_config",
+        name="apm_create_application",
         method="POST",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/batch_retry_config/",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/apm/create_application/",
     )
 
-    # 重试失败的节点步骤
-    batch_retry_instance_step = bind_property(
+    # 删除处理套餐
+    delete_action_config = bind_property(
         Operation,
-        name="batch_retry_instance_step",
+        name="delete_action_config",
         method="POST",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/batch_retry_instance_step/",
-    )
-
-    # 获取采集配置主机的运行状态
-    collect_running_status = bind_property(
-        Operation,
-        name="collect_running_status",
-        method="GET",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/collect_running_status/",
-    )
-
-    # 创建自定义事件
-    create_custom_event_group = bind_property(
-        Operation,
-        name="create_custom_event_group",
-        method="POST",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/create_custom_event_group/",
-    )
-
-    # 创建自定义指标
-    create_custom_time_series = bind_property(
-        Operation,
-        name="create_custom_time_series",
-        method="POST",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/create_custom_time_series/",
-    )
-
-    # 自定义指标列表
-    custom_time_series = bind_property(
-        Operation,
-        name="custom_time_series",
-        method="GET",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/custom_time_series/",
-    )
-
-    # 自定义指标详情
-    custom_time_series_detail = bind_property(
-        Operation,
-        name="custom_time_series_detail",
-        method="GET",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/custom_time_series_detail/",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/delete_action_config/",
     )
 
     # 删除告警策略
@@ -1560,28 +1720,20 @@ class MonitorV3Group(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/monitor_v3/delete_alarm_strategy/",
     )
 
-    # 删除采集配置
-    delete_collect_config = bind_property(
+    # 删除告警策略
+    delete_alarm_strategy_v2 = bind_property(
         Operation,
-        name="delete_collect_config",
+        name="delete_alarm_strategy_v2",
         method="POST",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/delete_collect_config/",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/delete_alarm_strategy_v2/",
     )
 
-    # 删除自定义事件
-    delete_custom_event_group = bind_property(
+    # 删除告警策略
+    delete_alarm_strategy_v3 = bind_property(
         Operation,
-        name="delete_custom_event_group",
+        name="delete_alarm_strategy_v3",
         method="POST",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/delete_custom_event_group/",
-    )
-
-    # 删除自定义指标
-    delete_custom_time_series = bind_property(
-        Operation,
-        name="delete_custom_time_series",
-        method="POST",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/delete_custom_time_series/",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/delete_alarm_strategy_v3/",
     )
 
     # 删除通知组
@@ -1600,6 +1752,14 @@ class MonitorV3Group(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/monitor_v3/disable_shield/",
     )
 
+    # 编辑处理套餐
+    edit_action_config = bind_property(
+        Operation,
+        name="edit_action_config",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/edit_action_config/",
+    )
+
     # 编辑告警屏蔽
     edit_shield = bind_property(
         Operation,
@@ -1616,44 +1776,12 @@ class MonitorV3Group(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/monitor_v3/export_uptime_check_task/",
     )
 
-    # 采集配置列表
-    get_collect_config_list = bind_property(
+    # 获取单个处理套餐
+    get_action_config = bind_property(
         Operation,
-        name="get_collect_config_list",
+        name="get_action_config",
         method="GET",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/get_collect_config_list/",
-    )
-
-    # 获取采集下发详细日志
-    get_collect_log_detail = bind_property(
-        Operation,
-        name="get_collect_log_detail",
-        method="GET",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/get_collect_log_detail/",
-    )
-
-    # 查询采集配置节点状态
-    get_collect_status = bind_property(
-        Operation,
-        name="get_collect_status",
-        method="GET",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/get_collect_status/",
-    )
-
-    # 获取自定义事件详情
-    get_custom_event_group = bind_property(
-        Operation,
-        name="get_custom_event_group",
-        method="GET",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/get_custom_event_group/",
-    )
-
-    # 获取监控链路时序数据
-    get_es_data = bind_property(
-        Operation,
-        name="get_es_data",
-        method="POST",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/get_es_data/",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/get_action_config/",
     )
 
     # 查询事件流转记录
@@ -1678,22 +1806,6 @@ class MonitorV3Group(OperationGroup):
         name="get_ts_data",
         method="POST",
         path="/api/c/compapi{bk_api_ver}/monitor_v3/get_ts_data/",
-    )
-
-    # 拨测节点列表
-    get_uptime_check_node_list = bind_property(
-        Operation,
-        name="get_uptime_check_node_list",
-        method="GET",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/get_uptime_check_node_list/",
-    )
-
-    # 拨测任务列表
-    get_uptime_check_task_list = bind_property(
-        Operation,
-        name="get_uptime_check_task_list",
-        method="GET",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/get_uptime_check_task_list/",
     )
 
     # 导入拨测节点配置
@@ -1744,6 +1856,14 @@ class MonitorV3Group(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/monitor_v3/metadata_create_event_group/",
     )
 
+    # 创建日志分组
+    metadata_create_log_group = bind_property(
+        Operation,
+        name="metadata_create_log_group",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/metadata_create_log_group/",
+    )
+
     # 创建监控结果表
     metadata_create_result_table = bind_property(
         Operation,
@@ -1776,20 +1896,20 @@ class MonitorV3Group(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/monitor_v3/metadata_delete_event_group/",
     )
 
+    # 删除日志分组
+    metadata_delete_log_group = bind_property(
+        Operation,
+        name="metadata_delete_log_group",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/metadata_delete_log_group/",
+    )
+
     # 删除自定义时序分组
     metadata_delete_time_series_group = bind_property(
         Operation,
         name="metadata_delete_time_series_group",
         method="POST",
         path="/api/c/compapi{bk_api_ver}/monitor_v3/metadata_delete_time_series_group/",
-    )
-
-    # 查询指定存储集群信息
-    metadata_get_cluster_info = bind_property(
-        Operation,
-        name="metadata_get_cluster_info",
-        method="GET",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/metadata_get_cluster_info/",
     )
 
     # 获取监控数据源具体信息
@@ -1806,6 +1926,14 @@ class MonitorV3Group(OperationGroup):
         name="metadata_get_event_group",
         method="GET",
         path="/api/c/compapi{bk_api_ver}/monitor_v3/metadata_get_event_group/",
+    )
+
+    # 查询日志分组具体内容
+    metadata_get_log_group = bind_property(
+        Operation,
+        name="metadata_get_log_group",
+        method="GET",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/metadata_get_log_group/",
     )
 
     # 获取监控结果表具体信息
@@ -1830,14 +1958,6 @@ class MonitorV3Group(OperationGroup):
         name="metadata_get_time_series_group",
         method="GET",
         path="/api/c/compapi{bk_api_ver}/monitor_v3/metadata_get_time_series_group/",
-    )
-
-    # 获取自定义时序结果表的metrics信息
-    metadata_get_time_series_metrics = bind_property(
-        Operation,
-        name="metadata_get_time_series_metrics",
-        method="GET",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/metadata_get_time_series_metrics/",
     )
 
     # 查询当前已有的标签信息
@@ -1888,6 +2008,14 @@ class MonitorV3Group(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/monitor_v3/metadata_modify_event_group/",
     )
 
+    # 修改日志分组
+    metadata_modify_log_group = bind_property(
+        Operation,
+        name="metadata_modify_log_group",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/metadata_modify_log_group/",
+    )
+
     # 修改监控结果表
     metadata_modify_result_table = bind_property(
         Operation,
@@ -1904,12 +2032,20 @@ class MonitorV3Group(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/monitor_v3/metadata_modify_time_series_group/",
     )
 
-    # 创建事件分组
+    # 查询事件分组
     metadata_query_event_group = bind_property(
         Operation,
         name="metadata_query_event_group",
         method="GET",
         path="/api/c/compapi{bk_api_ver}/monitor_v3/metadata_query_event_group/",
+    )
+
+    # 查询日志分组
+    metadata_query_log_group = bind_property(
+        Operation,
+        name="metadata_query_log_group",
+        method="GET",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/metadata_query_log_group/",
     )
 
     # 获取自定义时序分组具体内容
@@ -1936,60 +2072,20 @@ class MonitorV3Group(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/monitor_v3/metadata_upgrade_result_table/",
     )
 
-    # 修改自定义事件
-    modify_custom_event_group = bind_property(
+    # 修改数据源与结果表的关系
+    modify_datasource_result_table = bind_property(
         Operation,
-        name="modify_custom_event_group",
+        name="modify_datasource_result_table",
         method="POST",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/modify_custom_event_group/",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/metadata_modify_datasource_result_table/",
     )
 
-    # 修改自定义指标
-    modify_custom_time_series = bind_property(
+    # 保存处理套餐
+    save_action_config = bind_property(
         Operation,
-        name="modify_custom_time_series",
+        name="save_action_config",
         method="POST",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/modify_custom_time_series/",
-    )
-
-    # 获取自定义上报的proxy主机信息
-    proxy_host_info = bind_property(
-        Operation,
-        name="proxy_host_info",
-        method="GET",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/proxy_host_info/",
-    )
-
-    # 查询采集配置
-    query_collect_config = bind_property(
-        Operation,
-        name="query_collect_config",
-        method="POST",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/query_collect_config/",
-    )
-
-    # 获取业务下自定义事件列表
-    query_custom_event_group = bind_property(
-        Operation,
-        name="query_custom_event_group",
-        method="GET",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/query_custom_event_group/",
-    )
-
-    # 重试部分实例或主机
-    retry_target_nodes = bind_property(
-        Operation,
-        name="retry_target_nodes",
-        method="POST",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/retry_target_nodes/",
-    )
-
-    # 采集配置回滚
-    rollback_deployment_config = bind_property(
-        Operation,
-        name="rollback_deployment_config",
-        method="POST",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/rollback_deployment_config/",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/save_action_config/",
     )
 
     # 保存告警策略
@@ -2000,12 +2096,20 @@ class MonitorV3Group(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/monitor_v3/save_alarm_strategy/",
     )
 
-    # 创建/保存采集配置
-    save_collect_config = bind_property(
+    # 保存告警策略
+    save_alarm_strategy_v2 = bind_property(
         Operation,
-        name="save_collect_config",
+        name="save_alarm_strategy_v2",
         method="POST",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/save_collect_config/",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/save_alarm_strategy_v2/",
+    )
+
+    # 保存告警策略
+    save_alarm_strategy_v3 = bind_property(
+        Operation,
+        name="save_alarm_strategy_v3",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/save_alarm_strategy_v3/",
     )
 
     # 保存通知组
@@ -2016,12 +2120,60 @@ class MonitorV3Group(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/monitor_v3/save_notice_group/",
     )
 
+    # 查询处理记录
+    search_action = bind_property(
+        Operation,
+        name="search_action",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/search_action/",
+    )
+
+    # 批量获取处理套餐
+    search_action_config = bind_property(
+        Operation,
+        name="search_action_config",
+        method="GET",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/search_action_config/",
+    )
+
     # 查询告警策略
     search_alarm_strategy = bind_property(
         Operation,
         name="search_alarm_strategy",
         method="POST",
         path="/api/c/compapi{bk_api_ver}/monitor_v3/search_alarm_strategy/",
+    )
+
+    # 查询告警策略
+    search_alarm_strategy_v2 = bind_property(
+        Operation,
+        name="search_alarm_strategy_v2",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/search_alarm_strategy_v2/",
+    )
+
+    # 查询告警策略
+    search_alarm_strategy_v3 = bind_property(
+        Operation,
+        name="search_alarm_strategy_v3",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/search_alarm_strategy_v3/",
+    )
+
+    # 查询全业务告警策略
+    search_alarm_strategy_without_biz = bind_property(
+        Operation,
+        name="search_alarm_strategy_without_biz",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/search_alarm_strategy_without_biz/",
+    )
+
+    # 查询告警记录
+    search_alert = bind_property(
+        Operation,
+        name="search_alert",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/search_alert/",
     )
 
     # 查询事件
@@ -2048,36 +2200,28 @@ class MonitorV3Group(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/monitor_v3/switch_alarm_strategy/",
     )
 
-    # 启停采集配置
-    toggle_collect_config_status = bind_property(
+    # 视图数据查询
+    time_series_unify_query = bind_property(
         Operation,
-        name="toggle_collect_config_status",
+        name="time_series_unify_query",
         method="POST",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/toggle_collect_config_status/",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/time_series_unify_query/",
     )
 
-    # 采集配置插件升级
-    upgrade_collect_plugin = bind_property(
+    # 批量更新策略局部配置
+    update_partial_strategy_v2 = bind_property(
         Operation,
-        name="upgrade_collect_plugin",
+        name="update_partial_strategy_v2",
         method="POST",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/upgrade_collect_plugin/",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/update_partial_strategy_v2/",
     )
 
-    # 校验自定义事件名称是否合法
-    validate_custom_event_group_name = bind_property(
+    # 批量更新策略局部配置
+    update_partial_strategy_v3 = bind_property(
         Operation,
-        name="validate_custom_event_group_name",
-        method="GET",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/validate_custom_event_group_name/",
-    )
-
-    # 校验自定义指标名称是否合法
-    validate_custom_ts_group_name = bind_property(
-        Operation,
-        name="validate_custom_ts_group_name",
-        method="GET",
-        path="/api/c/compapi{bk_api_ver}/monitor_v3/validate_custom_ts_group_name/",
+        name="update_partial_strategy_v3",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/update_partial_strategy_v3/",
     )
 
 
@@ -2088,6 +2232,14 @@ class SopsGroup(OperationGroup):
         name="claim_functionalization_task",
         method="POST",
         path="/api/c/compapi{bk_api_ver}/sops/claim_functionalization_task/",
+    )
+
+    # 创建并开始执行任务
+    create_and_start_task = bind_property(
+        Operation,
+        name="create_and_start_task",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/sops/create_and_start_task/",
     )
 
     # 通过流程模板新建周期任务
@@ -2130,6 +2282,14 @@ class SopsGroup(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/sops/get_common_template_list/",
     )
 
+    # 获取职能化任务列表
+    get_functionalization_task_list = bind_property(
+        Operation,
+        name="get_functionalization_task_list",
+        method="GET",
+        path="/api/c/compapi{bk_api_ver}/sops/get_functionalization_task_list/",
+    )
+
     # 查询业务下的某个周期任务详情
     get_periodic_task_info = bind_property(
         Operation,
@@ -2144,6 +2304,14 @@ class SopsGroup(OperationGroup):
         name="get_periodic_task_list",
         method="GET",
         path="/api/c/compapi{bk_api_ver}/sops/get_periodic_task_list/",
+    )
+
+    # 根据插件code获取某个业务下对应插件信息
+    get_plugin_detail = bind_property(
+        Operation,
+        name="get_plugin_detail",
+        method="GET",
+        path="/api/c/compapi{bk_api_ver}/sops/get_plugin_detail/",
     )
 
     # 查询某个业务下的插件列表
@@ -2192,6 +2360,14 @@ class SopsGroup(OperationGroup):
         name="get_task_status",
         method="GET",
         path="/api/c/compapi{bk_api_ver}/sops/get_task_status/",
+    )
+
+    # 获取一批任务的是否需要人工干预的判断状态
+    get_tasks_manual_intervention_state = bind_property(
+        Operation,
+        name="get_tasks_manual_intervention_state",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/sops/get_tasks_manual_intervention_state/",
     )
 
     # 批量查询任务状态
@@ -2306,6 +2482,14 @@ class SopsGroup(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/sops/operate_task/",
     )
 
+    # 获取节点选择后新的任务树（针对公共流程）
+    preview_common_task_tree = bind_property(
+        Operation,
+        name="preview_common_task_tree",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/sops/preview_common_task_tree/",
+    )
+
     # 获取节点选择后新的任务树
     preview_task_tree = bind_property(
         Operation,
@@ -2391,7 +2575,6 @@ class UsermanageGroup(OperationGroup):
 
 class Client(ESBClient):
     """ESB Components"""
-
     bk_login = bind_property(BkLoginGroup, name="bk_login")
     cc = bind_property(CcGroup, name="cc")
     cmsi = bind_property(CmsiGroup, name="cmsi")

@@ -7,7 +7,7 @@
 [![blue-krill Release](https://img.shields.io/badge/blue--krill-1.0.5-brightgreen)](https://github.com/TencentBlueKing/bkpaas-python-sdk/releases)
 [![bkstorages Release](https://img.shields.io/badge/bkstorages-1.0.1-brightgreen)](https://github.com/TencentBlueKing/bkpaas-python-sdk/releases)
 [![bkapi-client-core Release](https://img.shields.io/badge/bkapi--client--core-1.1.0-brightgreen)](https://github.com/TencentBlueKing/bkpaas-python-sdk/releases)
-[![bkapi-component-open Release](https://img.shields.io/badge/bkapi--component--open-1.1.0-brightgreen)](https://github.com/TencentBlueKing/bkpaas-python-sdk/releases)
+[![bkapi-component-open Release](https://img.shields.io/badge/bkapi--component--open-2.0.0-brightgreen)](https://github.com/TencentBlueKing/bkpaas-python-sdk/releases)
 [![apigw-manager Release](https://img.shields.io/badge/apigw--manager-1.0.0-brightgreen)](https://github.com/TencentBlueKing/bkpaas-python-sdk/releases)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/TencentBlueKing/bkpaas-python-sdkpulls)
 
@@ -23,6 +23,7 @@ This toolset is a collection of Python SDKs for BlueKing PaaS/SaaS development, 
 - [bkapi-component-open](sdks/bkapi-component-open/README.md) Blueking component API Client
 - [apigw-manager](sdks/apigw-manager/README.md) Gateway management toolkits
 - [bkpaas-auth](sdks/bkpaas-auth/README.md) User authentication module used by internal services of the BK PaaS platform
+- [paas-service](sdks/paas-service/README.md) BK PaaS Platform Add-ons Service Framework
 
 All sdks above only support **Python 3.6+**
 
