@@ -173,7 +173,7 @@ class DjangoAuthUserCompatibleBackend(UniversalAuthBackend):
             db_user.is_staff = True
             db_user.is_superuser = True
 
-        db_user.email = bk_user.email
+        db_user.email = bk_user.email or ""
         db_user.save(update_fields=["is_active", "is_staff", "is_superuser", "email"])
         return db_user
 
