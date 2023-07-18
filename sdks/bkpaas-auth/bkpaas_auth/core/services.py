@@ -13,7 +13,7 @@ from bkpaas_auth.core.user_info import BkUserInfo, RtxUserInfo
 logger = logging.getLogger(__name__)
 
 
-def _get_app_credentials() -> Dict[str, str]:
+def get_app_credentials() -> Dict[str, str]:
     """Get app credentials to verify app, which is required for requesting user info API"""
     if conf.TOKEN_APP_CODE and conf.TOKEN_SECRET_KEY:
         return {'bk_app_code': conf.TOKEN_APP_CODE, 'bk_app_secret': conf.TOKEN_SECRET_KEY}
@@ -37,7 +37,7 @@ def _get_and_cache_user_info(cache_key, user_params, response_ok_checker):
     if cached_result:
         return cached_result
 
-    params = dict(user_params, **_get_app_credentials())
+    params = dict(user_params, **get_app_credentials())
     is_success, result = http_get(conf.TOKEN_USER_INFO_ENDPOINT, params=params)
     if not is_success:
         raise ServiceError('Unable to get user info')

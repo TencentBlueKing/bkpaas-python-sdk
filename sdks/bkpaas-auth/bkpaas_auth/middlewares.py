@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import logging
 import pickle
 import time
@@ -6,11 +7,13 @@ from typing import Dict
 
 from django.conf import settings
 from django.contrib import auth
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponse
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.encoding import force_text
 
 from bkpaas_auth.backends import UniversalAuthBackend
+from bkpaas_auth.core.constants import ACCESS_PERMISSION_DENIED_CODE
+from bkpaas_auth.core.exceptions import AccessPermissionDenied
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +38,15 @@ class CookieLoginMiddleware(MiddlewareMixin):
             return self.get_response(request)
 
         if self.should_authenticate(request, backend, credentials):
-            self.authenticate_and_login(request, credentials)
+            try:
+                self.authenticate_and_login(request, credentials)
+            except AccessPermissionDenied as e:
+                resp = HttpResponse(
+                    json.dumps({'code': ACCESS_PERMISSION_DENIED_CODE, 'detail': str(e)}),
+                    content_type="application/json",
+                )
+                resp.status_code = 403
+                return resp
 
         return self.get_response(request)
 

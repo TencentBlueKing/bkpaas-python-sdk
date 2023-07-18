@@ -7,10 +7,11 @@ import logging
 from django.utils.timezone import now
 
 from bkpaas_auth.conf import bkauth_settings
-from bkpaas_auth.core.constants import ProviderType
-from bkpaas_auth.core.exceptions import InvalidTokenCredentialsError, ServiceError
+from bkpaas_auth.core.constants import ProviderType, ACCESS_PERMISSION_DENIED_CODE
+from bkpaas_auth.core.exceptions import InvalidTokenCredentialsError, ServiceError, AccessPermissionDenied
 from bkpaas_auth.core.http import http_get
 from bkpaas_auth.core.user_info import BkUserInfo, RtxUserInfo, UserInfo
+from bkpaas_auth.core.services import get_app_credentials
 from bkpaas_auth.models import User
 
 logger = logging.getLogger(__name__)
@@ -27,18 +28,27 @@ class TokenRequestBackend(AbstractRequestBackend):
 
     def request_username(self, **credentials):
         """Get username through credentials"""
-        is_success, resp = http_get(bkauth_settings.USER_COOKIE_VERIFY_URL, params=credentials, timeout=10)
+        is_success, resp = http_get(
+            bkauth_settings.USER_COOKIE_VERIFY_URL, params=dict(credentials, **get_app_credentials()), timeout=10
+        )
         if not is_success:
             raise ServiceError('unable to fetch token services')
 
         # API 返回格式为：{"result": true, "code": 0, "message": "", "data": {"bk_username": "xxx"}}
-        if resp.get('code') != 0:
-            logger.debug(
-                f'Get user fail, url: {bkauth_settings.USER_COOKIE_VERIFY_URL}, '
-                f'params: {credentials}, response: {resp}'
-            )
-            raise InvalidTokenCredentialsError('Invalid credentials given')
-        return resp["data"]["bk_username"]
+        code = resp.get('code')
+        if code == 0:
+            return resp["data"]["bk_username"]
+
+        logger.debug(
+            f'Get user fail, url: {bkauth_settings.USER_COOKIE_VERIFY_URL}, '
+            f'params: {credentials}, response: {resp}'
+        )
+
+        # 用户认证成功，但用户无应用访问权限
+        if code == ACCESS_PERMISSION_DENIED_CODE:
+            raise AccessPermissionDenied(resp.get('message'))
+
+        raise InvalidTokenCredentialsError('Invalid credentials given')
 
 
 class RequestBackend(AbstractRequestBackend):

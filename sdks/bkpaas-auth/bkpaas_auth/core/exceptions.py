@@ -13,3 +13,7 @@ class InvalidSkeyError(Exception):
 
 class InvalidTokenCredentialsError(Exception):
     """When invalid credentials are given when exchange access token"""
+
+
+class AccessPermissionDenied(Exception):
+    """Authenticated user has no access permissions"""
