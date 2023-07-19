@@ -1,5 +1,9 @@
 # 版本历史
 
+## 2.0.5
+- TokenRequestBackend 处理蓝鲸统一登录的错误状态码 code=1302403
+- CookieLoginMiddleware 根据错误状态码 code=1302403, 限制用户的访问权限
+
 ## 2.0.4
 - 修复保存用户时，email 字段为 None 的问题
 
