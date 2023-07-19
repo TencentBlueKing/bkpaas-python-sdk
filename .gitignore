@@ -14,3 +14,5 @@ Pipfile.lock
 # pre-commit
 pre_commit_hooks
 *.code-workspace
+
+.DS_Store

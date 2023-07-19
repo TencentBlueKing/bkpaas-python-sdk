@@ -1,19 +1,24 @@
 # -*- coding: utf-8 -*-
+import json
 import string
 from contextlib import contextmanager
+from typing import Dict
 
 import pytest
+from bkpaas_auth.backends import UniversalAuthBackend
+from bkpaas_auth.core.constants import ACCESS_PERMISSION_DENIED_CODE, ProviderType
+from bkpaas_auth.core.exceptions import AccessPermissionDenied
+from bkpaas_auth.core.token import LoginToken
+from bkpaas_auth.middlewares import CookieLoginMiddleware, auth
+from bkpaas_auth.models import User
 from django.contrib.auth import SESSION_KEY, get_user_model
 from django.contrib.auth.middleware import AuthenticationMiddleware
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.sessions.middleware import SessionMiddleware
+from django.http import HttpRequest
 from django.test.utils import override_settings
 from mock import MagicMock, patch
 
-from bkpaas_auth.core.constants import ProviderType
-from bkpaas_auth.core.token import LoginToken
-from bkpaas_auth.middlewares import CookieLoginMiddleware, auth
-from bkpaas_auth.models import User
 from tests.utils import generate_random_string
 
 
@@ -44,6 +49,16 @@ def create_uin_user(uin):
     return user
 
 
+class FakeCookieLoginMiddleware(CookieLoginMiddleware):
+    def should_authenticate(
+        self, request: HttpRequest, backend: UniversalAuthBackend, credentials: Dict[str, str]
+    ) -> bool:
+        return True
+
+    def authenticate_and_login(self, request: HttpRequest, credentials: Dict[str, str]):
+        raise AccessPermissionDenied('authenticated user has no access permissions')
+
+
 class TestCookieLoginMiddleware:
     @contextmanager
     def login_by_credentials(self, dj_request):
@@ -63,6 +78,17 @@ class TestCookieLoginMiddleware:
             assert not mocked_auth_login.called
             assert dj_request.session.get(SESSION_KEY) is None
             assert isinstance(dj_request.user, AnonymousUser)
+
+    def test_authenticated_user_has_no_access_permissions(self, db, dj_request):
+        middleware = FakeCookieLoginMiddleware()
+        with patch("bkpaas_auth.backends.UniversalAuthBackend.get_credentials") as mocked_get_token:
+            mocked_get_token.return_value = {'bk_token': dj_request.COOKIES['bk_token']}
+            resp = middleware.process_request(dj_request)
+
+            assert resp.status_code == 403
+            resp_data = json.loads(resp.content.decode('utf-8'))
+            assert resp_data['code'] == ACCESS_PERMISSION_DENIED_CODE
+            assert resp_data['detail'] == 'authenticated user has no access permissions'
 
     def test_fresh_login(self, db, dj_request, bk_token):
         with self.login_by_credentials(dj_request) as mocked_authenticate:
