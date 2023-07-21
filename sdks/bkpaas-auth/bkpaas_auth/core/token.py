@@ -4,15 +4,15 @@
 import datetime
 import logging
 
-from django.utils.timezone import now
-
 from bkpaas_auth.conf import bkauth_settings
-from bkpaas_auth.core.constants import ProviderType, ACCESS_PERMISSION_DENIED_CODE
-from bkpaas_auth.core.exceptions import InvalidTokenCredentialsError, ServiceError, AccessPermissionDenied
+from bkpaas_auth.core.constants import ACCESS_PERMISSION_DENIED_CODE, ProviderType
+from bkpaas_auth.core.exceptions import AccessPermissionDenied, InvalidTokenCredentialsError, ServiceError
 from bkpaas_auth.core.http import http_get
-from bkpaas_auth.core.user_info import BkUserInfo, RtxUserInfo, UserInfo
 from bkpaas_auth.core.services import get_app_credentials
+from bkpaas_auth.core.user_info import BkUserInfo, RtxUserInfo, UserInfo
 from bkpaas_auth.models import User
+from django.utils.timezone import now
+from django.utils.translation import get_language
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,10 @@ class TokenRequestBackend(AbstractRequestBackend):
     def request_username(self, **credentials):
         """Get username through credentials"""
         is_success, resp = http_get(
-            bkauth_settings.USER_COOKIE_VERIFY_URL, params=dict(credentials, **get_app_credentials()), timeout=10
+            bkauth_settings.USER_COOKIE_VERIFY_URL,
+            params=dict(credentials, **get_app_credentials()),
+            timeout=10,
+            headers={'blueking-language': get_language()},
         )
         if not is_success:
             raise ServiceError('unable to fetch token services')

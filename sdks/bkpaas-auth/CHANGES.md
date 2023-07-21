@@ -1,5 +1,8 @@
 # 版本历史
 
+## 2.0.6
+- TokenRequestBackend.request_username 支持国际化
+
 ## 2.0.5
 - TokenRequestBackend 处理蓝鲸统一登录的错误状态码 code=1302403
 - CookieLoginMiddleware 根据错误状态码 code=1302403, 限制用户的访问权限

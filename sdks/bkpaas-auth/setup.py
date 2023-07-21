@@ -23,7 +23,7 @@ if os.path.exists(readme_path):
 setup(
     long_description=readme,
     name='bkpaas-auth',
-    version='2.0.5',
+    version='2.0.6',
     description='User authentication django app for blueking internal projects',
     python_requires='<4.0,>=3.6',
     author='blueking',
