@@ -10,7 +10,7 @@
 """
 from django.db import models
 
-from blue_krill.encrypt.handler import EncryptHandler
+from blue_krill.encrypt.handler import EncryptHandler, get_encrypt_handler
 from blue_krill.encrypt.utils import get_default_secret_key
 
 
@@ -21,12 +21,14 @@ class EncryptField(models.TextField):
 
     def __init__(self, secret_key: bytes = get_default_secret_key(), *args, **kwargs):
         super(EncryptField, self).__init__(*args, **kwargs)
-        self.handler = EncryptHandler(secret_key=secret_key)
+        # 通过 django setting 配置不同的加密算法 handler，handler 封装了不同的加密算法
+        self.handler = get_encrypt_handler()
+        # 处理存量数据
+        self.legacy_handler = EncryptHandler(secret_key=secret_key)
 
     def get_prep_value(self, value):
         if value is None:
             return value
-
         return self.handler.encrypt(value)
 
     def get_db_prep_value(self, value, connection, prepared=False):
@@ -35,5 +37,9 @@ class EncryptField(models.TextField):
     def from_db_value(self, value, expression, connection, context=None):
         if value is None:
             return value
-
-        return self.handler.decrypt(value)
+        # 根据加密头，选择不同的加密算法进行解密。
+        if self.handler.Header.contain_header(value):
+            return self.handler.decrypt(value)
+        elif self.legacy_handler.Header.contain_header(value):
+            return self.legacy_handler.decrypt(value)
+        return value

@@ -15,10 +15,10 @@ from unittest import mock
 import pytest
 import requests
 import requests_mock
+from bkstorages.backends.bkrepo import BKGenericRepoClient, BKRepoFile, BKRepoStorage, parse_gmt_datetime
 from django.core.files.base import File
 from six.moves.urllib_parse import urljoin
 
-from bkstorages.backends.bkrepo import BKGenericRepoClient, BKRepoFile, BKRepoStorage, parse_gmt_datetime
 from tests.utils import generate_random_string
 
 

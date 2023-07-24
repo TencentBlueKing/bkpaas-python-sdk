@@ -12,7 +12,6 @@ import os
 import zipfile
 
 import yaml
-from bkapi_client_core.config import SettingKeys, settings
 from packaging.version import Version as _Version
 
 from apigw_manager.core import configuration

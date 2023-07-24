@@ -11,8 +11,9 @@
 import unittest
 
 from cryptography.fernet import Fernet
+from django.conf import settings
 
-from blue_krill.encrypt.handler import EncryptHandler
+from blue_krill.encrypt.handler import EncryptHandler, NationEncryptHandler, get_encrypt_handler
 from blue_krill.encrypt.legacy import legacy_decrypt, legacy_encrypt
 
 
@@ -26,6 +27,42 @@ class TestEncrypt:
         encrypt_handler = EncryptHandler(secret_key=Fernet.generate_key())
         encrypted = encrypt_handler.encrypt('foo')
         assert encrypt_handler.encrypt(encrypted) == encrypted
+
+
+class TestNationEncrypt:
+    def test_encrypt(self):
+        encrypt_handler = NationEncryptHandler()
+        encrypted = encrypt_handler.encrypt('foo')
+        assert encrypt_handler.decrypt(encrypted) == 'foo'
+
+    def test_encrypt_twice(self):
+        encrypt_handler = NationEncryptHandler()
+        encrypted = encrypt_handler.encrypt('foo')
+        assert encrypt_handler.encrypt(encrypted) == encrypted
+
+
+class TestGetEncryptHandler:
+    def test_get_nation_encrypt_handler(self):
+        settings.BKKRILL_ENCRYPT_HANDLER = 'NationEncryptHandler'
+        handler = get_encrypt_handler()
+        assert isinstance(handler, NationEncryptHandler)
+
+    def test_nation_encrypt(self):
+        settings.BKKRILL_ENCRYPT_HANDLER = 'NationEncryptHandler'
+        handler = get_encrypt_handler()
+        encrypted = handler.encrypt('foo')
+        assert handler.encrypt(encrypted) == encrypted
+
+    def test_get_encrypt_handler(self):
+        settings.BKKRILL_ENCRYPT_HANDLER = ''
+        handler = get_encrypt_handler()
+        assert isinstance(handler, EncryptHandler)
+
+    def test_encrypt(self):
+        settings.BKKRILL_ENCRYPT_HANDLER = ''
+        handler = get_encrypt_handler()
+        encrypted = handler.encrypt('foo')
+        assert handler.encrypt(encrypted) == encrypted
 
 
 def test_decrypt_legacy():

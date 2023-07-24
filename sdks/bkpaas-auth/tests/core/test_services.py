@@ -4,7 +4,7 @@ from unittest import mock
 import pytest
 from django.core.exceptions import ImproperlyConfigured
 
-from bkpaas_auth.core.services import get_app_credentials, conf
+from bkpaas_auth.core.services import conf, get_app_credentials
 
 
 class TestGetRTXUserInfoCredentails:

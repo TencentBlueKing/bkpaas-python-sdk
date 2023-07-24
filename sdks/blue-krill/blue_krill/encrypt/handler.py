@@ -8,6 +8,8 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+from bkcrypto.contrib.django.ciphers import symmetric_cipher_manager
+from bkcrypto.symmetric.ciphers import BaseSymmetricCipher
 from cryptography.fernet import Fernet
 
 from blue_krill.encoding import force_bytes, force_text
@@ -50,3 +52,52 @@ class EncryptHandler:
         @classmethod
         def contain_header(cls, text: str) -> bool:
             return text.startswith(cls.HEADER)
+
+
+class NationEncryptHandler:
+    def __init__(self):
+        symmetric_cipher: BaseSymmetricCipher = symmetric_cipher_manager.cipher(using="default")
+        self.f = symmetric_cipher
+
+    def encrypt(self, text: str) -> str:
+        if self.Header.contain_header(text):
+            return text
+
+        return self.Header.add_header(self.f.encrypt(text))
+
+    def decrypt(self, encrypted: str) -> str:
+        encrypted = self.Header.strip_header(encrypted)
+
+        return self.f.decrypt(encrypted)
+
+    class Header:
+        HEADER = "nationcrypto$"
+
+        @classmethod
+        def add_header(cls, text: str):
+            return cls.HEADER + text
+
+        @classmethod
+        def strip_header(cls, text: str):
+            # 兼容无 header 加密串
+            if not cls.contain_header(text):
+                return text
+
+            return text[len(cls.HEADER) :]
+
+        @classmethod
+        def contain_header(cls, text: str) -> bool:
+            return text.startswith(cls.HEADER)
+
+
+def get_encrypt_handler():
+    try:
+        from django.conf import settings
+
+        cipher_name = settings.BKKRILL_ENCRYPT_HANDLER
+        if cipher_name == "NationEncryptHandler":
+            return NationEncryptHandler()
+        else:
+            return EncryptHandler()
+    except (ImportError, AttributeError):
+        return EncryptHandler()

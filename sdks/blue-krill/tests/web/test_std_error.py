@@ -9,9 +9,9 @@
  * specific language governing permissions and limitations under the License.
 """
 import pytest
+from django.utils.translation import gettext_lazy
 
 from blue_krill.web.std_error import APIError, ErrorCode
-from django.utils.translation import gettext_lazy
 
 
 def _format_message(message, exc):
@@ -76,4 +76,3 @@ class TestAPIError:
         exc = APIError('foo', gettext_lazy('message'))
         formatted_exc = exc.format(gettext_lazy('new message'))
         assert formatted_exc.message == "message: new message"
-
