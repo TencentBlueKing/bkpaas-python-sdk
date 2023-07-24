@@ -4,6 +4,9 @@
 import datetime
 import logging
 
+from django.utils.timezone import now
+from django.utils.translation import get_language
+
 from bkpaas_auth.conf import bkauth_settings
 from bkpaas_auth.core.constants import ACCESS_PERMISSION_DENIED_CODE, ProviderType
 from bkpaas_auth.core.exceptions import AccessPermissionDenied, InvalidTokenCredentialsError, ServiceError
@@ -11,8 +14,7 @@ from bkpaas_auth.core.http import http_get
 from bkpaas_auth.core.services import get_app_credentials
 from bkpaas_auth.core.user_info import BkUserInfo, RtxUserInfo, UserInfo
 from bkpaas_auth.models import User
-from django.utils.timezone import now
-from django.utils.translation import get_language
+
 
 logger = logging.getLogger(__name__)
 
