@@ -15,7 +15,6 @@ from bkpaas_auth.core.services import get_app_credentials
 from bkpaas_auth.core.user_info import BkUserInfo, RtxUserInfo, UserInfo
 from bkpaas_auth.models import User
 
-
 logger = logging.getLogger(__name__)
 
 
