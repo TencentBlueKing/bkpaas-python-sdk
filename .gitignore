@@ -16,3 +16,5 @@ pre_commit_hooks
 *.code-workspace
 
 .DS_Store
+.codecc
+.vscode

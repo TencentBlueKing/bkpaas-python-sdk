@@ -29,6 +29,7 @@ class TestEncrypt:
         assert encrypt_handler.encrypt(encrypted) == encrypted
 
 
+# 国密算法测试
 class TestNationEncrypt:
     def test_encrypt(self):
         encrypt_handler = NationEncryptHandler()
@@ -41,6 +42,7 @@ class TestNationEncrypt:
         assert encrypt_handler.encrypt(encrypted) == encrypted
 
 
+# get_encrypt_handler()测试
 class TestGetEncryptHandler:
     def test_get_nation_encrypt_handler(self):
         settings.BKKRILL_ENCRYPT_HANDLER = 'NationEncryptHandler'

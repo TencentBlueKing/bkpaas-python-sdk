@@ -54,6 +54,7 @@ class EncryptHandler:
             return text.startswith(cls.HEADER)
 
 
+# 国密算法
 class NationEncryptHandler:
     def __init__(self):
         symmetric_cipher: BaseSymmetricCipher = symmetric_cipher_manager.cipher(using="default")
@@ -90,6 +91,8 @@ class NationEncryptHandler:
             return text.startswith(cls.HEADER)
 
 
+# 根据 django setting BKKRILL_ENCRYPT_HANDLER 字段选择相应的加密算法
+# 配置字段为"NationEncryptHandler"时使用国密算法，其余情况均默认使用国际加密算法
 def get_encrypt_handler():
     try:
         from django.conf import settings
