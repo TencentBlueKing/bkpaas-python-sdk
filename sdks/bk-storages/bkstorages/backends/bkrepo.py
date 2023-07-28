@@ -12,7 +12,7 @@ import datetime
 import logging
 from os import PathLike
 from tempfile import SpooledTemporaryFile
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import curlify
 import requests
@@ -20,6 +20,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.files.base import File
 from django.core.files.storage import Storage
 from django.utils.deconstruct import deconstructible
+from django.utils.functional import cached_property
 from django.utils.timezone import localtime
 from requests.adapters import HTTPAdapter
 from requests.auth import HTTPBasicAuth
@@ -57,13 +58,21 @@ class BKGenericRepoClient:
         self.username = username
         self.password = password
         self._max_retries = kwargs.get("max_retries", MAX_RETRIES)
+        self._session: Optional[requests.Session] = None
 
     def get_client(self) -> requests.Session:
-        session = requests.session()
+        if self._session is not None:
+            return self._session
+        self._session = session = requests.session()
         session.auth = HTTPBasicAuth(username=self.username, password=self.password)
         session.mount("http://", HTTPAdapter(max_retries=self._max_retries))
         session.mount("https://", HTTPAdapter(max_retries=self._max_retries))
         return session
+
+    @cached_property
+    def is_public(self) -> bool:
+        """当前仓库是否公开"""
+        return self.get_bucket_metadata().get("public", False)
 
     def upload_file(self, filepath: PathLike, key: str, allow_overwrite: bool = True, **kwargs):
         """上传通用制品文件
@@ -160,6 +169,18 @@ class BKGenericRepoClient:
             return dict(resp.headers)
         raise RequestError("Can't get file head info", code=str(resp.status_code), response=resp)
 
+    def build_download_url(self, key: str, force_download: bool = False) -> str:
+        """构造下载url
+
+        :param str key: 文件完整路径
+        :param bool force_download: 如果为true，响应体会添加Content-Disposition，强制浏览器进行下载；不加此参数，浏览器将根据情况展示文件预览
+        """
+        while key.startswith("/"):
+            key = key[1:]
+        download = "true" if force_download else "false"
+        url = urljoin(self.endpoint_url, f'/generic/{self.project}/{self.bucket}/{key}?download={download}')
+        return url
+
     def generate_presigned_url(self, key: str, expires_in: int, token_type: str = "DOWNLOAD", *args, **kwargs) -> str:
         """创建临时访问url
 
@@ -225,6 +246,14 @@ class BKGenericRepoClient:
             else:
                 files.append(record["name"])
         return directories, files, (cur_page < total_pages)
+
+    def get_bucket_metadata(self) -> Dict:
+        """查询仓库信息"""
+        client = self.get_client()
+        url = urljoin(self.endpoint_url, f"/repository/api/repo/info/{self.project}/{self.bucket}/GENERIC")
+        resp = client.get(url)
+        data = self._validate_resp(resp)
+        return data
 
     @staticmethod
     def _validate_resp(response: requests.Response) -> Dict:
@@ -363,6 +392,8 @@ class BKRepoStorage(Storage):
         return metadata.get("Content-Length", 0)
 
     def url(self, name):
+        if self.client.is_public:
+            return self.client.build_download_url(self._full_path(name))
         # expires_in 小于等于 0 则永久有效
         return self.client.generate_presigned_url(self._full_path(name), expires_in=0)
 

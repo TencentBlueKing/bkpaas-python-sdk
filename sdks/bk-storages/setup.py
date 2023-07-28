@@ -23,7 +23,7 @@ readme = ''
 setup(
     long_description=readme,
     name='bkstorages',
-    version='1.0.8',
+    version='1.1.0',
     description='File storage backends for blueking PaaS platform',
     python_requires='<3.11,>=3.6.2',
     author='blueking',
