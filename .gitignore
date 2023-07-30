@@ -18,3 +18,7 @@ pre_commit_hooks
 .DS_Store
 .codecc
 .vscode
+
+# Pre-CI files
+.codecc
+build.yml

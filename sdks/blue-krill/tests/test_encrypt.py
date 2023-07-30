@@ -10,61 +10,36 @@
 """
 import unittest
 
-from cryptography.fernet import Fernet
-from django.conf import settings
-
-from blue_krill.encrypt.handler import EncryptHandler, NationEncryptHandler, get_encrypt_handler
+from blue_krill.encrypt.handler import EncryptHandler
 from blue_krill.encrypt.legacy import legacy_decrypt, legacy_encrypt
 
 
 class TestEncrypt:
     def test_encrypt(self):
-        encrypt_handler = EncryptHandler(secret_key=Fernet.generate_key())
+        encrypt_handler = EncryptHandler(encrypt_cipher_type='FernetCipher')
+        print(encrypt_handler.encrypt_cipher_type)
         encrypted = encrypt_handler.encrypt('foo')
         assert encrypt_handler.decrypt(encrypted) == 'foo'
 
-    def test_encrypt_twice(self):
-        encrypt_handler = EncryptHandler(secret_key=Fernet.generate_key())
-        encrypted = encrypt_handler.encrypt('foo')
-        assert encrypt_handler.encrypt(encrypted) == encrypted
-
-
-# 国密算法测试
-class TestNationEncrypt:
-    def test_encrypt(self):
-        encrypt_handler = NationEncryptHandler()
+    def test_sm4cipher_encrypt(self):
+        encrypt_handler = EncryptHandler()
+        print(encrypt_handler.encrypt_cipher_type)
         encrypted = encrypt_handler.encrypt('foo')
         assert encrypt_handler.decrypt(encrypted) == 'foo'
 
-    def test_encrypt_twice(self):
-        encrypt_handler = NationEncryptHandler()
+    def test_mixcipher_encrypt(self):
+        encrypt_handler = EncryptHandler(encrypt_cipher_type='FernetCipher')
+        decrypt_handler = EncryptHandler(encrypt_cipher_type='SM4Cipher')
         encrypted = encrypt_handler.encrypt('foo')
-        assert encrypt_handler.encrypt(encrypted) == encrypted
+        decrypted = decrypt_handler.decrypt(encrypted)
+        assert decrypted == 'foo'
 
-
-# get_encrypt_handler()测试
-class TestGetEncryptHandler:
-    def test_get_nation_encrypt_handler(self):
-        settings.BKKRILL_ENCRYPT_HANDLER = 'NationEncryptHandler'
-        handler = get_encrypt_handler()
-        assert isinstance(handler, NationEncryptHandler)
-
-    def test_nation_encrypt(self):
-        settings.BKKRILL_ENCRYPT_HANDLER = 'NationEncryptHandler'
-        handler = get_encrypt_handler()
-        encrypted = handler.encrypt('foo')
-        assert handler.encrypt(encrypted) == encrypted
-
-    def test_get_encrypt_handler(self):
-        settings.BKKRILL_ENCRYPT_HANDLER = ''
-        handler = get_encrypt_handler()
-        assert isinstance(handler, EncryptHandler)
-
-    def test_encrypt(self):
-        settings.BKKRILL_ENCRYPT_HANDLER = ''
-        handler = get_encrypt_handler()
-        encrypted = handler.encrypt('foo')
-        assert handler.encrypt(encrypted) == encrypted
+    def test_mixcipher_encrypt1(self):
+        decrypt_handler = EncryptHandler(encrypt_cipher_type='FernetCipher')
+        encrypt_handler = EncryptHandler(encrypt_cipher_type='SM4Cipher')
+        encrypted = encrypt_handler.encrypt('foo')
+        decrypted = decrypt_handler.decrypt(encrypted)
+        assert decrypted == 'foo'
 
 
 def test_decrypt_legacy():

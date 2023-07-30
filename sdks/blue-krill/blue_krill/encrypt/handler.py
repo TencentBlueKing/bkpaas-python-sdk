@@ -8,99 +8,114 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
-from bkcrypto.contrib.django.ciphers import symmetric_cipher_manager
-from bkcrypto.symmetric.ciphers import BaseSymmetricCipher
+from typing import Dict
+
+from bkcrypto import constants
+from bkcrypto.contrib.django.ciphers import get_symmetric_cipher
+from bkcrypto.symmetric.options import SM4SymmetricOptions
 from cryptography.fernet import Fernet
 
 from blue_krill.encoding import force_bytes, force_text
-from blue_krill.encrypt.utils import get_default_secret_key
+from blue_krill.encrypt.utils import get_default_encrypt_cipher_type, get_default_secret_key
+
+
+class _Header:
+    def __init__(self, header: str):
+        self.header = header
+
+    def add_header(self, text: str):
+        return self.header + text
+
+    def strip_header(self, text: str):
+        # 兼容无 header 加密串
+        if not self.contain_header(text):
+            return text
+        return text[len(self.header) :]
+
+    def contain_header(self, text: str) -> bool:
+        return text.startswith(self.header)
 
 
 class EncryptHandler:
-    def __init__(self, secret_key=get_default_secret_key()):
+    cipher_classes: Dict = {}
+
+    def __init__(self, encrypt_cipher_type=get_default_encrypt_cipher_type(), secret_key=get_default_secret_key()):
         self.secret_key = secret_key
-        self.f = Fernet(self.secret_key)
+        self.encrypt_cipher_type = encrypt_cipher_type
 
     def encrypt(self, text: str) -> str:
-        if self.Header.contain_header(text):
-            return text
+        """根据指定加密算法，加密字段"""
+        # 已加密则不处理
+        for _, cls in self.cipher_classes.items():
+            if cls.contain_header(cls, text=text):
+                return text
 
-        b_text = force_bytes(text)
-        return self.Header.add_header(force_text(self.f.encrypt(b_text)))
+        # 根据加密类型配置选择不同的加密算法
+        cipher_class = self.cipher_classes.get(self.encrypt_cipher_type)
+        if cipher_class is not None:
+            cipher = cipher_class(self.secret_key)
+            return cipher.encrypt(text)
+        else:
+            raise ValueError(f"Invalid cipher type: {self.encrypt_cipher_type}")
 
     def decrypt(self, encrypted: str) -> str:
-        encrypted = self.Header.strip_header(encrypted)
+        """根据 header 解密"""
+        for _, cls in self.cipher_classes.items():
+            if cls.contain_header(cls, text=encrypted):
+                cipher = cls(self.secret_key)
+                return cipher.decrypt(encrypted)
+        # 若不包含头则直接返回
+        return encrypted
+
+
+def register_cipher(cls):
+    EncryptHandler.cipher_classes[cls.__name__] = cls
+
+
+@register_cipher
+class FernetCipher(_Header):
+    header = "bkcrypt$"
+
+    def __init__(self, secret_key):
+        if secret_key == '':
+            self.secret_key = get_default_secret_key()
+        else:
+            self.secret_key = secret_key
+        super().__init__(self.header)
+        self.cipher = Fernet(self.secret_key)
+
+    def encrypt(self, text: str) -> str:
+        b_text = force_bytes(text)
+        return self.add_header(force_text(self.cipher.encrypt(b_text)))
+
+    def decrypt(self, encrypted: str) -> str:
+        encrypted = self.strip_header(encrypted)
 
         b_encrypted = force_bytes(encrypted)
-        return force_text(self.f.decrypt(b_encrypted))
-
-    class Header:
-        HEADER = "bkcrypt$"
-
-        @classmethod
-        def add_header(cls, text: str):
-            return cls.HEADER + text
-
-        @classmethod
-        def strip_header(cls, text: str):
-            # 兼容无 header 加密串
-            if not cls.contain_header(text):
-                return text
-
-            return text[len(cls.HEADER) :]
-
-        @classmethod
-        def contain_header(cls, text: str) -> bool:
-            return text.startswith(cls.HEADER)
+        return force_text(self.cipher.decrypt(b_encrypted))
 
 
-# 国密算法
-class NationEncryptHandler:
-    def __init__(self):
-        symmetric_cipher: BaseSymmetricCipher = symmetric_cipher_manager.cipher(using="default")
-        self.f = symmetric_cipher
+@register_cipher
+class SM4Cipher(_Header):
+    header = "sm4$"
+
+    def __init__(self, secret_key):
+        super().__init__(self.header)
+        if secret_key == '':
+            self.secret_key = get_default_secret_key()
+        else:
+            self.secret_key = secret_key
+        self.cipher = get_symmetric_cipher(
+            common={"key": secret_key},
+            cipher_options={
+                constants.SymmetricCipherType.SM4.value: SM4SymmetricOptions(mode=constants.SymmetricMode.CTR)
+            },
+        )
 
     def encrypt(self, text: str) -> str:
-        if self.Header.contain_header(text):
-            return text
-
-        return self.Header.add_header(self.f.encrypt(text))
+        return self.add_header((self.cipher.encrypt(text)))
 
     def decrypt(self, encrypted: str) -> str:
-        encrypted = self.Header.strip_header(encrypted)
+        encrypted = self.strip_header(encrypted)
 
-        return self.f.decrypt(encrypted)
-
-    class Header:
-        HEADER = "nationcrypto$"
-
-        @classmethod
-        def add_header(cls, text: str):
-            return cls.HEADER + text
-
-        @classmethod
-        def strip_header(cls, text: str):
-            # 兼容无 header 加密串
-            if not cls.contain_header(text):
-                return text
-
-            return text[len(cls.HEADER) :]
-
-        @classmethod
-        def contain_header(cls, text: str) -> bool:
-            return text.startswith(cls.HEADER)
-
-
-# 根据 django setting BKKRILL_ENCRYPT_HANDLER 字段选择相应的加密算法
-# 配置字段为"NationEncryptHandler"时使用国密算法，其余情况均默认使用国际加密算法
-def get_encrypt_handler():
-    try:
-        from django.conf import settings
-
-        cipher_name = settings.BKKRILL_ENCRYPT_HANDLER
-        if cipher_name == "NationEncryptHandler":
-            return NationEncryptHandler()
-        else:
-            return EncryptHandler()
-    except (ImportError, AttributeError):
-        return EncryptHandler()
+        return self.cipher.decrypt(encrypted)

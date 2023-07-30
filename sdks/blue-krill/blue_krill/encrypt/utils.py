@@ -28,6 +28,18 @@ def get_default_secret_key():
         raise
 
 
+def get_default_encrypt_cipher_type():
+    """获取默认的加密算法"""
+
+    try:
+        from django.conf import settings
+
+        return settings.ENCRYPT_CIPHER_TYPE
+    except ImportError:
+        logger.exception("you should supply a encrypt cipher type")
+        raise
+
+
 def encrypt_string(s: str, key: Optional[bytes] = None) -> str:
     """Shortcut function: encrypt a string into a fernet token"""
     key = key or get_default_secret_key()
