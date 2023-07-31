@@ -51,12 +51,13 @@ class EncryptHandler:
                 return text
 
         # 根据加密类型配置选择不同的加密算法
-        cipher_class = self.cipher_classes.get(self.encrypt_cipher_type)
-        if cipher_class is not None:
+        try:
+            cipher_class = self.cipher_classes[self.encrypt_cipher_type]
+        except KeyError:
+            raise ValueError(f"Invalid cipher type: {self.encrypt_cipher_type}")
+        else:
             cipher = cipher_class(self.secret_key)
             return cipher.encrypt(text)
-        else:
-            raise ValueError(f"Invalid cipher type: {self.encrypt_cipher_type}")
 
     def decrypt(self, encrypted: str) -> str:
         """根据 header 解密"""

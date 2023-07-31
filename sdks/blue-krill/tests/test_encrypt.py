@@ -11,6 +11,7 @@
 import unittest
 
 from cryptography.fernet import Fernet
+from django.test.utils import override_settings
 
 from blue_krill.encrypt.handler import EncryptHandler
 from blue_krill.encrypt.legacy import legacy_decrypt, legacy_encrypt
@@ -19,55 +20,77 @@ from blue_krill.encrypt.legacy import legacy_decrypt, legacy_encrypt
 class TestEncrypt:
     def test_encrypt(self):
         encrypt_handler = EncryptHandler(encrypt_cipher_type='FernetCipher', secret_key=Fernet.generate_key())
-        encrypted = encrypt_handler.encrypt('foo')
-        assert encrypt_handler.decrypt(encrypted) == 'foo'
+        for i in range(10):
+            text = random_string(10)
+            encrypted = encrypt_handler.encrypt(text)
+            assert encrypt_handler.decrypt(encrypted) == text
 
     def test_sm4cipher_encrypt(self):
         encrypt_handler = EncryptHandler(encrypt_cipher_type='SM4Cipher', secret_key=Fernet.generate_key())
-        encrypted = encrypt_handler.encrypt('foo')
-        assert encrypt_handler.decrypt(encrypted) == 'foo'
+        for i in range(10):
+            text = random_string(10)
+            encrypted = encrypt_handler.encrypt(text)
+            assert encrypt_handler.decrypt(encrypted) == text
 
     def test_mixcipher_encrypt(self):
         secret_key = Fernet.generate_key()
         encrypt_handler = EncryptHandler(encrypt_cipher_type='FernetCipher', secret_key=secret_key)
         decrypt_handler = EncryptHandler(encrypt_cipher_type='SM4Cipher', secret_key=secret_key)
-        encrypted = encrypt_handler.encrypt('foo')
-        decrypted = decrypt_handler.decrypt(encrypted)
-        assert decrypted == 'foo'
+        for i in range(10):
+            text = random_string(10)
+            encrypted = encrypt_handler.encrypt(text)
+            assert encrypted.startswith("bkcrypt$")
+            assert decrypt_handler.decrypt(encrypted) == text
 
     def test_mixcipher_encrypt1(self):
         secret_key = Fernet.generate_key()
         decrypt_handler = EncryptHandler(encrypt_cipher_type='FernetCipher', secret_key=secret_key)
         encrypt_handler = EncryptHandler(encrypt_cipher_type='SM4Cipher', secret_key=secret_key)
-        encrypted = encrypt_handler.encrypt('foo')
-        decrypted = decrypt_handler.decrypt(encrypted)
-        assert decrypted == 'foo'
+        for i in range(10):
+            text = random_string(10)
+            encrypted = encrypt_handler.encrypt(text)
+            assert encrypted.startswith("sm4$")
+            assert decrypt_handler.decrypt(encrypted) == text
 
 
 class TestEncryptFromDjangoSetting:
     def test_encrypt(self):
         encrypt_handler = EncryptHandler()
-        encrypted = encrypt_handler.encrypt('foo')
-        assert encrypt_handler.decrypt(encrypted) == 'foo'
+        for i in range(10):
+            text = random_string(10)
+            encrypted = encrypt_handler.encrypt(text)
+            assert encrypt_handler.decrypt(encrypted) == text
 
     def test_sm4cipher_encrypt(self):
         encrypt_handler = EncryptHandler()
-        encrypted = encrypt_handler.encrypt('foo')
-        assert encrypt_handler.decrypt(encrypted) == 'foo'
+        for i in range(10):
+            text = random_string(10)
+            encrypted = encrypt_handler.encrypt(text)
+            assert encrypt_handler.decrypt(encrypted) == text
 
     def test_mixcipher_encrypt(self):
-        encrypt_handler = EncryptHandler()
-        decrypt_handler = EncryptHandler()
-        encrypted = encrypt_handler.encrypt('foo')
-        decrypted = decrypt_handler.decrypt(encrypted)
-        assert decrypted == 'foo'
+        key = Fernet.generate_key()
+        with override_settings(ENCRYPT_CIPHER_TYPE='FernetCipher', BKKRILL_ENCRYPT_SECRET_KEY=key):
+            encrypt_handler = EncryptHandler()
+        with override_settings(ENCRYPT_CIPHER_TYPE='SM4Cipher', BKKRILL_ENCRYPT_SECRET_KEY=key):
+            decrypt_handler = EncryptHandler()
+        for i in range(10):
+            text = random_string(10)
+            encrypted = encrypt_handler.encrypt(text)
+            assert encrypted.startswith("bkcrypt$")
+            assert decrypt_handler.decrypt(encrypted) == text
 
     def test_mixcipher_encrypt1(self):
-        decrypt_handler = EncryptHandler()
-        encrypt_handler = EncryptHandler()
-        encrypted = encrypt_handler.encrypt('foo')
-        decrypted = decrypt_handler.decrypt(encrypted)
-        assert decrypted == 'foo'
+        key = Fernet.generate_key()
+        with override_settings(ENCRYPT_CIPHER_TYPE='SM4Cipher', BKKRILL_ENCRYPT_SECRET_KEY=key):
+            encrypt_handler = EncryptHandler()
+        with override_settings(ENCRYPT_CIPHER_TYPE='FernetCipher', BKKRILL_ENCRYPT_SECRET_KEY=key):
+            decrypt_handler = EncryptHandler()
+        for i in range(10):
+            text = random_string(10)
+            encrypted = encrypt_handler.encrypt(text)
+            assert encrypted.startswith("sm4$")
+            assert decrypt_handler.decrypt(encrypted) == text
 
 
 def test_decrypt_legacy():
@@ -77,6 +100,23 @@ def test_decrypt_legacy():
 
 def test_legacy_encrypt():
     assert legacy_encrypt('foo', 'a' * 24) == '40Ot6vrbuGI='
+
+
+def random_string(length):
+    import random
+    import string
+
+    # 定义用于生成随机字符串的字符集
+    characters = string.ascii_letters + string.digits
+    # 生成随机字符串
+    random_str = ''.join(random.choice(characters) for i in range(length))
+    return random_str
+
+
+def test_encrypt_legacy():
+    """
+    测试 legacy 加密
+    """
 
 
 if __name__ == "__main__":

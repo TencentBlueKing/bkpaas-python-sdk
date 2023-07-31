@@ -8,10 +8,11 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+from typing import Optional
+
 from django.db import models
 
 from blue_krill.encrypt.handler import EncryptHandler
-from blue_krill.encrypt.utils import get_default_secret_key
 
 
 class EncryptField(models.TextField):
@@ -19,10 +20,9 @@ class EncryptField(models.TextField):
 
     description = "a field which will be encrypted"
 
-    def __init__(self, secret_key: bytes = get_default_secret_key(), *args, **kwargs):
+    def __init__(self, secret_key: Optional[bytes] = None, *args, **kwargs):
         super(EncryptField, self).__init__(*args, **kwargs)
-        # 通过 django setting 配置不同的加密算法 handler，handler 封装了不同的加密算法
-        self.handler = EncryptHandler()
+        self.handler = EncryptHandler(secret_key=secret_key)
 
     def get_prep_value(self, value):
         if value is None:
