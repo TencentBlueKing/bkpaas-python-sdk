@@ -10,33 +10,61 @@
 """
 import unittest
 
+from cryptography.fernet import Fernet
+
 from blue_krill.encrypt.handler import EncryptHandler
 from blue_krill.encrypt.legacy import legacy_decrypt, legacy_encrypt
 
 
 class TestEncrypt:
     def test_encrypt(self):
-        encrypt_handler = EncryptHandler(encrypt_cipher_type='FernetCipher')
-        print(encrypt_handler.encrypt_cipher_type)
+        encrypt_handler = EncryptHandler(encrypt_cipher_type='FernetCipher', secret_key=Fernet.generate_key())
         encrypted = encrypt_handler.encrypt('foo')
         assert encrypt_handler.decrypt(encrypted) == 'foo'
 
     def test_sm4cipher_encrypt(self):
-        encrypt_handler = EncryptHandler()
-        print(encrypt_handler.encrypt_cipher_type)
+        encrypt_handler = EncryptHandler(encrypt_cipher_type='SM4Cipher', secret_key=Fernet.generate_key())
         encrypted = encrypt_handler.encrypt('foo')
         assert encrypt_handler.decrypt(encrypted) == 'foo'
 
     def test_mixcipher_encrypt(self):
-        encrypt_handler = EncryptHandler(encrypt_cipher_type='FernetCipher')
-        decrypt_handler = EncryptHandler(encrypt_cipher_type='SM4Cipher')
+        secret_key = Fernet.generate_key()
+        encrypt_handler = EncryptHandler(encrypt_cipher_type='FernetCipher', secret_key=secret_key)
+        decrypt_handler = EncryptHandler(encrypt_cipher_type='SM4Cipher', secret_key=secret_key)
         encrypted = encrypt_handler.encrypt('foo')
         decrypted = decrypt_handler.decrypt(encrypted)
         assert decrypted == 'foo'
 
     def test_mixcipher_encrypt1(self):
-        decrypt_handler = EncryptHandler(encrypt_cipher_type='FernetCipher')
-        encrypt_handler = EncryptHandler(encrypt_cipher_type='SM4Cipher')
+        secret_key = Fernet.generate_key()
+        decrypt_handler = EncryptHandler(encrypt_cipher_type='FernetCipher', secret_key=secret_key)
+        encrypt_handler = EncryptHandler(encrypt_cipher_type='SM4Cipher', secret_key=secret_key)
+        encrypted = encrypt_handler.encrypt('foo')
+        decrypted = decrypt_handler.decrypt(encrypted)
+        assert decrypted == 'foo'
+
+
+class TestEncryptFromDjangoSetting:
+    def test_encrypt(self):
+        encrypt_handler = EncryptHandler()
+        encrypted = encrypt_handler.encrypt('foo')
+        assert encrypt_handler.decrypt(encrypted) == 'foo'
+
+    def test_sm4cipher_encrypt(self):
+        encrypt_handler = EncryptHandler()
+        encrypted = encrypt_handler.encrypt('foo')
+        assert encrypt_handler.decrypt(encrypted) == 'foo'
+
+    def test_mixcipher_encrypt(self):
+        encrypt_handler = EncryptHandler()
+        decrypt_handler = EncryptHandler()
+        encrypted = encrypt_handler.encrypt('foo')
+        decrypted = decrypt_handler.decrypt(encrypted)
+        assert decrypted == 'foo'
+
+    def test_mixcipher_encrypt1(self):
+        decrypt_handler = EncryptHandler()
+        encrypt_handler = EncryptHandler()
         encrypted = encrypt_handler.encrypt('foo')
         decrypted = decrypt_handler.decrypt(encrypted)
         assert decrypted == 'foo'
