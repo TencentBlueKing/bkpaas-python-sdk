@@ -13,17 +13,17 @@ repos:
         exclude: "^(.*/poetry.lock|.*/requirements.txt|.*/requirements_dev.txt)|sdks/apigw-manager/build.yml"
         entry: bash -c "if [[ -d pre_commit_hooks ]]; then pre_commit_hooks/ip.sh $@; fi"
       # See ./pyproject.toml for below tool's version and settings
-#      - id: isort
-#        name: isort
-#        # Set language to disable pre-commit's virtual-env
-#        language: system
-#        types: [python]
-#        entry: poetry run isort --settings-path=pyproject.toml
-#      - id: black
-#        name: black
-#        language: system
-#        types: [python]
-#        entry: poetry run black --config=pyproject.toml
+      - id: isort
+        name: isort
+        # Set language to disable pre-commit's virtual-env
+        language: system
+        types: [python]
+        entry: poetry run isort --settings-path=pyproject.toml
+      - id: black
+        name: black
+        language: system
+        types: [python]
+        entry: poetry run black --config=pyproject.toml
       - id: flake8
         name: flak8
         language: system

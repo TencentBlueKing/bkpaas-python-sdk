@@ -93,8 +93,8 @@ class FernetCipher:
 
 
 @register_cipher
-class SM4Cipher:
-    header = _Header("sm4$")
+class SM4CTR:
+    header = _Header("sm4ctr$")
 
     def __init__(self, secret_key: Optional[bytes] = None):
         self.secret_key = secret_key or get_default_secret_key()

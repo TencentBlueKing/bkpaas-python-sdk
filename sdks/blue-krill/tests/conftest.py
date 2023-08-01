@@ -10,8 +10,6 @@
 """
 from typing import List
 
-from cryptography.fernet import Fernet
-
 
 def pytest_configure():
     from django.conf import settings
@@ -28,9 +26,6 @@ def pytest_configure():
         MIDDLEWARE=MIDDLEWARE,
         MIDDLEWARE_CLASSES=MIDDLEWARE,
         INSTALLED_APPS=(),
-        # Config for testing encrypt related functions
-        BKKRILL_ENCRYPT_SECRET_KEY=Fernet.generate_key(),
-        ENCRYPT_CIPHER_TYPE='SM4Cipher',
     )
 
     try:
