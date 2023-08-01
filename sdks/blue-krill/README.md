@@ -590,37 +590,47 @@ r.get('foo')
 ```
 
 ### 10 blue_krill.encrypt.handler
-`blue_krill.encrypt.handler` 提够了国家(Fernet)和国际(SM4)对称加密算法，并且为了适应存量数据，在解密时会根据`header`选择相应的算法进行解密。
+`blue_krill.encrypt.handler` 提够 Fernet 和 SM4 两种对称加密算法，并且为了适应存量数据，在解密时会根据`header`选择相应的算法进行解密。
 具体的使用方式如下:
 
 ```python
 from blue_krill.encrypt.handler import EncryptHandler
 
 # 实例化
-# 第一种方式，encrypt_cipher_type现有的就是FernetCipher和SM4Cipher，分别对应国家(Fernet)和国际(SM4)对称加密算法
+# 第一种方式通过传入 encrypt_cipher_type(加密算法类型) 和 secret_key(密钥)
+# encrypt_cipher_type 现有的就是 "FernetCipher" 和 "SM4Cipher"，分别对应 Fernet 和 SM4 对称加密算法
 encrypt_handler = EncryptHandler(encrypt_cipher_type='FernetCipher', secret_key=secret_key)
-# 第二种方式，encrypt_cipher_type和secret_key为None时，
-# 会通过django setting中的BKKRILL_ENCRYPT_SECRET_KEY和ENCRYPT_CIPHER_TYPE字段设置。
+# 第二种方式，不传入参数时，即 encrypt_cipher_type 和 secret_key 为 None 
+# 会分别通过 django setting 中的 ENCRYPT_CIPHER_TYPE 和 BKKRILL_ENCRYPT_SECRET_KEY 字段设置。
 encrypt_handler = EncryptHandler()
 
 # 加解密使用
-text="random_text"
-# 加密
-encrypted=encrypt_handler.encrypt(text)
+text = "random_text"
+# 加密，根据选择的算法不同，header 也会不同，算法为 Fernet 加密头为 bkcrypt$，算法为 SM4 时，加密头为 sm4$
+# encrypted = "bkcrypt$gAAAAABkyIHPPbOeAOLa3LMc8901rslfBeTdm3rWZntSz5ut7eIDyb9eDgPmzVtL3y-iUBPSxRtZLC2ynlmeKeCNmRmTHpjtWg=="
+# encrypted = "sm4$KI9M5PrhDCmj5ix90OKg/5qYLcR8F3owLlsG"
+encrypted = encrypt_handler.encrypt(text)
 # 解密
-decrypted=encrypt_handler.decrypt(encrypted)
+# decrypted = "random_text"
+decrypted = encrypt_handler.decrypt(encrypted)
 ```
 
 ### 11 blue_krill.models.fields
-`blue_krill.models.fields` 基于 `EncryptHandler` 实现了 `EncryptField`,具体使用：
+`blue_krill.models.fields` 基于 `EncryptHandler` 实现了 `EncryptField`，具体使用：
 ```python
 from django.db import models
 from blue_krill.models.fields import EncryptField
 
-#class User.password在存取时会做加解密
+
 class User(models.Model):
+    """
+    User.password 在存取时会做加解密
+    """
+    
     name = models.CharField(max_length=30)
-    #EncryptField继承TextField
+    #EncryptField 用法与 EncryptHandler 类似
+    #实例化时，可传入 encrypt_cipher_type 选择加密算法，secret_key 配置密钥
+    #不传入时，会分别通过 django setting 中的 ENCRYPT_CIPHER_TYPE 和 BKKRILL_ENCRYPT_SECRET_KEY 字段设置。
     password = EncryptField()
 
     def __str__(self):
