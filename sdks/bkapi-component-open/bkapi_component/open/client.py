@@ -2575,7 +2575,6 @@ class UsermanageGroup(OperationGroup):
 
 class Client(ESBClient):
     """ESB Components"""
-
     bk_login = bind_property(BkLoginGroup, name="bk_login")
     cc = bind_property(CcGroup, name="cc")
     cmsi = bind_property(CmsiGroup, name="cmsi")

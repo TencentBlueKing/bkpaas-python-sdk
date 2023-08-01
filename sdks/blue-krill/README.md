@@ -589,6 +589,44 @@ r.set('foo', 'bar')
 r.get('foo')
 ```
 
+### 10 blue_krill.encrypt.handler
+`blue_krill.encrypt.handler` 提够了国家(Fernet)和国际(SM4)对称加密算法，并且为了适应存量数据，在解密时会根据`header`选择相应的算法进行解密。
+具体的使用方式如下:
+
+```python
+from blue_krill.encrypt.handler import EncryptHandler
+
+# 实例化
+# 第一种方式，encrypt_cipher_type现有的就是FernetCipher和SM4Cipher，分别对应国家(Fernet)和国际(SM4)对称加密算法
+encrypt_handler = EncryptHandler(encrypt_cipher_type='FernetCipher', secret_key=secret_key)
+# 第二种方式，encrypt_cipher_type和secret_key为None时，
+# 会通过django setting中的BKKRILL_ENCRYPT_SECRET_KEY和ENCRYPT_CIPHER_TYPE字段设置。
+encrypt_handler = EncryptHandler()
+
+# 加解密使用
+text="random_text"
+# 加密
+encrypted=encrypt_handler.encrypt(text)
+# 解密
+decrypted=encrypt_handler.decrypt(encrypted)
+```
+
+### 11 blue_krill.models.fields
+`blue_krill.models.fields` 基于 `EncryptHandler` 实现了 `EncryptField`,具体使用：
+```python
+from django.db import models
+from blue_krill.models.fields import EncryptField
+
+#class User.password在存取时会做加解密
+class User(models.Model):
+    name = models.CharField(max_length=30)
+    #EncryptField继承TextField
+    password = EncryptField()
+
+    def __str__(self):
+        return self.name
+```
+
 ## 开发指南
 
 首先安装 [poetry](https://github.com/python-poetry/poetry)，之后在项目目录下执行 `poetry env use python3.6` 初始化开发用虚拟环境。然后用 `poetry shell` 命令激活虚拟环境。

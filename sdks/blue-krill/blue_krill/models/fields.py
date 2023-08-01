@@ -20,9 +20,9 @@ class EncryptField(models.TextField):
 
     description = "a field which will be encrypted"
 
-    def __init__(self, secret_key: Optional[bytes] = None, *args, **kwargs):
+    def __init__(self, encrypt_cipher_type: Optional[str] = None, secret_key: Optional[bytes] = None, *args, **kwargs):
         super(EncryptField, self).__init__(*args, **kwargs)
-        self.handler = EncryptHandler(secret_key=secret_key)
+        self.handler = EncryptHandler(encrypt_cipher_type=encrypt_cipher_type, secret_key=secret_key)
 
     def get_prep_value(self, value):
         if value is None:
