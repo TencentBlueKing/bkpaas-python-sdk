@@ -45,18 +45,18 @@ class TestEncryptFromDjangoSetting:
     def test_fernetcipher_encrypt(self):
         with override_settings(ENCRYPT_CIPHER_TYPE='FernetCipher', BKKRILL_ENCRYPT_SECRET_KEY=Fernet.generate_key()):
             encrypt_handler = EncryptHandler()
-        text = random_string(10)
-        encrypted = encrypt_handler.encrypt(text)
-        assert encrypted.startswith("bkcrypt$")
-        assert encrypt_handler.decrypt(encrypted) == text
+            text = random_string(10)
+            encrypted = encrypt_handler.encrypt(text)
+            assert encrypted.startswith("bkcrypt$")
+            assert encrypt_handler.decrypt(encrypted) == text
 
     def test_sm4cipher_encrypt(self):
         with override_settings(ENCRYPT_CIPHER_TYPE='SM4CTR', BKKRILL_ENCRYPT_SECRET_KEY=Fernet.generate_key()):
             encrypt_handler = EncryptHandler()
-        text = random_string(10)
-        encrypted = encrypt_handler.encrypt(text)
-        assert encrypted.startswith("sm4ctr")
-        assert encrypt_handler.decrypt(encrypted) == text
+            text = random_string(10)
+            encrypted = encrypt_handler.encrypt(text)
+            assert encrypted.startswith("sm4ctr")
+            assert encrypt_handler.decrypt(encrypted) == text
 
 
 def test_decrypt_legacy():
