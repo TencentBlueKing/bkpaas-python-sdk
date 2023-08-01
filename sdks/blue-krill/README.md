@@ -599,7 +599,7 @@ from blue_krill.encrypt.handler import EncryptHandler
 # 实例化
 # 第一种方式通过传入 encrypt_cipher_type(加密算法类型) 和 secret_key(密钥)
 # encrypt_cipher_type 现有的就是 "FernetCipher" 和 "SM4CTR"，分别对应 Fernet 和 SM4 对称加密算法
-encrypt_handler = EncryptHandler(encrypt_cipher_type='FernetCipher', secret_key=secret_key)
+encrypt_handler = EncryptHandler(encrypt_cipher_type='FernetCipher', secret_key=b'PIMCuSRiVqBg5eSzQqZZrOhGFSUtrlS-8_JlIpjHt0A=')
 # 第二种方式，不传入参数时，即 encrypt_cipher_type 和 secret_key 为 None 
 # 会分别通过 django setting 中的 ENCRYPT_CIPHER_TYPE 和 BKKRILL_ENCRYPT_SECRET_KEY 字段设置。
 encrypt_handler = EncryptHandler()
