@@ -14,7 +14,6 @@ from gzip import GzipFile
 from tempfile import SpooledTemporaryFile
 
 import botocore.utils
-from bkstorages.utils import clean_name, get_available_overwrite_name, get_setting, safe_join, setting
 from boto3 import __version__ as boto3_version
 from boto3 import resource
 from botocore.client import Config
@@ -28,6 +27,8 @@ from django.utils.encoding import filepath_to_uri, force_bytes, force_text, smar
 from django.utils.timezone import is_naive, localtime
 from six import BytesIO, string_types
 from six.moves.urllib import parse as urlparse
+
+from bkstorages.utils import clean_name, get_available_overwrite_name, get_setting, safe_join, setting
 
 SAFE_CHARS = '-._~'
 

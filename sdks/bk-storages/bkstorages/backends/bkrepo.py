@@ -16,8 +16,6 @@ from typing import Dict, List, Tuple
 
 import curlify
 import requests
-from bkstorages.exceptions import DownloadFailedError, ObjectAlreadyExists, RequestError, UploadFailedError
-from bkstorages.utils import clean_name, get_available_overwrite_name, get_setting, safe_join, setting
 from django.core.exceptions import ImproperlyConfigured
 from django.core.files.base import File
 from django.core.files.storage import Storage
@@ -26,6 +24,9 @@ from django.utils.timezone import localtime
 from requests.adapters import HTTPAdapter
 from requests.auth import HTTPBasicAuth
 from six.moves.urllib_parse import urljoin
+
+from bkstorages.exceptions import DownloadFailedError, ObjectAlreadyExists, RequestError, UploadFailedError
+from bkstorages.utils import clean_name, get_available_overwrite_name, get_setting, safe_join, setting
 
 GMT_FORMAT = '%a, %d %b %Y %H:%M:%S GMT'
 MAX_RETRIES = 2

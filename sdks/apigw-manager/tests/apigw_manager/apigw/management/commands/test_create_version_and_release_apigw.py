@@ -12,8 +12,7 @@ from datetime import datetime
 
 import pytest
 import yaml
-from packaging.version import InvalidVersion
-from packaging.version import parse as parse_version
+from packaging.version import parse as parse_version, InvalidVersion
 
 from apigw_manager.apigw.management.commands.create_version_and_release_apigw import Command
 
@@ -121,7 +120,7 @@ def test_parse_version_from_resource_version(command, resource_version, expected
         (None, "0.0.1"),
         ("1.0.0", "1.0.0"),
         ("v1.0.1", "1.0.1"),
-    ],
+    ]
 )
 def test_fix_defined_version(command, defined_version, expected):
     result = command._fix_defined_version(defined_version and parse_version(defined_version))
@@ -136,7 +135,7 @@ def test_fix_defined_version(command, defined_version, expected):
         ("1.0.1", "1.0.1", True, True),
         ("1.0.1", "1.0.1", False, False),
         ("1.0.1", "1.0.1+1", False, False),
-    ],
+    ]
 )
 def test_should_create_resource_version(mocker, command, defined_version, latest_version, is_dirty, expected):
     manager = mocker.MagicMock(is_dirty=mocker.MagicMock(return_value=is_dirty))

@@ -10,7 +10,6 @@
 """
 import jwt
 import pytest
-
 from bkapi_client_core.config import settings as bkapi_settings
 
 

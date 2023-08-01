@@ -8,6 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+import six
 import time
 from unittest.mock import MagicMock
 
@@ -15,7 +16,6 @@ import jwt
 import pytest
 import requests
 import requests_mock as requests_mock_mod
-import six
 from django.utils.crypto import get_random_string
 
 from blue_krill.auth.client import VerifiedClientMiddleware

@@ -8,13 +8,13 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+import six
 import logging
 import time
 from dataclasses import dataclass
 from typing import Dict, Optional
 
 import jwt
-import six
 from requests.auth import AuthBase
 
 logger = logging.getLogger(__name__)
