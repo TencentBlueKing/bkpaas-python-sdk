@@ -8,45 +8,107 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+from typing import ClassVar, Dict, Optional
+
+from bkcrypto import constants
+from bkcrypto.contrib.django.ciphers import get_symmetric_cipher
+from bkcrypto.symmetric.options import SM4SymmetricOptions
 from cryptography.fernet import Fernet
 
 from blue_krill.encoding import force_bytes, force_text
-from blue_krill.encrypt.utils import get_default_secret_key
+from blue_krill.encrypt.utils import get_default_encrypt_cipher_type, get_default_secret_key
+
+
+class _Header:
+    def __init__(self, header: str):
+        self.header = header
+
+    def add_header(self, text: str):
+        return self.header + text
+
+    def strip_header(self, text: str):
+        # 兼容无 header 加密串
+        if not self.contain_header(text):
+            return text
+        return text[len(self.header) :]
+
+    def contain_header(self, text: str) -> bool:
+        return text.startswith(self.header)
 
 
 class EncryptHandler:
-    def __init__(self, secret_key=get_default_secret_key()):
-        self.secret_key = secret_key
-        self.f = Fernet(self.secret_key)
+    cipher_classes: ClassVar[Dict] = {}
+
+    def __init__(self, encrypt_cipher_type: Optional[str] = None, secret_key: Optional[bytes] = None):
+        self.encrypt_cipher_type = encrypt_cipher_type or get_default_encrypt_cipher_type()
+        self.secret_key = secret_key or get_default_secret_key()
 
     def encrypt(self, text: str) -> str:
-        if self.Header.contain_header(text):
-            return text
-
-        b_text = force_bytes(text)
-        return self.Header.add_header(force_text(self.f.encrypt(b_text)))
-
-    def decrypt(self, encrypted: str) -> str:
-        encrypted = self.Header.strip_header(encrypted)
-
-        b_encrypted = force_bytes(encrypted)
-        return force_text(self.f.decrypt(b_encrypted))
-
-    class Header:
-        HEADER = "bkcrypt$"
-
-        @classmethod
-        def add_header(cls, text: str):
-            return cls.HEADER + text
-
-        @classmethod
-        def strip_header(cls, text: str):
-            # 兼容无 header 加密串
-            if not cls.contain_header(text):
+        """根据指定加密算法，加密字段"""
+        # 已加密则不处理
+        for _, cls in self.cipher_classes.items():
+            if cls.header.contain_header(text):
                 return text
 
-            return text[len(cls.HEADER) :]
+        # 根据加密类型配置选择不同的加密算法
+        try:
+            cipher_class = self.cipher_classes[self.encrypt_cipher_type]
+        except KeyError:
+            raise ValueError(f"Invalid cipher type: {self.encrypt_cipher_type}")
+        else:
+            cipher = cipher_class(self.secret_key)
+            return cipher.encrypt(text)
 
-        @classmethod
-        def contain_header(cls, text: str) -> bool:
-            return text.startswith(cls.HEADER)
+    def decrypt(self, encrypted: str) -> str:
+        """根据 header 解密"""
+        for _, cls in self.cipher_classes.items():
+            if cls.header.contain_header(encrypted):
+                cipher = cls(self.secret_key)
+                return cipher.decrypt(encrypted)
+        # 若不包含头则直接返回
+        return encrypted
+
+
+def register_cipher(cls):
+    EncryptHandler.cipher_classes[cls.__name__] = cls
+
+
+@register_cipher
+class FernetCipher:
+    header = _Header("bkcrypt$")
+
+    def __init__(self, secret_key: Optional[bytes] = None):
+        self.secret_key = secret_key or get_default_secret_key()
+        self.cipher = Fernet(self.secret_key)
+
+    def encrypt(self, text: str) -> str:
+        b_text = force_bytes(text)
+        return self.header.add_header(force_text(self.cipher.encrypt(b_text)))
+
+    def decrypt(self, encrypted: str) -> str:
+        encrypted = self.header.strip_header(encrypted)
+
+        b_encrypted = force_bytes(encrypted)
+        return force_text(self.cipher.decrypt(b_encrypted))
+
+
+@register_cipher
+class SM4CTR:
+    header = _Header("sm4ctr$")
+
+    def __init__(self, secret_key: Optional[bytes] = None):
+        self.secret_key = secret_key or get_default_secret_key()
+        self.cipher = get_symmetric_cipher(
+            common={"key": secret_key},
+            cipher_options={
+                constants.SymmetricCipherType.SM4.value: SM4SymmetricOptions(mode=constants.SymmetricMode.CTR)
+            },
+        )
+
+    def encrypt(self, text: str) -> str:
+        return self.header.add_header((self.cipher.encrypt(text)))
+
+    def decrypt(self, encrypted: str) -> str:
+        encrypted = self.header.strip_header(encrypted)
+
+        return self.cipher.decrypt(encrypted)

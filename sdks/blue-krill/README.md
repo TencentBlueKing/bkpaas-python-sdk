@@ -589,6 +589,54 @@ r.set('foo', 'bar')
 r.get('foo')
 ```
 
+### 10 blue_krill.encrypt.handler
+`blue_krill.encrypt.handler` 提够 Fernet 和 SM4 两种对称加密算法，并且为了适应存量数据，在解密时会根据`header`选择相应的算法进行解密。
+具体的使用方式如下:
+
+```python
+from blue_krill.encrypt.handler import EncryptHandler
+
+# 实例化
+# 第一种方式通过传入 encrypt_cipher_type(加密算法类型) 和 secret_key(密钥)
+# encrypt_cipher_type 现有的就是 "FernetCipher" 和 "SM4CTR"，分别对应 Fernet 和 SM4 对称加密算法
+encrypt_handler = EncryptHandler(encrypt_cipher_type='FernetCipher', secret_key=b'PIMCuSRiVqBg5eSzQqZZrOhGFSUtrlS-8_JlIpjHt0A=')
+# 第二种方式，不传入参数时，即 encrypt_cipher_type 和 secret_key 为 None 
+# 会分别通过 django setting 中的 ENCRYPT_CIPHER_TYPE 和 BKKRILL_ENCRYPT_SECRET_KEY 字段设置。
+encrypt_handler = EncryptHandler()
+
+# 加解密使用
+text = "random_text"
+# 加密，根据选择的算法不同，header 也会不同，算法为 Fernet 加密头为 bkcrypt$，算法为 SM4 时，加密头为 sm4ctr$
+# encrypted = "bkcrypt$gAAAAABkyIHPPbOeAOLa3LMc8901rslfBeTdm3rWZntSz5ut7eIDyb9eDgPmzVtL3y-iUBPSxRtZLC2ynlmeKeCNmRmTHpjtWg=="
+# encrypted = "sm4ctr$KI9M5PrhDCmj5ix90OKg/5qYLcR8F3owLlsG"
+encrypted = encrypt_handler.encrypt(text)
+# 解密
+# decrypted = "random_text"
+decrypted = encrypt_handler.decrypt(encrypted)
+```
+
+### 11 blue_krill.models.fields
+`blue_krill.models.fields` 基于 `EncryptHandler` 实现了 `EncryptField`，具体使用：
+```python
+from django.db import models
+from blue_krill.models.fields import EncryptField
+
+
+class User(models.Model):
+    """
+    User.password 在存取时会做加解密
+    """
+    
+    name = models.CharField(max_length=30)
+    # EncryptField 用法与 EncryptHandler 类似
+    # 实例化时，可传入 encrypt_cipher_type 选择加密算法，secret_key 配置密钥
+    # 不传入时，会分别通过 django setting 中的 ENCRYPT_CIPHER_TYPE 和 BKKRILL_ENCRYPT_SECRET_KEY 字段设置。
+    password = EncryptField()
+
+    def __str__(self):
+        return self.name
+```
+
 ## 开发指南
 
 首先安装 [poetry](https://github.com/python-poetry/poetry)，之后在项目目录下执行 `poetry env use python3.6` 初始化开发用虚拟环境。然后用 `poetry shell` 命令激活虚拟环境。
