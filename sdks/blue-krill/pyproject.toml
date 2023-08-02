@@ -21,8 +21,7 @@ toml = "*"
 python-editor = "^1.0.4"
 watchdog = "^1.0.2"
 curlify = "^2.2.1"
-bk-crypto-python-sdk = "^1.0.3"
-config = "^0.5.1"
+bk-crypto-python-sdk = "^1.0.4"
 
 [tool.poetry.dev-dependencies]
 redis = "^3.5.3"
