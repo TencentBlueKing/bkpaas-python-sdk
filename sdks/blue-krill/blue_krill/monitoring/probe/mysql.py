@@ -18,7 +18,7 @@ try:
     import pymysql as mysql
 except ImportError:
     try:
-        import MySQLdb as mysql
+        import MySQLdb as mysql  # noqa
     except ImportError:
         raise ImportError('Error loading mysql module. Did you install pymysql or mysqlclient?')
 

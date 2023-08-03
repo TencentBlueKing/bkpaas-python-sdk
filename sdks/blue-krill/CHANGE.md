@@ -1,5 +1,9 @@
 ## Change logs
 
+### 1.2.5
+
+- Feature: MySQLProbe support both pymysql and mysqlclient
+
 ### 1.2.4
 
 - Fix: 限制 bkrepo 创建项目管理员的权限

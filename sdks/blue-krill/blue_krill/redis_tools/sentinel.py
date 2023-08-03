@@ -16,7 +16,7 @@ from blue_krill.data_types.url import MutableURL
 
 try:
     import redis
-    from redis import sentinel
+    from redis import sentinel  # noqa
 except ImportError as _e:
     raise ImportError('Error loading redis module: %s.\n' 'Did you install a suitable version for redis?' % _e) from _e
 
