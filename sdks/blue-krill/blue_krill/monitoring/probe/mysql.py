@@ -15,9 +15,12 @@ from typing import Dict, List
 from blue_krill.monitoring.probe.base import Issue, VirtualProbe
 
 try:
-    import pymysql
-except ImportError as _e:
-    raise ImportError('Error loading mysql module: %s.\n' 'Did you install pymysql?' % _e) from _e
+    import pymysql as mysql
+except ImportError:
+    try:
+        import MySQLdb as mysql
+    except ImportError:
+        raise ImportError('Error loading mysql module. Did you install pymysql or mysqlclient?')
 
 
 logger = logging.getLogger(__name__)
@@ -44,12 +47,9 @@ class MySQLProbe(VirtualProbe):
 
     def diagnose(self) -> List[Issue]:
         try:
-            connection = pymysql.connect(**asdict(self.config))
-        except pymysql.err.OperationalError:
-            logger.exception("Can't connect to MySQL server on %s", self.config.host)
-            return [Issue(fatal=True, description=f"Can't connect to MySQL server on {self.config.host}")]
+            connection = mysql.connect(**asdict(self.config))
         except Exception:  # pylint: disable=broad-except
-            logger.exception("Unexpect exception occur when connecting to MySQL server on %s", self.config.host)
+            logger.exception("Can't connect to MySQL server on %s", self.config.host)
             return [Issue(fatal=True, description=f"Can't connect to MySQL server on {self.config.host}")]
 
         try:
