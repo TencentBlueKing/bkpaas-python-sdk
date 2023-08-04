@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "blue-krill"
-version = "1.2.5"
+version = "2.0.0"
 description = "Tools and common packages for blueking paas"
 license = "Apache License 2.0"
 readme = "README.md"
@@ -8,7 +8,7 @@ authors = ["blueking"]
 include = ["blue_krill/py.typed"]
 
 [tool.poetry.dependencies]
-python = ">=3.6.2,<3.11"
+python = ">=3.8,<3.11"
 dataclasses = {version = "^0.7", python = ">=3.6.2,<3.7"}
 cryptography = "^3.0.0"
 django-environ = "^0.8.1"
@@ -16,7 +16,7 @@ pyjwt = ">=1.7.1"
 requests = "*"
 six = "*"
 click = "*"
-pydantic = "^1.7"
+pydantic = "*"
 toml = "*"
 python-editor = "^1.0.4"
 watchdog = "^1.0.2"
@@ -41,7 +41,7 @@ flake8-comprehensions = "^3.5.0"
 pytest = "^6.2.2"
 pytest-django = "^4.1.0"
 # black
-black = "^21.7b0"
+black = "23.7.0"
 # mypy
 mypy = "^0.910"
 # install extension stubs if missing

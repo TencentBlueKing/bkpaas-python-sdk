@@ -1,5 +1,10 @@
 ## Change logs
 
+### 2.0.0
+
+- Feature: support use pydantic 1.7+ & 2.0+
+- Deprecated: drop support for python 3.6 & 3.7
+
 ### 1.2.5
 
 - Feature: MySQLProbe support both pymysql and mysqlclient

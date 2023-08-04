@@ -76,4 +76,3 @@ class TestAPIError:
         exc = APIError('foo', gettext_lazy('message'))
         formatted_exc = exc.format(gettext_lazy('new message'))
         assert formatted_exc.message == "message: new message"
-
