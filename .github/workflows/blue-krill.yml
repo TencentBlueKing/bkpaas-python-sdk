@@ -28,7 +28,7 @@ jobs:
           isort sdks/ --settings-path=sdks/blue-krill/pyproject.toml
       - name: Format with black
         run: |
-          pip install black==21.12b0 click==8.1.6
+          pip install black==23.7.0 click==8.1.6
           black sdks/ --config=sdks/blue-krill/pyproject.toml
       - name: Lint with flake8
         run: |

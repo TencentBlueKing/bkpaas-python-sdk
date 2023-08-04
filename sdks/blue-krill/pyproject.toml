@@ -41,7 +41,7 @@ flake8-comprehensions = "^3.5.0"
 pytest = "^6.2.2"
 pytest-django = "^4.1.0"
 # black
-black = "^21.7b0"
+black = "23.7.0"
 # mypy
 mypy = "^0.910"
 # install extension stubs if missing

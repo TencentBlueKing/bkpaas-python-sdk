@@ -25,7 +25,7 @@ from typing import Any, Collection, Dict, Iterator, List, Optional, Set, Type
 
 import click
 import toml
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, Field
 from toml.decoder import TomlDecodeError
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
@@ -140,7 +140,7 @@ class EditionConf(BaseModel):
     """
 
     name: str
-    rel_directory: Optional[str]
+    rel_directory: Optional[str] = None
 
     def get_rel_directory(self) -> str:
         return self.rel_directory or self.name
@@ -154,10 +154,10 @@ class Configuration(BaseModel):
     :param linker_type: "default" or "symbol-link"
     """
 
-    project_root: Optional[Path]
-    editions_root: Optional[Path]
-    linker_type: Optional[str]
-    editions: List[EditionConf]
+    project_root: Optional[Path] = None
+    editions_root: Optional[Path] = None
+    linker_type: Optional[str] = None
+    editions: List[EditionConf] = Field(default_factory=list)
 
     def get_project_root(self) -> Path:
         return self.project_root or Path.cwd()
