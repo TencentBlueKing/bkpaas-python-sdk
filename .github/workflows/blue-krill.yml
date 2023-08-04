@@ -2,13 +2,13 @@ name: CI Check for blue-krill
 
 on:
   push:
-    branches: [ master, staging ]
+    branches: [master, staging]
     paths:
-      - 'sdks/blue-krill/**'
+      - "sdks/blue-krill/**"
   pull_request:
-    branches: [ master, staging]
+    branches: [master, staging]
     paths:
-      - 'sdks/blue-krill/**'
+      - "sdks/blue-krill/**"
   workflow_dispatch:
   release:
     types: [published]
@@ -17,86 +17,82 @@ jobs:
     runs-on: macos-latest
     continue-on-error: true
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.7
-    - name: Format with isort
-      run: |
-        pip install isort==5.9.2
-        isort sdks/ --settings-path=sdks/blue-krill/pyproject.toml
-    - name: Format with black
-      run: |
-        pip install black==21.7b0 click==8.0.4
-        black sdks/ --config=sdks/blue-krill/pyproject.toml
-    - name: Lint with flake8
-      run: |
-        pip install flake8==4.0.1 pyproject-flake8==0.0.1a4
-        pflake8 sdks/ --config=sdks/blue-krill/pyproject.toml
-    - name: Lint with mypy
-      run: |
-        pip install mypy==0.910 types-requests==2.25.0 types-setuptools==57.0.0 types-dataclasses==0.1.5 types-redis==3.5.4 types-PyMySQL==1.0.0 types-six==0.1.7 types-toml==0.1.3
-        mypy sdks/blue-krill --config-file=sdks/blue-krill/pyproject.toml
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Format with isort
+        run: |
+          pip install isort==5.12.0
+          isort sdks/ --settings-path=sdks/blue-krill/pyproject.toml
+      - name: Format with black
+        run: |
+          pip install black==21.12b0 click==8.1.6
+          black sdks/ --config=sdks/blue-krill/pyproject.toml
+      - name: Lint with flake8
+        run: |
+          pip install flake8==4.0.1 pyproject-flake8==0.0.1a5
+          pflake8 sdks/ --config=sdks/blue-krill/pyproject.toml
+      - name: Lint with mypy
+        run: |
+          pip install mypy==0.910 types-requests==2.31.0.2 types-setuptools==57.4.18 types-dataclasses==0.1.7 types-redis==3.5.18 types-PyMySQL==1.1.0.1 types-six==0.1.9 types-toml==0.1.5
+          mypy sdks/blue-krill --config-file=sdks/blue-krill/pyproject.toml
   test:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
+        python-version: ["3.8", "3.9", "3.10"]
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Set up Poetry
-      uses: abatilo/actions-poetry@v2.1.0
-      with:
-          poetry-version: 1.3.2
-    - name: Start Redis Container
-      uses: supercharge/redis-github-action@1.4.0
-      if: runner.os == 'Linux'
-      with:
-        redis-version: 3.2.0
-    - name: Set Redis URL
-      if: runner.os == 'Linux'
-      run: |
-        echo "REDIS_URL=redis://localhost:6379/0" >> $GITHUB_ENV
-    - name: Install dependencies
-      working-directory: sdks/blue-krill
-      run: |
-        poetry export --without-hashes --dev -o requirements-dev.txt
-        python -m pip install --upgrade pip
-        python -m pip  install -r requirements-dev.txt
-        python -m pip  install tox-gh-actions==2.8.1
-    - name: Run test with tox targets for ${{ matrix.python-version }}
-      working-directory: sdks/blue-krill
-      run: tox
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Set up Poetry
+        uses: abatilo/actions-poetry@v2.3.0
+      - name: Start Redis Container
+        uses: supercharge/redis-github-action@1.4.0
+        if: runner.os == 'Linux'
+        with:
+          redis-version: 3.2.0
+      - name: Set Redis URL
+        if: runner.os == 'Linux'
+        run: |
+          echo "REDIS_URL=redis://localhost:6379/0" >> $GITHUB_ENV
+      - name: Install dependencies
+        working-directory: sdks/blue-krill
+        run: |
+          poetry export --without-hashes --dev -o requirements-dev.txt
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+          python -m pip install tox-gh-actions==2.8.1
+      - name: Run test with tox targets for ${{ matrix.python-version }}
+        working-directory: sdks/blue-krill
+        run: tox
   build:
     runs-on: macos-latest
     if: github.event.release && contains(github.event.release.tag_name, 'blue_krill')
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
-    - name: Set up Poetry
-      uses: abatilo/actions-poetry@v2.1.0
-      with:
-          poetry-version: 1.3.2
-    - name: Build blue-krill
-      run: |
-        cd sdks/blue-krill
-        poetry install
-        poetry build
-        echo "${{ github.event.relesae.tag_name }} ${{ github.sha }}" > Release.txt
-        cat Release.txt
-    - name: Release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: |
-          Release.txt
-          sdks/blue-krill/dist/*
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Set up Poetry
+        uses: abatilo/actions-poetry@v2.3.0
+      - name: Build blue-krill
+        run: |
+          cd sdks/blue-krill
+          poetry install
+          poetry build
+          echo "${{ github.event.relesae.tag_name }} ${{ github.sha }}" > Release.txt
+          cat Release.txt
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            Release.txt
+            sdks/blue-krill/dist/*
