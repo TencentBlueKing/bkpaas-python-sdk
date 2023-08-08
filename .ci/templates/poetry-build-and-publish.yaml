@@ -65,11 +65,12 @@ stages:
         run: |
           # 清理工作空间
           rm -r -f ${WORKSPACE}
-      - uses: BuildArchiveGetTask@2.*
-        name: Download artifact
+      - name: Download artifact
+        uses: downloadArtifact@1.*
         with:
-          pipeLineId: ${{ ci.pipeline_id }}
-          buildNo: true
+          repoName: pipeline
+          targetPipelineId: ${{ ci.pipeline_id }}
+          latestBuildNum: true
           srcPaths: "*"
           destPath: "dist"
       - template: publishing-step.yaml
