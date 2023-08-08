@@ -64,7 +64,7 @@ stages:
       - name: "Clean workspace"
         run: |
           # 清理工作空间
-          rm -r -f ${WORKSPACE}
+          rm -r -f ${WORKSPACE}/dist
       - name: Download artifact
         uses: downloadArtifact@1.*
         with:
