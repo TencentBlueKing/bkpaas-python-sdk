@@ -11,7 +11,7 @@ parameters:
   default: https://upload.pypi.org/legacy/
 - name: runner-image
   type: string
-  default: "python:3.8"
+  default: "bkci/ci:ubuntu"
 
 stages:
 - name: "Build Package Stage"
