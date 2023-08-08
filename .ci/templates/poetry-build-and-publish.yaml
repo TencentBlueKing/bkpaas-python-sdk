@@ -45,7 +45,7 @@ stages:
           # 执行构建
           poetry build
           # 上传构件
-          echo "::set-output name=files,type=artifact::dist/*"
+          echo "::set-output name=files,type=artifact::${{ parameters.project }}/dist/*"
     
 - name: "Publish package"
   check-in:
