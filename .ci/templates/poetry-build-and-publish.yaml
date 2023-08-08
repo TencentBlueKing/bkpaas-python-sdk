@@ -45,7 +45,7 @@ stages:
           # 执行构件
           poetry build
       - name: Upload artifact
-        uses: UploadArtifactory@7.*
+        uses: UploadArtifactory@1.*
         with:
           pathType: folder
           folderPath: ${{ parameters.project }}/dist
