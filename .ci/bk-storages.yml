@@ -1,0 +1,13 @@
+version: v2.0
+
+name: "Publish bk-storages to pypi"
+on:
+  tag: [ "bk-storages-*" ]
+
+stages:
+- template: poetry-build-and-publish.yaml
+  parameters:
+    username: "${{ settings.PYPI.username }}"
+    password: "${{ settings.PYPI.password }}"
+    project: "sdks/bk-storages"
+    repository-url: "https://upload.pypi.org/legacy/"

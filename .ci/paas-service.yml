@@ -1,0 +1,13 @@
+version: v2.0
+
+name: "Publish paas-service to pypi"
+on:
+  tag: [ "paas-service-*" ]
+
+stages:
+- template: poetry-build-and-publish.yaml
+  parameters:
+    username: "${{ settings.PYPI.username }}"
+    password: "${{ settings.PYPI.password }}"
+    project: "sdks/paas-service"
+    repository-url: "https://upload.pypi.org/legacy/"
