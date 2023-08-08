@@ -37,19 +37,16 @@ stages:
           python -m pip install --upgrade pip
           pip install poetry
 
-      - name: Build package
+      - name: Build package & Upload artifact
         run: |
           # 切换工作目录, 再切换到 project 目录
           cd ${WORKSPACE}
           cd ${{ parameters.project }}
           # 执行构件
           poetry build
-      - name: Upload artifact
-        uses: UploadArtifactory@1.*
-        with:
-          pathType: folder
-          folderPath: ${{ parameters.project }}/dist
-          repoName: pipeline
+          # 上传构建
+          echo "::set-output name=files,type=artifact::dist/*"
+    
 - name: "Publish package"
   check-in:
     reviews:
