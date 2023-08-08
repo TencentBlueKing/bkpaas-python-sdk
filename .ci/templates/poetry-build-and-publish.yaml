@@ -42,9 +42,9 @@ stages:
           # 切换工作目录, 再切换到 project 目录
           cd ${WORKSPACE}
           cd ${{ parameters.project }}
-          # 执行构件
+          # 执行构建
           poetry build
-          # 上传构建
+          # 上传构件
           echo "::set-output name=files,type=artifact::dist/*"
     
 - name: "Publish package"
