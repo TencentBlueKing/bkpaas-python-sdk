@@ -1,0 +1,83 @@
+parameters:
+- name: project
+  type: string
+- name: username
+  type: string
+  default: __token__
+- name: password
+  type: string
+- name: repository-url
+  type: string
+  default: https://upload.pypi.org/legacy/
+- name: runner-image
+  type: string
+  default: "python:3.8"
+
+stages:
+- name: "Build Package Stage"
+  jobs:
+    build:
+      name: build
+      runs-on:
+        pool-name: "docker"
+        container:
+          image: ${{ parameters.runner-image }}
+      steps:
+      - name: "Checkout"
+        checkout: self
+        with:
+          enableSubmodule: false
+          enableGitLfs: false
+      - name: Install dependencies
+        run: |
+          # 切换工作目录, 再切换到 project 目录
+          cd ${WORKSPACE}
+          cd ${{ parameters.project }}
+
+          python -m pip install --upgrade pip
+          pip install poetry
+
+      - name: Build package
+        run: |
+          # 切换工作目录, 再切换到 project 目录
+          cd ${WORKSPACE}
+          cd ${{ parameters.project }}
+          # 执行构件
+          poetry build
+      - name: Upload artifact
+        uses: UploadArtifactory@7.*
+        with:
+          pathType: folder
+          folderPath: ${{ parameters.project }}/dist
+          repoName: pipeline
+- name: "Publish package"
+  check-in:
+    reviews:
+      flows:
+      - name: 审批组
+        reviewers: ["raymondhzu", "jamesge", "jiayuan", "shabbywu", "schneesu"]
+  jobs:
+    publish:
+      name: publish
+      runs-on:
+        pool-name: "docker"
+        container:
+          image: ${{ parameters.runner-image }}
+      steps:
+      - name: "Clean workspace"
+        run: |
+          # 清理工作空间
+          rm -r -f ${WORKSPACE}
+      - uses: BuildArchiveGetTask@2.*
+        name: Download artifact
+        with:
+          pipeLineId: ${{ ci.pipeline_id }}
+          buildNo: true
+          srcPaths: "*"
+          destPath: "dist"
+      - template: publishing-step.yaml
+        parameters:
+          username: ${{ parameters.username }}
+          password: ${{ parameters.password }}
+          repository-url: ${{ parameters.repository-url }}
+          packages-dir: dist

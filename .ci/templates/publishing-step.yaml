@@ -1,0 +1,26 @@
+parameters:
+- name: username
+  type: string
+  default: __token__
+- name: password
+  type: string
+- name: repository-url
+  type: string
+  default:  https://upload.pypi.org/legacy/
+- name: packages-dir
+  type: string
+  default: ./dist
+
+
+steps:
+- name: Publish package
+  run: |
+    # 切换工作目录
+    cd ${WORKSPACE}
+    # setup twine
+    pip install twine
+
+    ls -lah ${{ parameters.packages-dir }}
+
+    # perform upload action
+    twine upload --username ${{ parameters.username }} --password ${{ parameters.password }} --repository-url ${{ parameters.repository-url }} ${{ parameters.packages-dir }}/* --verbose

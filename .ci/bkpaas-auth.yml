@@ -1,0 +1,13 @@
+version: v2.0
+
+name: "Publish bkpaas-auth to pypi"
+on:
+  tag: [ "bkpaas-auth-*" ]
+
+stages:
+- template: poetry-build-and-publish.yaml
+  parameters:
+    username: "${{ settings.PYPI.username }}"
+    password: "${{ settings.PYPI.password }}"
+    project: "sdks/bkpaas-auth"
+    repository-url: "https://upload.pypi.org/legacy/"
