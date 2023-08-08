@@ -11,7 +11,7 @@ parameters:
   default: https://upload.pypi.org/legacy/
 - name: runner-image
   type: string
-  default: "bkci/ci:ubuntu"
+  default: "bkci/ci:latest"
 
 stages:
 - name: "Build Package Stage"
@@ -34,7 +34,7 @@ stages:
           cd ${WORKSPACE}
           cd ${{ parameters.project }}
 
-          python -m pip install --upgrade pip
+          pip install --upgrade pip
           pip install poetry
 
       - name: Build package & Upload artifact
