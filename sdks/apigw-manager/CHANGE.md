@@ -1,5 +1,8 @@
 ## Change logs
 
+### 2.0.1
+- 修复镜像 sync-apigateway 中，同步任务失败时，脚本退出码为 0 的问题
+
 ### 2.0.0
 - 恢复指令 sync_apigw_strategies，但其中仅打印告警日志
 
