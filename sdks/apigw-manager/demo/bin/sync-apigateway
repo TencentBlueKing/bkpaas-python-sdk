@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 log() {
     NOW=$(date +"%Y-%m-%d %H:%M:%S")
     echo "${NOW} [$1] $2"
@@ -25,12 +23,14 @@ title() {
 
 call_command() {
     command=$1
-    
     shift
+
     log_info "Running command ${command}"
-    if ! apigw-manager "${command}" "$@"
-    then
-        status=$?
+
+    apigw-manager "${command}" "$@"
+    status=$?
+
+    if [ ${status} -ne 0 ]; then
         log_warn "Command ${command} failed with status ${status}"
         return ${status}
     fi
@@ -48,10 +48,11 @@ call_definition_command() {
         log_warn "Definition file ${definition} does not exist, skipped"
         return 0
     fi
+
+    call_command "${command}" -f "${definition}" "$@"
+    status=$?
     
-    if ! call_command "${command}" -f "${definition}" "$@"
-    then
-        status=$?
+    if [ ${status} -ne 0 ]; then
         log_warn "Command ${command} failed with status ${status}"
         return ${status}
     fi
@@ -62,20 +63,17 @@ call_definition_command() {
 must_call_definition_command() {
     command=$1
     definition=$2
-    
     shift 2
+
     call_definition_command "${command}" "${definition}" "$@"
-    
     status=$?
-    case ${status} in
-        0)
-            return 0
-        ;;
-        *)
-            log_error "Crash during command ${command}"
-            exit ${status}
-        ;;
-    esac
+
+    if [ ${status} -ne 0 ]; then
+        log_error "Crash during command ${command}"
+        exit ${status}
+    fi
+
+    return 0
 }
 
 definition_file="${definition_file:-definition.yaml}"
