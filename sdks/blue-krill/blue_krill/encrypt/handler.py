@@ -30,7 +30,7 @@ class _Header:
         # 兼容无 header 加密串
         if not self.contain_header(text):
             return text
-        return text[len(self.header) :]
+        return text[len(self.header):]
 
     def contain_header(self, text: str) -> bool:
         return text.startswith(self.header)
@@ -40,8 +40,12 @@ class EncryptHandler:
     cipher_classes: ClassVar[Dict] = {}
 
     def __init__(self, encrypt_cipher_type: Optional[str] = None, secret_key: Optional[bytes] = None):
-        self.encrypt_cipher_type = encrypt_cipher_type or get_default_encrypt_cipher_type()
+        self._encrypt_cipher_type = encrypt_cipher_type
         self.secret_key = secret_key or get_default_secret_key()
+
+    @property
+    def encrypt_cipher_type(self):
+        return self._encrypt_cipher_type or get_default_encrypt_cipher_type()
 
     def encrypt(self, text: str) -> str:
         """根据指定加密算法，加密字段"""
