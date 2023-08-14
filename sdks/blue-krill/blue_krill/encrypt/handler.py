@@ -41,15 +41,11 @@ class EncryptHandler:
 
     def __init__(self, encrypt_cipher_type: Optional[str] = None, secret_key: Optional[bytes] = None):
         self._encrypt_cipher_type = encrypt_cipher_type
-        self._secret_key = secret_key
+        self.secret_key = secret_key or get_default_secret_key()
 
     @property
     def encrypt_cipher_type(self):
         return self._encrypt_cipher_type or get_default_encrypt_cipher_type()
-
-    @property
-    def secret_key(self):
-        return self._secret_key or get_default_secret_key()
 
     def encrypt(self, text: str) -> str:
         """根据指定加密算法，加密字段"""
