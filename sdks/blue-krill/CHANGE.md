@@ -2,7 +2,7 @@
 
 ### 2.0.1
 
-- Fix: EncryptField supports SM4 encryption algorithm
+- Feature: EncryptField supports SM4 encryption algorithm
 
 ### 2.0.0
 
