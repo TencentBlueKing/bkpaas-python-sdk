@@ -59,6 +59,22 @@ class TestEncryptFromDjangoSetting:
             assert encrypt_handler.decrypt(encrypted) == text
 
 
+def test_encrypt_type_switching(self):
+    secret_key = Fernet.generate_key()
+    with override_settings(ENCRYPT_CIPHER_TYPE='FernetCipher', BKKRILL_ENCRYPT_SECRET_KEY=secret_key):
+        encrypt_handler = EncryptHandler()
+        text = random_string(10)
+        encrypted = encrypt_handler.encrypt(text)
+        assert encrypted.startswith("bkcrypt$")
+        assert encrypt_handler.decrypt(encrypted) == text
+
+    with override_settings(ENCRYPT_CIPHER_TYPE='SM4CTR', BKKRILL_ENCRYPT_SECRET_KEY=secret_key):
+        text = random_string(10)
+        encrypted = encrypt_handler.encrypt(text)
+        assert encrypted.startswith("sm4ctr$")
+        assert encrypt_handler.decrypt(encrypted) == text
+
+
 def test_decrypt_legacy():
     encrypted_s = '40Ot6vrbuGI='
     assert legacy_decrypt(encrypted_s, 'a' * 24) == 'foo'

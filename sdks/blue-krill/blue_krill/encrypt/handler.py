@@ -40,11 +40,13 @@ class EncryptHandler:
     cipher_classes: ClassVar[Dict] = {}
 
     def __init__(self, encrypt_cipher_type: Optional[str] = None, secret_key: Optional[bytes] = None):
-        self.encrypt_cipher_type = encrypt_cipher_type or get_default_encrypt_cipher_type()
-        self.secret_key = secret_key or get_default_secret_key()
+        self.encrypt_cipher_type = encrypt_cipher_type
+        self.secret_key = secret_key
 
     def encrypt(self, text: str) -> str:
         """根据指定加密算法，加密字段"""
+        encrypt_cipher_type = self.encrypt_cipher_type or get_default_encrypt_cipher_type()
+        secret_key = self.secret_key or get_default_secret_key()
         # 已加密则不处理
         for _, cls in self.cipher_classes.items():
             if cls.header.contain_header(text):
@@ -52,18 +54,20 @@ class EncryptHandler:
 
         # 根据加密类型配置选择不同的加密算法
         try:
-            cipher_class = self.cipher_classes[self.encrypt_cipher_type]
+            cipher_class = self.cipher_classes[encrypt_cipher_type]
         except KeyError:
-            raise ValueError(f"Invalid cipher type: {self.encrypt_cipher_type}")
+            raise ValueError(f"Invalid cipher type: {encrypt_cipher_type}")
         else:
-            cipher = cipher_class(self.secret_key)
+            cipher = cipher_class(secret_key)
             return cipher.encrypt(text)
 
     def decrypt(self, encrypted: str) -> str:
+        encrypt_cipher_type = self.encrypt_cipher_type or get_default_encrypt_cipher_type()
+        secret_key = self.secret_key or get_default_secret_key()
         """根据 header 解密"""
         for _, cls in self.cipher_classes.items():
             if cls.header.contain_header(encrypted):
-                cipher = cls(self.secret_key)
+                cipher = cls(secret_key)
                 return cipher.decrypt(encrypted)
         # 若不包含头则直接返回
         return encrypted
