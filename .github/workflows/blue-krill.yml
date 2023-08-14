@@ -92,7 +92,7 @@ jobs:
           cd sdks/blue-krill
           poetry install
           poetry build
-          echo "${{ github.event.relesae.tag_name }} ${{ github.sha }}" > Release.txt
+          echo "${{ github.event.release.tag_name }} ${{ github.sha }}" > Release.txt
           cat Release.txt
       - name: Release
         uses: softprops/action-gh-release@v1
