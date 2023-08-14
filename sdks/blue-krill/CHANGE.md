@@ -1,5 +1,9 @@
 ## Change logs
 
+### 2.0.1
+
+- Feature: EncryptField supports SM4 encryption algorithm
+
 ### 2.0.0
 
 - Feature: support use pydantic 1.7+ & 2.0+
