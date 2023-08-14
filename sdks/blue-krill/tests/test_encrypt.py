@@ -59,7 +59,7 @@ class TestEncryptFromDjangoSetting:
             assert encrypt_handler.decrypt(encrypted) == text
 
 
-def test_encrypt_type_switching():
+def test_switch_encrypt_type():
     secret_key = Fernet.generate_key()
     with override_settings(ENCRYPT_CIPHER_TYPE='FernetCipher', BKKRILL_ENCRYPT_SECRET_KEY=secret_key):
         encrypt_handler = EncryptHandler()
