@@ -11,3 +11,4 @@ stages:
     password: "${{ settings.PYPI.password }}"
     project: "sdks/blue-krill"
     repository-url: "https://upload.pypi.org/legacy/"
+    runner-image: "435495971/bkci:ubuntu-python3.9"
