@@ -2,8 +2,20 @@
 name = "bkstorages"
 version = "1.1.0"
 description = "File storage backends for blueking PaaS platform"
-classifiers = ["Programming Language :: Python", "Programming Language :: Python :: 3", "Framework :: Django"]
-authors = ["blueking <blueking@tencent.com>"]
+readme = "README.md"
+authors = [
+    {name = "blueking", email = "blueking@tencent.com"},
+]
+license = "MIT"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Framework :: Django",
+]
+
+[project.urls]
+Homepage = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
+Repository = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
 
 [tool.poetry.dependencies]
 python = ">=3.6.2,<3.11"

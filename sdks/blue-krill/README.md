@@ -639,10 +639,10 @@ class User(models.Model):
 
 ## 开发指南
 
-首先安装 [poetry](https://github.com/python-poetry/poetry)，之后在项目目录下执行 `poetry env use python3.6` 初始化开发用虚拟环境。然后用 `poetry shell` 命令激活虚拟环境。
+首先安装 [poetry](https://github.com/python-poetry/poetry)，之后在项目目录下执行 `poetry env use python3.8` 初始化开发用虚拟环境。然后用 `poetry shell` 命令激活虚拟环境。
 
 - 执行 `poetry install` 安装所有依赖
-- 使用 `pytest -s .` 执行所有单元测试
+- 使用 `poetry run pytest -s .` 执行所有单元测试
 
 在开发时，如果想让某项目安装本地目录里的 blue-krill 模块，首先切换到对应项目虚拟环境，然后在 blue-krill 目录执行 `pip install -e .` 
 

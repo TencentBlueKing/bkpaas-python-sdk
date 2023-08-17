@@ -1,11 +1,21 @@
 [tool.poetry]
 name = "blue-krill"
 version = "2.0.1"
-description = "Tools and common packages for blueking paas"
-license = "Apache License 2.0"
-readme = "README.md"
-authors = ["blueking"]
+description = "Tools and common packages for blueking PaaS platform."
 include = ["blue_krill/py.typed"]
+readme = "README.md"
+authors = [
+    {name = "blueking", email = "blueking@tencent.com"},
+]
+license = "MIT"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+]
+
+[project.urls]
+Homepage = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
+Repository = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.11"

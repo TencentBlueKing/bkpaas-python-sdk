@@ -2,9 +2,19 @@
 name = "bkpaas-auth"
 version = "2.0.6"
 description = "User authentication django app for blueking internal projects"
-license = "Apach License 2.0"
 readme = "README.md"
-authors = ["blueking <blueking@tencent.com>"]
+authors = [
+    {name = "blueking", email = "blueking@tencent.com"},
+]
+license = "MIT"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+]
+
+[project.urls]
+Homepage = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
+Repository = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
 
 [tool.poetry.dependencies]
 python = ">=3.6,<4.0"
