@@ -29,7 +29,7 @@ class TestEncrypt:
         encrypt_handler = EncryptHandler(encrypt_cipher_type='SM4CTR', secret_key=Fernet.generate_key())
         text = random_string(10)
         encrypted = encrypt_handler.encrypt(text)
-        assert encrypted.startswith("sm4ctr")
+        assert encrypted.startswith("sm4ctr$")
         assert encrypt_handler.decrypt(encrypted) == text
 
     def test_mixcipher_encrypt(self):
@@ -55,7 +55,7 @@ class TestEncryptFromDjangoSetting:
             encrypt_handler = EncryptHandler()
             text = random_string(10)
             encrypted = encrypt_handler.encrypt(text)
-            assert encrypted.startswith("sm4ctr")
+            assert encrypted.startswith("sm4ctr$")
             assert encrypt_handler.decrypt(encrypted) == text
 
 
