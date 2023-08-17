@@ -3,9 +3,7 @@ name = "apigw-manager"
 version = "2.0.1"
 description = "The SDK for managing blueking gateway resource."
 readme = "README.md"
-authors = [
-    {name = "blueking", email = "blueking@tencent.com"},
-]
+authors = ["blueking <blueking@tencent.com>"]
 license = "MIT"
 classifiers = [
     "Programming Language :: Python :: 3",

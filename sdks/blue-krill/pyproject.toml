@@ -4,9 +4,7 @@ version = "2.0.1"
 description = "Tools and common packages for blueking PaaS platform."
 include = ["blue_krill/py.typed"]
 readme = "README.md"
-authors = [
-    {name = "blueking", email = "blueking@tencent.com"},
-]
+authors = ["blueking <blueking@tencent.com>"]
 license = "MIT"
 classifiers = [
     "Programming Language :: Python :: 3",
