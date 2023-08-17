@@ -9,6 +9,7 @@ from bkpaas_auth.conf import bkauth_settings as conf
 from bkpaas_auth.core.exceptions import ServiceError
 from bkpaas_auth.core.http import http_get
 from bkpaas_auth.core.user_info import BkUserInfo, RtxUserInfo
+from bkpaas_auth.utils import scrub_data
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,8 @@ def _get_and_cache_user_info(cache_key, user_params, response_ok_checker):
 
     if not response_ok_checker(result):
         logger.error(
-            f'Get user info fail, url: {conf.TOKEN_USER_INFO_ENDPOINT}, params: {params}, response: {result}',
+            f'Get user info fail, url: {conf.TOKEN_USER_INFO_ENDPOINT}, params: {scrub_data(params)}'
+            f', response: {result}',
         )
         return
 
