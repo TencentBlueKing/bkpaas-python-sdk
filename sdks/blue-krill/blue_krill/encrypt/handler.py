@@ -103,7 +103,8 @@ class SM4CTR:
     def __init__(self, secret_key: Optional[bytes] = None):
         self.secret_key = secret_key or get_default_secret_key()
         self.cipher = get_symmetric_cipher(
-            common={"key": secret_key},
+            common={"key": self.secret_key},
+            cipher_type=constants.SymmetricCipherType.SM4.value,
             cipher_options={
                 constants.SymmetricCipherType.SM4.value: SM4SymmetricOptions(mode=constants.SymmetricMode.CTR)
             },

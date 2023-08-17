@@ -1,5 +1,9 @@
 ## Change logs
 
+### 2.0.2
+
+- Fix: configure the correct SM4 encryption algorithm
+
 ### 2.0.1
 
 - Feature: EncryptField supports SM4 encryption algorithm
