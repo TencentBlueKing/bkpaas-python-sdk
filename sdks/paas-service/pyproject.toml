@@ -2,8 +2,18 @@
 [tool.poetry]
 name = "paas_service"
 version = "1.1.4"
-description = ""
+description = "A Django application for developing BK-PaaS add-on services."
+readme = "README.md"
 authors = ["blueking <blueking@tencent.com>"]
+license = "MIT"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+]
+
+[project.urls]
+Homepage = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
+Repository = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
 
 [[tool.poetry.source]]
 url = "https://mirrors.tencent.com/pypi/simple/"

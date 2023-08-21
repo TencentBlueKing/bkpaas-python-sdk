@@ -19,7 +19,7 @@ setup(
     version='2.0.0',
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*',
     author='blueking',
-    license='Apach License 2.0',
+    license='MIT',
     packages=find_packages(),
     namespace_packages=['bkapi_component'],
     package_dir={'': '.'},
