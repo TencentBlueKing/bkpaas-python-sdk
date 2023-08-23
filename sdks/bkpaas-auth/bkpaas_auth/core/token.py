@@ -14,6 +14,7 @@ from bkpaas_auth.core.http import http_get
 from bkpaas_auth.core.services import get_app_credentials
 from bkpaas_auth.core.user_info import BkUserInfo, RtxUserInfo, UserInfo
 from bkpaas_auth.models import User
+from bkpaas_auth.utils import scrub_data
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ class TokenRequestBackend(AbstractRequestBackend):
 
         logger.debug(
             f'Get user fail, url: {bkauth_settings.USER_COOKIE_VERIFY_URL}, '
-            f'params: {credentials}, response: {resp}'
+            f'params: {scrub_data(credentials)}, response: {resp}'
         )
 
         # 用户认证成功，但用户无应用访问权限
@@ -69,7 +70,7 @@ class RequestBackend(AbstractRequestBackend):
         if resp.get('ret') != 0:
             logger.debug(
                 f'Get user fail, url: {bkauth_settings.USER_COOKIE_VERIFY_URL}, '
-                f'params: {credentials}, response: {resp}'
+                f'params: {scrub_data(credentials)}, response: {resp}'
             )
             raise InvalidTokenCredentialsError('Invalid credentials given')
         return resp["data"]["username"]

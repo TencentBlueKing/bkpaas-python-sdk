@@ -1,5 +1,20 @@
 # -*- coding: utf-8 -*-
+import logging
+import sys
+
 import pytest
+
+
+def setup_root_logger(level):
+    """Set up the root logger, make it to write messages to stdout"""
+    root = logging.getLogger()
+    root.setLevel(level)
+
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(level)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    root.addHandler(handler)
 
 
 def pytest_configure():
@@ -51,6 +66,8 @@ def pytest_configure():
     from bkpaas_auth.monkey import patch_middleware_get_user
 
     patch_middleware_get_user()
+
+    setup_root_logger(logging.DEBUG)
 
 
 @pytest.fixture

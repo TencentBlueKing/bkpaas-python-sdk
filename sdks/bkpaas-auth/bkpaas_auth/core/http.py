@@ -14,6 +14,7 @@ from typing import Tuple, Union
 import requests
 
 from bkpaas_auth.conf import bkauth_settings
+from bkpaas_auth.utils import scrub_data
 
 logger = logging.getLogger(__name__)
 
@@ -32,26 +33,39 @@ def get_requests_session():
 
 def _http_request(method: str, url: str, **kwargs) -> Tuple[bool, Union[None, dict, list]]:
     session = get_requests_session()
-    try:
-        resp = session.request(method, url, **kwargs)
-    except requests.exceptions.RequestException:
-        logger.exception("http request error! method: %s, url: %s, kwargs: %s", method, url, kwargs)
-        return False, None
+    params = kwargs.pop("params", None)
+    data = kwargs.pop("data", None)
 
-    logger.debug("request method: %s, url: %s, kwargs: %s", method, url, kwargs)
+    req_details = build_req_details_str(method, url, params, data, **kwargs)
+    logger.debug("Sending HTTP request, req details: %s", req_details)
+
+    try:
+        resp = session.request(method, url, params=params, data=data, **kwargs)
+    except requests.exceptions.RequestException:
+        logger.exception("http request error! req details: %s", req_details)
+        return False, None
 
     try:
         return True, resp.json()
     except json.decoder.JSONDecodeError:
         logger.exception(
-            "response json error! method: %s, url: %s, kwargs: %s, response.status_code: %s, response.text: %s",
-            method,
-            url,
-            kwargs,
+            "response json error! req details: %s, response.status_code: %s, response.text: %s",
+            req_details,
             resp.status_code,
             resp.text,
         )
         return False, None
+
+
+def build_req_details_str(method, url, params, data, **kwargs) -> str:
+    """Build the request details string for logging purpose."""
+    msg = f'{method} {url}'
+    if params:
+        msg += f', params: {scrub_data(params)}'
+    if data:
+        msg += f', data: {scrub_data(data)}'
+    msg += f', kwargs: {kwargs}'
+    return msg
 
 
 def http_get(url: str, **kwargs) -> Tuple[bool, Union[None, dict, list]]:

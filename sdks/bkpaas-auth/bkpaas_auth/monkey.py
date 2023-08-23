@@ -31,7 +31,7 @@ def get_user(request):
     except KeyError:
         user = models.AnonymousUser()
     except ImportError as e:
-        logger.exception(f"get an anonymous user, error:{e}")
+        logger.exception(f"get an anonymous user, error: {e}")
         user = models.AnonymousUser()
     return user
 

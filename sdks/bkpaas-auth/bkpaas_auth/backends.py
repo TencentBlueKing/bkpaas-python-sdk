@@ -57,7 +57,7 @@ class UniversalAuthBackend:
                 expires_in=bkauth_settings.LOGIN_TOKEN_EXPIRE_IN,
             )
             token.user_info = UserInfo(username=username)
-            logger.debug(f'New login token exchanged by credentials, token={login_token}')
+            logger.debug('New login token exchanged by credentials')
         except InvalidTokenCredentialsError:
             logger.warning('authenticate error, invalid credentials given')
             return None
@@ -91,9 +91,8 @@ class UniversalAuthBackend:
         try:
             user_token_pickled = force_bytes(request.session['user_token'], 'latin1')
             user_token: LoginToken = pickle.loads(user_token_pickled)
-            logger.debug('LoginToken from session: %s', user_token)
         except Exception as error:
-            logger.exception("pickle loads user_token failed, %s, %s", error, request.session['user_token'])
+            logger.exception("pickle loads user_token failed, %s", error)
             return None
 
         # token 已经过期则不返回，否则会出现 403
