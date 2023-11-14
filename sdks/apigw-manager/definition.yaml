@@ -53,9 +53,9 @@ apply_permissions:
   - api_name: "{{ settings.BK_APIGW_NAME }}"
 
 # 网关资源，建议资源配置采用单独的配置文件，可通过网关管理端导出资源配置
-resources:
-  swagger: "2.0"
-  paths: []
+# resources:
+#   swagger: "2.0"
+#   paths: []
 
 # 资源文档
 # 资源文档的目录格式样例如下，en 为英文文档，zh 为中文文档，创建归档文件可使用指令 `tar czvf xxx.tgz en zh`：

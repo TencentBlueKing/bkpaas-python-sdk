@@ -7,7 +7,7 @@
 # sync apigateway and release new resource-version
 set -e
 
-# 待同步网关名
+# 待同步网关名，直接指定网关名，则不需要配置 django settings BK_APIGW_NAME
 gateway_name="bk-demo"
 
 # 待同步网关、资源定义文件
@@ -20,7 +20,7 @@ python manage.py sync_apigw_config --api-name=${gateway_name} --file="${definiti
 python manage.py sync_apigw_stage --api-name=${gateway_name} --file="${definition_file}"
 python manage.py sync_apigw_resources --delete --api-name=${gateway_name} --file="${resources_file}"
 python manage.py sync_resource_docs_by_archive --api-name=${gateway_name} --file="${definition_file}"
+python manage.py create_version_and_release_apigw --api-name=${gateway_name} --file="${definition_file}"
 python manage.py grant_apigw_permissions --api-name=${gateway_name} --file="${definition_file}"
 python manage.py fetch_apigw_public_key --api-name=${gateway_name}
-python manage.py create_version_and_release_apigw --api-name=${gateway_name} --file="${definition_file}"
 echo "gateway ${gateway_name} sync definition end"
