@@ -1,0 +1,38 @@
+release:
+  # 发布版本号
+  version: 1.0.0
+  title: "这是一个测试"
+  comment: "这是一个测试"
+
+apigateway:
+  description: "描述"
+  description_en: "英文描述"
+  is_public: true
+  maintainers:
+    - "admin"
+
+stage:
+  name: "prod"
+  description: "这是一个测试"
+  description_en: "This is a test"
+  proxy_http:
+    timeout: 60
+    upstreams:
+      loadbalance: "roundrobin"
+      hosts:
+        - host: "https://httpbin.org"
+          weight: 100
+
+# 资源文档
+# 资源文档的目录格式样例如下，en 为英文文档，zh 为中文文档：
+# ./
+# - en
+#   - anything.md
+# - zh
+#   - anything.md
+resource_docs:
+  basedir: "/data/support-files/apidocs/"
+
+# 主动授权，网关主动给应用，添加访问网关所有资源的权限
+grant_permissions:
+  - bk_app_code: "{{ settings.BK_APP_CODE }}"

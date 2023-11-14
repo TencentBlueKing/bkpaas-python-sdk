@@ -12,6 +12,7 @@ COPY demo /apigw-manager/demo
 COPY manage.py /apigw-manager/manage.py
 COPY pyproject.toml /apigw-manager/pyproject.toml
 COPY poetry.lock /apigw-manager/poetry.lock
+COPY README.md /apigw-manager/README.md
 
 WORKDIR /apigw-manager
 RUN pip3 install .[demo,kubernetes]

@@ -26,7 +26,7 @@ class ApiCommand(BaseCommand):
     manager_class: typing.Callable
 
     def add_arguments(self, parser):
-        parser.add_argument("--api-name", help="api name")
+        parser.add_argument("--gateway-name", "--api-name", dest="api_name", help="gateway name")
         parser.add_argument("--host", help="apigateway host with stage of admin api `bk-apigateway`")
 
     def get_configuration(self, **kwargs):
