@@ -156,8 +156,10 @@ class Command(BaseCommand):
         if not settings.SYNC_APIGATEWAY_ENABLED:
             return
         
+        # 待同步网关名，需修改为实际网关名；直接指定网关名，则不需要配置 django settings BK_APIGW_NAME
         gateway_name = "bk-demo"
 
+        # 待同步网关、资源定义文件，需调整为实际的配置文件地址
         definition_path = os.path.join(settings.BASE_DIR, "support-files/definition.yaml")
         resources_path = os.path.join(settings.BASE_DIR, "support-files/resources.yaml")
 
