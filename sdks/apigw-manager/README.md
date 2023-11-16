@@ -156,16 +156,18 @@ class Command(BaseCommand):
         if not settings.SYNC_APIGATEWAY_ENABLED:
             return
         
+        gateway_name = "bk-demo"
+
         definition_path = os.path.join(settings.BASE_DIR, "support-files/definition.yaml")
         resources_path = os.path.join(settings.BASE_DIR, "support-files/resources.yaml")
 
-        call_command("sync_apigw_config", f"--file={definition_path}")
-        call_command("sync_apigw_stage", f"--file={definition_path}")
-        call_command("sync_apigw_resources", "--delete", f"--file={resources_path}")
-        call_command("sync_resource_docs_by_archive", f"--file={definition_path}")
-        call_command("create_version_and_release_apigw", f"--file={definition_path}")
-        call_command("grant_apigw_permissions", f"--file={definition_path}")
-        call_command("fetch_apigw_public_key", f"--file={definition_path}")
+        call_command("sync_apigw_config", f"--api-name={gateway_name}", f"--file={definition_path}")
+        call_command("sync_apigw_stage", f"--api-name={gateway_name}", f"--file={definition_path}")
+        call_command("sync_apigw_resources", f"--api-name={gateway_name}", "--delete", f"--file={resources_path}")
+        call_command("sync_resource_docs_by_archive", f"--api-name={gateway_name}", f"--file={definition_path}")
+        call_command("create_version_and_release_apigw", f"--api-name={gateway_name}", f"--file={definition_path}")
+        call_command("grant_apigw_permissions", f"--api-name={gateway_name}", f"--file={definition_path}")
+        call_command("fetch_apigw_public_key", f"--api-name={gateway_name}", f"--file={definition_path}")
 ```
 
 #### 步骤2. 添加 SDK apigw-manager
