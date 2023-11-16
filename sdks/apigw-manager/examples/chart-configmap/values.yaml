@@ -1,0 +1,15 @@
+apigatewaySync:
+  enabled: true
+  configMapMounts:
+    - name: "sync-apigw-base"
+      filePath: "files/support-files/*"
+      mountPath: "/data/"
+    - name: "sync-apigw-bin"
+      filePath: "files/support-files/bin/*"
+      mountPath: "/data/bin/"
+    - name: "sync-apigw-apidocs-zh"
+      filePath: "files/support-files/apidocs/zh/*"
+      mountPath: "/data/apidocs/zh/"
+    - name: "sync-apigw-apidocs-en"
+      filePath: "files/support-files/apidocs/en/*"
+      mountPath: "/data/apidocs/en/"

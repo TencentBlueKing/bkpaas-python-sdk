@@ -4,7 +4,7 @@ ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
 RUN python3 -m venv /opt/venv
-ENV PATH="/opt/venv/bin:/data/bin:/apigw-manager/demo/bin:$PATH"
+ENV PATH="/opt/venv/bin:/apigw-manager/demo/bin:$PATH"
 RUN pip3 install --upgrade pip
 
 COPY src /apigw-manager/src

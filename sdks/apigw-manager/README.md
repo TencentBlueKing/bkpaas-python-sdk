@@ -33,12 +33,12 @@ SDK 同步网关配置到 API 网关，支持多种方案:
 同步网关配置到 API 网关，需要准备网关配置、资源配置、资源文档、自定义同步脚本等数据，可参考目录：
 ```
 support-files
-├── definition.yaml         # 维护网关、环境、资源文档地址、主动授权、发布等配置，但不包含资源配置
+├── definition.yaml         # 维护网关、环境、资源文档路径、主动授权、发布等配置，但不包含资源配置
 ├── resources.yaml          # 维护资源配置；资源配置可通过 API 网关管理端直接导出，且数据量较大，因此单独管理
 ├── bin
 │   └── sync-apigateway     # 自定义同步脚本，django 项目也可使用自定义 django command；利用 SDK 提供的 django command 组装同步任务
-├── bk_apigw_docs_demo.tgz  # 资源文档归档文件，可选；与资源文档目录 apidocs 二选一即可
-└── apidocs                 # 资源文档，可选；可通过 API 网关管理端直接导出，或者手工维护 markdown 格式文档文件
+├── bk_apigw_docs_demo.tgz  # 资源文档归档文件，可选；可通过 API 网关管理端导出；与资源文档目录 apidocs 二选一
+└── apidocs                 # 资源文档目录，可选；可通过 API 网关管理端导出并解压，或者手工维护 markdown 格式文档文件
     ├── zh                  # 中文文档目录
     │   └── anything.md
     └── en                  # 英文文档目录
@@ -50,7 +50,7 @@ support-files
 用于定义网关、环境等配置，为了简化使用，使用以下模型进行处理：
 
 ```
-  Template(definition.yaml)                           YAML
+  Template(definition.yaml)                     YAML
 +--------------------------+        +----------------------------+
 |                          |        |                            |       +--------------------------------------+
 | ns1:                     |        | ns1:                       |       |                                      |
@@ -80,7 +80,7 @@ definition.yaml 中可以使用 Django 模版语法引用和渲染变量，内�
 
 #### 2. resources.yaml
 
-用于定义资源配置，建议通过网关管理端导出资源配置。为了方便用户直接使用网关导出的资源文件，资源定义默认没有命名空间。
+用于定义资源配置，建议通过网关管理端导出。为了方便用户直接使用网关导出的资源文件，资源定义默认没有命名空间。
 
 #### 3. apidocs（可选）
 
@@ -131,37 +131,36 @@ definition_file="support-files/definition.yaml"
 resources_file="support-files/resources.yaml"
 
 echo "gateway sync definition start ..."
-python manage.py sync_apigw_config --api-name=${gateway_name} -f "${definition_file}"  # 同步网关基本信息
-python manage.py sync_apigw_stage --api-name=${gateway_name} -f "${definition_file}"  # 同步网关环境信息
-python manage.py sync_apigw_resources --delete --api-name=${gateway_name} -f "${resources_file}"  # 同步网关资源；--delete 将删除网关中未在 resources.yaml 存在的资源
-python manage.py sync_resource_docs_by_archive --api-name=${gateway_name} -f "${definition_file}"  # 同步资源文档
-python manage.py create_version_and_release_apigw --api-name=${gateway_name} -f "${definition_file}" # 创建资源版本并发布
-python manage.py grant_apigw_permissions --api-name=${gateway_name} -f "${definition_file}"  # 为应用主动授权，如无可跳过
-python manage.py apply_apigw_permissions --api-name=${gateway_name} -f "${definition_file}"  # 申请网关权限，如无可跳过
+python manage.py sync_apigw_config --api-name=${gateway_name} --file="${definition_file}"  # 同步网关基本信息
+python manage.py sync_apigw_stage --api-name=${gateway_name} --file="${definition_file}"  # 同步网关环境信息
+python manage.py sync_apigw_resources --delete --api-name=${gateway_name} --file="${resources_file}"  # 同步网关资源；--delete 将删除网关中未在 resources.yaml 存在的资源
+python manage.py sync_resource_docs_by_archive --api-name=${gateway_name} --file="${definition_file}"  # 同步资源文档
+python manage.py create_version_and_release_apigw --api-name=${gateway_name} --file="${definition_file}" # 创建资源版本并发布
+python manage.py grant_apigw_permissions --api-name=${gateway_name} --file="${definition_file}"  # 为应用主动授权，如无可跳过
+python manage.py apply_apigw_permissions --api-name=${gateway_name} --file="${definition_file}"  # 申请网关权限，如无可跳过
 python manage.py fetch_apigw_public_key --api-name=${gateway_name}  # 获取网关公钥
 python manage.py fetch_esb_public_key  # 可选，获取 ESB 公钥（专用于同时接入 ESB 和网关的系统）
 echo "gateway sync definition end"
 ```
 
 如果需要更灵活的控制，也可以采用自定义 django command 的方案，例如：
-```
-import os
-
+```python
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.core.management import call_command
 
+
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):
-        if not settings.SYNC_APIGATEWAY_ENABLED:
+        if not getattr(settings, "SYNC_APIGATEWAY_ENABLED", True):
             return
         
         # 待同步网关名，需修改为实际网关名；直接指定网关名，则不需要配置 django settings BK_APIGW_NAME
         gateway_name = "bk-demo"
 
         # 待同步网关、资源定义文件，需调整为实际的配置文件地址
-        definition_path = os.path.join(settings.BASE_DIR, "support-files/definition.yaml")
-        resources_path = os.path.join(settings.BASE_DIR, "support-files/resources.yaml")
+        definition_path = "support-files/definition.yaml"
+        resources_path = "support-files/resources.yaml"
 
         call_command("sync_apigw_config", f"--api-name={gateway_name}", f"--file={definition_path}")
         call_command("sync_apigw_stage", f"--api-name={gateway_name}", f"--file={definition_path}")
@@ -169,7 +168,7 @@ class Command(BaseCommand):
         call_command("sync_resource_docs_by_archive", f"--api-name={gateway_name}", f"--file={definition_path}")
         call_command("create_version_and_release_apigw", f"--api-name={gateway_name}", f"--file={definition_path}")
         call_command("grant_apigw_permissions", f"--api-name={gateway_name}", f"--file={definition_path}")
-        call_command("fetch_apigw_public_key", f"--api-name={gateway_name}", f"--file={definition_path}")
+        call_command("fetch_apigw_public_key", f"--api-name={gateway_name}")
 ```
 
 #### 步骤2. 添加 SDK apigw-manager
@@ -213,7 +212,7 @@ chart 部署方案，可采用 K8S Job 同步，样例如下：
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "bk-demo-sync-apigateway-1"
+  name: "bk-demo-sync-apigateway"
 spec:
   template:
     spec:
@@ -221,7 +220,10 @@ spec:
       - command:
         - bash
         args:
-        - sync-apigateway
+        - support-files/bin/sync-apigateway
+        ## 自定义 django command 时，可直接执行 command 指令
+        # -c
+        # "python manage.py sync_apigateway"
         image: "mirrors.example.com/blueking/my-image:1.0.0"
         imagePullPolicy: "IfNotPresent"
         name: sync-apigateway
@@ -229,7 +231,7 @@ spec:
 
 二进制部署方案，在部署阶段直接执行 sync-apigateway 脚本：
 ```shell
-bash sync-apigateway
+bash support-files/bin/sync-apigateway
 ```
 
 ### 方案二：通过镜像方式同步
@@ -341,14 +343,7 @@ title "done"
 步骤2：在 chart values.yaml 中添加配置
 ```yaml
 apigatewaySync:
-  ## 默认为 false 不同步网关配置
-  enabled: false
-  image:
-    registry: mirrors.example.com
-    repository: blueking/apigw-manager
-    tag: "latest"
-    pullPolicy: "Always"
-  mounts:
+  configMapMounts:
     - name: "sync-apigw-base"
       filePath: "files/support-files/*"
       mountPath: "/data/"
@@ -365,25 +360,24 @@ apigatewaySync:
 
 步骤2：在 chart templates 下创建 ConfigMap 模板文件，样例如下：
 ```yaml
-{{- if .Values.apigatewaySync.enabled }}
-{{- range $item := .Values.apigatewaySync.configMaps }}
+{{- $files := .Files }}
+{{- range $item := .Values.apigatewaySync.configMapMounts }}
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: bk-demo-{{ $item.name }}
 data:
-{{ (.Files.Glob "$item.filePath").AsConfig | indent 2 }}
+{{ ($files.Glob $item.filePath).AsConfig | indent 2 }}
 {{- end }}
 ```
 
 步骤3：添加 K8S Job 同步任务，样例如下：
 ```yaml
-{{- if .Values.apigatewaySync.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "bk-demo-sync-apigateway-1"
+  name: "bk-demo-sync-apigateway"
 spec:
   template:
     spec:
@@ -391,7 +385,7 @@ spec:
       - command:
         - bash
         args:
-        - sync-apigateway
+        - bin/sync-apigateway
         image: "mirrors.example.com/blueking/apigw-manager:latest"
         imagePullPolicy: "Always"
         name: sync-apigateway
@@ -405,17 +399,18 @@ spec:
         - name: BK_API_URL_TMPL
           value: "http://bkapi.example.com/api/{api_name}"
         volumeMounts: 
-        {{- range $item := .Values.apigatewaySync.configMaps }}
+        {{- range $item := .Values.apigatewaySync.configMapMounts }}
         - mountPath: "{{ $item.mountPath }}"
           name: "{{ $item.name }}"
         {{- end }}
       volumes: 
-      {{- range $item := .Values.apigatewaySync.configMaps }}
+      {{- range $item := .Values.apigatewaySync.configMapMounts }}
       - name: "{{ $item.name }}"
         configMap:
           defaultMode: 420
           name: "{{ $item.name }}"
       {{- end }}
+      restartPolicy: Never
 ```
 
 #### 使用方式二：chart + 自定义镜像
@@ -445,7 +440,7 @@ spec:
 ```Dockerfile
 FROM mirrors.example.com/blueking/apigw-manager:latest
 
-COPY <support-files> /data/
+COPY support-files /data/
 ```
 
 步骤3：构建新镜像
@@ -458,7 +453,7 @@ docker build -t my-apigw-manager -f Dockerfile .
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "bk-demo-sync-apigateway-1"
+  name: "bk-demo-sync-apigateway"
 spec:
   template:
     spec:
@@ -466,7 +461,7 @@ spec:
       - command:
         - bash
         args:
-        - sync-apigateway
+        - bin/sync-apigateway
         image: "mirrors.example.com/blueking/my-apigw-manager:latest"
         imagePullPolicy: "Always"
         name: sync-apigateway
@@ -479,6 +474,7 @@ spec:
           value: "secret"
         - name: BK_API_URL_TMPL
           value: "http://bkapi.example.com/api/{api_name}"
+      restartPolicy: Never
 ```
 
 #### 使用方式三：二进制 + 外部文件挂载

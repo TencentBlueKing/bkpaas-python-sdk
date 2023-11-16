@@ -1,5 +1,3 @@
-FROM apigw-manager:lastest
-
-COPY bin/sync-apigateway /data/bin/
+FROM mirrors.example.com/blueking/apigw-manager:latest
 
 COPY support-files /data/

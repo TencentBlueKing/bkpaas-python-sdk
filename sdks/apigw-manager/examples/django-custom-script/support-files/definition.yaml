@@ -5,9 +5,9 @@ release:
   comment: "这是一个测试"
 
 apigateway:
-  description: "描述"
-  description_en: "英文描述"
-  is_public: true
+  description: "这是一个测试"
+  description_en: "This is a test"
+  is_public: false
   maintainers:
     - "admin"
 
@@ -31,7 +31,7 @@ stage:
 # - zh
 #   - anything.md
 resource_docs:
-  basedir: "{{ settings.BASE_DIR }}/support-files/apidocs/"
+  basedir: "support-files/apidocs/"
 
 # 主动授权，网关主动给应用，添加访问网关所有资源的权限
 grant_permissions:
