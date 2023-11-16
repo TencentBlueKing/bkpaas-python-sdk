@@ -24,8 +24,9 @@ pip install "apigw-manager[cryptography]"
 
 SDK 同步网关配置到 API 网关，支持多种方案:
 - 直接使用 django command 同步
-- 通过独立镜像方式同步
-- 通过外部挂载方式同步
+  - 此方案适用于 django 项目；django 项目，可直接执行 SDK 提供的 django command 指令
+- 通过镜像方式同步
+  - 此方案适用于非 django 项目；非 django 项目，无法直接执行 django command 指令
 
 ### 准备工作
 
@@ -127,12 +128,16 @@ resource_docs:
 在 django settings.py 中定义网关名称和接口地址模板：
 
 ```python
-# 待同步网关配置的网关名
+# 蓝鲸应用账号，用于访问网关 bk-apigateway 接口
+BK_APP_CODE = "my-app"
+BK_APP_SECRET = "my-app-secret"
+
+# 待同步网关配置的网关名（如果需同步多个网关，可在同步命令中指定）
 BK_APIGW_NAME = "my-apigateway-name"
 
 # 需将 bkapi.example.com 替换为真实的云 API 域名；
 # 在 PaaS 3.0 部署的应用，可从环境变量中获取 BK_API_URL_TMPL，不需要额外配置；
-# 实际上，SDK 将调用网关 bk-apigateway 的接口将数据同步到 API 网关
+# 实际上，SDK 将调用网关 bk-apigateway 接口将数据同步到 API 网关
 BK_API_URL_TMPL = "http://bkapi.example.com/api/{api_name}/"
 ```
 
@@ -172,25 +177,272 @@ echo "gateway sync definition end"
 
 #### 6. 同步网关数据到 API 网关
 
-如项目以二进制方案部署，可在部署阶段执行 sync-apigateway 脚本，进行同步。
+同步方案:
+- 如项目以 chart 方案部署，可将 sync-apigateway 添加到一个 K8S Job 进行同步。
+- 如项目以二进制方案部署，可在部署阶段执行 sync-apigateway 脚本，进行同步。
 
-如项目以 chart 方案部署，可将 sync-apigateway 添加到一个 K8S Job 进行同步。
+### 通过镜像方式同步
 
-### 通过独立镜像方式同步
+网关提供基础镜像 apigw-manager，用于同步网关数据到 API 网关。基础镜像通过 [Dockerfile](Dockerfile) 进行构建，该镜像封装了 [demo](demo) 项目，可读取 /data/ 目录，直接进行网关注册和同步操作，目录约定：
+- */data/definition.yaml*：网关定义文件，用于注册网关；
+- */data/resources.yaml*：资源定义文件，用于同步网关资源，可通过网关导出；
+- */data/apidocs*：文档目录，可通过网关导出后解压；
+- */data/bin/sync-apigateway*：自定义的同步命令；镜像提供的默认同步命令：[sync-apigateway](demo/bin/sync-apigateway)
 
-#### 1. 准备网关 yaml 配置：definition.yaml
+镜像执行同步时，需要额外的环境变量支持：
+- `BK_APIGW_NAME`：网关名称；
+- `BK_API_URL_TMPL`：云网关 API 地址模板；
+- `BK_APP_CODE`：应用名称；
+- `BK_APP_SECRET`：应用密钥；
+- `DATABASE_URL`：数据库连接地址，可选，格式：`mysql://{username}:{password}@{host}:{port}/{dbname}`；
+- `APIGW_PUBLIC_KEY_PATH`：网关公钥保存路径，可选，默认为当前目录下 `apigateway.pub`；
 
-#### 2. 准备资源 yaml 配置：resources.yaml
+通过镜像进行同步时，镜像需访问用户自定义的数据，在二进制和 chart 两种不同的使用方式中，镜像加载用户自定义数据的方式有所不同。
+- 二进制：可直接通过外部文件挂载
+- chart：
+  - 单个文件大小 < 1MB 时，可使用 ConfigMap 挂载
+  - 单个文件大小 >= 1MB 时，可创建自定义镜像
 
-#### 3. 准备资源文档（可选）
+#### 准备工作
 
-#### 4. 准备同步命令（可选）
+网关配置，资源配置，资源文档等数据，可参考上文 `根据  YAML 同步网关配置` -> `准备工作` 进行准备。
 
-#### 5. 同步网关数据到 API 网关
+同步命令，可选择使用默认同步命令 [sync-apigateway](demo/bin/sync-apigateway)，如果不满足需求，可以自定义同步命令。
 
-### 通过外部挂载方式同步
+##### 1. 使用默认同步命令
 
+默认同步命令 [sync-apigateway](demo/bin/sync-apigateway)，允许通过额外的环境变量设置命令参数：
+- `SYNC_APIGW_CONFIG_ARGS`: 用于命令 `sync_apigw_config`
+- `SYNC_APIGW_STAGE_ARGS`: 用于命令 `sync_apigw_stage`
+- `APPLY_APIGW_PERMISSIONS_ARGS`: 用于命令 `apply_apigw_permissions`
+- `GRANT_APIGW_PERMISSIONS_ARGS`: 用于命令 `grant_apigw_permissions`
+- `SYNC_APIGW_RESOURCES_ARGS`: 默认值："--delete"，用于命令 `sync_apigw_resources`
+- `SYNC_RESOURCE_DOCS_BY_ARCHIVE_ARGS`: 默认值: "--safe-mode"，用于命令 `sync_resource_docs_by_archive`
+- `CREATE_VERSION_AND_RELEASE_APIGW_ARGS`: 默认值："--generate-sdks"，用于命令 `create_version_and_release_apigw`
+- `APIGW_PUBLIC_KEY_PATH`: 网关公钥保存路径，默认为当前目录下 `apigateway.pub`，用于命令 `fetch_apigw_public_key`
 
+##### 2. 自定义同步命令
+
+如果默认同步命令不满足需求，可以自定义同步命令，样例如下：
+```bash
+#!/bin/bash
+
+# 加载 apigw-manager 原始镜像中的通用函数
+source /apigw-manager/demo/bin/functions
+
+# 待同步网关名
+gateway_name="bk-demo"
+
+# 待同步网关、资源定义文件
+definition_file="/data/definition.yaml"
+resources_file="/data/resources.yaml"
+
+title "begin to db migrate"
+call_command migrate apigw
+
+title "syncing apigateway"
+must_call_definition_command sync_apigw_config "${definition_file}" --gateway-name=${gateway_name}
+must_call_definition_command sync_apigw_stage "${definition_file}" --gateway-name=${gateway_name}
+must_call_definition_command sync_apigw_resources "${resources_file}" --gateway-name=${gateway_name} --delete
+must_call_definition_command sync_resource_docs_by_archive "${definition_file}" --gateway-name=${gateway_name} --safe-mode
+must_call_definition_command grant_apigw_permissions "${definition_file}" --gateway-name=${gateway_name}
+
+title "fetch apigateway public key"
+apigw-manager fetch_apigw_public_key --gateway-name=${gateway_name} --print > "apigateway.pub"
+
+title "releasing"
+must_call_definition_command create_version_and_release_apigw "${definition_file}" --gateway-name=${gateway_name}
+
+title "done"
+```
+
+样例脚本中：
+- /apigw-manager/demo/bin/functions，定义一些常用 bash 函数，如 title, call_command 等，源码 [functions](demo/bin/functions)
+- title: 打印一行日志
+- call_command: 执行一个 django command 指令，出错返回非 0 错误码，不退出脚本
+- must_call_definition_command: 执行一个 django command 指令，出错退出脚本执行
+- apigw-manager: 单纯执行一个 django command 指令，出错返回非 0 错误码，不退出脚本，源码 [apigw-manager](demo/bin/apigw-manager)
+
+#### 使用方式一：二进制 + 外部文件挂载
+
+使用基础镜像 apigw-manager，通过外部文件挂载的方式，将对应的目录挂载到 /data/ 目录下，可通过以下类似的命令进行同步：
+```bash
+docker run --rm \
+    -v /<MY_PATH>/:/data/ \
+    -e BK_APIGW_NAME=<BK_APIGW_NAME> \
+    -e BK_API_URL_TMPL=<BK_API_URL_TMPL> \
+    -e BK_APP_CODE=<BK_APP_CODE> \
+    -e BK_APP_SECRET=<BK_APP_SECRET> \
+    -e DATABASE_URL=<DATABASE_URL> \
+    mirrors.example.com/blueking/apigw-manager:latest
+```
+
+同步后，会在 *<MY_PATH>* 目录下获得网关公钥文件 *apigateway.pub*。
+
+#### 使用方式二：chart + ConfigMap
+
+使用基础镜像 apigw-manager，并为网关配置、资源文档创建 ConfigMap 对象，将这些 ConfigMap 挂载到基础镜像中，如此镜像就可以读取到网关数据，但是 chart 本身限制单文件不能超过 1MB。
+
+操作步骤如下：
+
+步骤1：将网关配置、资源文档、自定义同步命令，放到 chart 项目的 files 文件夹下，可参考目录：
+```
+.
+├── Chart.yaml
+├── files
+│   └── support-files
+│       ├── apidocs
+│       │   ├── en
+│       │   │   └── anything.md
+│       │   └── zh
+│       │       └── anything.md
+│       ├── bin
+│       │   └── sync-apigateway
+│       ├── definition.yaml
+│       └── resources.yaml
+```
+
+步骤2：在 chart values.yaml 中添加配置
+```yaml
+apigatewaySync:
+  ## 默认为 false 不同步网关配置
+  enabled: false
+  image:
+    registry: mirrors.example.com
+    repository: blueking/apigw-manager
+    tag: "latest"
+    pullPolicy: "Always"
+  mounts:
+    - name: "sync-apigw-base"
+      filePath: "files/support-files/*"
+      mountPath: "/data/"
+    - name: "sync-apigw-bin"
+      filePath: "files/support-files/bin/*"
+      mountPath: "/data/bin/"
+    - name: "sync-apigw-apidocs-zh"
+      filePath: "files/support-files/apidocs/zh/*"
+      mountPath: "/data/apidocs/zh/"
+    - name: "sync-apigw-apidocs-en"
+      filePath: "files/support-files/apidocs/en/*"
+      mountPath: "/data/apidocs/en/"
+```
+
+步骤2：在 chart templates 下创建 ConfigMap 模板文件，样例如下：
+```yaml
+{{- if .Values.apigatewaySync.enabled }}
+{{- range $item := .Values.apigatewaySync.configMaps }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bk-demo-{{ $item.name }}
+data:
+{{ (.Files.Glob "$item.filePath").AsConfig | indent 2 }}
+{{- end }}
+```
+
+步骤3：添加 K8S Job 同步任务，样例如下：
+```yaml
+{{- if .Values.apigatewaySync.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "bk-demo-sync-apigateway-1"
+spec:
+  template:
+    spec:
+      containers:
+      - command:
+        - bash
+        args:
+        - sync-apigateway
+        image: "mirrors.example.com/blueking/apigw-manager:latest"
+        imagePullPolicy: "Always"
+        name: sync-apigateway
+        env:
+        - name: BK_APIGW_NAME
+          value: "bk-demo"
+        - name: BK_APP_CODE
+          value: "bk-demo"
+        - name: BK_APP_SECRET
+          value: "secret"
+        - name: BK_API_URL_TMPL
+          value: "http://bkapi.example.com/api/{api_name}"
+        volumeMounts: 
+        {{- range $item := .Values.apigatewaySync.configMaps }}
+        - mountPath: "{{ $item.mountPath }}"
+          name: "{{ $item.name }}"
+        {{- end }}
+      volumes: 
+      {{- range $item := .Values.apigatewaySync.configMaps }}
+      - name: "{{ $item.name }}"
+        configMap:
+          defaultMode: 420
+          name: "{{ $item.name }}"
+      {{- end }}
+```
+
+#### 使用方式三：chart + 自定义镜像
+
+可将 apigw-manager 作为基础镜像，将配置文件和文档一并构建成一个新镜像，然后通过如 K8S Job 方式进行同步。
+
+操作步骤如下：
+
+步骤1. 将网关配置，资源文档，自定义同步命令，放到一个文件夹下，可参考目录：
+```
+.
+├── Dockerfile
+└── support-files
+    ├── apidocs
+    │   ├── en
+    │   │   └── anything.md
+    │   └── zh
+    │       └── anything.md
+    ├── bin
+    │   └── sync-apigateway
+    ├── definition.yaml
+    └── resources.yaml
+```
+
+步骤2. 构建 Dockerfile 参考：
+```Dockerfile
+FROM mirrors.example.com/blueking/apigw-manager:latest
+
+COPY <support-files> /data/
+```
+
+步骤3：构建新镜像
+```shell
+docker build -t my-apigw-manager -f Dockerfile .
+```
+
+步骤4：添加 K8S Job 同步任务，样例如下
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "bk-demo-sync-apigateway-1"
+spec:
+  template:
+    spec:
+      containers:
+      - command:
+        - bash
+        args:
+        - sync-apigateway
+        image: "mirrors.example.com/blueking/my-apigw-manager:latest"
+        imagePullPolicy: "Always"
+        name: sync-apigateway
+        env:
+        - name: BK_APIGW_NAME
+          value: "bk-demo"
+        - name: BK_APP_CODE
+          value: "bk-demo"
+        - name: BK_APP_SECRET
+          value: "secret"
+        - name: BK_API_URL_TMPL
+          value: "http://bkapi.example.com/api/{api_name}"
+```
 
 ## 校验请求来自 API 网关
 
@@ -261,21 +513,7 @@ APIGW_MANAGER_DUMMY_PAYLOAD_APP_CODE # JWT payload 中的 app_code
 APIGW_MANAGER_DUMMY_PAYLOAD_USERNAME # JWT payload 中的 username
 ```
 
-
-## 镜像
-### 基础镜像
-基础镜像通过 [Dockerfile](Dockerfile) 进行构建，该镜像封装了 [demo](demo) 项目，可读取 /data/ 目录，直接进行网关注册和同步操作，目录约定：
-- */data/definition.yaml*：网关定义文件，用于注册网关；
-- */data/resources.yaml*：资源定义文件，用于同步网关资源，可通过网关导出；
-- */data/docs*：文档目录，可通过网关导出后解压；
-
-镜像执行同步时，需要额外的环境变量支持：
-- `BK_APIGW_NAME`：网关名称；
-- `BK_API_URL_TMPL`：云网关 API 地址模板；
-- `BK_APP_CODE`：应用名称；
-- `BK_APP_SECRET`：应用密钥；
-- `DATABASE_URL`：数据库连接地址，格式：`mysql://username:password@host:port/dbname`；
-- `APIGW_PUBLIC_KEY_PATH`：网关公钥保存路径，默认为当前目录下 `apigateway.pub`；
+## FAQ
 
 #### 如何获得网关公钥
 1. 如果设置了环境变量 `APIGW_PUBLIC_KEY_PATH`，同步后可读取该文件获取；
@@ -284,34 +522,4 @@ APIGW_MANAGER_DUMMY_PAYLOAD_USERNAME # JWT payload 中的 username
     select value from apigw_manager_context where scope="public_key" and key="<BK_APIGW_NAME>";
     ```
 
-### 通过外部挂载方式同步
-通过外部文件挂载的方式，将对应的目录挂载到 `/data/` 目录下，可通过以下类似的命令进行同步：
-```shell
-docker run --rm \
-    -v /<MY_PATH>/:/data/ \
-    -e BK_APIGW_NAME=<BK_APIGW_NAME> \
-    -e BK_API_URL_TMPL=<BK_API_URL_TMPL> \
-    -e BK_APP_CODE=<BK_APP_CODE> \
-    -e BK_APP_SECRET=<BK_APP_SECRET> \
-    -e DATABASE_URL=<DATABASE_URL> \
-    apigw-manager
-```
-
 同步后，会在 *<MY_PATH>* 目录下获得网关公钥文件 *apigateway.pub*。
-
-### 通过镜像方式同步
-可将 apigw-manager 作为基础镜像，将配置文件和文档一并构建成一个新镜像，然后通过如 K8S Job 方式进行同步，构建 Dockerfile 参考：
-```Dockerfile
-FROM apigw-manager
-
-COPY <MY_PATH> /data/
-```
-
-环境变量可通过运行时传入，也可以通过构建参数提前设置（仅支持 `BK_APIGW_NAME` 和 `BK_APP_CODE`）：
-```shell
-docker build \
-    -t my-apigw-manager \
-    --build-arg BK_APIGW_NAME=<BK_APIGW_NAME> \
-    --build-arg BK_APP_CODE=<BK_APP_CODE> \
-    -f Dockerfile .
-```
