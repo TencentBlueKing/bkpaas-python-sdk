@@ -30,21 +30,19 @@ SDK 同步网关配置到 API 网关，支持多种方案:
 
 ### 准备工作
 
-同步网关配置到 API 网关，需要准备网关配置、资源配置、资源文档等数据：
-- definition.yaml: 维护网关、环境、资源文档地址、主动授权、发布等配置，但不包含资源配置
-- resources.yaml: 维护资源配置；资源配置可通过 API 网关管理端直接导出，且数据量较大，因此单独管理
-- apidocs：资源文档，可选，可通过 API 网关管理端直接导出，或者手工维护 markdown 格式文档文件
-
-网关配置及文档文件目录样例如下：
+同步网关配置到 API 网关，需要准备网关配置、资源配置、资源文档、自定义同步脚本等数据，可参考目录：
 ```
 support-files
-├── definition.yaml
-├── resources.yaml
-└── apidocs
-    ├── zh
-    │   └── get_user.md
-    └── en
-        └── get_user.md
+├── definition.yaml         # 维护网关、环境、资源文档地址、主动授权、发布等配置，但不包含资源配置
+├── resources.yaml          # 维护资源配置；资源配置可通过 API 网关管理端直接导出，且数据量较大，因此单独管理
+├── bin
+│   └── sync-apigateway     # 自定义同步脚本，django 项目也可使用自定义 django command；利用 SDK 提供的 django command 组装同步任务
+├── bk_apigw_docs_demo.tgz  # 资源文档归档文件，可选；与资源文档目录 apidocs 二选一即可
+└── apidocs                 # 资源文档，可选；可通过 API 网关管理端直接导出，或者手工维护 markdown 格式文档文件
+    ├── zh                  # 中文文档目录
+    │   └── anything.md
+    └── en                  # 英文文档目录
+        └── anything.md
 ```
 
 #### 1. definition.yaml
@@ -52,18 +50,18 @@ support-files
 用于定义网关、环境等配置，为了简化使用，使用以下模型进行处理：
 
 ```
-   Template(definition.yaml)                          YAML
-+----------------------------+            +----------------------------+
-|                            |            |                            |           +--------------------------------------+
-|  ns1:                      |            | ns1:                       |           |                                      |
-|    key: {{environ.KEY1}}   |            |   key: value_from_environ  |---------->| api1({"key": "value_from_environ"})  |
-|                            |   Render   |                            |           |                                      |
-|                            +----------->+                            |   Load    |                                      |
-|  ns2:                      |            | ns2:                       |           |                                      |
-|    key: {{settings.KEY2}}  |            |   key: value_from_settings |---------->| api2({"key": "value_from_settings"}) |
-|                            |            |                            |           |                                      |
-|                            |            |                            |           +--------------------------------------+
-+----------------------------+            +----------------------------+
+  Template(definition.yaml)                           YAML
++--------------------------+        +----------------------------+
+|                          |        |                            |       +--------------------------------------+
+| ns1:                     |        | ns1:                       |       |                                      |
+|   key: {{environ.KEY1}}  |        |   key: value_from_environ  |------>| api1({"key": "value_from_environ"})  |
+|                          | Render |                            |       |                                      |
+|                          +------->+                            | Load  |                                      |
+| ns2:                     |        | ns2:                       |       |                                      |
+|   key: {{settings.KEY2}} |        |   key: value_from_settings |------>| api2({"key": "value_from_settings"}) |
+|                          |        |                            |       |                                      |
+|                          |        |                            |       +--------------------------------------+
++--------------------------+        +----------------------------+
 ```
 
 definition.yaml 中可以使用 Django 模版语法引用和渲染变量，内置以下变量：
@@ -75,14 +73,14 @@ definition.yaml 中可以使用 Django 模版语法引用和渲染变量，内�
 - `stage`：定义环境信息，用于命令 `sync_apigw_stage`；
 - `grant_permissions`：应用主动授权，用于命令 `grant_apigw_permissions`；
 - `apply_permissions`：申请网关权限，用于命令 `apply_apigw_permissions`；
-- `resource_docs`：定义资源文档，用于命令 `sync_resource_docs_by_archive`；
+- `resource_docs`：定义资源文档路径，用于命令 `sync_resource_docs_by_archive`；
 - `release`：定义发布内容，用于命令 `create_version_and_release_apigw`；
 
 **注意，同步资源后需要发布后才生效，发布内容定义于 `release`，请及时更新对应的版本信息，否则可能会导致资源漏发或 SDK 版本异常的情况**
 
 #### 2. resources.yaml
 
-用于定义资源配置，推荐在一个文件中统一进行定义，建议通过网关管理端导出资源配置。为了方便用户直接使用网关导出的资源文件，资源定义默认没有命名空间。
+用于定义资源配置，建议通过网关管理端导出资源配置。为了方便用户直接使用网关导出的资源文件，资源定义默认没有命名空间。
 
 #### 3. apidocs（可选）
 
@@ -100,30 +98,85 @@ definition.yaml 中可以使用 Django 模版语法引用和渲染变量，内�
     └── get_user.md
 ```
 
-参考 [definition.yaml 样例](definition.yaml) `resource_docs` 部分，在项目 definition.yaml 文件中，配置资源文档在项目中的位置。
+导入资源文档时，可以直接使用资源文档归档文件，也可以使用资源文档目录。参考 [definition.yaml 样例](definition.yaml)，
+在项目 definition.yaml 文件中，修改资源文档相关配置 resource_docs：
 ```yaml
 resource_docs:
-  # 资源文档的归档文件，可为 tar.gz，zip 格式文件
+  # 资源文档的归档文件，可为 tar.gz，zip 格式文件；创建归档文件可使用指令 `tar czvf xxx.tgz en zh`
   # archivefile: "{{ settings.BK_APIGW_RESOURCE_DOCS_ARCHIVE_FILE }}"
   # 资源文档目录，basedir 与 archivefile 二者至少一个有效，若同时存在，则 archivefile 优先
   # basedir: "{{ settings.BK_APIGW_RESOURCE_DOCS_BASE_DIR }}"
   basedir: "{{ settings.BASE_DIR }}/support-files/apidocs/"
 ```
 
-### 直接使用 django command 同步
+### 方案一：直接使用 django command 同步
 
-此方案适用于 django 项目，项目安装 apigw-manager SDK 后，可以直接执行 SDK 提供的 django command。
-- 准备文件的样例 [python-script example](examples/python-script)
+此方案适用于 django 项目，项目安装 SDK apigw-manager 后，可以直接执行 SDK 提供的 django command。
+- 准备文件的样例 [django-custom-script example](examples/django-custom-script)
 
-#### 1. 添加 SDK apigw-manager
+#### 步骤1. 准备自定义同步脚本
+
+创建一个 bash 脚本，如 `sync-apigateway`，使用 SDK 提供的 django command 定义网关配置的同步脚本，样例如下：
+```shell
+#!/bin/bash
+
+# 如果任何命令返回一个非零退出状态（错误），脚本将会立即终止执行
+set -e
+
+# 待同步网关名，需修改为实际网关名；直接指定网关名，则不需要配置 django settings BK_APIGW_NAME
+gateway_name="bk-demo"
+
+# 待同步网关、资源定义文件，需调整为实际的配置文件地址
+definition_file="support-files/definition.yaml"
+resources_file="support-files/resources.yaml"
+
+echo "gateway sync definition start ..."
+python manage.py sync_apigw_config --api-name=${gateway_name} -f "${definition_file}"  # 同步网关基本信息
+python manage.py sync_apigw_stage --api-name=${gateway_name} -f "${definition_file}"  # 同步网关环境信息
+python manage.py sync_apigw_resources --delete --api-name=${gateway_name} -f "${resources_file}"  # 同步网关资源；--delete 将删除网关中未在 resources.yaml 存在的资源
+python manage.py sync_resource_docs_by_archive --api-name=${gateway_name} -f "${definition_file}"  # 同步资源文档
+python manage.py create_version_and_release_apigw --api-name=${gateway_name} -f "${definition_file}" # 创建资源版本并发布
+python manage.py grant_apigw_permissions --api-name=${gateway_name} -f "${definition_file}"  # 为应用主动授权，如无可跳过
+python manage.py apply_apigw_permissions --api-name=${gateway_name} -f "${definition_file}"  # 申请网关权限，如无可跳过
+python manage.py fetch_apigw_public_key --api-name=${gateway_name}  # 获取网关公钥
+python manage.py fetch_esb_public_key  # 可选，获取 ESB 公钥（专用于同时接入 ESB 和网关的系统）
+echo "gateway sync definition end"
+```
+
+如果需要更灵活的控制，也可以采用自定义 django command 的方案，例如：
+```
+import os
+
+from django.conf import settings
+from django.core.management.base import BaseCommand
+from django.core.management import call_command
+
+class Command(BaseCommand):
+    def handle(self, *args, **kwargs):
+        if not settings.SYNC_APIGATEWAY_ENABLED:
+            return
+        
+        definition_path = os.path.join(settings.BASE_DIR, "support-files/definition.yaml")
+        resources_path = os.path.join(settings.BASE_DIR, "support-files/resources.yaml")
+
+        call_command("sync_apigw_config", f"--file={definition_path}")
+        call_command("sync_apigw_stage", f"--file={definition_path}")
+        call_command("sync_apigw_resources", "--delete", f"--file={resources_path}")
+        call_command("sync_resource_docs_by_archive", f"--file={definition_path}")
+        call_command("create_version_and_release_apigw", f"--file={definition_path}")
+        call_command("grant_apigw_permissions", f"--file={definition_path}")
+        call_command("fetch_apigw_public_key", f"--file={definition_path}")
+```
+
+#### 步骤2. 添加 SDK apigw-manager
 
 将 SDK apigw-manager 添加到项目依赖中，如 pyproject.toml 或 requirements.txt。
 
-#### 2. 将准备的网关配置文件，添加到项目
+#### 步骤3. 将准备的网关配置文件，添加到项目
 
 将准备的网关配置文件：definition.yaml, resources.yaml, apidocs (可选)，添加到项目
 
-#### 3. 更新 django settings 配置
+#### 步骤4. 更新 django settings 配置
 
 在 django settings.py 中定义网关名称和接口地址模板：
 
@@ -149,45 +202,39 @@ INSTALLED_APPS += [
 ]
 ```
 
-#### 4. 同步命令
+#### 步骤5. 同步网关数据到 API 网关
 
-创建一个 bash 脚本，如 `sync-apigateway`，使用 SDK 提供的 django command 定义网关配置的同步脚本，样例如下：
-```shell
-#!/bin/bash
-
-# 如果任何命令返回一个非零退出状态（错误），脚本将会立即终止执行
-set -e
-
-# 待同步网关、资源定义文件，需调整为实际的配置文件地址
-definition_file="support-files/definition.yaml"
-resources_file="support-files/resources.yaml"
-
-echo "gateway sync definition start ..."
-python manage.py sync_apigw_config -f "${definition_file}"  # 同步网关基本信息
-python manage.py sync_apigw_stage -f "${definition_file}"  # 同步网关环境信息
-python manage.py sync_apigw_resources --delete -f "${resources_file}"  # 同步网关资源
-python manage.py sync_resource_docs_by_archive -f "${definition_file}"  # 同步资源文档
-python manage.py create_version_and_release_apigw -f "${definition_file}" # 创建资源版本并发布
-python manage.py grant_apigw_permissions -f "${definition_file}"  # 为应用主动授权，如无可跳过
-python manage.py apply_apigw_permissions -f "${definition_file}"  # 申请网关权限，如无可跳过
-python manage.py fetch_apigw_public_key  # 获取网关公钥
-python manage.py fetch_esb_public_key  # 获取 ESB 公钥（专用于同时接入 ESB 和网关的系统），如无可跳过
-echo "gateway sync definition end"
+chart 部署方案，可采用 K8S Job 同步，样例如下：
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "bk-demo-sync-apigateway-1"
+spec:
+  template:
+    spec:
+      containers:
+      - command:
+        - bash
+        args:
+        - sync-apigateway
+        image: "mirrors.example.com/blueking/my-image:1.0.0"
+        imagePullPolicy: "IfNotPresent"
+        name: sync-apigateway
 ```
 
-#### 6. 同步网关数据到 API 网关
+二进制部署方案，在部署阶段直接执行 sync-apigateway 脚本：
+```shell
+bash sync-apigateway
+```
 
-同步方案:
-- 如项目以 chart 方案部署，可将 sync-apigateway 添加到一个 K8S Job 进行同步。
-- 如项目以二进制方案部署，可在部署阶段执行 sync-apigateway 脚本，进行同步。
-
-### 通过镜像方式同步
+### 方案二：通过镜像方式同步
 
 网关提供基础镜像 apigw-manager，用于同步网关数据到 API 网关。基础镜像通过 [Dockerfile](Dockerfile) 进行构建，该镜像封装了 [demo](demo) 项目，可读取 /data/ 目录，直接进行网关注册和同步操作，目录约定：
 - */data/definition.yaml*：网关定义文件，用于注册网关；
 - */data/resources.yaml*：资源定义文件，用于同步网关资源，可通过网关导出；
 - */data/apidocs*：文档目录，可通过网关导出后解压；
-- */data/bin/sync-apigateway*：自定义的同步命令；镜像提供的默认同步命令：[sync-apigateway](demo/bin/sync-apigateway)
+- */data/bin/sync-apigateway*：自定义同步脚本；镜像提供默认同步脚本：[sync-apigateway](demo/bin/sync-apigateway)，如不满足需求，可自定义同步脚本
 
 镜像执行同步时，需要额外的环境变量支持：
 - `BK_APIGW_NAME`：网关名称；
@@ -197,21 +244,21 @@ echo "gateway sync definition end"
 - `DATABASE_URL`：数据库连接地址，可选，格式：`mysql://{username}:{password}@{host}:{port}/{dbname}`；
 - `APIGW_PUBLIC_KEY_PATH`：网关公钥保存路径，可选，默认为当前目录下 `apigateway.pub`；
 
-通过镜像进行同步时，镜像需访问用户自定义的数据，在二进制和 chart 两种不同的使用方式中，镜像加载用户自定义数据的方式有所不同。
-- 二进制：可直接通过外部文件挂载
+通过镜像进行同步时，镜像需访问用户自定义的数据，在 chart 和二进制两种不同的部署方案中，镜像加载用户自定义数据的方式有所不同：
 - chart：
-  - 单个文件大小 < 1MB 时，可使用 ConfigMap 挂载
-  - 单个文件大小 >= 1MB 时，可创建自定义镜像
+  - 单文件大小 < 1MB 时，可使用 ConfigMap 挂载
+  - 单文件大小 >= 1MB 时，可创建自定义镜像
+- 二进制：可直接通过外部文件挂载
 
 #### 准备工作
 
 网关配置，资源配置，资源文档等数据，可参考上文 `根据  YAML 同步网关配置` -> `准备工作` 进行准备。
 
-同步命令，可选择使用默认同步命令 [sync-apigateway](demo/bin/sync-apigateway)，如果不满足需求，可以自定义同步命令。
+同步脚本，可选择使用默认同步脚本 [sync-apigateway](demo/bin/sync-apigateway)，如果不满足需求，可以自定义同步脚本。
 
-##### 1. 使用默认同步命令
+##### 1. 使用默认同步脚本
 
-默认同步命令 [sync-apigateway](demo/bin/sync-apigateway)，允许通过额外的环境变量设置命令参数：
+默认同步脚本 [sync-apigateway](demo/bin/sync-apigateway)，允许通过额外的环境变量设置命令参数：
 - `SYNC_APIGW_CONFIG_ARGS`: 用于命令 `sync_apigw_config`
 - `SYNC_APIGW_STAGE_ARGS`: 用于命令 `sync_apigw_stage`
 - `APPLY_APIGW_PERMISSIONS_ARGS`: 用于命令 `apply_apigw_permissions`
@@ -221,16 +268,16 @@ echo "gateway sync definition end"
 - `CREATE_VERSION_AND_RELEASE_APIGW_ARGS`: 默认值："--generate-sdks"，用于命令 `create_version_and_release_apigw`
 - `APIGW_PUBLIC_KEY_PATH`: 网关公钥保存路径，默认为当前目录下 `apigateway.pub`，用于命令 `fetch_apigw_public_key`
 
-##### 2. 自定义同步命令
+##### 2. 自定义同步脚本
 
-如果默认同步命令不满足需求，可以自定义同步命令，样例如下：
+如果默认同步脚本不满足需求，可以自定义同步脚本，样例如下：
 ```bash
 #!/bin/bash
 
 # 加载 apigw-manager 原始镜像中的通用函数
 source /apigw-manager/demo/bin/functions
 
-# 待同步网关名
+# 待同步网关名，需修改为实际网关名；直接指定网关名，则不需要配置环境变量 BK_APIGW_NAME
 gateway_name="bk-demo"
 
 # 待同步网关、资源定义文件
@@ -241,47 +288,32 @@ title "begin to db migrate"
 call_command migrate apigw
 
 title "syncing apigateway"
-must_call_definition_command sync_apigw_config "${definition_file}" --gateway-name=${gateway_name}
-must_call_definition_command sync_apigw_stage "${definition_file}" --gateway-name=${gateway_name}
-must_call_definition_command sync_apigw_resources "${resources_file}" --gateway-name=${gateway_name} --delete
-must_call_definition_command sync_resource_docs_by_archive "${definition_file}" --gateway-name=${gateway_name} --safe-mode
-must_call_definition_command grant_apigw_permissions "${definition_file}" --gateway-name=${gateway_name}
+must_call_definition_command sync_apigw_config "${definition_file}" --api-name=${gateway_name}
+must_call_definition_command sync_apigw_stage "${definition_file}" --api-name=${gateway_name}
+must_call_definition_command sync_apigw_resources "${resources_file}" --api-name=${gateway_name} --delete
+must_call_definition_command sync_resource_docs_by_archive "${definition_file}" --api-name=${gateway_name} --safe-mode
+must_call_definition_command grant_apigw_permissions "${definition_file}" --api-name=${gateway_name}
 
 title "fetch apigateway public key"
-apigw-manager fetch_apigw_public_key --gateway-name=${gateway_name} --print > "apigateway.pub"
+apigw-manager fetch_apigw_public_key --api-name=${gateway_name} --print > "apigateway.pub"
 
 title "releasing"
-must_call_definition_command create_version_and_release_apigw "${definition_file}" --gateway-name=${gateway_name}
+must_call_definition_command create_version_and_release_apigw "${definition_file}" --api-name=${gateway_name}
 
 title "done"
 ```
 
 样例脚本中：
-- /apigw-manager/demo/bin/functions，定义一些常用 bash 函数，如 title, call_command 等，源码 [functions](demo/bin/functions)
-- title: 打印一行日志
-- call_command: 执行一个 django command 指令，出错返回非 0 错误码，不退出脚本
-- must_call_definition_command: 执行一个 django command 指令，出错退出脚本执行
-- apigw-manager: 单纯执行一个 django command 指令，出错返回非 0 错误码，不退出脚本，源码 [apigw-manager](demo/bin/apigw-manager)
+- `/apigw-manager/demo/bin/functions`，定义一些常用 bash 函数，如 title, call_command 等，源码 [functions](demo/bin/functions)
+- `call_command`: 执行一个 django command 指令，出错返回非 0 错误码，不退出脚本
+- `must_call_definition_command`: 执行一个 django command 指令，出错退出脚本执行
+- `apigw-manager`: 单纯执行一个 django command 指令，出错返回非 0 错误码，不退出脚本，源码 [apigw-manager](demo/bin/apigw-manager)
+- `title`: 打印一行日志
 
-#### 使用方式一：二进制 + 外部文件挂载
-
-使用基础镜像 apigw-manager，通过外部文件挂载的方式，将对应的目录挂载到 /data/ 目录下，可通过以下类似的命令进行同步：
-```bash
-docker run --rm \
-    -v /<MY_PATH>/:/data/ \
-    -e BK_APIGW_NAME=<BK_APIGW_NAME> \
-    -e BK_API_URL_TMPL=<BK_API_URL_TMPL> \
-    -e BK_APP_CODE=<BK_APP_CODE> \
-    -e BK_APP_SECRET=<BK_APP_SECRET> \
-    -e DATABASE_URL=<DATABASE_URL> \
-    mirrors.example.com/blueking/apigw-manager:latest
-```
-
-同步后，会在 *<MY_PATH>* 目录下获得网关公钥文件 *apigateway.pub*。
-
-#### 使用方式二：chart + ConfigMap
+#### 使用方式一：chart + ConfigMap
 
 使用基础镜像 apigw-manager，并为网关配置、资源文档创建 ConfigMap 对象，将这些 ConfigMap 挂载到基础镜像中，如此镜像就可以读取到网关数据，但是 chart 本身限制单文件不能超过 1MB。
+- 准备文件的样例 [chart-configmap example](examples/chart-configmap)
 
 操作步骤如下：
 
@@ -382,9 +414,10 @@ spec:
       {{- end }}
 ```
 
-#### 使用方式三：chart + 自定义镜像
+#### 使用方式二：chart + 自定义镜像
 
 可将 apigw-manager 作为基础镜像，将配置文件和文档一并构建成一个新镜像，然后通过如 K8S Job 方式进行同步。
+- 准备文件的样例 [chart-custom-docker example](examples/chart-custom-docker)
 
 操作步骤如下：
 
@@ -404,7 +437,7 @@ spec:
     └── resources.yaml
 ```
 
-步骤2. 构建 Dockerfile 参考：
+步骤2. 构建 Dockerfile，参考：
 ```Dockerfile
 FROM mirrors.example.com/blueking/apigw-manager:latest
 
@@ -443,6 +476,22 @@ spec:
         - name: BK_API_URL_TMPL
           value: "http://bkapi.example.com/api/{api_name}"
 ```
+
+#### 使用方式三：二进制 + 外部文件挂载
+
+使用基础镜像 apigw-manager，通过外部文件挂载的方式，将对应的目录挂载到 /data/ 目录下，可通过以下类似的命令进行同步：
+```bash
+docker run --rm \
+    -v /<MY_PATH>/:/data/ \
+    -e BK_APIGW_NAME=<BK_APIGW_NAME> \
+    -e BK_API_URL_TMPL=<BK_API_URL_TMPL> \
+    -e BK_APP_CODE=<BK_APP_CODE> \
+    -e BK_APP_SECRET=<BK_APP_SECRET> \
+    -e DATABASE_URL=<DATABASE_URL> \
+    mirrors.example.com/blueking/apigw-manager:latest
+```
+
+同步后，会在 *<MY_PATH>* 目录下获得网关公钥文件 *apigateway.pub*。
 
 ## 校验请求来自 API 网关
 
@@ -493,7 +542,7 @@ auth.authenticate(request, username=username, verified=verified)
 - 已认证的用户名，通过 `UserModel` 根据 `username` 获取用户，不存在时返回 `None`；
 - 未认证的用户名，返回 `AnonymousUser`，可通过继承后修改 `make_anonymous_user` 的实现来定制具体字段；
 
-## 本地开发测试
+### 本地开发测试
 
 如果使用了 `ApiGatewayJWTGenericMiddleware` 中间件，在本地开发测试时在请求中带上合法的 JWT 是相对来说较困难的，这个时候我们可以通过使用测试用的 `JWTProvider` 来解决这个问题
 

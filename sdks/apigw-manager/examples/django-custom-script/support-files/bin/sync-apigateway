@@ -4,7 +4,7 @@
 # - 需将 "apigw_manager.apigw" 添加到 django settings INSTALLED_APPS
 # - 需提前执行 "python manage.py migrate"
 
-# sync apigateway and release new resource-version
+# 如果任何命令返回一个非零退出状态（错误），脚本将会立即终止执行
 set -e
 
 # 待同步网关名，直接指定网关名，则不需要配置 django settings BK_APIGW_NAME
