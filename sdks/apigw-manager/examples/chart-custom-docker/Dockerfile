@@ -1,3 +1,3 @@
-FROM mirrors.example.com/blueking/apigw-manager:latest
+FROM hub.bktencent.com/blueking/apigw-manager:latest
 
 COPY support-files /data/

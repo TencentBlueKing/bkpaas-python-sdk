@@ -17,7 +17,7 @@ spec:
         - bash
         args:
         - bin/sync-apigateway
-        image: "mirrors.example.com/blueking/apigw-manager:latest"
+        image: "hub.bktencent.com/blueking/apigw-manager:latest"
         imagePullPolicy: "Always"
         name: sync-apigateway
         env:

@@ -224,7 +224,7 @@ spec:
         ## 自定义 django command 时，可直接执行 command 指令
         # -c
         # "python manage.py sync_apigateway"
-        image: "mirrors.example.com/blueking/my-image:1.0.0"
+        image: "hub.bktencent.com/blueking/my-image:1.0.0"
         imagePullPolicy: "IfNotPresent"
         name: sync-apigateway
 ```
@@ -386,7 +386,7 @@ spec:
         - bash
         args:
         - bin/sync-apigateway
-        image: "mirrors.example.com/blueking/apigw-manager:latest"
+        image: "hub.bktencent.com/blueking/apigw-manager:latest"
         imagePullPolicy: "Always"
         name: sync-apigateway
         env:
@@ -438,7 +438,7 @@ spec:
 
 步骤2. 构建 Dockerfile，参考：
 ```Dockerfile
-FROM mirrors.example.com/blueking/apigw-manager:latest
+FROM hub.bktencent.com/blueking/apigw-manager:latest
 
 COPY support-files /data/
 ```
@@ -462,7 +462,7 @@ spec:
         - bash
         args:
         - bin/sync-apigateway
-        image: "mirrors.example.com/blueking/my-apigw-manager:latest"
+        image: "hub.bktencent.com/blueking/my-apigw-manager:latest"
         imagePullPolicy: "Always"
         name: sync-apigateway
         env:
@@ -488,7 +488,7 @@ docker run --rm \
     -e BK_APP_CODE=<BK_APP_CODE> \
     -e BK_APP_SECRET=<BK_APP_SECRET> \
     -e DATABASE_URL=<DATABASE_URL> \
-    mirrors.example.com/blueking/apigw-manager:latest
+    hub.bktencent.com/blueking/apigw-manager:latest
 ```
 
 同步后，会在 *<MY_PATH>* 目录下获得网关公钥文件 *apigateway.pub*。
