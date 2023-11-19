@@ -27,6 +27,17 @@ def urljoin(base_url, path):
     return "%s/%s" % (base_url.rstrip("/"), path.lstrip("/"))
 
 
+class _WrappedRequest:
+    def __init__(self, request):
+        self._request = request
+
+        # 请求头中可能有敏感信息，不打印请求头
+        self.headers = {}
+
+    def __getattr__(self, name):
+        return getattr(self._request, name)
+
+
 class CurlRequest:
     def __init__(
         self,
@@ -41,11 +52,11 @@ class CurlRequest:
 
         try:
             # if request.body contains binary content, it may not be decoded
-            return curlify.to_curl(self.request)
+            return curlify.to_curl(_WrappedRequest(self.request))
         except UnicodeDecodeError:
             copied_request = copy.deepcopy(self.request)
             copied_request.body = ""
-            return curlify.to_curl(copied_request)
+            return curlify.to_curl(_WrappedRequest(copied_request))
         except Exception:
             return ""
 

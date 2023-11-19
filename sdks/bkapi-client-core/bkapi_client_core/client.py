@@ -13,7 +13,7 @@ import logging
 from typing import Any, Dict, Optional
 
 from requests import Response
-from requests.exceptions import HTTPError, RequestException
+from requests.exceptions import HTTPError, RequestException, JSONDecodeError
 from requests.sessions import merge_setting
 from requests.structures import CaseInsensitiveDict
 
@@ -112,7 +112,15 @@ class ResponseHeadersRepresenter(object):
         if not self._headers:
             return ""
 
-        return "request_id: %s, error_code: %s, %s" % (self.request_id, self.error_code, self.error_message)
+        parts = ["request_id: %s" % self.request_id]
+
+        if self.error_code:
+            parts.append("error_code: %s" % self.error_code)
+
+        if self.error_message:
+            parts.append(self.error_message)
+
+        return ", ".join(parts)
 
 
 class BaseClient(object):
@@ -306,21 +314,27 @@ class BaseClient(object):
                 response_headers_representer=response_headers_representer,
             )
 
+        # 先校验 json，状态码校验失败时，可以在 exception 中获取正常的 json 响应内容；
+        # 如此，方便调用者在同一层中处理 http 状态码和 json 两个异常
         try:
-            response.raise_for_status()
-        except HTTPError as err:
-            raise HTTPResponseError(
-                str(err), response=response, response_headers_representer=response_headers_representer
-            )
-
-        try:
-            return response.json()
-        except (TypeError, json.JSONDecodeError):
+            response_json = response.json()
+        except (TypeError, json.JSONDecodeError, JSONDecodeError):
             raise JSONResponseError(
                 "The response is not a valid JSON",
                 response=response,
                 response_headers_representer=response_headers_representer,
             )
+
+        try:
+            response.raise_for_status()
+        except HTTPError as err:
+            raise HTTPResponseError(
+                str(err),
+                response=response,
+                response_headers_representer=response_headers_representer,
+            )
+
+        return response_json
 
     def close(self):
         """Close the session"""
