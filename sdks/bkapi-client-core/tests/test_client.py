@@ -9,19 +9,19 @@
  * specific language governing permissions and limitations under the License.
 """
 import pytest
-from requests.exceptions import HTTPError, RequestException
+from requests.exceptions import RequestException
 
 from bkapi_client_core.base import Operation, OperationGroup
 from bkapi_client_core.client import BaseClient, RequestContextBuilder, ResponseHeadersRepresenter
 from bkapi_client_core.config import HookEvent
-from bkapi_client_core.exceptions import EndpointNotSetError, ResponseError, APIGatewayResponseError, HTTPResponseError
+from bkapi_client_core.exceptions import APIGatewayResponseError, EndpointNotSetError, ResponseError
 from bkapi_client_core.property import bind_property
 from bkapi_client_core.session import Session
 
 
 class TestRequestContextBuilder:
     @pytest.fixture(autouse=True)
-    def setup(self, faker):
+    def setup(self):
         self.builder = RequestContextBuilder()
 
     @pytest.mark.parametrize(
@@ -237,7 +237,7 @@ class TestResponseHeadersRepresenter:
                 },
                 "request_id: abcdef",
             ),
-        ]
+        ],
     )
     def test_str(self, headers, expected):
         representer = ResponseHeadersRepresenter(headers)
@@ -381,7 +381,7 @@ class TestBaseClient:
             ),
             (
                 {
-                    "headers": {}, 
+                    "headers": {},
                 },
                 None,
             ),
@@ -390,8 +390,8 @@ class TestBaseClient:
                     "headers": {"X-Bkapi-Error-Code": "error"},
                 },
                 APIGatewayResponseError,
-            )
-        ]
+            ),
+        ],
     )
     def test_check_response_apigateway_error(self, mocker, response, expected_error):
         if not expected_error:

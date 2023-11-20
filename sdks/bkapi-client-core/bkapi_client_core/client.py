@@ -195,7 +195,7 @@ class BaseClient(object):
 
     def check_response_apigateway_error(
         self,
-        response, # type: Optional[Response]
+        response,  # type: Optional[Response]
     ):
         # type: (...) -> None
         """检查是否包含 apigateway 层面的报错，如应用认证失败，无访问 API 权限等"""
@@ -209,7 +209,6 @@ class BaseClient(object):
                 response=response,
                 response_headers_representer=response_headers_representer,
             )
-
 
     def update_headers(
         self,
@@ -285,7 +284,9 @@ class BaseClient(object):
         # log exception
         if isinstance(exception, ResponseError):
             response = exception.response
-            response_headers_representer = ResponseHeadersRepresenter(response.headers if response is not None else None)
+            response_headers_representer = ResponseHeadersRepresenter(
+                response.headers if response is not None else None
+            )
             logger.warning(
                 "request bkapi failed. status_code: %s, %s\n%s",
                 response.status_code if response is not None else None,
@@ -294,7 +295,9 @@ class BaseClient(object):
             )
         elif isinstance(exception, RequestException):
             response = exception.response
-            response_headers_representer = ResponseHeadersRepresenter(response.headers if response is not None else None)
+            response_headers_representer = ResponseHeadersRepresenter(
+                response.headers if response is not None else None
+            )
             logger.exception(
                 "request bkapi error. status_code: %s, %s\n%s",
                 response.status_code if response is not None else None,
@@ -355,7 +358,6 @@ class BaseClient(object):
                 response=response,
                 response_headers_representer=response_headers_representer,
             )
-
 
     def close(self):
         """Close the session"""

@@ -48,6 +48,11 @@ class TestCurlRequest:
         result = utils.CurlRequest(request).to_curl()
         assert result == "curl -X GET https://example.com/get"
 
-        request = requests.Request("GET", "https://example.com/get", params={"foo": "bar"}, headers={"x-token": "test"}).prepare()
+        request = requests.Request(
+            "GET",
+            "https://example.com/get",
+            params={"foo": "bar"},
+            headers={"x-token": "test"},
+        ).prepare()
         result = utils.CurlRequest(request).to_curl()
         assert result == "curl -X GET 'https://example.com/get?foo=bar'"
