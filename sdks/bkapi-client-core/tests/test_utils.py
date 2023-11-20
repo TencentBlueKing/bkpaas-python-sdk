@@ -9,6 +9,7 @@
  * specific language governing permissions and limitations under the License.
 """
 import pytest
+import requests
 
 from bkapi_client_core import utils
 
@@ -42,10 +43,11 @@ def test_to_curl(mocker, curlify, request_, expected):
 
 
 class TestCurlRequest:
-    def test_str(self, mocker):
-        curlify = mocker.patch.object(utils, "curlify")
-        curlify.to_curl.return_value = "curl http://example.com"
+    def test_str(self):
+        request = requests.Request("GET", "https://example.com/get").prepare()
+        result = utils.CurlRequest(request).to_curl()
+        assert result == "curl -X GET https://example.com/get"
 
-        request = mocker.MagicMock(url="http://example.com")
-        result = utils.CurlRequest(request)
-        assert str(result) == "curl http://example.com"
+        request = requests.Request("GET", "https://example.com/get", params={"foo": "bar"}, headers={"x-token": "test"}).prepare()
+        result = utils.CurlRequest(request).to_curl()
+        assert result == "curl -X GET 'https://example.com/get?foo=bar'"

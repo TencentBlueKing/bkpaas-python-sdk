@@ -13,7 +13,7 @@ import logging
 from typing import Any, Dict, Optional
 
 from requests import Response
-from requests.exceptions import HTTPError, RequestException, JSONDecodeError
+from requests.exceptions import HTTPError, RequestException
 from requests.sessions import merge_setting
 from requests.structures import CaseInsensitiveDict
 
@@ -267,7 +267,7 @@ class BaseClient(object):
         if isinstance(exception, RequestException):
             response = exception.response
             response_headers_representer = ResponseHeadersRepresenter(response and response.headers)
-            logger.exception(
+            logger.warning(
                 "request bkapi failed. status_code: %s, %s\n%s",
                 response and response.status_code,
                 response_headers_representer,
@@ -318,7 +318,7 @@ class BaseClient(object):
         # 如此，方便调用者在同一层中处理 http 状态码和 json 两个异常
         try:
             response_json = response.json()
-        except (TypeError, json.JSONDecodeError, JSONDecodeError):
+        except (TypeError, json.JSONDecodeError):
             raise JSONResponseError(
                 "The response is not a valid JSON",
                 response=response,
