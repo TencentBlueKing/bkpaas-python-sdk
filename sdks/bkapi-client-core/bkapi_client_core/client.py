@@ -25,6 +25,7 @@ from bkapi_client_core.exceptions import (
     EndpointNotSetError,
     HTTPResponseError,
     JSONResponseError,
+    ResponseError,
 )
 from bkapi_client_core.session import Session
 from bkapi_client_core.utils import CurlRequest, urljoin
@@ -209,24 +210,6 @@ class BaseClient(object):
                 response_headers_representer=response_headers_representer,
             )
 
-    def check_response_status(
-        self,
-        response,  # type: Optional[Response]
-    ):
-        # type: (...) -> None
-        """检查响应状态码，即 requests raise_for_status 校验"""
-        if response is None:
-            return
-
-        try:
-            response.raise_for_status()
-        except HTTPError as err:
-            response_headers_representer = ResponseHeadersRepresenter(response.headers)
-            raise HTTPResponseError(
-                str(err),
-                response=response,
-                response_headers_representer=response_headers_representer,
-            )
 
     def update_headers(
         self,
@@ -300,11 +283,20 @@ class BaseClient(object):
     ):
         # type: (...) -> Optional[Response]
         # log exception
-        if isinstance(exception, RequestException):
+        if isinstance(exception, ResponseError):
             response = exception.response
             response_headers_representer = ResponseHeadersRepresenter(response.headers if response is not None else None)
             logger.warning(
                 "request bkapi failed. status_code: %s, %s\n%s",
+                response.status_code if response is not None else None,
+                response_headers_representer,
+                CurlRequest(exception.request),
+            )
+        elif isinstance(exception, RequestException):
+            response = exception.response
+            response_headers_representer = ResponseHeadersRepresenter(response.headers if response is not None else None)
+            logger.exception(
+                "request bkapi error. status_code: %s, %s\n%s",
                 response.status_code if response is not None else None,
                 response_headers_representer,
                 CurlRequest(exception.request),
@@ -344,15 +336,16 @@ class BaseClient(object):
 
         self.check_response_apigateway_error(response)
 
-        # 先校验 json，状态码校验失败时，可以在 exception 中获取正常的 json 响应内容；
-        # 如此，方便调用者在同一层中处理 http 状态码和 json 两个异常
-        response_json = self._check_response_json(response)
+        try:
+            response.raise_for_status()
+        except HTTPError as err:
+            response_headers_representer = ResponseHeadersRepresenter(response.headers)
+            raise HTTPResponseError(
+                str(err),
+                response=response,
+                response_headers_representer=response_headers_representer,
+            )
 
-        self.check_response_status(response)
-
-        return response_json
-
-    def _check_response_json(self, response):
         try:
             return response.json()
         except (TypeError, json.JSONDecodeError):
