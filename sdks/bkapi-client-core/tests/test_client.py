@@ -9,12 +9,12 @@
  * specific language governing permissions and limitations under the License.
 """
 import pytest
-from requests.exceptions import RequestException
+from requests.exceptions import HTTPError, RequestException
 
 from bkapi_client_core.base import Operation, OperationGroup
 from bkapi_client_core.client import BaseClient, RequestContextBuilder, ResponseHeadersRepresenter
 from bkapi_client_core.config import HookEvent
-from bkapi_client_core.exceptions import EndpointNotSetError, ResponseError
+from bkapi_client_core.exceptions import EndpointNotSetError, ResponseError, APIGatewayResponseError, HTTPResponseError
 from bkapi_client_core.property import bind_property
 from bkapi_client_core.session import Session
 
@@ -372,6 +372,44 @@ class TestBaseClient:
         with pytest.raises(RequestException):  # type: ignore
             self.client.parse_response(mocker.MagicMock(), mocker.MagicMock())
 
+    @pytest.mark.parametrize(
+        "response, expected_error",
+        [
+            (
+                None,
+                None,
+            ),
+            (
+                {
+                    "headers": {}, 
+                },
+                None,
+            ),
+            (
+                {
+                    "headers": {"X-Bkapi-Error-Code": "error"},
+                },
+                APIGatewayResponseError,
+            )
+        ]
+    )
+    def test_check_response_apigateway_error(self, mocker, response, expected_error):
+        if not expected_error:
+            self.client.check_response_apigateway_error(response and mocker.MagicMock(**response))
+            return
+
+        with pytest.raises(expected_error):
+            self.client.check_response_apigateway_error(mocker.MagicMock(**response))
+
+    def test_check_response_status(self, mocker):
+        self.client.check_response_status(None)
+        self.client.check_response_status(mocker.MagicMock())
+
+        response = {"raise_for_status.side_effect": HTTPError()}
+        with pytest.raises(HTTPResponseError):
+            self.client.check_response_status(mocker.MagicMock(**response))
+            
+        
     @pytest.mark.parametrize(
         "session_headers, headers, expected",
         [

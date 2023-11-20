@@ -192,6 +192,42 @@ class BaseClient(object):
         except RequestException as err:
             return self._handle_exception(operation, None, err)
 
+    def check_response_apigateway_error(
+        self,
+        response, # type: Optional[Response]
+    ):
+        # type: (...) -> None
+        """检查是否包含 apigateway 层面的报错，如应用认证失败，无访问 API 权限等"""
+        if response is None:
+            return
+
+        response_headers_representer = ResponseHeadersRepresenter(response.headers)
+        if response_headers_representer.has_apigateway_error:
+            raise APIGatewayResponseError(
+                "Request bkapi error, %s" % response_headers_representer.error_message,
+                response=response,
+                response_headers_representer=response_headers_representer,
+            )
+
+    def check_response_status(
+        self,
+        response,  # type: Optional[Response]
+    ):
+        # type: (...) -> None
+        """检查响应状态码，即 requests raise_for_status 校验"""
+        if response is None:
+            return
+
+        try:
+            response.raise_for_status()
+        except HTTPError as err:
+            response_headers_representer = ResponseHeadersRepresenter(response.headers)
+            raise HTTPResponseError(
+                str(err),
+                response=response,
+                response_headers_representer=response_headers_representer,
+            )
+
     def update_headers(
         self,
         headers,  # type: Dict[str, str]
