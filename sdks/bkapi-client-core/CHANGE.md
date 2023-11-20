@@ -2,9 +2,9 @@
 
 ## 1.2.0
 - BK_API_CLIENT_ENABLE_SSL_VERIFY 默认值设置为 False
-- BaseClient 处理响应内容时优先检查 json，添加辅助方法：check_response_apigateway_error, check_response_status
-- ResponseError 添加 response_status_code/response_text/response_json 等辅助方法
-- 日志中，curl 信息中不再携带请求头
+- Client 添加辅助方法：check_response_apigateway_error
+- ResponseError 添加辅助方法：response_status_code, response_text, response_json
+- 日志中，curl 信息不再携带请求头
 
 ### 1.1.8
 - 使用 `CurlRequest` 封装转换 curl 命令的逻辑以优化性能
