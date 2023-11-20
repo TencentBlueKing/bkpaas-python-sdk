@@ -59,7 +59,7 @@ class _WrappedRequest:
     def __init__(self, request):
         self._request = request
 
-        # 请求头中可能有敏感信息，不打印请求头
+        # 去除请求头中的敏感信息
         self.headers = self._get_headers_without_sensitive(self._request.headers)
 
     def __getattr__(self, name):
