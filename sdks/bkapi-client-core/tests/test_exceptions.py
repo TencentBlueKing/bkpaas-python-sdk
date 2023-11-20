@@ -127,12 +127,23 @@ class TestResponseError:
         [
             (None, None),
             ({"status_code": 200}, 200),
+            ({"status_code": 400}, 400),
         ]
     )
-    def test_request_status_code(self, mocker, faker, response, expected):
+    def test_response_status_code(self, mocker, faker, response, expected):
         err = exceptions.ResponseError(
             faker.pystr(),
             response=response and mocker.MagicMock(**response),
             response_headers_representer=ResponseHeadersRepresenter({"X-Bkapi-Request-Id": "abcdef"}),
         )
         assert err.response_status_code == expected
+
+    def test_response_json(self, mocker, faker):
+        err = exceptions.ResponseError(faker.pystr(), response=None)
+        assert err.response_json() == None
+
+        err = exceptions.ResponseError(
+            faker.pystr(),
+            response=mocker.MagicMock(**{"json.return_value": {"foo": "bar"}})
+        )
+        assert err.response_json() == {"foo": "bar"}

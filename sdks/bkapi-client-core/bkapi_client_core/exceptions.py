@@ -99,15 +99,16 @@ class ResponseError(RequestException, BKAPIError):
     @property
     def response_status_code(self):
         # type: (...) -> Optional[int]
-        return self.response and self.response.status_code
+        # bool(response) is equal to response.ok
+        return self.response.status_code if self.response is not None else None
 
     @property
     def response_text(self):
         # type: (...) -> Optional[str]
-        try:
-            return self.response and self.response.text
-        except Exception:
-            return None
+        return self.response.text if self.response is not None else None
+
+    def response_json(self):
+        return self.response.json() if self.response is not None else None
 
     def __str__(self):
         if self.response is None:
@@ -126,9 +127,6 @@ class APIGatewayResponseError(ResponseError):
 
 class HTTPResponseError(ResponseError):
     """HTTP request status code error"""
-
-    def response_json(self):
-        return self.response.json()
 
 
 class JSONResponseError(ResponseError):

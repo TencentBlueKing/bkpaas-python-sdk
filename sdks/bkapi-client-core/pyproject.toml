@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bkapi-client-core"
-version = "1.1.9"
+version = "1.2.0"
 description = "A toolkit for buiding blueking API clients."
 readme = "README.md"
 authors = ["blueking <blueking@tencent.com>"]

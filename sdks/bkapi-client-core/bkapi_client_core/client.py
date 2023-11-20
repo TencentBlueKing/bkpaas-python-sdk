@@ -302,10 +302,10 @@ class BaseClient(object):
         # log exception
         if isinstance(exception, RequestException):
             response = exception.response
-            response_headers_representer = ResponseHeadersRepresenter(response and response.headers)
+            response_headers_representer = ResponseHeadersRepresenter(response.headers if response is not None else None)
             logger.warning(
                 "request bkapi failed. status_code: %s, %s\n%s",
-                response and response.status_code,
+                response.status_code if response is not None else None,
                 response_headers_representer,
                 CurlRequest(exception.request),
             )
