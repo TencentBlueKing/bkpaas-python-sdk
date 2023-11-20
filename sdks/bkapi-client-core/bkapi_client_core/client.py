@@ -342,35 +342,27 @@ class BaseClient(object):
         if response is None:
             return None
 
-        response_headers_representer = ResponseHeadersRepresenter(response.headers)
-        if response_headers_representer.has_apigateway_error:
-            raise APIGatewayResponseError(
-                "Request bkapi error, %s" % response_headers_representer.error_message,
-                response=response,
-                response_headers_representer=response_headers_representer,
-            )
+        self.check_response_apigateway_error(response)
 
         # 先校验 json，状态码校验失败时，可以在 exception 中获取正常的 json 响应内容；
         # 如此，方便调用者在同一层中处理 http 状态码和 json 两个异常
+        response_json = self._check_response_json(response)
+
+        self.check_response_status(response)
+
+        return response_json
+
+    def _check_response_json(self, response):
         try:
-            response_json = response.json()
+            return response.json()
         except (TypeError, json.JSONDecodeError):
+            response_headers_representer = ResponseHeadersRepresenter(response.headers)
             raise JSONResponseError(
                 "The response is not a valid JSON",
                 response=response,
                 response_headers_representer=response_headers_representer,
             )
 
-        try:
-            response.raise_for_status()
-        except HTTPError as err:
-            raise HTTPResponseError(
-                str(err),
-                response=response,
-                response_headers_representer=response_headers_representer,
-            )
-
-        return response_json
 
     def close(self):
         """Close the session"""
