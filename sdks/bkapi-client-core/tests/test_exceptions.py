@@ -9,7 +9,6 @@
  * specific language governing permissions and limitations under the License.
 """
 import pytest
-import requests
 
 from bkapi_client_core import exceptions
 from bkapi_client_core.client import ResponseHeadersRepresenter
@@ -47,7 +46,7 @@ class TestResponseError:
                 },
                 "error, status_code: 400, request_id: abcdef",
             ),
-        ]
+        ],
     )
     def test_str(self, mocker, error, response, headers, expected):
         err = exceptions.ResponseError(
@@ -83,7 +82,8 @@ class TestResponseError:
 
     def test_curl_command(self, mocker, faker):
         mocker.patch(
-            "bkapi_client_core.exceptions.CurlRequest.to_curl", return_value="curl -X GET http://example.com",
+            "bkapi_client_core.exceptions.CurlRequest.to_curl",
+            return_value="curl -X GET http://example.com",
         )
         err = exceptions.ResponseError(
             faker.pystr(),
@@ -97,7 +97,7 @@ class TestResponseError:
         [
             (None, None),
             ({"method": "GET"}, "GET"),
-        ]
+        ],
     )
     def test_request_method(self, mocker, faker, request_, expected):
         err = exceptions.ResponseError(
@@ -112,7 +112,7 @@ class TestResponseError:
         [
             (None, ""),
             ({"url": "http://example.com/test?foo=bar"}, "http://example.com/test"),
-        ]
+        ],
     )
     def test_request_url(self, mocker, faker, request_, expected):
         err = exceptions.ResponseError(
@@ -128,7 +128,7 @@ class TestResponseError:
             (None, None),
             ({"status_code": 200}, 200),
             ({"status_code": 400}, 400),
-        ]
+        ],
     )
     def test_response_status_code(self, mocker, faker, response, expected):
         err = exceptions.ResponseError(
@@ -140,10 +140,9 @@ class TestResponseError:
 
     def test_response_json(self, mocker, faker):
         err = exceptions.ResponseError(faker.pystr(), response=None)
-        assert err.response_json() == None
+        assert err.response_json() is None
 
         err = exceptions.ResponseError(
-            faker.pystr(),
-            response=mocker.MagicMock(**{"json.return_value": {"foo": "bar"}})
+            faker.pystr(), response=mocker.MagicMock(**{"json.return_value": {"foo": "bar"}})
         )
         assert err.response_json() == {"foo": "bar"}
