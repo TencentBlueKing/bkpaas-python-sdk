@@ -205,7 +205,7 @@ class BaseClient(object):
         response_headers_representer = ResponseHeadersRepresenter(response.headers)
         if response_headers_representer.has_apigateway_error:
             raise APIGatewayResponseError(
-                "Request bkapi error, %s" % response_headers_representer.error_message,
+                "Error responded by API Gateway",
                 response=response,
                 response_headers_representer=response_headers_representer,
             )
@@ -283,23 +283,14 @@ class BaseClient(object):
         # type: (...) -> Optional[Response]
         # log exception
         if isinstance(exception, ResponseError):
-            response = exception.response
-            response_headers_representer = ResponseHeadersRepresenter(
-                response.headers if response is not None else None
-            )
-            logger.warning(
-                "request bkapi failed. status_code: %s, %s\n%s",
-                response.status_code if response is not None else None,
-                response_headers_representer,
-                CurlRequest(exception.request),
-            )
+            logger.warning("%s\n%s", str(exception), CurlRequest(exception.request))
         elif isinstance(exception, RequestException):
             response = exception.response
             response_headers_representer = ResponseHeadersRepresenter(
                 response.headers if response is not None else None
             )
             logger.exception(
-                "request bkapi error. status_code: %s, %s\n%s",
+                "Request bkapi error, status_code: %s, %s\n%s",
                 response.status_code if response is not None else None,
                 response_headers_representer,
                 CurlRequest(exception.request),
@@ -344,7 +335,7 @@ class BaseClient(object):
         except HTTPError as err:
             response_headers_representer = ResponseHeadersRepresenter(response.headers)
             raise HTTPResponseError(
-                str(err),
+                "Error responded by Backend api, %s" % str(err),
                 response=response,
                 response_headers_representer=response_headers_representer,
             )
