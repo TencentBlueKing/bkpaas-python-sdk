@@ -1,5 +1,8 @@
 ## Change logs
 
+### 2.0.2
+- 优化请求 bk-apigateway 接口失败时，打印的错误消息
+
 ### 2.0.1
 - 修复镜像 sync-apigateway 中，同步任务失败时，脚本退出码为 0 的问题
 

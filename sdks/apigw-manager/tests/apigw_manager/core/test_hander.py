@@ -11,7 +11,7 @@
 from faker import Faker
 from pytest import fixture, raises
 
-from apigw_manager.core.exceptions import ApiRequestError
+from apigw_manager.core.exceptions import ApiResponseError
 from apigw_manager.core.handler import Handler
 from bkapi_client_core.exceptions import HTTPResponseError
 
@@ -90,12 +90,12 @@ class TestHandler:
 
     def test_call_connect_error(self, handler: Handler, operation):
         operation.side_effect = HTTPResponseError()
-        with raises(HTTPResponseError):
+        with raises(ApiResponseError):
             handler._call(operation)
 
     def test_call_server_error(self, handler: Handler, operation, mocker):
         operation.side_effect = HTTPResponseError(response=mocker.MagicMock(status_code=500))
-        with raises(HTTPResponseError):
+        with raises(ApiResponseError):
             handler._call(operation)
 
     def test_call_request_error(self, handler: Handler, operation, mocker):
@@ -106,7 +106,7 @@ class TestHandler:
             )
         )
 
-        with raises(ApiRequestError):
+        with raises(ApiResponseError):
             handler._call(operation)
 
     def test_call_request_error_with_no_json(self, handler: Handler, operation, mocker):
@@ -117,5 +117,5 @@ class TestHandler:
             )
         )
 
-        with raises(HTTPResponseError):
+        with raises(ApiResponseError):
             handler._call(operation)

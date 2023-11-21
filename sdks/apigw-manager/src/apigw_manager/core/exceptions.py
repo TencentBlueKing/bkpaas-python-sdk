@@ -18,20 +18,18 @@ class ApiException(Exception):
         return self.operation_id
 
 
-class ApiResultError(Exception):
+class ApiResponseError(Exception):
+    """There was an exception that occurred while handling the response"""
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        return self.message
+
+class ApiResultError(ApiResponseError):
     def __init__(self, code, message):
         self.code = code
         self.message = message
 
     def __str__(self):
         return "code: %s, %s" % (self.code, self.message)
-
-
-class ApiRequestError(Exception):
-    def __init__(self, status_code, code, message):
-        self.status_code = status_code
-        self.code = code
-        self.message = message
-
-    def __str__(self):
-        return "status_code: %s, code: %s, %s" % (self.status_code, self.code, self.message)
