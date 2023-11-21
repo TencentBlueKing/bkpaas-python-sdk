@@ -47,6 +47,8 @@ stage:
 # 主动授权，网关主动给应用，添加访问网关所有资源的权限
 grant_permissions:
   - bk_app_code: "{{ settings.BK_APP_CODE }}"
+    # 按网关授权，包括网关下所有资源，包括未来新创建的资源
+    grant_dimension: "api"
 
 # 应用申请指定网关所有资源的权限，待网关管理员审批后，应用才可访问网关资源
 apply_permissions:

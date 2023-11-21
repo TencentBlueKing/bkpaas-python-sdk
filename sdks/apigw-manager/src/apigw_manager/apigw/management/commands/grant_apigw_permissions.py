@@ -27,7 +27,7 @@ class Command(PermissionCommand):
 
             manager.grant_permission(**permission)
             print(
-                "Granted API gateway %s permission for app code %s, dimension %s"
+                "Granted gateway %s permission for app code %s, dimension %s"
                 % (
                     manager.config.api_name,
                     permission["target_app_code"],
