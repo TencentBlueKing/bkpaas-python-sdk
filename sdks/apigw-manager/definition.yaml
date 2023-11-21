@@ -1,3 +1,6 @@
+# definition.yaml 配置文件版本号，必填，固定值 1
+spec_version: 1
+
 release:
   # 发布版本号，
   # 资源配置更新，需更新此版本号才会发布资源版本，此版本号和 sdk 版本号一致，错误设置会影响调用方使用
@@ -48,7 +51,7 @@ stage:
 grant_permissions:
   - bk_app_code: "{{ settings.BK_APP_CODE }}"
     # 按网关授权，包括网关下所有资源，包括未来新创建的资源
-    grant_dimension: "api"
+    grant_dimension: "gateway"
 
 # 应用申请指定网关所有资源的权限，待网关管理员审批后，应用才可访问网关资源
 apply_permissions:
@@ -56,8 +59,7 @@ apply_permissions:
 
 # 为网关添加关联应用，关联应用可以通过网关 bk-apigateway 的接口操作网关数据；每个网关最多可有 10 个关联应用
 related_apps:
-  target_app_codes:
-    - "{{ settings.BK_APP_CODE }}"
+  - "{{ settings.BK_APP_CODE }}"
 
 # 网关资源，建议资源配置采用单独的配置文件，可通过网关管理端导出资源配置
 resources:

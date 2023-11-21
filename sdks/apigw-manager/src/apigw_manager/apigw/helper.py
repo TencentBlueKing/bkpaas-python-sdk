@@ -27,6 +27,8 @@ logger = logging.getLogger(__name__)
 class Definition:
     """Gateway model definitions"""
 
+    valid_spec_versions = ["1"]
+
     @classmethod
     def load_from(cls, path, dictionary):
         with open(path) as fp:
@@ -41,7 +43,20 @@ class Definition:
         return cls(rendered)
 
     def __init__(self, definition):
-        self.loaded = yaml_load(definition)
+        loaded = yaml_load(definition)
+
+        self._check_spec_version(loaded)
+
+        self.loaded = loaded
+
+    def _check_spec_version(self, definition):
+        spec_version = definition.get("spec_version")
+        if not spec_version:
+            logger.warning("please add `spec_version: 1` to definition.yaml")
+            return
+
+        if str(spec_version) not in self.valid_spec_versions:
+            raise ValueError("spec_version configured in definition.yaml is wrong, choices: 1")
 
     def _get_namespace_list(self, namespace):
         if not namespace:

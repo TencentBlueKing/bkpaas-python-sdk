@@ -23,7 +23,7 @@ class Command(SyncCommand):
             return
 
         try:
-            manager.add_related_apps(**definition)
+            manager.add_related_apps(target_app_codes=definition)
         except ApiResponseError as err:
             print("warning!! Add related apps error, %s" % str(err))
             return
@@ -32,6 +32,6 @@ class Command(SyncCommand):
             "Add related apps for gateway %s: %s"
             % (
                 manager.config.api_name,
-                ", ".join(definition["target_app_codes"])
+                ", ".join(definition)
             )
         )
