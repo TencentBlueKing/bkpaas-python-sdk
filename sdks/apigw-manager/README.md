@@ -1,6 +1,6 @@
 # apigw-manager
 
-蓝鲸 API 网关管理 SDK 是一个用于管理 API 网关的工具，提供了基本的网关注册、同步和发布等功能。此外，它还提供了一个后端服务校验工具，用于验证 API 请求是否来自蓝鲸 API 网关。
+蓝鲸 API 网关管理 SDK 是一个用于管理 API 网关的工具，提供了基本的网关注册、同步和发布等功能。此外，它还为后端服务提供了验证 API 请求是否来自蓝鲸 API 网关的功能。
 
 1. Django Command：SDK 提供了 Django Command，用于同步网关数据。您可以根据需要编排指令，以满足您的特定需求，并集成到您的项目自动执行 API 网关同步过程，以便更轻松地管理 API 网关。
 
@@ -93,7 +93,7 @@ release:
 # 定义网关基本信息，用于命令 `sync_apigw_config`
 apigateway:
   description: "描述"
-  description_en: "英文描述"
+  description_en: "English description"
   is_public: true
   # 标记网关为官方网关，网关名需以 `bk-` 开头，可选
   api_type: 1
@@ -111,7 +111,7 @@ apigateway:
 stage:
   name: "prod"
   description: "描述"
-  description_en: "英文描述"
+  description_en: "English description"
   # 环境变量
   vars:
     key: "value"
@@ -129,18 +129,12 @@ stage:
       # 设置Headers
       set:
         X-Token: "token"
-  # 流量控制
-  rate_limit:
-    enabled: false
-    rate:
-      tokens: 5000
-      period: 60
 
 # 主动授权，网关主动给应用，添加访问网关所有资源的权限；
 # 用于命令 `grant_apigw_permissions`
 grant_permissions:
   - bk_app_code: "{{ settings.BK_APP_CODE }}"
-    # 按网关授权，包括网关下所有资源，包括未来新创建的资源
+    # 授权维度，可选值：gateway，按网关授权，包括网关下所有资源，以及未来新创建的资源
     grant_dimension: "gateway"
 
 # 应用申请指定网关所有资源的权限，待网关管理员审批后，应用才可访问网关资源；
@@ -168,7 +162,7 @@ resource_docs:
 ```
 
 **注意：**
-- 同步资源后，需要创建版本并发布才能生效，发布内容定义于 definition.yaml `release`
+- 同步资源后，需要创建版本并发布才能生效，发布数据定义于 definition.yaml `release`
 - 资源配置 resources.yaml 变更时，需要更新 definition.yaml `release` 中的版本号 version，以便正确创建资源版本及 SDK
 
 #### 2. resources.yaml
@@ -199,12 +193,12 @@ resource_docs:
   # archivefile: "{{ settings.BK_APIGW_RESOURCE_DOCS_ARCHIVE_FILE }}"
   # 资源文档目录，basedir 与 archivefile 二者至少一个有效，若同时存在，则 archivefile 优先
   # basedir: "{{ settings.BK_APIGW_RESOURCE_DOCS_BASE_DIR }}"
-  basedir: "{{ settings.BASE_DIR }}/support-files/apidocs/"
+  basedir: "support-files/apidocs/"
 ```
 
 ### 方案一：直接使用 Django Command 同步
 
-此方案适用于 Django 项目，具体请参考 [sync-apigateway-with-django-command.md](docs/sync-apigateway-with-django-command.md)
+此方案适用于 Django 项目，具体请参考 [sync-apigateway-with-django.md](docs/sync-apigateway-with-django.md)
 
 ### 方案二：通过镜像方式同步
 

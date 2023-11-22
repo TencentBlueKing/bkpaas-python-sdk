@@ -4,11 +4,11 @@
 - */data/definition.yaml*：网关定义文件，用于注册网关；
 - */data/resources.yaml*：资源定义文件，用于同步网关资源，可通过网关导出；
 - */data/apidocs*：文档目录，可通过网关导出后解压；
-- */data/bin/sync-apigateway.sh*：自定义同步脚本；镜像提供默认同步脚本：[sync-apigateway](../demo/bin/sync-apigateway)，如不满足需求，可自定义同步脚本
+- */data/bin/sync-apigateway.sh*：自定义同步脚本；镜像提供默认同步脚本：[sync-apigateway](../bin/sync-apigateway)，如不满足需求，可自定义同步脚本
 
 镜像执行同步时，需要额外的环境变量支持：
 - `BK_APIGW_NAME`：网关名称；
-- `BK_API_URL_TMPL`：云网关 API 地址模板；
+- `BK_API_URL_TMPL`：云网关 API 地址模板，例如：http://bkapi.example.com/api/{api_name}；
 - `BK_APP_CODE`：应用名称；
 - `BK_APP_SECRET`：应用密钥；
 
@@ -20,9 +20,7 @@
 
 #### 准备工作
 
-网关配置，资源配置，资源文档等数据，可参考上文 `根据  YAML 同步网关配置` -> `准备工作` 进行准备。
-
-基础镜像提供了同步脚本 [sync-apigateway](../demo/bin/sync-apigateway)，脚本允许通过额外的环境变量设置命令参数：
+基础镜像提供了同步脚本 [sync-apigateway](../bin/sync-apigateway)，脚本允许通过额外的环境变量设置命令参数：
 - `SYNC_APIGW_CONFIG_ARGS`: 用于命令 `sync_apigw_config`
 - `SYNC_APIGW_STAGE_ARGS`: 用于命令 `sync_apigw_stage`
 - `APPLY_APIGW_PERMISSIONS_ARGS`: 用于命令 `apply_apigw_permissions`
@@ -30,9 +28,8 @@
 - `SYNC_APIGW_RESOURCES_ARGS`: 默认值："--delete"，用于命令 `sync_apigw_resources`
 - `SYNC_RESOURCE_DOCS_BY_ARCHIVE_ARGS`: 默认值: "--safe-mode"，用于命令 `sync_resource_docs_by_archive`
 - `CREATE_VERSION_AND_RELEASE_APIGW_ARGS`: 默认值："--generate-sdks"，用于命令 `create_version_and_release_apigw`
-- `APIGW_PUBLIC_KEY_PATH`: 网关公钥保存路径，默认为当前目录下 `apigateway.pub`，用于命令 `fetch_apigw_public_key`
 
-如果同步脚本不满足需求，可以自定义同步脚本，并参考下文将其添加到镜像，镜像执行时指定使用自定义同步脚本即可。自定义同步脚本样例如下：
+如果基础镜像提供的同步脚本不满足需求，可以自定义同步脚本，镜像执行时指定使用自定义同步脚本即可。自定义同步脚本样例如下：
 ```bash
 #!/bin/bash
 
@@ -69,7 +66,7 @@ log_info "done"
 - `/apigw-manager/bin/functions`，定义一些常用 bash 函数，源码 [functions](../bin/functions)
 - `apigw-manager`: 单纯执行一个 Django Command 指令，出错返回非 0 错误码，不退出脚本，源码 [apigw-manager](../bin/apigw-manager)
 
-functions 中的 bash 函数有以下这些：
+functions 中的 bash 函数：
 - `call_command`: 执行一个 Django Command 指令，出错返回非 0 错误码，不退出脚本
 - `call_definition_command`: 执行一个 Django Command 指令，出错时打印告警日志，不退出脚本
 - `must_call_definition_command`: 执行一个 Django Command 指令，出错退出脚本执行
@@ -81,7 +78,7 @@ functions 中的 bash 函数有以下这些：
 #### 使用方式一：chart + ConfigMap
 
 使用基础镜像 apigw-manager，并为网关配置、资源文档创建 ConfigMap 对象，将这些 ConfigMap 挂载到基础镜像中，如此镜像就可以读取到网关数据，但是 chart 本身限制单文件不能超过 1MB。
-- 准备文件的样例 [chart-configmap example](../examples/chart-configmap)
+- 准备文件的样例 [examples/chart/configmap](../examples/chart/configmap)
 
 操作步骤如下：
 
@@ -178,7 +175,7 @@ spec:
 #### 使用方式二：chart + 自定义镜像
 
 可将 apigw-manager 作为基础镜像，将配置文件和文档一并构建成一个新镜像，然后通过如 K8S Job 方式进行同步。
-- 准备文件的样例 [chart-custom-docker example](../examples/chart-custom-docker)
+- 准备文件的样例 [examples/chart/custom-docker](../examples/chart/custom-docker)
 
 操作步骤如下：
 

@@ -1,7 +1,7 @@
 ### 直接使用 Django Command 同步网关
 
 项目安装 SDK apigw-manager 后，可以直接执行 SDK 提供的 Django Command。
-- 准备文件的样例 [django-custom-script example](../examples/django-custom-script)
+- 准备文件的样例 [examples/django/custom-script](../examples/django/custom-script)
 
 #### 步骤1. 准备自定义同步脚本
 
@@ -23,10 +23,10 @@ echo "gateway sync definition start ..."
 python manage.py sync_apigw_config --api-name=${gateway_name} --file="${definition_file}"  # 同步网关基本信息
 python manage.py sync_apigw_stage --api-name=${gateway_name} --file="${definition_file}"  # 同步网关环境信息
 python manage.py sync_apigw_resources --delete --api-name=${gateway_name} --file="${resources_file}"  # 同步网关资源；--delete 将删除网关中未在 resources.yaml 存在的资源
-python manage.py sync_resource_docs_by_archive --api-name=${gateway_name} --file="${definition_file}"  # 同步资源文档
-python manage.py create_version_and_release_apigw --api-name=${gateway_name} --file="${definition_file}" # 创建资源版本并发布
-python manage.py grant_apigw_permissions --api-name=${gateway_name} --file="${definition_file}"  # 为应用主动授权，如无可跳过
-python manage.py apply_apigw_permissions --api-name=${gateway_name} --file="${definition_file}"  # 申请网关权限，如无可跳过
+python manage.py sync_resource_docs_by_archive --api-name=${gateway_name} --file="${definition_file}"  # 可选，同步资源文档
+python manage.py create_version_and_release_apigw --api-name=${gateway_name} --file="${definition_file}" # 创建资源版本并发布；指定参数 --generate-sdks 时，会同时生成资源版本对应的网关 SDK
+python manage.py grant_apigw_permissions --api-name=${gateway_name} --file="${definition_file}"  # 可选，为应用主动授权
+python manage.py apply_apigw_permissions --api-name=${gateway_name} --file="${definition_file}"  # 可选，申请网关权限
 python manage.py fetch_apigw_public_key --api-name=${gateway_name}  # 获取网关公钥
 python manage.py fetch_esb_public_key  # 可选，获取 ESB 公钥（专用于同时接入 ESB 和网关的系统）
 echo "gateway sync definition end"
