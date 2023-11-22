@@ -16,7 +16,7 @@ spec:
       - command:
         - bash
         args:
-        - bin/sync-apigateway
+        - bin/sync-apigateway.sh
         image: "hub.bktencent.com/blueking/apigw-manager:latest"
         imagePullPolicy: "Always"
         name: sync-apigateway

@@ -25,4 +25,4 @@ call_command fetch_esb_public_key ${FETCH_ESB_PUBLIC_KEY_ARGS}
 title "releasing"
 must_call_definition_command create_version_and_release_apigw "${definition_file}" ${CREATE_VERSION_AND_RELEASE_APIGW_ARGS:-"--generate-sdks"}
 
-title "done"
+log_info "done"

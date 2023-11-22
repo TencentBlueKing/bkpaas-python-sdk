@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 加载 apigw-manager 原始镜像中的通用函数
-source /apigw-manager/demo/bin/functions
+source /apigw-manager/bin/functions
 
 # 待同步网关名
 gateway_name="bk-demo"
