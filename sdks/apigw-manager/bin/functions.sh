@@ -1,4 +1,4 @@
-# vim:ft=sh
+#!/bin/bash
 
 # 本文定义与业务逻辑无关的通用函数
 
@@ -29,7 +29,7 @@ call_command() {
 
     log_info "Running command ${command}"
 
-    apigw-manager "${command}" "$@"
+    apigw-manager.sh "${command}" "$@"
     status=$?
 
     if [ ${status} -ne 0 ]; then

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source $(dirname "$0")/functions
+source $(dirname "$0")/functions.sh
 
 definition_file="${definition_file:-definition.yaml}"
 resources_file="${resources_file:-resources.yaml}"
@@ -17,7 +17,7 @@ must_call_definition_command sync_apigw_resources "${resources_file}" ${SYNC_API
 must_call_definition_command sync_resource_docs_by_archive "${definition_file}" ${SYNC_RESOURCE_DOCS_BY_ARCHIVE_ARGS:-"--safe-mode"}
 
 title "fetch apigateway public key"
-apigw-manager fetch_apigw_public_key --print > "${APIGW_PUBLIC_KEY_PATH:-apigateway.pub}"
+apigw-manager.sh fetch_apigw_public_key --print > "${APIGW_PUBLIC_KEY_PATH:-apigateway.pub}"
 
 title "fetch esb public key"
 call_command fetch_esb_public_key ${FETCH_ESB_PUBLIC_KEY_ARGS}

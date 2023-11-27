@@ -17,17 +17,10 @@ spec:
         - bash
         args:
         - bin/sync-apigateway.sh
-        image: "hub.bktencent.com/blueking/my-apigw-manager:latest"
+        image: "{{ .Values.apigatewaySync.image }}"
         imagePullPolicy: "Always"
         name: sync-apigateway
         env:
-        - name: BK_APIGW_NAME
-          value: "bk-demo"
-        - name: BK_APP_CODE
-          value: "bk-demo"
-        - name: BK_APP_SECRET
-          value: "secret"
-        - name: BK_API_URL_TMPL
-          value: "http://bkapi.example.com/api/{api_name}"
+        {{- toYaml .Values.apigatewaySync.extraEnvVars | nindent 8 }}
       restartPolicy: Never
 {{- end }}

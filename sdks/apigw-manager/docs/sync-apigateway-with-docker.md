@@ -34,7 +34,7 @@
 #!/bin/bash
 
 # 加载 apigw-manager 原始镜像中的通用函数
-source /apigw-manager/bin/functions
+source /apigw-manager/bin/functions.sh
 
 # 待同步网关名，需修改为实际网关名；直接指定网关名，则不需要配置环境变量 BK_APIGW_NAME
 gateway_name="bk-demo"
@@ -54,7 +54,7 @@ must_call_definition_command sync_resource_docs_by_archive "${definition_file}" 
 must_call_definition_command grant_apigw_permissions "${definition_file}" --api-name=${gateway_name}
 
 title "fetch apigateway public key"
-apigw-manager fetch_apigw_public_key --api-name=${gateway_name} --print > "apigateway.pub"
+apigw-manager.sh fetch_apigw_public_key --api-name=${gateway_name} --print > "apigateway.pub"
 
 title "releasing"
 must_call_definition_command create_version_and_release_apigw "${definition_file}" --api-name=${gateway_name}
@@ -63,10 +63,10 @@ log_info "done"
 ```
 
 基础镜像提供一些常用的 bash 函数，以及执行 Django Command 指令的辅助脚本：
-- `/apigw-manager/bin/functions`，定义一些常用 bash 函数，源码 [functions](../bin/functions)
-- `apigw-manager`: 单纯执行一个 Django Command 指令，出错返回非 0 错误码，不退出脚本，源码 [apigw-manager](../bin/apigw-manager)
+- `/apigw-manager/bin/functions.sh`，定义一些常用 bash 函数，源码 [functions.sh](../bin/functions.sh)
+- `apigw-manager.sh`: 单纯执行一个 Django Command 指令，出错返回非 0 错误码，不退出脚本，源码 [apigw-manager.sh](../bin/apigw-manager.sh)
 
-functions 中的 bash 函数：
+functions.sh 中的 bash 函数：
 - `call_command`: 执行一个 Django Command 指令，出错返回非 0 错误码，不退出脚本
 - `call_definition_command`: 执行一个 Django Command 指令，出错时打印告警日志，不退出脚本
 - `must_call_definition_command`: 执行一个 Django Command 指令，出错退出脚本执行
@@ -78,7 +78,7 @@ functions 中的 bash 函数：
 #### 使用方式一：chart + ConfigMap
 
 使用基础镜像 apigw-manager，并为网关配置、资源文档创建 ConfigMap 对象，将这些 ConfigMap 挂载到基础镜像中，如此镜像就可以读取到网关数据，但是 chart 本身限制单文件不能超过 1MB。
-- 准备文件的样例 [examples/chart/configmap](../examples/chart/configmap)
+- 准备文件的样例 [examples/chart/use-configmap](../examples/chart/use-configmap)
 
 操作步骤如下：
 
@@ -175,7 +175,7 @@ spec:
 #### 使用方式二：chart + 自定义镜像
 
 可将 apigw-manager 作为基础镜像，将配置文件和文档一并构建成一个新镜像，然后通过如 K8S Job 方式进行同步。
-- 准备文件的样例 [examples/chart/custom-docker](../examples/chart/custom-docker)
+- 准备文件的样例 [examples/chart/use-custom-docker-image](../examples/chart/use-custom-docker-image)
 
 操作步骤如下：
 
@@ -247,4 +247,19 @@ docker run --rm \
     -e BK_APP_CODE=<BK_APP_CODE> \
     -e BK_APP_SECRET=<BK_APP_SECRET> \
     hub.bktencent.com/blueking/apigw-manager:latest
+```
+
+
+### 支持同步指令
+
+```bash
+must_call_definition_command add_related_apps "${definition_file}" --api-name=${gateway_name}  # 可选，为网关添加关联应用，关联应用可以通过网关 bk-apigateway 提供的接口管理网关数据
+must_call_definition_command apply_apigw_permissions "${definition_file}" --api-name=${gateway_name}  # 可选，申请网关权限
+must_call_definition_command create_version_and_release_apigw "${definition_file}" --api-name=${gateway_name}  # 创建资源版本并发布；指定参数 --generate-sdks 时，会同时生成资源版本对应的网关 SDK
+apigw-manager.sh fetch_apigw_public_key --api-name=${gateway_name} --print > "apigateway.pub"  # 获取网关公钥，存放到文件 apigateway.pub
+must_call_definition_command grant_apigw_permissions "${definition_file}" --api-name=${gateway_name}  # 可选，为应用主动授权
+must_call_definition_command sync_apigw_config "${definition_file}" --api-name=${gateway_name}  # 同步网关基本信息
+must_call_definition_command sync_apigw_resources "${resources_file}" --api-name=${gateway_name} --delete  # 同步网关资源；--delete 将删除网关中未在 resources.yaml 存在的资源
+must_call_definition_command sync_apigw_stage "${definition_file}" --api-name=${gateway_name}  # 同步网关环境信息
+must_call_definition_command sync_resource_docs_by_archive "${definition_file}" --api-name=${gateway_name} --safe-mode  # 可选，同步资源文档
 ```

@@ -1,14 +1,12 @@
 # apigw-manager
 
-蓝鲸 API 网关管理 SDK 是一个用于管理 API 网关的工具，提供了基本的网关注册、同步和发布等功能。此外，它还为后端服务提供了验证 API 请求是否来自蓝鲸 API 网关的功能。
+蓝鲸 API 网关管理 SDK 是一个用于管理 API 网关的工具，它提供了一套完整的工具和功能，可以帮助您更轻松地管理 API 网关，提高系统的安全性和可靠性。
 
-1. Django Command：SDK 提供了 Django Command，用于同步网关数据。您可以根据需要编排指令，以满足您的特定需求，并集成到您的项目自动执行 API 网关同步过程，以便更轻松地管理 API 网关。
+1. Django Command：SDK 提供了 Django Command，支持网关注册、同步、发布等功能。您可以根据需要编排指令，以满足您的特定需求，并集成到您的项目自动执行 API 网关同步过程，以便更轻松地管理 API 网关。
 
 2. Docker 镜像：对于非 Django 项目，提供了 Docker 基础镜像，封装了 SDK 同步网关的相关功能，以便非 Django 项目轻松管理 API 网关。
 
-3. Django 中间件：SDK 还提供了 Django 中间件，用于解析 API 网关请求后端接口时添加的请求头 X-Bkapi-JWT，以校验请求是否来自 API 网关。这个中间件可以确保只有来自蓝鲸 API 网关的请求才能访问您的后端服务，从而提高系统的安全性。
-
-蓝鲸 API 网关管理 SDK 提供了一套完整的工具和功能，可以帮助您更轻松地管理 API 网关，提高系统的安全性和可靠性。
+3. Django 中间件：SDK 还提供了 Django 中间件，用于解析 API 网关请求后端接口时添加的请求头 X-Bkapi-JWT，以方便后端服务校验请求是否来自 API 网关。这个中间件可以确保只有来自蓝鲸 API 网关的请求才能访问您的后端服务，从而提高系统的安全性。
 
 ## 安装
 基础安装：
@@ -32,7 +30,7 @@ pip install "apigw-manager[cryptography]"
 
 SDK 同步网关配置到 API 网关，支持多种方案:
 - 直接使用 Django Command 同步：此方案适用于 Django 项目；Django 项目，可直接执行 SDK 提供的 Django Command 指令
-- 通过镜像方式同步：此方案适用于非 Django 项目；非 Django 项目，无法直接执行 Django Command 指令
+- 通过镜像方式同步：此方案适用于非 Django 项目；非 Django 项目，无法直接执行 SDK 提供的 Django Command 指令
 
 ### 准备工作
 
@@ -40,11 +38,11 @@ SDK 同步网关配置到 API 网关，支持多种方案:
 ```
 support-files
 ├── definition.yaml         # 维护网关、环境、资源文档路径、主动授权、发布等配置，但不包含资源配置
-├── resources.yaml          # 维护资源配置；资源配置可通过 API 网关管理端直接导出，且数据量较大，因此单独管理
+├── resources.yaml          # 维护资源配置；资源配置可通过 API 网关管理端直接导出，数据量较大，因此单独管理
 ├── bin
-│   └── sync-apigateway.sh  # 自定义同步脚本，Django 项目也可使用自定义 Django Command；利用 SDK 提供的 Django Command 组装同步任务
+│   └── sync-apigateway.sh  # 自定义同步脚本，Django 项目也可以自定义 Django Command
 ├── bk_apigw_docs_demo.tgz  # 资源文档归档文件，可选；可通过 API 网关管理端导出；与资源文档目录 apidocs 二选一
-└── apidocs                 # 资源文档目录，可选；可通过 API 网关管理端导出并解压，或者手工维护 markdown 格式文档文件
+└── apidocs                 # 资源文档目录，可选；可通过 API 网关管理端导出并解压，或者直接维护 markdown 格式文档文件
     ├── zh                  # 中文文档目录
     │   └── anything.md
     └── en                  # 英文文档目录
@@ -74,7 +72,7 @@ definition.yaml 中可以使用 Django 模版语法引用和渲染变量，内�
 - `settings`：Django 提供的配置对象
 - `environ`：环境变量
 
-推荐在一个文件中统一进行定义，用命名空间来区分不同配置间的定义，definition.yaml 样例：
+推荐在一个文件中统一进行定义，用命名空间区分不同配置间的定义，definition.yaml 样例：
 
 ```yaml
 # definition.yaml 配置文件版本号，必填，固定值 1
@@ -82,7 +80,7 @@ spec_version: 1
 
 # 定义发布内容，用于命令 `create_version_and_release_apigw`
 release:
-  # 发布版本号，
+  # 发布版本号；
   # 资源配置更新，需更新此版本号才会发布资源版本，此版本号和 sdk 版本号一致，错误设置会影响调用方使用
   version: 1.0.0
   # 版本标题
@@ -93,9 +91,11 @@ release:
 # 定义网关基本信息，用于命令 `sync_apigw_config`
 apigateway:
   description: "描述"
+  # 网关的英文描述，蓝鲸官方网关需提供英文描述，以支持国际化
   description_en: "English description"
+  # 是否公开；公开，则用户可查看资源文档、申请资源权限；不公开，则网关对用户隐藏
   is_public: true
-  # 标记网关为官方网关，网关名需以 `bk-` 开头，可选
+  # 标记网关为官方网关，网关名需以 `bk-` 开头，可选；非官方网关，可去除此配置
   api_type: 1
   # 应用请求网关时，是否允许从请求参数 (querystring, body) 中获取蓝鲸认证信息，默认值为 true；
   # 如果为 false，则只能从请求头 X-Bkapi-Authorization 获取蓝鲸认证信息；
@@ -104,6 +104,7 @@ apigateway:
   # 网关请求后端时，是否删除请求参数 (querystring, body) 中的蓝鲸认证敏感信息，比如 bk_token，为 true 表示允许删除；
   # 待请求网关的所有调用者，将认证参数放到请求头 X-Bkapi-Authorization 时，可将此值设置为 false
   allow_delete_sensitive_params: false
+  # 网关维护人员，仅维护人员有管理网关的权限
   maintainers:
     - "admin"
 
@@ -111,8 +112,9 @@ apigateway:
 stage:
   name: "prod"
   description: "描述"
+  # 环境的英文名，蓝鲸官方网关需提供，以支持国际化
   description_en: "English description"
-  # 环境变量
+  # 环境变量；如未使用，可去除此配置
   vars:
     key: "value"
   # 代理配置
@@ -122,13 +124,14 @@ stage:
     upstreams:
       loadbalance: "roundrobin"
       hosts:
-        - host: "http://127.0.0.1"
+        # 网关调用后端服务的默认域名或IP，不包含Path，比如：http://api.example.com
+        - host: ""
           weight: 100
-    # Header转换
-    transform_headers:
-      # 设置Headers
-      set:
-        X-Token: "token"
+    # Header转换；如未使用，可去除此配置
+    # transform_headers:
+    #   # 设置Headers
+    #   set:
+    #     X-Token: "token"
 
 # 主动授权，网关主动给应用，添加访问网关所有资源的权限；
 # 用于命令 `grant_apigw_permissions`
