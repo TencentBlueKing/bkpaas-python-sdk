@@ -1,7 +1,7 @@
 ### 直接使用 Django Command 同步网关
 
 项目安装 SDK apigw-manager 后，可以直接执行 SDK 提供的 Django Command。
-- 准备文件的样例 [examples/django/custom-script](../examples/django/custom-script)
+- 准备文件的样例 [examples/django/use-custom-script](../examples/django/use-custom-script)
 
 #### 步骤1. 准备自定义同步脚本
 
