@@ -278,11 +278,9 @@ APIGW_MANAGER_DUMMY_PAYLOAD_USERNAME # JWT payload 中的 username
 
 ## FAQ
 
-#### 如何获得网关公钥
-1. 如果设置了环境变量 `APIGW_PUBLIC_KEY_PATH`，同步后可读取该文件获取；
-2. 如果通过 `DATABASE_URL` 设置了外部数据库，可通过执行以下 SQL 查询：
+#### Docker 镜像方案如何获得网关公钥
+1. 可设置环境变量 `APIGW_PUBLIC_KEY_PATH`（默认值：apigateway.pub），同步后可读取该文件获取；
+2. 可设置环境变量 `DATABASE_URL`，指定外部数据库，同步后可通过执行以下 SQL 查询：
     ```sql
     select value from apigw_manager_context where scope="public_key" and key="<BK_APIGW_NAME>";
     ```
-
-同步后，会在 *<MY_PATH>* 目录下获得网关公钥文件 *apigateway.pub*。
