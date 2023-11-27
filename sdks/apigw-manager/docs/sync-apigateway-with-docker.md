@@ -102,6 +102,7 @@ functions.sh 中的 bash 函数：
 步骤2：在 chart values.yaml 中添加配置
 ```yaml
 apigatewaySync:
+  image: "hub.bktencent.com/blueking/apigw-manager:latest"
   configMapMounts:
     - name: "sync-apigw-base"
       filePath: "files/support-files/*"
@@ -115,6 +116,15 @@ apigatewaySync:
     - name: "sync-apigw-apidocs-en"
       filePath: "files/support-files/apidocs/en/*"
       mountPath: "/data/apidocs/en/"
+  extraEnvVars:
+    - name: BK_APIGW_NAME
+      value: "bk-demo"
+    - name: BK_APP_CODE
+      value: "bk-demo"
+    - name: BK_APP_SECRET
+      value: "secret"
+    - name: BK_API_URL_TMPL
+      value: "http://bkapi.example.com/api/{api_name}"
 ```
 
 步骤2：在 chart templates 下创建 ConfigMap 模板文件，样例如下：
@@ -145,18 +155,11 @@ spec:
         - bash
         args:
         - bin/sync-apigateway.sh
-        image: "hub.bktencent.com/blueking/apigw-manager:latest"
+        image: "{{ .Values.apigatewaySync.image }}"
         imagePullPolicy: "Always"
         name: sync-apigateway
         env:
-        - name: BK_APIGW_NAME
-          value: "bk-demo"
-        - name: BK_APP_CODE
-          value: "bk-demo"
-        - name: BK_APP_SECRET
-          value: "secret"
-        - name: BK_API_URL_TMPL
-          value: "http://bkapi.example.com/api/{api_name}"
+        {{- toYaml .Values.apigatewaySync.extraEnvVars | nindent 8 }}
         volumeMounts: 
         {{- range $item := .Values.apigatewaySync.configMapMounts }}
         - mountPath: "{{ $item.mountPath }}"
