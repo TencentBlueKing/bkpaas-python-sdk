@@ -1,5 +1,8 @@
 ## Change logs
 
+### 3.0.0
+- 优化 README.md，提供 examples
+
 ### 2.0.1
 - 修复镜像 sync-apigateway 中，同步任务失败时，脚本退出码为 0 的问题
 
