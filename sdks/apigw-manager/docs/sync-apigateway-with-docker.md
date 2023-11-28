@@ -4,7 +4,7 @@
 - */data/definition.yaml*：网关定义文件，用于注册网关；
 - */data/resources.yaml*：资源定义文件，用于同步网关资源，可通过网关导出；
 - */data/apidocs*：文档目录，可通过网关导出后解压；
-- */data/bin/sync-apigateway.sh*：自定义同步脚本；镜像提供默认同步脚本：[sync-apigateway](../bin/sync-apigateway)，如不满足需求，可自定义同步脚本
+- */data/bin/sync-apigateway.sh*：自定义同步脚本；镜像提供默认同步脚本：[sync-apigateway.sh](../bin/sync-apigateway.sh)，如不满足需求，可自定义同步脚本
 
 镜像执行同步时，需要额外的环境变量支持：
 - `BK_APIGW_NAME`：网关名称；
@@ -20,7 +20,7 @@
 
 #### 准备工作
 
-基础镜像提供了同步脚本 [sync-apigateway](../bin/sync-apigateway)，脚本允许通过额外的环境变量设置命令参数：
+基础镜像提供了同步脚本 [sync-apigateway.sh](../bin/sync-apigateway.sh)，脚本允许通过额外的环境变量设置命令参数：
 - `SYNC_APIGW_CONFIG_ARGS`: 用于命令 `sync_apigw_config`
 - `SYNC_APIGW_STAGE_ARGS`: 用于命令 `sync_apigw_stage`
 - `APPLY_APIGW_PERMISSIONS_ARGS`: 用于命令 `apply_apigw_permissions`
