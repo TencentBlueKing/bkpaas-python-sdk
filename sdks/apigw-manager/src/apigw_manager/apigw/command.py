@@ -9,6 +9,7 @@
  * specific language governing permissions and limitations under the License.
 """
 import os
+import sys
 import typing
 
 from django.conf import settings
@@ -16,6 +17,7 @@ from django.core.management.base import BaseCommand
 
 from apigw_manager.apigw.helper import Definition
 from apigw_manager.apigw.utils import get_configuration, parse_value_list
+from apigw_manager.core.exceptions import ApiResponseError
 from apigw_manager.core.fetch import Fetcher
 from apigw_manager.core.permission import Manager as PermissionManager
 from apigw_manager.core.sync import Synchronizer
@@ -31,6 +33,19 @@ class ApiCommand(BaseCommand):
 
     def get_configuration(self, **kwargs):
         return get_configuration(**{k: v for k, v in kwargs.items() if v is not None})
+
+    def handle(self, *args, **kwargs):
+        configuration = self.get_configuration(**kwargs)
+        manager = self.manager_class(configuration)
+
+        try:
+            self.do(manager=manager, configuration=configuration, *args, **kwargs)
+        except ApiResponseError as err:
+            self.stderr.write(str(err))
+            sys.exit(1)
+
+    def do(self, manager, configuration, *args, **kwargs):
+        pass
 
 
 class DefinitionCommand(ApiCommand):
@@ -67,16 +82,20 @@ class DefinitionCommand(ApiCommand):
 
         return definition.get(namespace, {})
 
-    def do(self, manager, definition, *args, **kwargs):
-        pass
-
     def handle(self, *args, **kwargs):
         configuration = self.get_configuration(**kwargs)
 
         manager = self.manager_class(configuration)
         definition = self.get_definition(**kwargs)
 
-        self.do(manager=manager, definition=definition, configuration=configuration, *args, **kwargs)
+        try:
+            self.do(manager=manager, definition=definition, configuration=configuration, *args, **kwargs)
+        except ApiResponseError as err:
+            self.stderr.write(str(err))
+            sys.exit(1)
+
+    def do(self, manager, definition, *args, **kwargs):
+        pass
 
 
 class FetchCommand(ApiCommand):

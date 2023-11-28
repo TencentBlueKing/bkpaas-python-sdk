@@ -2194,7 +2194,7 @@ reference = "tencent"
 name = "six"
 version = "1.16.0"
 description = "Python 2 and 3 compatibility utilities"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
 files = [
@@ -2586,4 +2586,4 @@ monitor = ["prometheus-client"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^2.7 || ^3.6"
-content-hash = "3f78606f9de472b2c2746c3bebae9b61b234b3efcf9d6bd3336aa7f926833c5d"
+content-hash = "a511699900912e4824cbcf81f571527eef5d4b7cb50c1cbcd6166ddffd0561d0"

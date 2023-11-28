@@ -15,8 +15,8 @@ import typing
 from bkapi.bk_apigateway.client import Client as BKAPIGatewayClient
 from future.utils import raise_from
 
-from apigw_manager.core.exceptions import ApiException, ApiRequestError, ApiResultError
-from bkapi_client_core.exceptions import HTTPResponseError
+from apigw_manager.core.exceptions import ApiException, ApiResponseError, ApiResultError
+from bkapi_client_core.exceptions import ResponseError
 
 if typing.TYPE_CHECKING:
     from apigw_manager.core import configuration
@@ -92,8 +92,9 @@ class Handler(object):
 
         try:
             return operation(**data)
-        except HTTPResponseError as err:
-            raise_from(self._convert_operation_exception(err), err)
+        except ResponseError as err:
+            message = "%s\n%s\nResponse: %s" % (err, err.curl_command, err.response_text)
+            raise ApiResponseError(message)
         except Exception as err:
             raise_from(ApiException(operation_id), err)
 
@@ -107,19 +108,3 @@ class Handler(object):
             )
 
         return convertor(result)
-
-    def _convert_operation_exception(self, err: HTTPResponseError):
-        response = err.response
-        if response is None or response.status_code / 100 != 4:
-            return err
-
-        try:
-            result = response.json()
-        except Exception:
-            return err
-
-        return ApiRequestError(
-            response.status_code,
-            result.get("code"),
-            result.get("message"),
-        )

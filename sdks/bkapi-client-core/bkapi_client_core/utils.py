@@ -9,6 +9,7 @@
  * specific language governing permissions and limitations under the License.
 """
 import copy
+import json
 from functools import wraps
 from typing import Callable, Optional, Type, TypeVar
 
@@ -27,6 +28,56 @@ def urljoin(base_url, path):
     return "%s/%s" % (base_url.rstrip("/"), path.lstrip("/"))
 
 
+class _SensitiveCleaner:
+    """处理敏感信息"""
+
+    def __init__(self, sensitive_keys):
+        self.sensitive_keys = sensitive_keys
+
+    def clean(self, data):
+        data = copy.deepcopy(data)
+        self._clean(data)
+        return data
+
+    def _clean(self, data):
+        if isinstance(data, dict):
+            for key, value in data.items():
+                if isinstance(value, (dict, list)):
+                    self._clean(value)
+
+                elif key in self.sensitive_keys and value:
+                    data[key] = "***"
+
+        elif isinstance(data, list):
+            for item in data:
+                self._clean(item)
+
+
+class _WrappedRequest:
+    header_bkapi_authorization = "X-Bkapi-Authorization"
+
+    def __init__(self, request):
+        self._request = request
+
+        # 去除请求头中的敏感信息
+        self.headers = self._get_headers_without_sensitive(self._request.headers)
+
+    def __getattr__(self, name):
+        return getattr(self._request, name)
+
+    def _get_headers_without_sensitive(self, headers):
+        headers = copy.deepcopy(headers)
+
+        authorization = headers.get(self.header_bkapi_authorization)
+        if authorization:
+            sensitive_cleaner = _SensitiveCleaner(
+                ["bk_app_secret", "app_secret", "bk_token", "bk_ticket", "access_token"]
+            )
+            headers[self.header_bkapi_authorization] = json.dumps(sensitive_cleaner.clean(json.loads(authorization)))
+
+        return headers
+
+
 class CurlRequest:
     def __init__(
         self,
@@ -41,11 +92,11 @@ class CurlRequest:
 
         try:
             # if request.body contains binary content, it may not be decoded
-            return curlify.to_curl(self.request)
+            return curlify.to_curl(_WrappedRequest(self.request))
         except UnicodeDecodeError:
             copied_request = copy.deepcopy(self.request)
             copied_request.body = ""
-            return curlify.to_curl(copied_request)
+            return curlify.to_curl(_WrappedRequest(copied_request))
         except Exception:
             return ""
 
