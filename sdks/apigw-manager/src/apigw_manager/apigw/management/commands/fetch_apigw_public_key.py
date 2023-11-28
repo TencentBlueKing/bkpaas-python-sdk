@@ -8,6 +8,8 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+import sys
+
 from apigw_manager.apigw import helper
 from apigw_manager.apigw.command import FetchCommand
 
@@ -25,9 +27,7 @@ class Command(FetchCommand):
         parser.add_argument("--bk-app-secret", dest="bk_app_secret", help="app secret")
         parser.add_argument("--no-save", default=False, action="store_true", help="do not save the public key")
 
-    def handle(self, print_, no_save, *args, **kwargs):
-        configuration = self.get_configuration(**kwargs)
-        manager = self.manager_class(configuration)
+    def do(self, manager, configuration, print_, no_save, *args, **kwargs):
         result = manager.public_key()
 
         if print_:

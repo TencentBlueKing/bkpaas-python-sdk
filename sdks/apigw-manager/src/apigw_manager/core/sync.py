@@ -34,3 +34,7 @@ class Synchronizer(Handler):
     def sync_resource_docs_by_archive(self, *args, **kwargs):
         result = self._call(self.client.api.import_resource_docs_by_archive, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))
+
+    def add_related_apps(self, *args, **kwargs):
+        result = self._call(self.client.api.add_related_apps, *args, **kwargs)
+        return self._parse_result(result, itemgetter("data"))
