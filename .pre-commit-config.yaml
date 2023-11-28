@@ -46,3 +46,24 @@ repos:
         pass_filenames: false
         entry: bash -c "cd sdks/paas-service && poetry run mypy . --config-file=./pyproject.toml"
         files: '^sdks/paas-service/'
+  # sdk apigw-manager
+  - repo: local
+    hooks:
+      - id: format
+        name: ruff-formatter
+        language: python
+        types: [python]
+        entry: bash -c 'cd sdks/apigw-manager/ && ruff format --config=pyproject.toml --force-exclude .'
+        files: sdks/apigw-manager/
+      - id: ruff
+        name: ruff
+        language: python
+        types: [python]
+        entry: bash -c 'cd sdks/apigw-manager/ && ruff --config=pyproject.toml --force-exclude --fix .'
+        files: sdks/apigw-manager/
+      - id: mypy
+        name: mypy
+        language: python
+        types: [python]
+        entry: mypy --config-file=sdks/apigw-manager/pyproject.toml
+        files: sdks/apigw-manager/
