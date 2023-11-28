@@ -23,14 +23,20 @@ class Command(PermissionCommand):
 
         for permission in definition:
             permission.setdefault("target_app_code", manager.config.bk_app_code)
-            permission.setdefault("grant_dimension", "api")
 
-            result = manager.apply_permission(**permission)
+            if permission.get("gateway_name"):
+                permission["api_name"] = permission.get("gateway_name")
+
+            grant_dimension = permission.pop("grant_dimension", "api")
+            if grant_dimension == "gateway":
+                grant_dimension = "api"
+
+            result = manager.apply_permission(grant_dimension=grant_dimension, **permission)
             print(
-                "Applied permissions for API gateway %s, record %s, dimension %s"
+                "Applied permissions for gateway %s, record %s, dimension %s"
                 % (
                     permission["api_name"],
                     result["record_id"],
-                    permission["grant_dimension"],
+                    grant_dimension,
                 )
             )

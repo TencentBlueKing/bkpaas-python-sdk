@@ -47,17 +47,17 @@ title "begin to db migrate"
 call_command migrate apigw
 
 title "syncing apigateway"
-must_call_definition_command sync_apigw_config "${definition_file}" --api-name=${gateway_name}
-must_call_definition_command sync_apigw_stage "${definition_file}" --api-name=${gateway_name}
-must_call_definition_command sync_apigw_resources "${resources_file}" --api-name=${gateway_name} --delete
-must_call_definition_command sync_resource_docs_by_archive "${definition_file}" --api-name=${gateway_name} --safe-mode
-must_call_definition_command grant_apigw_permissions "${definition_file}" --api-name=${gateway_name}
+must_call_definition_command sync_apigw_config "${definition_file}" --gateway-name=${gateway_name}
+must_call_definition_command sync_apigw_stage "${definition_file}" --gateway-name=${gateway_name}
+must_call_definition_command sync_apigw_resources "${resources_file}" --gateway-name=${gateway_name} --delete
+must_call_definition_command sync_resource_docs_by_archive "${definition_file}" --gateway-name=${gateway_name} --safe-mode
+must_call_definition_command grant_apigw_permissions "${definition_file}" --gateway-name=${gateway_name}
 
 title "fetch apigateway public key"
-apigw-manager.sh fetch_apigw_public_key --api-name=${gateway_name} --print > "apigateway.pub"
+apigw-manager.sh fetch_apigw_public_key --gateway-name=${gateway_name} --print > "apigateway.pub"
 
 title "releasing"
-must_call_definition_command create_version_and_release_apigw "${definition_file}" --api-name=${gateway_name}
+must_call_definition_command create_version_and_release_apigw "${definition_file}" --gateway-name=${gateway_name}
 
 log_info "done"
 ```
@@ -256,13 +256,13 @@ docker run --rm \
 ### 支持同步指令
 
 ```bash
-must_call_definition_command add_related_apps "${definition_file}" --api-name=${gateway_name}  # 可选，为网关添加关联应用，关联应用可以通过网关 bk-apigateway 提供的接口管理网关数据
-must_call_definition_command apply_apigw_permissions "${definition_file}" --api-name=${gateway_name}  # 可选，申请网关权限
-must_call_definition_command create_version_and_release_apigw "${definition_file}" --api-name=${gateway_name}  # 创建资源版本并发布；指定参数 --generate-sdks 时，会同时生成资源版本对应的网关 SDK
-apigw-manager.sh fetch_apigw_public_key --api-name=${gateway_name} --print > "apigateway.pub"  # 获取网关公钥，存放到文件 apigateway.pub
-must_call_definition_command grant_apigw_permissions "${definition_file}" --api-name=${gateway_name}  # 可选，为应用主动授权
-must_call_definition_command sync_apigw_config "${definition_file}" --api-name=${gateway_name}  # 同步网关基本信息
-must_call_definition_command sync_apigw_resources "${resources_file}" --api-name=${gateway_name} --delete  # 同步网关资源；--delete 将删除网关中未在 resources.yaml 存在的资源
-must_call_definition_command sync_apigw_stage "${definition_file}" --api-name=${gateway_name}  # 同步网关环境信息
-must_call_definition_command sync_resource_docs_by_archive "${definition_file}" --api-name=${gateway_name} --safe-mode  # 可选，同步资源文档
+must_call_definition_command add_related_apps "${definition_file}" --gateway-name=${gateway_name}  # 可选，为网关添加关联应用，关联应用可以通过网关 bk-apigateway 提供的接口管理网关数据
+must_call_definition_command apply_apigw_permissions "${definition_file}" --gateway-name=${gateway_name}  # 可选，申请网关权限
+must_call_definition_command create_version_and_release_apigw "${definition_file}" --gateway-name=${gateway_name}  # 创建资源版本并发布；指定参数 --generate-sdks 时，会同时生成资源版本对应的网关 SDK
+apigw-manager.sh fetch_apigw_public_key --gateway-name=${gateway_name} --print > "apigateway.pub"  # 获取网关公钥，存放到文件 apigateway.pub
+must_call_definition_command grant_apigw_permissions "${definition_file}" --gateway-name=${gateway_name}  # 可选，为应用主动授权
+must_call_definition_command sync_apigw_config "${definition_file}" --gateway-name=${gateway_name}  # 同步网关基本信息
+must_call_definition_command sync_apigw_resources "${resources_file}" --gateway-name=${gateway_name} --delete  # 同步网关资源；--delete 将删除网关中未在 resources.yaml 存在的资源
+must_call_definition_command sync_apigw_stage "${definition_file}" --gateway-name=${gateway_name}  # 同步网关环境信息
+must_call_definition_command sync_resource_docs_by_archive "${definition_file}" --gateway-name=${gateway_name} --safe-mode  # 可选，同步资源文档
 ```

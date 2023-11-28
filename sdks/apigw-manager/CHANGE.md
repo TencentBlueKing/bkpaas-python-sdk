@@ -1,6 +1,8 @@
 ## Change logs
 
 ### 3.0.0
+- 基础镜像 apigw-manager 中，将镜像指令 sync-apigateway 重命名为 sync-apigateway.sh
+- 基础镜像 apigw-manager 中，sync-apigateway.sh 中去除指令 apply_apigw_permissions
 - 优化 README.md，提供 examples
 
 ### 2.0.1

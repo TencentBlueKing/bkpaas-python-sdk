@@ -143,7 +143,9 @@ grant_permissions:
 # 应用申请指定网关所有资源的权限，待网关管理员审批后，应用才可访问网关资源；
 # 用于命令 `apply_apigw_permissions`
 apply_permissions:
-  - api_name: "{{ settings.BK_APIGW_NAME }}"
+  - gateway_name: "{{ settings.BK_APIGW_NAME }}"
+    # 权限维度，可选值：gateway，按网关授权，包括网关下所有资源，以及未来新创建的资源
+    grant_dimension: "gateway"
 
 # 为网关添加关联应用，关联应用可以通过网关 bk-apigateway 的接口操作网关数据；每个网关最多可有 10 个关联应用；
 # 用于命令 `add_related_apps`

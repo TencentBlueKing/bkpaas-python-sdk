@@ -16,11 +16,11 @@ resources_file="support-files/resources.yaml"
 
 # sync gateway
 echo "gateway ${gateway_name} sync definition start ..."
-python manage.py sync_apigw_config --api-name=${gateway_name} --file="${definition_file}"
-python manage.py sync_apigw_stage --api-name=${gateway_name} --file="${definition_file}"
-python manage.py sync_apigw_resources --delete --api-name=${gateway_name} --file="${resources_file}"
-python manage.py sync_resource_docs_by_archive --api-name=${gateway_name} --file="${definition_file}"
-python manage.py create_version_and_release_apigw --api-name=${gateway_name} --file="${definition_file}"
-python manage.py grant_apigw_permissions --api-name=${gateway_name} --file="${definition_file}"
-python manage.py fetch_apigw_public_key --api-name=${gateway_name}
+python manage.py sync_apigw_config --gateway-name=${gateway_name} --file="${definition_file}"
+python manage.py sync_apigw_stage --gateway-name=${gateway_name} --file="${definition_file}"
+python manage.py sync_apigw_resources --delete --gateway-name=${gateway_name} --file="${resources_file}"
+python manage.py sync_resource_docs_by_archive --gateway-name=${gateway_name} --file="${definition_file}"
+python manage.py create_version_and_release_apigw --gateway-name=${gateway_name} --file="${definition_file}"
+python manage.py grant_apigw_permissions --gateway-name=${gateway_name} --file="${definition_file}"
+python manage.py fetch_apigw_public_key --gateway-name=${gateway_name}
 echo "gateway ${gateway_name} sync definition end"

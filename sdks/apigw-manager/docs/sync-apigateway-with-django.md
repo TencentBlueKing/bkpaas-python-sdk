@@ -20,13 +20,13 @@ definition_file="support-files/definition.yaml"
 resources_file="support-files/resources.yaml"
 
 echo "gateway sync definition start ..."
-python manage.py sync_apigw_config --api-name=${gateway_name} --file="${definition_file}"  # 同步网关基本信息
-python manage.py sync_apigw_stage --api-name=${gateway_name} --file="${definition_file}"  # 同步网关环境信息
-python manage.py sync_apigw_resources --delete --api-name=${gateway_name} --file="${resources_file}"  # 同步网关资源；--delete 将删除网关中未在 resources.yaml 存在的资源
-python manage.py sync_resource_docs_by_archive --api-name=${gateway_name} --file="${definition_file}"  # 可选，同步资源文档
-python manage.py create_version_and_release_apigw --api-name=${gateway_name} --file="${definition_file}" # 创建资源版本并发布；指定参数 --generate-sdks 时，会同时生成资源版本对应的网关 SDK
-python manage.py grant_apigw_permissions --api-name=${gateway_name} --file="${definition_file}"  # 可选，为应用主动授权
-python manage.py fetch_apigw_public_key --api-name=${gateway_name}  # 获取网关公钥
+python manage.py sync_apigw_config --gateway-name=${gateway_name} --file="${definition_file}"  # 同步网关基本信息
+python manage.py sync_apigw_stage --gateway-name=${gateway_name} --file="${definition_file}"  # 同步网关环境信息
+python manage.py sync_apigw_resources --delete --gateway-name=${gateway_name} --file="${resources_file}"  # 同步网关资源；--delete 将删除网关中未在 resources.yaml 存在的资源
+python manage.py sync_resource_docs_by_archive --gateway-name=${gateway_name} --file="${definition_file}"  # 可选，同步资源文档
+python manage.py create_version_and_release_apigw --gateway-name=${gateway_name} --file="${definition_file}" # 创建资源版本并发布；指定参数 --generate-sdks 时，会同时生成资源版本对应的网关 SDK
+python manage.py grant_apigw_permissions --gateway-name=${gateway_name} --file="${definition_file}"  # 可选，为应用主动授权
+python manage.py fetch_apigw_public_key --gateway-name=${gateway_name}  # 获取网关公钥
 echo "gateway sync definition end"
 ```
 
@@ -49,13 +49,13 @@ class Command(BaseCommand):
         definition_path = "support-files/definition.yaml"
         resources_path = "support-files/resources.yaml"
 
-        call_command("sync_apigw_config", f"--api-name={gateway_name}", f"--file={definition_path}")
-        call_command("sync_apigw_stage", f"--api-name={gateway_name}", f"--file={definition_path}")
-        call_command("sync_apigw_resources", f"--api-name={gateway_name}", "--delete", f"--file={resources_path}")
-        call_command("sync_resource_docs_by_archive", f"--api-name={gateway_name}", f"--file={definition_path}")
-        call_command("create_version_and_release_apigw", f"--api-name={gateway_name}", f"--file={definition_path}")
-        call_command("grant_apigw_permissions", f"--api-name={gateway_name}", f"--file={definition_path}")
-        call_command("fetch_apigw_public_key", f"--api-name={gateway_name}")
+        call_command("sync_apigw_config", f"--gateway-name={gateway_name}", f"--file={definition_path}")
+        call_command("sync_apigw_stage", f"--gateway-name={gateway_name}", f"--file={definition_path}")
+        call_command("sync_apigw_resources", f"--gateway-name={gateway_name}", "--delete", f"--file={resources_path}")
+        call_command("sync_resource_docs_by_archive", f"--gateway-name={gateway_name}", f"--file={definition_path}")
+        call_command("create_version_and_release_apigw", f"--gateway-name={gateway_name}", f"--file={definition_path}")
+        call_command("grant_apigw_permissions", f"--gateway-name={gateway_name}", f"--file={definition_path}")
+        call_command("fetch_apigw_public_key", f"--gateway-name={gateway_name}")
 ```
 
 #### 步骤2. 添加 SDK apigw-manager
@@ -125,14 +125,14 @@ bash support-files/bin/sync-apigateway.sh
 ### 支持的 Django Command 列表
 
 ```bash
-python manage.py add_related_apps --api-name=${gateway_name} --file="${definition_file}"  # 可选，为网关添加关联应用，关联应用可以通过网关 bk-apigateway 提供的接口管理网关数据
-python manage.py apply_apigw_permissions --api-name=${gateway_name} --file="${definition_file}"  # 可选，申请网关权限
-python manage.py create_version_and_release_apigw --api-name=${gateway_name} --file="${definition_file}" # 创建资源版本并发布；指定参数 --generate-sdks 时，会同时生成资源版本对应的网关 SDK
-python manage.py fetch_apigw_public_key --api-name=${gateway_name}  # 获取网关公钥
+python manage.py add_related_apps --gateway-name=${gateway_name} --file="${definition_file}"  # 可选，为网关添加关联应用，关联应用可以通过网关 bk-apigateway 提供的接口管理网关数据
+python manage.py apply_apigw_permissions --gateway-name=${gateway_name} --file="${definition_file}"  # 可选，申请网关权限
+python manage.py create_version_and_release_apigw --gateway-name=${gateway_name} --file="${definition_file}" # 创建资源版本并发布；指定参数 --generate-sdks 时，会同时生成资源版本对应的网关 SDK
+python manage.py fetch_apigw_public_key --gateway-name=${gateway_name}  # 获取网关公钥
 python manage.py fetch_esb_public_key  # 可选，获取 ESB 公钥（专用于同时接入 ESB 和网关的系统）
-python manage.py grant_apigw_permissions --api-name=${gateway_name} --file="${definition_file}"  # 可选，为应用主动授权
-python manage.py sync_apigw_config --api-name=${gateway_name} --file="${definition_file}"  # 同步网关基本信息
-python manage.py sync_apigw_resources --delete --api-name=${gateway_name} --file="${resources_file}"  # 同步网关资源；--delete 将删除网关中未在 resources.yaml 存在的资源
-python manage.py sync_apigw_stage --api-name=${gateway_name} --file="${definition_file}"  # 同步网关环境信息
-python manage.py sync_resource_docs_by_archive --api-name=${gateway_name} --file="${definition_file}"  # 可选，同步资源文档
+python manage.py grant_apigw_permissions --gateway-name=${gateway_name} --file="${definition_file}"  # 可选，为应用主动授权
+python manage.py sync_apigw_config --gateway-name=${gateway_name} --file="${definition_file}"  # 同步网关基本信息
+python manage.py sync_apigw_resources --delete --gateway-name=${gateway_name} --file="${resources_file}"  # 同步网关资源；--delete 将删除网关中未在 resources.yaml 存在的资源
+python manage.py sync_apigw_stage --gateway-name=${gateway_name} --file="${definition_file}"  # 同步网关环境信息
+python manage.py sync_resource_docs_by_archive --gateway-name=${gateway_name} --file="${definition_file}"  # 可选，同步资源文档
 ```

@@ -11,7 +11,6 @@ call_command migrate apigw
 title "syncing apigateway"
 must_call_definition_command sync_apigw_config "${definition_file}" ${SYNC_APIGW_CONFIG_ARGS}
 must_call_definition_command sync_apigw_stage "${definition_file}" ${SYNC_APIGW_STAGE_ARGS}
-must_call_definition_command apply_apigw_permissions "${definition_file}" ${APPLY_APIGW_PERMISSIONS_ARGS}
 must_call_definition_command grant_apigw_permissions "${definition_file}" ${GRANT_APIGW_PERMISSIONS_ARGS}
 must_call_definition_command sync_apigw_resources "${resources_file}" ${SYNC_APIGW_RESOURCES_ARGS:-"--delete"}
 must_call_definition_command sync_resource_docs_by_archive "${definition_file}" ${SYNC_RESOURCE_DOCS_BY_ARCHIVE_ARGS:-"--safe-mode"}
