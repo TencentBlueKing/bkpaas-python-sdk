@@ -22,7 +22,7 @@ requirements.txt: poetry.lock
 	poetry export -f requirements.txt --without-hashes | grep -v "index-url" > requirements.txt
 
 requirements_dev.txt: requirements.txt
-	poetry export -f requirements.txt --without-hashes --dev | grep -v "index-url" > requirements_dev.txt
+	poetry export -f requirements.txt --without-hashes --with dev | grep -v "index-url" > requirements_dev.txt
 
 requirements_tox.txt: requirements_dev.txt
 	grep -E 'pytest|mock|django|prometheus-client' requirements_dev.txt > requirements_tox.txt

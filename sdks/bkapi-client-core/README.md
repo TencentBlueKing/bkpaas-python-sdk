@@ -6,7 +6,6 @@
 - 支持丰富的请求参数，包括魔法参数 data，requests.request 全部参数(除 data)、路径参数
   - 魔法参数 data，对于 GET/HEAD/OPTIONS 请求，参数将转换为 QueryString，其它请求方法，则转换为 json 格式的 Body
   - 支持从 django settings，Cookies 获取认证数据
-  - verify 默认值为 True，请求 HTTPS 接口更安全
 - 支持对 session 进行更新细粒度的控制，支持复用 session 的连接
 - 灵活的响应处理方式
   - 支持校验响应状态码，获取响应的 json 数据
@@ -111,7 +110,7 @@ SDK 支持通过配置更改一些默认的行为，Django settings 配置优先
 | BK_APP_CODE                          | 应用代号                               | string | `"my_app"`                        |                            | 支持        | 支持     | BKPAAS_APP_ID     |
 | BK_APP_SECRET                        | 应用密钥                               | string | `"my_secret"`                     |                            | 支持        | 支持     | BKPAAS_APP_SECRET |
 | DEFAULT_STAGE_MAPPINGS               | 指定对应网关的默认环境                 | dict   | `{"my_gateway": "prod"}`          |                            | 支持        |          |                   |
-| BK_API_CLIENT_ENABLE_SSL_VERIFY      | 是否开启 SSL 证书验证                  | bool   | `True`                            |                            | 支持        |          |                   |
+| BK_API_CLIENT_ENABLE_SSL_VERIFY      | 是否开启 SSL 证书验证                  | bool   | `True`                            | `False`                    | 支持        |          |                   |
 | BK_API_AUTHORIZATION_COOKIES_MAPPING | 指定 Cookie 和认证参数的映射关系       | dict   | `{"key": "cookie"}`               | `{"bk_token": "bk_token"}` | 支持        |          |                   |
 | BK_API_URL_TMPL                      | 网关地址模板，支持 `{api_name}` 占位符 | string | `"http://{api_name}.example.com"` |                            | 支持        | 支持     |                   |
 | BK_COMPONENT_API_URL                 | 组件 API 网关地址                      | string | `"http://esb.example.com"`        |                            | 支持        | 支持     |                   |

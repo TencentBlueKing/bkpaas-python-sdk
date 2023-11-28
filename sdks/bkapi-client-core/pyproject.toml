@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bkapi-client-core"
-version = "1.1.9"
+version = "1.2.0"
 description = "A toolkit for buiding blueking API clients."
 readme = "README.md"
 authors = ["blueking <blueking@tencent.com>"]
@@ -22,6 +22,7 @@ curlify = ">=2.0"
 bkoauth = {version = ">=0.0.10", optional = true}
 typing-extensions = ">=3.7.4"
 prometheus-client = {version = ">=0.9.0", optional = true}
+six = "*"
 
 [tool.poetry.extras]
 django=["bkoauth", "prometheus-client"]

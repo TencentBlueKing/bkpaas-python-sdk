@@ -10,7 +10,6 @@
 """
 from typing import Optional
 
-import curlify
 from requests.exceptions import (
     ChunkedEncodingError,
     ConnectionError,
@@ -22,6 +21,9 @@ from requests.exceptions import (
     RequestException,
     Timeout,
 )
+from six.moves.urllib.parse import urlparse, urlunparse
+
+from .utils import CurlRequest
 
 __all__ = [
     "ChunkedEncodingError",
@@ -77,9 +79,36 @@ class ResponseError(RequestException, BKAPIError):
 
     @property
     def curl_command(self):
-        if self.request is None:
+        return CurlRequest(self.request).to_curl()
+
+    @property
+    def request_method(self):
+        # type: (...) -> Optional[str]
+        return self.request and self.request.method
+
+    @property
+    def request_url(self):
+        # type: (...) -> str
+        url = self.request and self.request.url
+        if not url:
             return ""
-        return curlify.to_curl(self.request)
+
+        parsed_url = urlparse(url)
+        return urlunparse((parsed_url.scheme, parsed_url.netloc, parsed_url.path, "", "", ""))
+
+    @property
+    def response_status_code(self):
+        # type: (...) -> Optional[int]
+        # bool(response) is equal to response.ok
+        return self.response.status_code if self.response is not None else None
+
+    @property
+    def response_text(self):
+        # type: (...) -> Optional[str]
+        return self.response.text if self.response is not None else None
+
+    def response_json(self):
+        return self.response.json() if self.response is not None else None
 
     def __str__(self):
         if self.response is None:

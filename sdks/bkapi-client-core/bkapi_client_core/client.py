@@ -25,6 +25,7 @@ from bkapi_client_core.exceptions import (
     EndpointNotSetError,
     HTTPResponseError,
     JSONResponseError,
+    ResponseError,
 )
 from bkapi_client_core.session import Session
 from bkapi_client_core.utils import CurlRequest, urljoin
@@ -112,7 +113,15 @@ class ResponseHeadersRepresenter(object):
         if not self._headers:
             return ""
 
-        return "request_id: %s, error_code: %s, %s" % (self.request_id, self.error_code, self.error_message)
+        parts = ["request_id: %s" % self.request_id]
+
+        if self.error_code:
+            parts.append("error_code: %s" % self.error_code)
+
+        if self.error_message:
+            parts.append(self.error_message)
+
+        return ", ".join(parts)
 
 
 class BaseClient(object):
@@ -183,6 +192,23 @@ class BaseClient(object):
             return self._handle_response_content(operation, response)
         except RequestException as err:
             return self._handle_exception(operation, None, err)
+
+    def check_response_apigateway_error(
+        self,
+        response,  # type: Optional[Response]
+    ):
+        # type: (...) -> None
+        """检查是否包含 apigateway 层面的报错，如应用认证失败，无访问 API 权限等"""
+        if response is None:
+            return
+
+        response_headers_representer = ResponseHeadersRepresenter(response.headers)
+        if response_headers_representer.has_apigateway_error:
+            raise APIGatewayResponseError(
+                "Error responded by API Gateway",
+                response=response,
+                response_headers_representer=response_headers_representer,
+            )
 
     def update_headers(
         self,
@@ -256,12 +282,16 @@ class BaseClient(object):
     ):
         # type: (...) -> Optional[Response]
         # log exception
-        if isinstance(exception, RequestException):
+        if isinstance(exception, ResponseError):
+            logger.warning("%s\n%s", str(exception), CurlRequest(exception.request))
+        elif isinstance(exception, RequestException):
             response = exception.response
-            response_headers_representer = ResponseHeadersRepresenter(response and response.headers)
+            response_headers_representer = ResponseHeadersRepresenter(
+                response.headers if response is not None else None
+            )
             logger.exception(
-                "request bkapi failed. status_code: %s, %s\n%s",
-                response and response.status_code,
+                "Request bkapi error, status_code: %s, %s\n%s",
+                response.status_code if response is not None else None,
                 response_headers_representer,
                 CurlRequest(exception.request),
             )
@@ -298,24 +328,22 @@ class BaseClient(object):
         if response is None:
             return None
 
-        response_headers_representer = ResponseHeadersRepresenter(response.headers)
-        if response_headers_representer.has_apigateway_error:
-            raise APIGatewayResponseError(
-                "Request bkapi error, %s" % response_headers_representer.error_message,
+        self.check_response_apigateway_error(response)
+
+        try:
+            response.raise_for_status()
+        except HTTPError as err:
+            response_headers_representer = ResponseHeadersRepresenter(response.headers)
+            raise HTTPResponseError(
+                "Error responded by Backend api, %s" % str(err),
                 response=response,
                 response_headers_representer=response_headers_representer,
             )
 
         try:
-            response.raise_for_status()
-        except HTTPError as err:
-            raise HTTPResponseError(
-                str(err), response=response, response_headers_representer=response_headers_representer
-            )
-
-        try:
             return response.json()
         except (TypeError, json.JSONDecodeError):
+            response_headers_representer = ResponseHeadersRepresenter(response.headers)
             raise JSONResponseError(
                 "The response is not a valid JSON",
                 response=response,

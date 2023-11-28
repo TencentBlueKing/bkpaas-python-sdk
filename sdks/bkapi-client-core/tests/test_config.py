@@ -125,5 +125,5 @@ class TestDjangoSettings(TestEnvSettings):
 def test_defaults():
     assert settings.get(SettingKeys.DEFAULT_BK_API_VER) == "v2"
     assert settings.get(SettingKeys.BK_API_USE_TEST_ENV) is False
-    assert settings.get(SettingKeys.BK_API_CLIENT_ENABLE_SSL_VERIFY) is True
+    assert settings.get(SettingKeys.BK_API_CLIENT_ENABLE_SSL_VERIFY) is False
     assert settings.get(SettingKeys.BK_API_AUTHORIZATION_COOKIES_MAPPING) == {"bk_token": "bk_token"}

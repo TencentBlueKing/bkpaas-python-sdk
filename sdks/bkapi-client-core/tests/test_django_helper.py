@@ -151,9 +151,9 @@ def test_get_client_by_request_with_verify(verify, core_settings, client_cls, dj
     client = django_helper.get_client_by_request(client_cls, django_request)
 
     if verify:
-        client.disable_ssl_verify.assert_called_once_with()
-    else:
         client.disable_ssl_verify.assert_not_called()
+    else:
+        client.disable_ssl_verify.assert_called_once_with()
 
 
 @pytest.mark.parametrize(
@@ -187,6 +187,6 @@ def test_get_client_by_username_with_verify(verify, core_settings, client_cls, d
     client = django_helper.get_client_by_username(client_cls, "test")
 
     if verify:
-        client.disable_ssl_verify.assert_called_once_with()
-    else:
         client.disable_ssl_verify.assert_not_called()
+    else:
+        client.disable_ssl_verify.assert_called_once_with()

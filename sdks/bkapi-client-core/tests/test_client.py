@@ -14,14 +14,14 @@ from requests.exceptions import RequestException
 from bkapi_client_core.base import Operation, OperationGroup
 from bkapi_client_core.client import BaseClient, RequestContextBuilder, ResponseHeadersRepresenter
 from bkapi_client_core.config import HookEvent
-from bkapi_client_core.exceptions import EndpointNotSetError, ResponseError
+from bkapi_client_core.exceptions import APIGatewayResponseError, EndpointNotSetError, ResponseError
 from bkapi_client_core.property import bind_property
 from bkapi_client_core.session import Session
 
 
 class TestRequestContextBuilder:
     @pytest.fixture(autouse=True)
-    def setup(self, faker):
+    def setup(self):
         self.builder = RequestContextBuilder()
 
     @pytest.mark.parametrize(
@@ -213,15 +213,35 @@ class TestResponseHeadersRepresenter:
         headers = ResponseHeadersRepresenter(headers)
         assert headers.has_apigateway_error == expected
 
-    def test_str(self, faker):
-        headers = ResponseHeadersRepresenter(
-            {
-                "X-Bkapi-Error-Code": faker.pystr(),
-                "X-Bkapi-Error-Message": faker.pystr(),
-                "X-Bkapi-Request-Id": faker.uuid4(),
-            }
-        )
-        assert "request_id:" in str(headers)
+    @pytest.mark.parametrize(
+        "headers, expected",
+        [
+            (
+                {
+                    "X-Bkapi-Request-Id": "abcdef",
+                    "X-Bkapi-Error-Code": "foo",
+                    "X-Bkapi-Error-Message": "error",
+                },
+                "request_id: abcdef, error_code: foo, error",
+            ),
+            (
+                {
+                    "X-Bkapi-Request-Id": "abcdef",
+                    "X-Bkapi-Error-Code": "foo",
+                },
+                "request_id: abcdef, error_code: foo",
+            ),
+            (
+                {
+                    "X-Bkapi-Request-Id": "abcdef",
+                },
+                "request_id: abcdef",
+            ),
+        ],
+    )
+    def test_str(self, headers, expected):
+        representer = ResponseHeadersRepresenter(headers)
+        assert str(representer) == expected
 
 
 class TestBaseClient:
@@ -353,6 +373,35 @@ class TestBaseClient:
             self.client.parse_response(mocker.MagicMock(), mocker.MagicMock())
 
     @pytest.mark.parametrize(
+        "response, expected_error",
+        [
+            (
+                None,
+                None,
+            ),
+            (
+                {
+                    "headers": {},
+                },
+                None,
+            ),
+            (
+                {
+                    "headers": {"X-Bkapi-Error-Code": "error"},
+                },
+                APIGatewayResponseError,
+            ),
+        ],
+    )
+    def test_check_response_apigateway_error(self, mocker, response, expected_error):
+        if not expected_error:
+            self.client.check_response_apigateway_error(response and mocker.MagicMock(**response))
+            return
+
+        with pytest.raises(expected_error):
+            self.client.check_response_apigateway_error(mocker.MagicMock(**response))
+
+    @pytest.mark.parametrize(
         "session_headers, headers, expected",
         [
             (
@@ -428,12 +477,20 @@ class TestBaseClient:
     def test_handle_response_content(self, mocker):
         assert self.client._handle_response_content(mocker.MagicMock(), None) is None
 
+        response = {
+            "headers": {"X-Bkapi-Request-Id": "abcd"},
+            "json.return_value": {"foo": "bar"},
+            "raise_for_status.return_value": None,
+        }
+        result = self.client._handle_response_content(None, mocker.MagicMock(**response))
+        assert result == {"foo": "bar"}
+
     @pytest.mark.parametrize(
         "response",
         [
             {"headers": {"X-Bkapi-Error-Code": "error"}},
             {"raise_for_status.side_effect": RequestException("error")},
-            {"raise_for_status.return_value": None, "json.side_effect": TypeError},
+            {"json.side_effect": TypeError},
         ],
     )
     def test_handle_response_content_error(self, mocker, response):
