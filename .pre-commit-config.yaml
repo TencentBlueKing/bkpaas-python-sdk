@@ -55,12 +55,12 @@ repos:
         types: [python]
         entry: bash -c 'cd sdks/bkapi-client-core/ && ruff format --config=pyproject.toml --force-exclude .'
         files: sdks/bkapi-client-core/
-      # - id: ruff
-      #   name: run ruff for "bkapi-client-core"
-      #   language: python
-      #   types: [python]
-      #   entry: bash -c 'cd sdks/bkapi-client-core/ && ruff --config=pyproject.toml --force-exclude --fix .'
-      #   files: sdks/bkapi-client-core/
+      - id: ruff
+        name: run ruff for "bkapi-client-core"
+        language: python
+        types: [python]
+        entry: bash -c 'cd sdks/bkapi-client-core/ && ruff --config=pyproject.toml --force-exclude --fix .'
+        files: sdks/bkapi-client-core/
       - id: mypy
         name: run mypy for "bkapi-client-core"
         language: python
