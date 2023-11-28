@@ -1,4 +1,4 @@
-# 通过镜像方式同步网关: chart + configmap 样例
+# 通过镜像方式同步网关: chart + ConfigMap 样例
 
 主要步骤：
 - 1. 修改 values.yaml 中的 `apigatewaySync.extraEnvVars`

@@ -115,8 +115,8 @@ stage:
   # 环境的英文名，蓝鲸官方网关需提供，以支持国际化
   description_en: "English description"
   # 环境变量；如未使用，可去除此配置
-  vars:
-    key: "value"
+  # vars:
+  #   key: "value"
   # 代理配置
   proxy_http:
     timeout: 60

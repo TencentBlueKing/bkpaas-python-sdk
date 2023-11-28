@@ -1,3 +1,5 @@
+spec_version: 1
+
 release:
   # 发布版本号
   version: 1.0.0
@@ -36,3 +38,4 @@ resource_docs:
 # 主动授权，网关主动给应用，添加访问网关所有资源的权限
 grant_permissions:
   - bk_app_code: "{{ settings.BK_APP_CODE }}"
+    grant_dimension: "gateway"

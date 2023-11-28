@@ -1,6 +1,3 @@
-.. role:: raw-html-m2r(raw)
-   :format: html
-
 
 apigw-manager
 =============
@@ -137,8 +134,8 @@ definition.yaml 中可以使用 Django 模版语法引用和渲染变量，内�
      # 环境的英文名，蓝鲸官方网关需提供，以支持国际化
      description_en: "English description"
      # 环境变量；如未使用，可去除此配置
-     vars:
-       key: "value"
+     # vars:
+     #   key: "value"
      # 代理配置
      proxy_http:
        timeout: 60
@@ -165,7 +162,9 @@ definition.yaml 中可以使用 Django 模版语法引用和渲染变量，内�
    # 应用申请指定网关所有资源的权限，待网关管理员审批后，应用才可访问网关资源；
    # 用于命令 `apply_apigw_permissions`
    apply_permissions:
-     - api_name: "{{ settings.BK_APIGW_NAME }}"
+     - gateway_name: "{{ settings.BK_APIGW_NAME }}"
+       # 权限维度，可选值：gateway，按网关授权，包括网关下所有资源，以及未来新创建的资源
+       grant_dimension: "gateway"
 
    # 为网关添加关联应用，关联应用可以通过网关 bk-apigateway 的接口操作网关数据；每个网关最多可有 10 个关联应用；
    # 用于命令 `add_related_apps`
@@ -331,14 +330,12 @@ UserModelBackend
 FAQ
 ---
 
-如何获得网关公钥
-~~~~~~~~~~~~~~~~
+Docker 镜像方案如何获得网关公钥
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-#. 如果设置了环境变量 ``APIGW_PUBLIC_KEY_PATH``\ ，同步后可读取该文件获取；
-#. 如果通过 ``DATABASE_URL`` 设置了外部数据库，可通过执行以下 SQL 查询：
+#. 可设置环境变量 ``APIGW_PUBLIC_KEY_PATH``\ （默认值：apigateway.pub），同步后可读取该文件获取；
+#. 可设置环境变量 ``DATABASE_URL``\ ，指定外部数据库，同步后可通过执行以下 SQL 查询：
    .. code-block:: sql
 
        select value from apigw_manager_context where scope="public_key" and key="<BK_APIGW_NAME>";
-
-同步后，会在 *\ :raw-html-m2r:`<MY_PATH>`\ * 目录下获得网关公钥文件 *apigateway.pub*\ 。

@@ -76,7 +76,7 @@ BK_APP_CODE = "my-app"
 BK_APP_SECRET = "my-app-secret"
 
 # 待同步网关配置的网关名（如果需同步多个网关，可在同步命令中指定）
-BK_APIGW_NAME = "my-apigateway-name"
+BK_APIGW_NAME = "my-gateway-name"
 
 # 需将 bkapi.example.com 替换为真实的云 API 域名；
 # 在 PaaS 3.0 部署的应用，可从环境变量中获取 BK_API_URL_TMPL，不需要额外配置；

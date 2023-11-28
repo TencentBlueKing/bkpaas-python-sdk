@@ -3,6 +3,7 @@
 ### 3.0.0
 - 添加指令 add_related_apps，支持为网关添加关联应用
 - definition.yaml 添加 spec_version 字段，指定配置文件版本号
+- Django Command 中，通过参数 --gateway-name 指定网关
 - 基础镜像 apigw-manager 中，将镜像指令 sync-apigateway 重命名为 sync-apigateway.sh
 - 基础镜像 apigw-manager 中，sync-apigateway.sh 中去除指令 apply_apigw_permissions
 - 优化请求 bk-apigateway 接口失败时，打印的错误消息

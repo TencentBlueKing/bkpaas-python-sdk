@@ -63,7 +63,7 @@ log_info "done"
 ```
 
 基础镜像提供一些常用的 bash 函数，以及执行 Django Command 指令的辅助脚本：
-- `/apigw-manager/bin/functions.sh`，定义一些常用 bash 函数，源码 [functions.sh](../bin/functions.sh)
+- `functions.sh`，定义一些常用 bash 函数，源码 [functions.sh](../bin/functions.sh)
 - `apigw-manager.sh`: 单纯执行一个 Django Command 指令，出错返回非 0 错误码，不退出脚本，源码 [apigw-manager.sh](../bin/apigw-manager.sh)
 
 functions.sh 中的 bash 函数：
