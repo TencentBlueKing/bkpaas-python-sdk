@@ -28,7 +28,7 @@ class TestAPIGatewayAuthorization:
         assert auth.auth["y"] is None
 
     @pytest.mark.parametrize(
-        "auth, expected",
+        ("auth", "expected"),
         [
             ({"x": "test", "y": None}, {"x": "test"}),
             ({"access_token": "test", "jwt": "test"}, {"access_token": "test", "jwt": "test"}),

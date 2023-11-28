@@ -14,7 +14,7 @@ from bkapi_client_core.apigateway import django_helper
 
 
 @pytest.mark.parametrize(
-    "endpoint, bk_api_url_tmpl, expected",
+    ("endpoint", "bk_api_url_tmpl", "expected"),
     [
         ("http://example.com", "http://", "http://example.com"),
         (None, "http://{api_name}.example.com", "http://{api_name}.example.com"),

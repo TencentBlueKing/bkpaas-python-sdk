@@ -8,9 +8,9 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional  # noqa
 
-from requests import Response
+from requests import Response  # noqa
 from typing_extensions import Protocol
 
 
@@ -49,7 +49,7 @@ class OperationResource(object):
     def __init__(
         self,
         name="",  # type: str
-        manager=None,  # type: ManagerProtocol
+        manager=None,  # type: Optional[ManagerProtocol]
     ):
         self.name = name
         self._manager = manager
@@ -97,11 +97,11 @@ class Operation(OperationResource):
     def __init__(
         self,
         name="",  # type: str
-        manager=None,  # type: ManagerProtocol
+        manager=None,  # type: Optional[ManagerProtocol]
         method="",  # type: str
         path="",  # type: str
-        bkapi_config=None,  # type: Dict[str, Any]
-        **properties  # type: Dict[str, Any]
+        bkapi_config=None,  # type: Optional[Dict[str, Any]]
+        **properties,  # type: Dict[str, Any]
     ):
         self.method = method
         self.path = path
@@ -128,7 +128,7 @@ class Operation(OperationResource):
         timeout=None,  # type: Optional[float]
         proxies=None,  # type: Optional[Dict[str, Any]]
         verify=None,  # type: Optional[bool]
-        **kwargs
+        **kwargs,
     ):
         """
         Request to the api and return the structured result which parsed by the client.
@@ -153,7 +153,7 @@ class Operation(OperationResource):
                 timeout=timeout,
                 proxies=proxies,
                 verify=verify,
-                **kwargs
+                **kwargs,
             ),
         )
 
@@ -168,7 +168,7 @@ class Operation(OperationResource):
         timeout=None,  # type: Optional[float]
         proxies=None,  # type: Optional[Dict[str, Any]]
         verify=None,  # type: Optional[bool]
-        **kwargs
+        **kwargs,
     ):
         # type: (...) -> Optional[Response]
         """
@@ -194,7 +194,7 @@ class Operation(OperationResource):
                 timeout=timeout,
                 proxies=proxies,
                 verify=verify,
-                **kwargs
+                **kwargs,
             ),
         )
 

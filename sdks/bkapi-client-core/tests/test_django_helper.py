@@ -41,7 +41,7 @@ def mock_validate_user_authenticated(mocker):
 
 
 @pytest.mark.parametrize(
-    "app_code_passed,app_secret_passed,app_code_in_settings,app_secret_in_settings",
+    ("app_code_passed", "app_secret_passed", "app_code_in_settings", "app_secret_in_settings"),
     [
         (False, False, True, True),
         (True, True, False, False),
@@ -96,7 +96,7 @@ def test_vaildate_user_authenticated_error(django_request, is_authenticated):
 
 
 @pytest.mark.parametrize(
-    "cookies, session, cookie_name_to_key, expected",
+    ("cookies", "session", "cookie_name_to_key", "expected"),
     [
         ({"color": "red"}, {}, {"color": "color"}, {"color": "red"}),
         ({"color": "red"}, {}, {"color": "color_name"}, {"color_name": "red"}),
@@ -111,7 +111,7 @@ def test_get_authorization_from_cookies(mocker, cookies, session, cookie_name_to
 
 
 @pytest.mark.parametrize(
-    "bkoauth,authorization_in_cookies,expected_access_token",
+    ("bkoauth", "authorization_in_cookies", "expected_access_token"),
     [
         (None, {}, None),
         ({"get_access_token.return_value.access_token": "test_token"}, {}, "test_token"),
@@ -157,7 +157,7 @@ def test_get_client_by_request_with_verify(verify, core_settings, client_cls, dj
 
 
 @pytest.mark.parametrize(
-    "bkoauth,expected_access_token",
+    ("bkoauth", "expected_access_token"),
     [
         (None, None),
         ({"get_access_token_by_user.return_value.access_token": "test_token"}, "test_token"),

@@ -31,8 +31,7 @@ def mock_registry():
 
 @pytest.fixture()
 def mock_operation(mocker):
-    operation = mocker.MagicMock()
-    return operation
+    return mocker.MagicMock()
 
 
 def test_enable_collector(mocker, mock_registry, mock_register_global_hook):
@@ -46,7 +45,7 @@ def test_enable_collector(mocker, mock_registry, mock_register_global_hook):
 
 class TestHookCollector:
     @pytest.fixture(autouse=True)
-    def setup(self, mock_registry):
+    def _setup(self, mock_registry):
         self.collector = HookCollector(
             registry=mock_registry,
             namespace="",
@@ -74,12 +73,12 @@ class TestHookCollector:
         assert len(result["hooks"][HookEvent.RESPONSE]) == 2
 
     @pytest.mark.parametrize(
-        "request_size, request_headers, response_size, response_headers",
+        ("request_size", "request_headers", "response_size", "response_headers"),
         [
-            [0, {}, 0, {}],
-            [0, {"Content-Length": ""}, 0, {"Content-Length": ""}],
-            [123, {"Content-Length": "123"}, 456, {"Content-Length": "456"}],
-            [0, {"Content-Length": "NAN"}, 0, {"Content-Length": "NAN"}],
+            (0, {}, 0, {}),
+            (0, {"Content-Length": ""}, 0, {"Content-Length": ""}),
+            (123, {"Content-Length": "123"}, 456, {"Content-Length": "456"}),
+            (0, {"Content-Length": "NAN"}, 0, {"Content-Length": "NAN"}),
         ],
     )
     def test_response_hook(

@@ -17,7 +17,7 @@ from bkapi_client_core.session import Session, deregister_global_hook, register_
 
 class TestSession:
     @pytest.fixture(autouse=True)
-    def setup(self, mocker):
+    def _setup(self, mocker):
         self.session = Session()
 
     def test_init(self):
@@ -25,7 +25,7 @@ class TestSession:
         assert session.headers["X-Testing"] == "1"
 
     @pytest.mark.parametrize(
-        "url, path_params, session_path_params",
+        ("url", "path_params", "session_path_params"),
         [
             ("http://example.com/red/", {}, {}),
             ("http://example.com/{ color }/", {"color": "red"}, {}),
@@ -37,7 +37,7 @@ class TestSession:
     )
     def test_handle(self, requests_mock, url, path_params, session_path_params):
         requests_mock.get("http://example.com/red/", json={"a": "b"})
-        session = Session(**{"path_params": session_path_params})
+        session = Session(path_params=session_path_params)
         result = session.handle(url, method="GET", path_params=path_params)
         assert result.json() == {"a": "b"}
 

@@ -21,11 +21,11 @@ from bkapi_client_core.session import Session
 
 class TestRequestContextBuilder:
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def _setup(self):
         self.builder = RequestContextBuilder()
 
     @pytest.mark.parametrize(
-        "endpoint,path,excepted",
+        ("endpoint", "path", "excepted"),
         [
             ("http://example.com", "api/test", "http://example.com/api/test"),
             ("http://example.com", "/api/test", "http://example.com/api/test"),
@@ -40,7 +40,7 @@ class TestRequestContextBuilder:
         assert context["url"] == excepted
 
     @pytest.mark.parametrize(
-        "method,params,data,excepted_params,excepted_json",
+        ("method", "params", "data", "excepted_params", "excepted_json"),
         [
             (
                 "GET",
@@ -150,7 +150,7 @@ class TestRequestContextBuilder:
         assert context.get("json") == excepted_json
 
     @pytest.mark.parametrize(
-        "input,output",
+        ("input", "output"),
         [
             (
                 {"endpoint": "http://example.com", "path": "/api/", "method": "GET"},
@@ -179,7 +179,7 @@ class TestRequestContextBuilder:
 
 class TestResponseHeadersRepresenter:
     @pytest.mark.parametrize(
-        "headers, key, default, expected",
+        ("headers", "key", "default", "expected"),
         [
             (None, "test", "", ""),
             ({"x-color": "red"}, "x-color", "", "red"),
@@ -203,7 +203,7 @@ class TestResponseHeadersRepresenter:
         assert headers.request_id == "abcdef"
 
     @pytest.mark.parametrize(
-        "headers, expected",
+        ("headers", "expected"),
         [
             ({"X-Bkapi-Error-Code": "error"}, True),
             ({}, False),
@@ -214,7 +214,7 @@ class TestResponseHeadersRepresenter:
         assert headers.has_apigateway_error == expected
 
     @pytest.mark.parametrize(
-        "headers, expected",
+        ("headers", "expected"),
         [
             (
                 {
@@ -246,7 +246,7 @@ class TestResponseHeadersRepresenter:
 
 class TestBaseClient:
     @pytest.fixture(autouse=True)
-    def setup(self, faker, requests_mock):
+    def _setup(self, faker, requests_mock):
         self.client = BaseClient(faker.url())
 
     def test_client_default_name(self):
@@ -284,7 +284,7 @@ class TestBaseClient:
         mock_close.assert_called_once_with()
 
     @pytest.mark.parametrize(
-        "endpoint,operation_path,excepted_url",
+        ("endpoint", "operation_path", "excepted_url"),
         [
             ("http://example.com", "echo", "http://example.com/echo"),
             ("http://example.com/", "/echo", "http://example.com/echo"),
@@ -373,7 +373,7 @@ class TestBaseClient:
             self.client.parse_response(mocker.MagicMock(), mocker.MagicMock())
 
     @pytest.mark.parametrize(
-        "response, expected_error",
+        ("response", "expected_error"),
         [
             (
                 None,
@@ -402,7 +402,7 @@ class TestBaseClient:
             self.client.check_response_apigateway_error(mocker.MagicMock(**response))
 
     @pytest.mark.parametrize(
-        "session_headers, headers, expected",
+        ("session_headers", "headers", "expected"),
         [
             (
                 {"x-token": "test"},
@@ -429,7 +429,7 @@ class TestBaseClient:
         assert client.session.headers == expected
 
     @pytest.mark.parametrize(
-        "auth,update_auth,expected",
+        ("auth", "update_auth", "expected"),
         [
             (
                 {},

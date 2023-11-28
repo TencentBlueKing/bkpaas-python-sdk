@@ -8,9 +8,9 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
-from typing import Optional, Type
+from typing import Optional, Type  # noqa
 
-from bkapi_client_core.client import BaseClient
+from bkapi_client_core.client import BaseClient  # noqa
 from bkapi_client_core.config import SettingKeys, settings
 from bkapi_client_core.django_helper import get_client_by_request as _get_client_by_request
 from bkapi_client_core.django_helper import get_client_by_username as _get_client_by_username

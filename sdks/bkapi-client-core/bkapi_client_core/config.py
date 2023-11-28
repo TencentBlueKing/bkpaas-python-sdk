@@ -9,7 +9,7 @@
  * specific language governing permissions and limitations under the License.
 """
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional  # noqa
 
 try:
     from django.conf import settings as django_settings  # noqa
@@ -73,17 +73,17 @@ class Settings(object):
         if key in self._resolved:
             return self._resolved[key]
 
-        for key in self._aliases.get(key, [key]):
-            if self._settings and hasattr(self._settings, key):
-                value = self._resolved[key] = getattr(self._settings, key)
+        for _key in self._aliases.get(key, [key]):
+            if self._settings and hasattr(self._settings, _key):
+                value = self._resolved[_key] = getattr(self._settings, _key)
                 return value
 
-            if self._env and key in self._env:
-                value = self._resolved[key] = self._env[key]
+            if self._env and _key in self._env:
+                value = self._resolved[_key] = self._env[_key]
                 return value
 
-            if key in self._defaults:
-                value = self._resolved[key] = self._defaults[key]
+            if _key in self._defaults:
+                value = self._resolved[_key] = self._defaults[_key]
                 return value
 
         return default

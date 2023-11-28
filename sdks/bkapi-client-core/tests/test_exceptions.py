@@ -16,7 +16,7 @@ from bkapi_client_core.client import ResponseHeadersRepresenter
 
 class TestResponseError:
     @pytest.mark.parametrize(
-        "error, response, headers, expected",
+        ("error", "response", "headers", "expected"),
         [
             (
                 "error",
@@ -93,7 +93,7 @@ class TestResponseError:
         assert err.curl_command == "curl -X GET http://example.com"
 
     @pytest.mark.parametrize(
-        "request_, expected",
+        ("request_", "expected"),
         [
             (None, None),
             ({"method": "GET"}, "GET"),
@@ -108,7 +108,7 @@ class TestResponseError:
         assert err.request_method == expected
 
     @pytest.mark.parametrize(
-        "request_, expected",
+        ("request_", "expected"),
         [
             (None, ""),
             ({"url": "http://example.com/test?foo=bar"}, "http://example.com/test"),
@@ -123,7 +123,7 @@ class TestResponseError:
         assert err.request_url == expected
 
     @pytest.mark.parametrize(
-        "response, expected",
+        ("response", "expected"),
         [
             (None, None),
             ({"status_code": 200}, 200),
