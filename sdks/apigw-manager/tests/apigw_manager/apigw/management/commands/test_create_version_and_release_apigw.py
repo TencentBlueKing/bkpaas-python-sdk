@@ -12,7 +12,8 @@ from datetime import datetime
 
 import pytest
 import yaml
-from packaging.version import parse as parse_version, InvalidVersion
+from packaging.version import InvalidVersion
+from packaging.version import parse as parse_version
 
 from apigw_manager.apigw.management.commands.create_version_and_release_apigw import Command
 
@@ -72,7 +73,7 @@ def fake_resource_version():
 
 
 @pytest.mark.parametrize(
-    "version, expected",
+    ("version", "expected"),
     [
         (None, "None"),
         ("1.0.0", "1.0.0"),
@@ -99,7 +100,7 @@ def test_parse_version_from_definition__error(command, version):
 
 
 @pytest.mark.parametrize(
-    "resource_version, expected",
+    ("resource_version", "expected"),
     [
         (None, "None"),
         ({}, "None"),
@@ -115,12 +116,12 @@ def test_parse_version_from_resource_version(command, resource_version, expected
 
 
 @pytest.mark.parametrize(
-    "defined_version, expected",
+    ("defined_version", "expected"),
     [
         (None, "0.0.1"),
         ("1.0.0", "1.0.0"),
         ("v1.0.1", "1.0.1"),
-    ]
+    ],
 )
 def test_fix_defined_version(command, defined_version, expected):
     result = command._fix_defined_version(defined_version and parse_version(defined_version))
@@ -128,14 +129,14 @@ def test_fix_defined_version(command, defined_version, expected):
 
 
 @pytest.mark.parametrize(
-    "defined_version, latest_version, is_dirty, expected",
+    ("defined_version", "latest_version", "is_dirty", "expected"),
     [
         ("1.0.0", None, False, True),
         ("1.0.1", "1.0.0", False, True),
         ("1.0.1", "1.0.1", True, True),
         ("1.0.1", "1.0.1", False, False),
         ("1.0.1", "1.0.1+1", False, False),
-    ]
+    ],
 )
 def test_should_create_resource_version(mocker, command, defined_version, latest_version, is_dirty, expected):
     manager = mocker.MagicMock(is_dirty=mocker.MagicMock(return_value=is_dirty))
@@ -149,7 +150,7 @@ def test_should_create_resource_version(mocker, command, defined_version, latest
 
 
 @pytest.mark.parametrize(
-    "defined_version, resource_version_exists, expected",
+    ("defined_version", "resource_version_exists", "expected"),
     [
         ("1.0.1", False, "1.0.1"),
         ("0.0.1", False, "0.0.1"),

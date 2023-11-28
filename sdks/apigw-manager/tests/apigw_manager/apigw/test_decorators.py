@@ -27,7 +27,7 @@ def mock_invalid_request(rf):
 def mock_valid_request(rf):
     req = rf.get("/")
     req.jwt = "jwt_token"
-    setattr(req, "jwt", "jwt_token")
+    req.jwt = "jwt_token"
     return req
 
 

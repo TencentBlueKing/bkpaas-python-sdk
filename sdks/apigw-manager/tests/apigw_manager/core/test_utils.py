@@ -8,12 +8,12 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
-from pytest import fixture, raises
+import pytest
 
 from apigw_manager.core.utils import get_item, itemgetter
 
 
-@fixture()
+@pytest.fixture()
 def test_data(faker):
     return {
         "a": {
@@ -32,7 +32,7 @@ class TestGetItem:
     def test_key_not_found(self, test_data):
         assert "nothing" not in test_data["a"]
 
-        with raises(KeyError):
+        with pytest.raises(KeyError):
             get_item(test_data, ["a", "nothing"])
 
 

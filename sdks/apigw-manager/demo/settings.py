@@ -18,7 +18,7 @@ import environ
 try:
     import pymysql
 
-    pymysql.version_info = (1, 4, 6, 'final', 0)  # change mysqlclient version
+    pymysql.version_info = (1, 4, 6, "final", 0)  # change mysqlclient version
     pymysql.install_as_MySQLdb()
 except ImportError:
     pass
@@ -61,14 +61,14 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'apigw_manager.apigw.authentication.ApiGatewayJWTGenericMiddleware',
-    'apigw_manager.apigw.authentication.ApiGatewayJWTAppMiddleware',
-    'apigw_manager.apigw.authentication.ApiGatewayJWTUserMiddleware',
+    "apigw_manager.apigw.authentication.ApiGatewayJWTGenericMiddleware",
+    "apigw_manager.apigw.authentication.ApiGatewayJWTAppMiddleware",
+    "apigw_manager.apigw.authentication.ApiGatewayJWTUserMiddleware",
 ]
 
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',
-    'apigw_manager.apigw.authentication.UserModelBackend',
+    "django.contrib.auth.backends.ModelBackend",
+    "apigw_manager.apigw.authentication.UserModelBackend",
 ]
 
 ROOT_URLCONF = "demo.urls"
@@ -142,7 +142,7 @@ STATIC_URL = "/static/"
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 # Default primary key field type

@@ -16,5 +16,5 @@ class Command(BaseCommand):
     """Get the esb public key and store it into the database"""
 
     def handle(self, api_name, *args, **kwargs):
-        for name in ["bk-esb", "apigw"]:
-            super(Command, self).handle(api_name=name, *args, **kwargs)
+        for gateway_name in ["bk-esb", "apigw"]:
+            super(Command, self).handle(gateway_name, *args, **kwargs)

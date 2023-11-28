@@ -14,12 +14,12 @@ from bkapi_client_core.config import settings as bkapi_settings
 
 
 @pytest.fixture(autouse=True)
-def reset_bkapi_settings():
+def _reset_bkapi_settings():
     bkapi_settings.reset()
 
 
 @pytest.fixture(autouse=True)
-def mark_django_db(db):
+def _mark_django_db(db):
     pass
 
 
@@ -37,7 +37,7 @@ def issuer(faker):
 
 @pytest.fixture()
 def private_key():
-    return '''-----BEGIN RSA PRIVATE KEY-----
+    return """-----BEGIN RSA PRIVATE KEY-----
 MIICWgIBAAKBgER92Clgmc3ikcLbSjZFo2jC4mA+aP/kNKRKMud3AlDY0mPVbEu3
 LeHov93zmvy1s5k5XTBPeAdRybKODQ0/jHOeXOOflaynDKZWknD8/WmU0O64Z/Qf
 IH7c1FhDYX1VUZhwPwpL0IxYJDIoCKzwBafPsIC4PUH+Lqyga3emP/v1AgMBAAEC
@@ -51,17 +51,17 @@ SFrjt40UQUd3RCnLrQd03h6qeBgv1Al5e2fHcdzr8gbEwzAvFizoN4L5AkAwzA4W
 WlRVbg5FYPz92Yjx0FFH0gLTm6FpNGmNoMuu16lkl8xXWQRKgof2oCondSZIldRT
 pe3xpxJvNIfri5u3AkA5VTxp77yXQ7Bra/F3eyLzQ8VzhhjXes+jxb6imag2Ry9o
 AuBDWd8zTFaIkV0Wl8BteGrMMfhLv0F9JxuDcZas
------END RSA PRIVATE KEY-----'''
+-----END RSA PRIVATE KEY-----"""
 
 
 @pytest.fixture()
 def public_key():
-    return '''-----BEGIN PUBLIC KEY-----
+    return """-----BEGIN PUBLIC KEY-----
 MIGeMA0GCSqGSIb3DQEBAQUAA4GMADCBiAKBgER92Clgmc3ikcLbSjZFo2jC4mA+
 aP/kNKRKMud3AlDY0mPVbEu3LeHov93zmvy1s5k5XTBPeAdRybKODQ0/jHOeXOOf
 laynDKZWknD8/WmU0O64Z/QfIH7c1FhDYX1VUZhwPwpL0IxYJDIoCKzwBafPsIC4
 PUH+Lqyga3emP/v1AgMBAAE=
------END PUBLIC KEY-----'''
+-----END PUBLIC KEY-----"""
 
 
 @pytest.fixture()
@@ -95,31 +95,31 @@ def jwt_algorithm():
 @pytest.fixture()
 def jwt_app(settings):
     return {
-        'app_code': settings.BK_APP_CODE,
-        'verified': True,
+        "app_code": settings.BK_APP_CODE,
+        "verified": True,
     }
 
 
 @pytest.fixture()
 def jwt_user():
     return {
-        'username': 'admin',
-        'source_type': 'default',
-        'verified': True,
+        "username": "admin",
+        "source_type": "default",
+        "verified": True,
     }
 
 
 @pytest.fixture()
 def jwt_decoded(jwt_app, jwt_user):
     return {
-        'app': jwt_app,
-        'user': jwt_user,
+        "app": jwt_app,
+        "user": jwt_user,
     }
 
 
 @pytest.fixture()
 def jwt_header(api_name, jwt_algorithm):
-    return {'alg': jwt_algorithm, 'kid': api_name, 'typ': 'JWT'}
+    return {"alg": jwt_algorithm, "kid": api_name, "typ": "JWT"}
 
 
 @pytest.fixture()

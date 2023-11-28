@@ -19,7 +19,6 @@ logger = logging.getLogger(__name__)
 
 def apigw_require(view_func):
     def wrapper(request, *args, **kwargs):
-
         exempt = getattr(settings, "BK_APIGW_REQUIRE_EXEMPT", False)
         if exempt:
             return view_func(request, *args, **kwargs)

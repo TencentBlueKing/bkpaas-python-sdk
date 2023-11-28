@@ -13,12 +13,12 @@ repos:
         exclude: "^(.*/poetry.lock|.*/requirements.txt|.*/requirements_dev.txt)|sdks/apigw-manager/build.yml"
         entry: bash -c "if [[ -d pre_commit_hooks ]]; then pre_commit_hooks/ip.sh $@; fi"
       # See ./pyproject.toml for below tool's version and settings
-      - id: isort
-        name: isort
-        # Set language to disable pre-commit's virtual-env
-        language: system
-        types: [python]
-        entry: poetry run isort --settings-path=pyproject.toml
+      # - id: isort
+      #   name: isort
+      #   # Set language to disable pre-commit's virtual-env
+      #   language: system
+      #   types: [python]
+      #   entry: poetry run isort --settings-path=pyproject.toml
       - id: black
         name: black
         language: system
@@ -68,23 +68,23 @@ repos:
         entry: mypy --config-file=sdks/bkapi-client-core/pyproject.toml
         files: sdks/bkapi-client-core/
   # sdk apigw-manager
-  # - repo: local
-  #   hooks:
-  #     - id: format
-  #       name: run ruff-formatter for "apigw-manager"
-  #       language: python
-  #       types: [python]
-  #       entry: bash -c 'cd sdks/apigw-manager/ && ruff format --config=pyproject.toml --force-exclude .'
-  #       files: sdks/apigw-manager/
-  #     - id: ruff
-  #       name: run ruff for "apigw-manager"
-  #       language: python
-  #       types: [python]
-  #       entry: bash -c 'cd sdks/apigw-manager/ && ruff --config=pyproject.toml --force-exclude --fix .'
-  #       files: sdks/apigw-manager/
-  #     - id: mypy
-  #       name: run mypy for "apigw-manager"
-  #       language: python
-  #       types: [python]
-  #       entry: mypy --config-file=sdks/apigw-manager/pyproject.toml
-  #       files: sdks/apigw-manager/
+  - repo: local
+    hooks:
+      - id: format
+        name: run ruff-formatter for "apigw-manager"
+        language: python
+        types: [python]
+        entry: bash -c 'cd sdks/apigw-manager/ && ruff format --config=pyproject.toml --force-exclude .'
+        files: sdks/apigw-manager/
+      - id: ruff
+        name: run ruff for "apigw-manager"
+        language: python
+        types: [python]
+        entry: bash -c 'cd sdks/apigw-manager/ && ruff --config=pyproject.toml --force-exclude --fix .'
+        files: sdks/apigw-manager/
+      - id: mypy
+        name: run mypy for "apigw-manager"
+        language: python
+        types: [python]
+        entry: mypy --config-file=sdks/apigw-manager/pyproject.toml
+        files: sdks/apigw-manager/

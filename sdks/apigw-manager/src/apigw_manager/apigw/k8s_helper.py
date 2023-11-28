@@ -9,7 +9,6 @@ from apigw_manager.apigw.helper import BasePublicKeyManager
 
 class SecretPublicKeyManager(BasePublicKeyManager):
     def __init__(self):
-
         self.namespace = getattr(settings, "APIGW_JWT_PUBLIC_KEY_SECRET_NAMESPACE", "default")
         self.secret_mappings = getattr(settings, "APIGW_JWT_PUBLIC_KEY_SECRET_MAPPINGS", {})
 
@@ -18,7 +17,6 @@ class SecretPublicKeyManager(BasePublicKeyManager):
         self.client = CoreV1Api(api_client=api_client.ApiClient(configuration=configuration))
 
     def get(self, api_name, issuer=None):
-
         try:
             secret = self.client.read_namespaced_secret(self._get_name(issuer), self.namespace)
         except exceptions.ApiException as err:
@@ -37,7 +35,6 @@ class SecretPublicKeyManager(BasePublicKeyManager):
         return base64.b64decode(value).decode()
 
     def set(self, api_name, public_key, issuer=None):
-
         name = self._get_name(issuer)
         secret = V1Secret(
             metadata=V1ObjectMeta(

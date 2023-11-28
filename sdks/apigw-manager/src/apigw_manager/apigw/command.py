@@ -24,7 +24,6 @@ from apigw_manager.core.sync import Synchronizer
 
 
 class ApiCommand(BaseCommand):
-
     manager_class: typing.Callable
 
     def add_arguments(self, parser):
@@ -39,7 +38,7 @@ class ApiCommand(BaseCommand):
         manager = self.manager_class(configuration)
 
         try:
-            self.do(manager=manager, configuration=configuration, *args, **kwargs)
+            self.do(manager, configuration, *args, **kwargs)
         except ApiResponseError as err:
             self.stderr.write(str(err))
             sys.exit(1)
@@ -89,7 +88,7 @@ class DefinitionCommand(ApiCommand):
         definition = self.get_definition(**kwargs)
 
         try:
-            self.do(manager=manager, definition=definition, configuration=configuration, *args, **kwargs)
+            self.do(manager, definition, configuration, *args, **kwargs)
         except ApiResponseError as err:
             self.stderr.write(str(err))
             sys.exit(1)

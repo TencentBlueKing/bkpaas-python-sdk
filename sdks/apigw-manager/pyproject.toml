@@ -52,15 +52,12 @@ ipython = "^7"
 twine = "^3.4.1"
 django = ">=1.11.1"
 kubernetes = "^24.2.0"
+types-PyYAML = "6.0.12.9"
+types-PyMySQL = "1.1.0.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
-
-[[tool.poetry.source]]
-name = "tencent"
-url = "https://mirrors.cloud.tencent.com/pypi/simple/"
-priority = "default"
 
 [tool.mypy]
 ignore_missing_imports = true
@@ -69,6 +66,12 @@ no_implicit_optional = true
 show_error_codes = true
 strict_optional = true
 pretty = true
+
+[[tool.mypy.overrides]]
+module = [
+    "*.migrations.*",
+]
+ignore_errors = true
 
 [tool.pytest.ini_options]
 addopts = "-p no:pastebin -p no:nose -p no:doctest -p no:warnings"
@@ -165,3 +168,4 @@ max-complexity = 12
 
 [tool.ruff.isort]
 relative-imports-order = "closest-to-furthest"
+known-first-party = ["apigw_manager"]

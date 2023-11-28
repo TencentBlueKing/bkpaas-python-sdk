@@ -80,11 +80,10 @@ def invalid_apigw_request(mock_request):
 
 class TestApiGatewayJWTMiddleware:
     @pytest.fixture(autouse=True)
-    def setup_middleware(self, mock_response, api_name):
+    def _setup_middleware(self, mock_response, api_name):
         self.middleware = authentication.ApiGatewayJWTMiddleware(mock_response)
 
     def test_default_config(self, api_name, jwt_algorithm):
-
         assert isinstance(self.middleware.provider, DefaultJWTProvider)
         assert self.middleware.provider.default_api_name == api_name
         assert self.middleware.provider.algorithm == jwt_algorithm
@@ -158,7 +157,7 @@ class TestApiGatewayJWTGenericMiddleware:
 
 class TestApiGatewayJWTAppMiddleware:
     @pytest.fixture(autouse=True)
-    def setup_middleware(self, mock_response):
+    def _setup_middleware(self, mock_response):
         self.middleware = authentication.ApiGatewayJWTAppMiddleware(mock_response)
 
     def test_make_app(self):
@@ -177,7 +176,6 @@ class TestApiGatewayJWTAppMiddleware:
 
     @pytest.mark.parametrize("field", ["app_code", "bk_app_code"])
     def test_call_with_jwt(self, jwt_request, mock_response, jwt_app, field):
-
         jwt_app = jwt_request.jwt.payload["app"]
         app_code = jwt_app.pop("app_code", None) or jwt_app.pop("bk_app_code", None)
         jwt_app[field] = app_code
@@ -191,15 +189,15 @@ class TestApiGatewayJWTAppMiddleware:
 
 class TestApiGatewayJWTUserMiddleware:
     @pytest.fixture(autouse=True)
-    def setup_middleware(self, mock_response):
+    def _setup_middleware(self, mock_response):
         self.middleware = authentication.ApiGatewayJWTUserMiddleware(mock_response)
 
     @pytest.fixture(autouse=True)
-    def patch_authenticate(self, mocker):
+    def _patch_authenticate(self, mocker):
         self.authenticate_function = mocker.patch("django.contrib.auth.authenticate")
 
     @pytest.fixture(autouse=True)
-    def setup_user(self, mocker):
+    def _setup_user(self, mocker):
         self.user = mocker.MagicMock()
 
     def test_get_user(self, jwt_request):
@@ -240,7 +238,7 @@ class TestApiGatewayJWTUserMiddleware:
 
 class TestUserModelBackend:
     @pytest.fixture(autouse=True)
-    def setup_backend(self, mocker):
+    def _setup_backend(self, mocker):
         self.user_maker = mocker.MagicMock()
         self.backend = authentication.UserModelBackend()
         self.backend.user_maker = self.user_maker

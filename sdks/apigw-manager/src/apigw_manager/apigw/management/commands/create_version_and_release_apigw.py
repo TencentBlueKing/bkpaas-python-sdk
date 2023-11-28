@@ -135,8 +135,8 @@ class Command(DefinitionCommand):
         # create a sdk when released a new version
         if generate_sdks:
             self._generate_sdks(
-                releaser=releaser,
-                version=resource_version["version"],
+                releaser,
+                resource_version["version"],
                 *args,
                 **kwargs,
             )

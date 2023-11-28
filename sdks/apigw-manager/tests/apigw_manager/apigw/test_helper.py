@@ -23,16 +23,16 @@ from apigw_manager.apigw.models import Context
 class TestDefinition:
     def test_load(self):
         definition = Definition.load(
-            'a: {{a}}',
+            "a: {{a}}",
             {
-                'a': 1,
+                "a": 1,
             },
         )
 
-        assert definition.loaded['a'] == 1
+        assert definition.loaded["a"] == 1
 
     @pytest.mark.parametrize(
-        ["namespace", "level"],
+        ("namespace", "level"),
         [
             (None, 1),
             ("", 1),
@@ -43,7 +43,7 @@ class TestDefinition:
     )
     def test_get(self, namespace, level):
         definition = Definition(
-            '''
+            """
         level: 1
         a:
             level: 2
@@ -51,7 +51,7 @@ class TestDefinition:
                 level: 3
                 c:
                     level: 4
-        '''
+        """
         )
 
         result = definition.get(namespace)
@@ -60,7 +60,7 @@ class TestDefinition:
 
 class TestContextManager:
     @pytest.fixture(autouse=True)
-    def setup_manager(self, faker):
+    def _setup_manager(self, faker):
         self.manager = ContextManager()
         self.manager.scope = faker.pystr()
 
@@ -101,7 +101,7 @@ class TestContextManager:
 
 class TestPublicKeyManager:
     @pytest.fixture(autouse=True)
-    def setup_manager(self):
+    def _setup_manager(self):
         self.manager = PublicKeyManager()
 
     def test_get_not_found(self, api_name):
@@ -160,7 +160,7 @@ class TestPublicKeyManager:
 
 class TestReleaseVersionManager:
     @pytest.fixture(autouse=True)
-    def setup_manager(self):
+    def _setup_manager(self):
         self.manager = ReleaseVersionManager()
 
     def test_increase(self, faker):
@@ -172,7 +172,7 @@ class TestReleaseVersionManager:
 
 class TestResourceSignatureManager:
     @pytest.fixture(autouse=True)
-    def setup_manager(self):
+    def _setup_manager(self):
         self.manager = ResourceSignatureManager()
 
     def test_get_not_found(self, faker):

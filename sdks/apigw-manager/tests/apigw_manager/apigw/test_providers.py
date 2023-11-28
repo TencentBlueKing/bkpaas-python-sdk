@@ -36,7 +36,7 @@ def django_jwt_cache(settings, django_jwt_cache_name, mocker):
 
 class TestSettingsPublicKeyProvider:
     @pytest.fixture(autouse=True)
-    def setup_provider(self):
+    def _setup_provider(self):
         self.provider = SettingsPublicKeyProvider("testing")
 
     def test_default_api_name(self):

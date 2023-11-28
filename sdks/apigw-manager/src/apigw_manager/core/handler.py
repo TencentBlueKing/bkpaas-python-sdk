@@ -13,13 +13,13 @@ import logging
 import typing
 
 from bkapi.bk_apigateway.client import Client as BKAPIGatewayClient
+from bkapi_client_core.exceptions import ResponseError
 from future.utils import raise_from
 
 from apigw_manager.core.exceptions import ApiException, ApiResponseError, ApiResultError
-from bkapi_client_core.exceptions import ResponseError
 
 if typing.TYPE_CHECKING:
-    from apigw_manager.core import configuration
+    from apigw_manager.core import configuration  # noqa
 
 logger = logging.getLogger(__name__)
 

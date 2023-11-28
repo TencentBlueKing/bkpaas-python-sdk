@@ -26,7 +26,7 @@ def public_key_secret(api_name, public_key):
 
 class TestSecretPublicKeyManager:
     @pytest.fixture(autouse=True)
-    def setup_manager(self, issuer, mocker, settings, public_key_secret):
+    def _setup_manager(self, issuer, mocker, settings, public_key_secret):
         mocker.patch("kubernetes.config.load_incluster_config")
         settings.APIGW_JWT_PUBLIC_KEY_SECRET_NAMESPACE = public_key_secret.metadata.namespace
         settings.APIGW_JWT_PUBLIC_KEY_SECRET_MAPPINGS = {
