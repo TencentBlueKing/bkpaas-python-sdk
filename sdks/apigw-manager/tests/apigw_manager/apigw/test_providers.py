@@ -42,13 +42,13 @@ class TestSettingsPublicKeyProvider:
     def test_default_api_name(self):
         assert self.provider.default_api_name == "testing"
 
-    def test_provide_public_key_not_set(self, settings, api_name):
+    def test_provide_public_key_not_set(self, settings, fake_gateway_name):
         assert not hasattr(settings, "APIGW_PUBLIC_KEY")
-        assert self.provider.provide(api_name) is None
+        assert self.provider.provide(fake_gateway_name) is None
 
-    def test_provide(self, settings, api_name, public_key):
+    def test_provide(self, settings, fake_gateway_name, public_key):
         settings.APIGW_PUBLIC_KEY = public_key
-        assert self.provider.provide(api_name) == public_key
+        assert self.provider.provide(fake_gateway_name) == public_key
 
 
 class TestCachePublicKeyProvider:
@@ -56,41 +56,41 @@ class TestCachePublicKeyProvider:
         provider = CachePublicKeyProvider("testing")
         assert provider.default_api_name == "testing"
 
-    def test_provide_from_cache(self, api_name, django_jwt_cache):
+    def test_provide_from_cache(self, fake_gateway_name, django_jwt_cache):
         jwt_issuer = "blueking"
 
         def side_effect(key):
             data = {
-                "apigw:public_key::%s" % api_name: "testing-01",
-                "apigw:public_key:%s:%s" % (jwt_issuer, api_name): "testing-02",
+                "apigw:public_key::%s" % fake_gateway_name: "testing-01",
+                "apigw:public_key:%s:%s" % (jwt_issuer, fake_gateway_name): "testing-02",
             }
             return data[key]
 
         django_jwt_cache.get.side_effect = side_effect
         provider = CachePublicKeyProvider("testing")
 
-        assert provider.provide(api_name) == "testing-01"
-        assert provider.provide(api_name, jwt_issuer) == "testing-02"
+        assert provider.provide(fake_gateway_name) == "testing-01"
+        assert provider.provide(fake_gateway_name, jwt_issuer) == "testing-02"
 
-    def test_provide_cache_missed(self, api_name, django_jwt_cache, public_key_in_db):
+    def test_provide_cache_missed(self, fake_gateway_name, django_jwt_cache, public_key_in_db):
         django_jwt_cache.get.return_value = None
         provider = CachePublicKeyProvider("testing")
 
-        public_key = provider.provide(api_name)
+        public_key = provider.provide(fake_gateway_name)
         assert public_key == public_key_in_db
 
         django_jwt_cache.set.assert_called_with(
-            "apigw:public_key::%s" % api_name,
+            "apigw:public_key::%s" % fake_gateway_name,
             public_key_in_db,
             provider.cache_expires,
             provider.cache_version,
         )
 
-        public_key = provider.provide(api_name, "not-exist")
+        public_key = provider.provide(fake_gateway_name, "not-exist")
         assert public_key == public_key_in_db
 
         django_jwt_cache.set.assert_called_with(
-            "apigw:public_key:not-exist:%s" % api_name,
+            "apigw:public_key:not-exist:%s" % fake_gateway_name,
             public_key_in_db,
             provider.cache_expires,
             provider.cache_version,
@@ -126,8 +126,8 @@ class TestDefaultJWTProvider:
         public_key_provider.provide.return_value = None
         assert provider.provide(jwt_request) is None
 
-    def test_provide(self, provider, jwt_request, api_name, jwt_decoded):
+    def test_provide(self, provider, jwt_request, fake_gateway_name, jwt_decoded):
         decoded = provider.provide(jwt_request)
 
-        assert decoded.api_name == api_name
+        assert decoded.api_name == fake_gateway_name
         assert decoded.payload == jwt_decoded

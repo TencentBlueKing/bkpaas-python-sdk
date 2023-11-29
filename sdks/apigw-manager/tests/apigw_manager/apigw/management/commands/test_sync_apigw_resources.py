@@ -47,8 +47,8 @@ def test_do(mocker, configuration, command, manager, resource_signature_manager)
         content=definition,
         delete=True,
     )
-    resource_signature_manager.update_signature.assert_called_once_with(configuration.api_name, mocker.ANY)
-    resource_signature_manager.mark_dirty.assert_called_once_with(configuration.api_name)
+    resource_signature_manager.update_signature.assert_called_once_with(configuration.gateway_name, mocker.ANY)
+    resource_signature_manager.mark_dirty.assert_called_once_with(configuration.gateway_name)
 
 
 @pytest.mark.parametrize(
@@ -61,10 +61,10 @@ def test_do(mocker, configuration, command, manager, resource_signature_manager)
     ],
 )
 def test_update_signature(mocker, command, configuration, resource_signature_manager, added, deleted, dirty):
-    command.update_signature(configuration.api_name, {}, added, deleted)
-    resource_signature_manager.update_signature(configuration.api_name, mocker.ANY)
+    command.update_signature(configuration.gateway_name, {}, added, deleted)
+    resource_signature_manager.update_signature(configuration.gateway_name, mocker.ANY)
 
     if dirty:
-        resource_signature_manager.mark_dirty.assert_called_once_with(configuration.api_name)
+        resource_signature_manager.mark_dirty.assert_called_once_with(configuration.gateway_name)
     else:
         resource_signature_manager.mark_clean.assert_not_called()

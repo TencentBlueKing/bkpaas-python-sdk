@@ -61,7 +61,7 @@ class Handler(object):
     def _call_with_cache(self, operation, **kwargs):
         """Call the API instance, allow data to be retrieved from the cache"""
         cache_key = {
-            "api_name": kwargs.get("api_name", self.config.api_name),
+            "api_name": kwargs.get("api_name", self.config.gateway_name),
             "kwargs": kwargs,
         }
 
@@ -79,7 +79,7 @@ class Handler(object):
     def _call(self, operation, files=None, **kwargs):
         """Call the API instance"""
         data = {
-            "path_params": {"api_name": kwargs.pop("api_name", self.config.api_name)},
+            "path_params": {"api_name": kwargs.pop("api_name", self.config.gateway_name)},
             "data": kwargs,
             "headers": {
                 "X-Bkapi-Authorization": kwargs.pop("x_bkapi_authorization", self._get_bkapi_authorization()),

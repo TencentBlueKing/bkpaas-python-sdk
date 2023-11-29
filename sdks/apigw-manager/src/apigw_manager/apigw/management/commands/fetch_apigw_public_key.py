@@ -36,4 +36,4 @@ class Command(FetchCommand):
             return
 
         public_key_manager = helper.make_default_public_key_manager()
-        public_key_manager.set(configuration.api_name, result["public_key"], result.get("issuer"))
+        public_key_manager.set(configuration.gateway_name, result["public_key"], result.get("issuer"))

@@ -27,16 +27,15 @@ class Command(PermissionCommand):
             if permission.get("gateway_name"):
                 permission["api_name"] = permission.get("gateway_name")
 
-            grant_dimension = permission.pop("grant_dimension", "api")
-            if grant_dimension == "gateway":
-                grant_dimension = "api"
+            if permission.get("grant_dimension") in [None, "gateway"]:
+                permission["grant_dimension"] = "api"
 
-            result = manager.apply_permission(grant_dimension=grant_dimension, **permission)
+            result = manager.apply_permission(**permission)
             print(
                 "Applied permissions for gateway %s, record %s, dimension %s"
                 % (
                     permission["api_name"],
                     result["record_id"],
-                    grant_dimension,
+                    permission["grant_dimension"],
                 )
             )

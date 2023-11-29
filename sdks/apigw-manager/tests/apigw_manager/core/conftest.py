@@ -33,12 +33,6 @@ def bk_app_secret(faker: Faker, config: configuration.Configuration):
 
 
 @pytest.fixture()
-def api_name(faker: Faker, config: configuration.Configuration):
-    config.api_name = faker.color
-    return config.api_name
-
-
-@pytest.fixture()
 def api_cache(mocker: MockerFixture, config: configuration.Configuration):
     config.api_cache = mocker.MagicMock()
     return config.api_cache

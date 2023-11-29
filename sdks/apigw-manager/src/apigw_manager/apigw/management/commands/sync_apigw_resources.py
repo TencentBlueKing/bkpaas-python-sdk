@@ -52,4 +52,4 @@ class Command(SyncCommand):
             % (added_count, updated_count, deleted_count)
         )
 
-        self.update_signature(configuration.api_name, definition, added_count, deleted_count)
+        self.update_signature(configuration.gateway_name, definition, added_count, deleted_count)

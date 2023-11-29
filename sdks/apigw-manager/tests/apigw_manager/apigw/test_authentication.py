@@ -60,9 +60,9 @@ def apigw_request(jwt_encoded, mock_request):
 
 
 @pytest.fixture()
-def jwt_request(api_name, jwt_decoded, mock_request):
+def jwt_request(fake_gateway_name, jwt_decoded, mock_request):
     mock_request.jwt = providers.DecodedJWT(
-        api_name=api_name,
+        api_name=fake_gateway_name,
         payload=jwt_decoded,
     )
 
@@ -80,12 +80,12 @@ def invalid_apigw_request(mock_request):
 
 class TestApiGatewayJWTMiddleware:
     @pytest.fixture(autouse=True)
-    def _setup_middleware(self, mock_response, api_name):
+    def _setup_middleware(self, mock_response, fake_gateway_name):
         self.middleware = authentication.ApiGatewayJWTMiddleware(mock_response)
 
-    def test_default_config(self, api_name, jwt_algorithm):
+    def test_default_config(self, fake_gateway_name, jwt_algorithm):
         assert isinstance(self.middleware.provider, DefaultJWTProvider)
-        assert self.middleware.provider.default_api_name == api_name
+        assert self.middleware.provider.default_api_name == fake_gateway_name
         assert self.middleware.provider.algorithm == jwt_algorithm
         assert self.middleware.provider.allow_invalid_jwt_token is False
         assert isinstance(self.middleware.provider.public_key_provider, SettingsPublicKeyProvider)
@@ -106,7 +106,7 @@ class TestApiGatewayJWTMiddleware:
 
         assert not hasattr(mock_request, "jwt")
 
-    def test_call(self, settings, public_key, apigw_request, mock_response, api_name):
+    def test_call(self, settings, public_key, apigw_request, mock_response, fake_gateway_name):
         assert self.middleware.JWT_KEY_NAME in apigw_request.META
 
         settings.APIGW_PUBLIC_KEY = public_key
@@ -114,7 +114,7 @@ class TestApiGatewayJWTMiddleware:
         self.middleware(apigw_request)
         mock_response.assert_called_with(apigw_request)
 
-        assert apigw_request.jwt.api_name == api_name
+        assert apigw_request.jwt.api_name == fake_gateway_name
         assert apigw_request._dont_enforce_csrf_checks
 
     def test_jwt_invalid(self, settings, public_key, invalid_apigw_request, mock_response):

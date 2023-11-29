@@ -54,10 +54,10 @@ class ApiGatewayJWTMiddleware:
         )
         self.provider = jwt_provider_cls(
             jwt_key_name=self.JWT_KEY_NAME,
-            default_api_name=configuration.api_name,
+            default_api_name=configuration.gateway_name,
             algorithm=getattr(settings, "APIGW_JWT_ALGORITHM", self.ALGORITHM),
             allow_invalid_jwt_token=getattr(settings, "APIGW_ALLOW_INVALID_JWT_TOKEN", False),
-            public_key_provider=self.PUBLIC_KEY_PROVIDER_CLS(default_api_name=configuration.api_name),
+            public_key_provider=self.PUBLIC_KEY_PROVIDER_CLS(default_api_name=configuration.gateway_name),
         )
 
     def __call__(self, request):

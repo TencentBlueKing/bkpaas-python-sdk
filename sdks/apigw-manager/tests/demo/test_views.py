@@ -32,11 +32,11 @@ def user_object(jwt_user, faker):
     return user_model.objects.create_user(username=jwt_user["username"], password=faker.color_name())
 
 
-def test_jwt_info(csrf_client: Client, jwt_headers: dict, jwt_decoded: dict, api_name):
+def test_jwt_info(csrf_client: Client, jwt_headers: dict, jwt_decoded: dict, fake_gateway_name):
     response = csrf_client.post("/test/jwt", **jwt_headers)
     result = response.json()
 
-    assert result["api_name"] == api_name
+    assert result["api_name"] == fake_gateway_name
     assert result["payload"] == jwt_decoded
 
 

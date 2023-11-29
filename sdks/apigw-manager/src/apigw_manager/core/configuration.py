@@ -31,6 +31,7 @@ class Configuration(object):
         self.bk_app_code = bk_app_code
         self.bk_app_secret = bk_app_secret
         self.api_name = api_name
+        self.gateway_name = api_name
         self.api_cache = api_cache
         self.access_token = access_token
         self.jwt_provider_cls = jwt_provider_cls

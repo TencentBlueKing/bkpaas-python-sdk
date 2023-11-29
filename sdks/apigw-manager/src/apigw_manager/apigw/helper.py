@@ -128,7 +128,7 @@ class BasePublicKeyManager(ABC):
 
     def current(self):
         configuration = get_configuration()
-        return self.get(configuration.api_name)
+        return self.get(configuration.gateway_name)
 
 
 class PublicKeyManager(ContextManager, BasePublicKeyManager):

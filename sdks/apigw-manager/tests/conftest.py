@@ -24,10 +24,10 @@ def _mark_django_db(db):
 
 
 @pytest.fixture()
-def api_name(settings, faker):
-    api_name = faker.pystr()
-    settings.BK_APIGW_NAME = api_name
-    return api_name
+def fake_gateway_name(settings, faker):
+    gateway_name = faker.pystr()
+    settings.BK_APIGW_NAME = gateway_name
+    return gateway_name
 
 
 @pytest.fixture()
@@ -65,11 +65,11 @@ PUH+Lqyga3emP/v1AgMBAAE=
 
 
 @pytest.fixture()
-def public_key_context(api_name, public_key):
+def public_key_context(fake_gateway_name, public_key):
     from apigw_manager.apigw.models import Context
 
     context, _ = Context.objects.update_or_create(
-        key=api_name,
+        key=fake_gateway_name,
         scope="public_key",
         defaults={
             "value": public_key,
@@ -118,8 +118,8 @@ def jwt_decoded(jwt_app, jwt_user):
 
 
 @pytest.fixture()
-def jwt_header(api_name, jwt_algorithm):
-    return {"alg": jwt_algorithm, "kid": api_name, "typ": "JWT"}
+def jwt_header(fake_gateway_name, jwt_algorithm):
+    return {"alg": jwt_algorithm, "kid": fake_gateway_name, "typ": "JWT"}
 
 
 @pytest.fixture()

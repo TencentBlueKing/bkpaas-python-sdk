@@ -28,4 +28,4 @@ class Command(SyncCommand):
             print("warning!! Add related apps error, %s" % str(err))
             return
 
-        print("Add related apps for gateway %s: %s" % (manager.config.api_name, ", ".join(definition)))
+        print("Add related apps for gateway %s: %s" % (manager.config.gateway_name, ", ".join(definition)))

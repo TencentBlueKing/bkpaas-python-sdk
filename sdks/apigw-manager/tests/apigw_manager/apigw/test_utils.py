@@ -26,12 +26,12 @@ class TestGetConfiguration:
 
         assert configuration.bk_app_code == settings.BK_APP_CODE
 
-    def test_api_name(self, settings, faker):
+    def test_gateway_name(self, settings, faker):
         settings.BK_APIGW_NAME = faker.color()
 
         configuration = get_configuration()
 
-        assert configuration.api_name == settings.BK_APIGW_NAME
+        assert configuration.gateway_name == settings.BK_APIGW_NAME
 
     def test_app_secret(self, settings, faker):
         settings.BK_APP_SECRET = faker.color()

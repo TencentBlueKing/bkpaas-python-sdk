@@ -101,13 +101,13 @@ class Command(DefinitionCommand):
 
         releaser = self.Releaser(configuration)
         manager = self.ResourceSignatureManager()
-        api_name = configuration.api_name
+        gateway_name = configuration.gateway_name
 
         # 如何判断是否需要创建新版本？
         # 1. 使用配置中的版本号与线上最新版本进行比较，如果版本 public 部分不一致，则需要创建新版本
         # 2. 如果配置中的版本号与线上最新版本 public 部分一致，为了避免开发者忘记更新版本号的情况，获取同步结果进行判断：
         #    - 如果有资源变更，则需要创建新版本
-        if self._should_create_resource_version(manager, api_name, fixed_defined_version, latest_version):
+        if self._should_create_resource_version(manager, gateway_name, fixed_defined_version, latest_version):
             exists = self._check_resource_version_exists(fetcher, fixed_defined_version)
             resource_version = self._create_resource_version(
                 releaser=releaser,
@@ -115,7 +115,7 @@ class Command(DefinitionCommand):
                 title=title or definition.get("title", ""),
                 comment=comment or definition.get("comment", ""),
             )
-            manager.reset_dirty(api_name)
+            manager.reset_dirty(gateway_name)
 
         else:
             generate_sdks = False
