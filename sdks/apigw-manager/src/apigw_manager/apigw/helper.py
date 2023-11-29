@@ -52,7 +52,6 @@ class Definition:
     def _check_spec_version(self, definition):
         spec_version = definition.get("spec_version")
         if not spec_version:
-            logger.warning("please add `spec_version: 1` to definition.yaml")
             return
 
         if str(spec_version) not in self.valid_spec_versions:
