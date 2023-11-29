@@ -36,7 +36,7 @@ class TestAPIGatewayClient:
         assert client._endpoint == endpoint + "/{stage_name}"
 
     @pytest.mark.parametrize(
-        "endpoint, stage, expected",
+        ("endpoint", "stage", "expected"),
         [
             (None, None, "/prod"),
             ("http://bkapi.example.com", None, "http://bkapi.example.com/prod"),
@@ -52,7 +52,7 @@ class TestAPIGatewayClient:
         assert client._get_endpoint() == expected
 
     @pytest.mark.parametrize(
-        "stage, mappings, expected",
+        ("stage", "mappings", "expected"),
         [
             (None, None, "prod"),
             (None, {}, "prod"),

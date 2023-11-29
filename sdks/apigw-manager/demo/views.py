@@ -14,7 +14,7 @@ from django.http import JsonResponse
 
 def jwt_info(request):
     data = {}
-    jwt = getattr(request, 'jwt', None)
+    jwt = getattr(request, "jwt", None)
     if jwt:
         data.update(
             {
@@ -28,7 +28,7 @@ def jwt_info(request):
 
 def jwt_app(request):
     data = {}
-    app = getattr(request, 'app', None)
+    app = getattr(request, "app", None)
     if app:
         data.update(
             {
@@ -42,7 +42,7 @@ def jwt_app(request):
 
 def jwt_user(request):
     data = {}
-    user = getattr(request, 'user', None)
+    user = getattr(request, "user", None)
     if user:
         data.update(
             {

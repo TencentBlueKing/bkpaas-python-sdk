@@ -24,11 +24,10 @@ from apigw_manager.core.sync import Synchronizer
 
 
 class ApiCommand(BaseCommand):
-
     manager_class: typing.Callable
 
     def add_arguments(self, parser):
-        parser.add_argument("--api-name", help="api name")
+        parser.add_argument("--gateway-name", "--api-name", dest="api_name", help="gateway name")
         parser.add_argument("--host", help="apigateway host with stage of admin api `bk-apigateway`")
 
     def get_configuration(self, **kwargs):
@@ -39,7 +38,7 @@ class ApiCommand(BaseCommand):
         manager = self.manager_class(configuration)
 
         try:
-            self.do(manager=manager, configuration=configuration, *args, **kwargs)
+            self.do(manager, configuration, *args, **kwargs)
         except ApiResponseError as err:
             self.stderr.write(str(err))
             sys.exit(1)
@@ -89,12 +88,12 @@ class DefinitionCommand(ApiCommand):
         definition = self.get_definition(**kwargs)
 
         try:
-            self.do(manager=manager, definition=definition, configuration=configuration, *args, **kwargs)
+            self.do(manager, definition, configuration, *args, **kwargs)
         except ApiResponseError as err:
             self.stderr.write(str(err))
             sys.exit(1)
 
-    def do(self, manager, definition, *args, **kwargs):
+    def do(self, manager, definition, configuration, *args, **kwargs):
         pass
 
 

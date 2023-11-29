@@ -15,7 +15,7 @@ from bkapi_client_core.base import Operation, OperationGroup, OperationResource
 
 class TestOperationResource:
     @pytest.fixture(autouse=True)
-    def setup(self, mocker):
+    def _setup(self, mocker):
         self.manager = mocker.MagicMock()
         self.resource = OperationResource()
 
@@ -47,12 +47,12 @@ class TestOperationResource:
 
 class TestOperation:
     @pytest.fixture(autouse=True)
-    def setup(self, mocker):
+    def _setup(self, mocker):
         self.manager = mocker.MagicMock()
         self.operation = Operation()
 
     def test_call_without_bind(self):
-        with pytest.raises(ValueError):  # type: ignore
+        with pytest.raises(ValueError):  # noqa
             self.operation()
 
     def test_call_with_bind(self, faker):
@@ -65,7 +65,7 @@ class TestOperation:
         assert self.operation() is result
 
     @pytest.mark.parametrize(
-        "init_args,call_args,call_data,excepted",
+        ("init_args", "call_args", "call_data", "excepted"),
         [
             (
                 {"method": "POST", "path": "/"},
@@ -103,7 +103,7 @@ class TestOperation:
 
 class TestOperationGroup:
     @pytest.fixture(autouse=True)
-    def setup(self, mocker, faker):
+    def _setup(self, mocker, faker):
         self.manager = mocker.MagicMock()
         self.group = OperationGroup(name=faker.pystr(), manager=self.manager)
 
@@ -126,16 +126,16 @@ class TestOperationGroup:
 
         self.group.register(name, Operation())
 
-        with pytest.raises(ValueError):  # type: ignore
+        with pytest.raises(ValueError):  # noqa
             self.group.register(name, Operation())
 
     def test_register_with_empty_name(self):
-        with pytest.raises(ValueError):  # type: ignore
+        with pytest.raises(ValueError):  # noqa
             self.group.register("", Operation())
 
     def test_handle_without_bind(self, mocker):
         group = OperationGroup()
-        with pytest.raises(ValueError):  # type: ignore
+        with pytest.raises(ValueError):  # noqa
             group.get_client()
 
     def test_handle_with_bind(self, mocker, faker):
@@ -155,5 +155,5 @@ class TestOperationGroup:
         assert self.group.test is operation
 
     def test_non_registered_operation(self):
-        with pytest.raises(AttributeError):  # type: ignore
-            self.group.test
+        with pytest.raises(AttributeError):
+            _ = self.group.test

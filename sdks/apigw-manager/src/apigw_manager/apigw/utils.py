@@ -16,7 +16,6 @@ from bkapi_client_core.config import SettingKeys, settings
 from packaging.version import Version as _Version
 
 from apigw_manager.core import configuration
-from bkapi_client_core.config import SettingKeys, settings
 
 
 def get_configuration(**kwargs):
@@ -103,7 +102,7 @@ class ZipArchiveFile:
         path = path if path.endswith(os.path.sep) else path + os.path.sep
 
         path_to_name = {}
-        for root, dirs, files in os.walk(path):
+        for root, _, files in os.walk(path):
             for name in files:
                 file_path = os.path.join(root, name)
                 path_to_name[file_path] = file_path[len(path) :]

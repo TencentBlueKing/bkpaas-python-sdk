@@ -19,7 +19,7 @@ class TestESBClient:
         assert client.name == "esb"
 
     @pytest.mark.parametrize(
-        "use_test_env, expected",
+        ("use_test_env", "expected"),
         [
             (True, {"X-Use-Test-Env": "true"}),
             (False, {}),
@@ -33,7 +33,7 @@ class TestESBClient:
         assert client.session.headers == expected
 
     @pytest.mark.parametrize(
-        "language, expected",
+        ("language", "expected"),
         [
             ("en", {"Blueking-Language": "en", "Accept-Language": "en"}),
             ("", {}),
@@ -48,7 +48,7 @@ class TestESBClient:
         assert client.session.headers == expected
 
     @pytest.mark.parametrize(
-        "bk_api_ver, expected",
+        ("bk_api_ver", "expected"),
         [
             ("v2", {"bk_api_ver": "/v2"}),
             ("", {"bk_api_ver": ""}),
@@ -61,7 +61,7 @@ class TestESBClient:
         assert client.session.path_params == expected
 
     @pytest.mark.parametrize(
-        "headers, key, value, expected",
+        ("headers", "key", "value", "expected"),
         [
             ({}, "x-color", "red", {"x-color": "red"}),
             ({}, "x-color", "", {"x-color": ""}),
@@ -76,7 +76,7 @@ class TestESBClient:
         assert client.session.headers == expected
 
     @pytest.mark.parametrize(
-        "headers, key, expected",
+        ("headers", "key", "expected"),
         [
             ({"x-color": "red"}, "x-token", {"x-color": "red"}),
             ({"x-color": "red"}, "x-color", {}),

@@ -19,7 +19,6 @@ def command():
 
 
 def test_do(mock_manager, command, configuration):
-
     command.do(
         mock_manager,
         [

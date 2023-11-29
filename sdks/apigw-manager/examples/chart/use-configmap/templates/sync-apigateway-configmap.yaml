@@ -1,0 +1,15 @@
+{{- if .Values.apigatewaySync.enabled }}
+{{- $files := .Files }}
+{{- $name_prefix := include "bk-demo.name-prefix" . }}
+{{- $labels := include "bk-demo.labels" . }}
+{{- range $item := .Values.apigatewaySync.configMapMounts }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $name_prefix }}-{{ $item.name }}
+  labels: {{ $labels | nindent 4 }}
+data:
+{{ ($files.Glob $item.filePath).AsConfig | indent 2 }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,39 @@
+{{- if .Values.apigatewaySync.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "bk-demo.job-name" (list . "sync-apigateway") }}
+  labels: {{ include "bk-demo.labels" . | nindent 4 }}
+spec:
+  backoffLimit: 10
+  parallelism: 1
+  template:
+    metadata:
+      labels: {{ include "bk-demo.selector-labels" . | nindent 8 }}
+        app.kubernetes.io/component: "sync-apigateway"
+    spec:
+      containers:
+      - command:
+        - bash
+        args:
+        - bin/sync-apigateway.sh
+        image: "{{ .Values.apigatewaySync.image }}"
+        imagePullPolicy: "Always"
+        name: sync-apigateway
+        env:
+        {{- toYaml .Values.apigatewaySync.extraEnvVars | nindent 8 }}
+        volumeMounts: 
+        {{- range $item := .Values.apigatewaySync.configMapMounts }}
+        - mountPath: "{{ $item.mountPath }}"
+          name: "{{ $item.name }}"
+        {{- end }}
+      volumes: 
+      {{- $name_prefix := include "bk-demo.name-prefix" . }}
+      {{- range $item := .Values.apigatewaySync.configMapMounts }}
+      - name: "{{ $item.name }}"
+        configMap:
+          defaultMode: 420
+          name: "{{ $name_prefix }}-{{ $item.name }}"
+      {{- end }}
+      restartPolicy: Never
+{{- end }}

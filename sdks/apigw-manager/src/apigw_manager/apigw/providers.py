@@ -37,10 +37,10 @@ class PublicKeyProvider(metaclass=abc.ABCMeta):
     def __init__(self, default_api_name: str):
         self.default_api_name = default_api_name
 
-    @abc.abstractclassmethod
+    @abc.abstractmethod
     def provide(self, api_name: str, jwt_issuer: Optional[str] = None) -> Optional[str]:
         """
-        provide should return publick key base on api_name and jwt_issuer and
+        provide should return public key base on api_name and jwt_issuer and
         return None when process error
         """
 
@@ -119,7 +119,7 @@ class JWTProvider(metaclass=abc.ABCMeta):
         algorithm: str,
         allow_invalid_jwt_token: bool,
         public_key_provider: PublicKeyProvider,
-        **kwargs
+        **kwargs,
     ) -> None:
         self.jwt_key_name = jwt_key_name
         self.default_api_name = default_api_name
@@ -127,7 +127,7 @@ class JWTProvider(metaclass=abc.ABCMeta):
         self.allow_invalid_jwt_token = allow_invalid_jwt_token
         self.public_key_provider = public_key_provider
 
-    @abc.abstractclassmethod
+    @abc.abstractmethod
     def provide(self, request: HttpRequest) -> Optional[DecodedJWT]:
         """
         provide should extract jwt from rquest and return a DecodedJWT

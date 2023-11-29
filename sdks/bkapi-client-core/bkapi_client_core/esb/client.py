@@ -8,10 +8,10 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
-from typing import Optional
+from typing import Optional  # noqa
 
 from bkapi_client_core.client import BaseClient
-from bkapi_client_core.session import Session
+from bkapi_client_core.session import Session  # noqa
 
 
 class ESBClient(BaseClient):

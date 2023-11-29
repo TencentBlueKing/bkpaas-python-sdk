@@ -46,3 +46,45 @@ repos:
         pass_filenames: false
         entry: bash -c "cd sdks/paas-service && poetry run mypy . --config-file=./pyproject.toml"
         files: '^sdks/paas-service/'
+  # sdk bkapi-client-core
+  - repo: local
+    hooks:
+      - id: format
+        name: run ruff-formatter for "bkapi-client-core"
+        language: python
+        types: [python]
+        entry: bash -c 'cd sdks/bkapi-client-core/ && ruff format --config=pyproject.toml --force-exclude .'
+        files: sdks/bkapi-client-core/
+      - id: ruff
+        name: run ruff for "bkapi-client-core"
+        language: python
+        types: [python]
+        entry: bash -c 'cd sdks/bkapi-client-core/ && ruff --config=pyproject.toml --force-exclude --fix .'
+        files: sdks/bkapi-client-core/
+      - id: mypy
+        name: run mypy for "bkapi-client-core"
+        language: python
+        types: [python]
+        entry: mypy --config-file=sdks/bkapi-client-core/pyproject.toml
+        files: sdks/bkapi-client-core/
+  # sdk apigw-manager
+  - repo: local
+    hooks:
+      - id: format
+        name: run ruff-formatter for "apigw-manager"
+        language: python
+        types: [python]
+        entry: bash -c 'cd sdks/apigw-manager/ && ruff format --config=pyproject.toml --force-exclude .'
+        files: sdks/apigw-manager/
+      - id: ruff
+        name: run ruff for "apigw-manager"
+        language: python
+        types: [python]
+        entry: bash -c 'cd sdks/apigw-manager/ && ruff --config=pyproject.toml --force-exclude --fix .'
+        files: sdks/apigw-manager/
+      - id: mypy
+        name: run mypy for "apigw-manager"
+        language: python
+        types: [python]
+        entry: mypy --config-file=sdks/apigw-manager/pyproject.toml
+        files: sdks/apigw-manager/

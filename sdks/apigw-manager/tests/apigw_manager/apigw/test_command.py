@@ -15,7 +15,7 @@ from apigw_manager.apigw import command
 
 class TestApiCommand:
     @pytest.fixture(autouse=True)
-    def setup_command(self):
+    def _setup_command(self):
         self.command = command.ApiCommand()
 
     def test_get_configuration(self, configuration):
@@ -35,7 +35,7 @@ class TestApiCommand:
 
 class TestDefinitionCommand:
     @pytest.fixture(autouse=True)
-    def setup_command(self):
+    def _setup_command(self):
         self.command = command.DefinitionCommand()
 
     def test_get_context(self):

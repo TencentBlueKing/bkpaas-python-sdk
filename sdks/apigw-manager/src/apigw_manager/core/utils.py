@@ -23,5 +23,4 @@ def itemgetter(*keys):
 
 def get_item(r, keys):
     """Get the value according to the keys"""
-    result = reduce(getitem, keys, r)  # type: dict
-    return result
+    return reduce(getitem, keys, r)

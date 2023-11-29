@@ -9,9 +9,9 @@
  * specific language governing permissions and limitations under the License.
 """
 import string
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional  # noqa
 
-from requests import Request
+from requests import Request  # noqa
 from requests import Session as RequestSession
 from requests.hooks import dispatch_hook
 from requests.models import RequestHooksMixin
@@ -100,7 +100,7 @@ class Session(RequestSession, RequestHooksMixin):
         url,  # type: str
         path_params=None,  # type: Optional[Dict[str, Any]]
         timeout=None,  # type: Optional[float]
-        **kwargs  # type: Any
+        **kwargs,  # type: Any
     ):
         render = _UrlRender(url, self.path_params)
         rendered_url = render.render(path_params)
@@ -138,14 +138,13 @@ class Session(RequestSession, RequestHooksMixin):
         request,  # type: Request
     ):
         request = self.dispatch_hook(HookEvent.REQUEST, request)
-        prepared_request = super(Session, self).prepare_request(request)
-        return prepared_request
+        return super(Session, self).prepare_request(request)
 
     def dispatch_hook(
         self,
         event,  # str
         data,  # Any
-        **extras  # type: Any
+        **extras,  # type: Any
     ):
         data = dispatch_hook(event, _SESSION_HOOKS, data, **extras)
         return dispatch_hook(event, self.hooks, data, **extras)

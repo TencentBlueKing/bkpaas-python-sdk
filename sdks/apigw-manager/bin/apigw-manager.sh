@@ -1,7 +1,6 @@
 #!/bin/bash
 
 bin_dir=$(dirname "$0")
-demo_dir=$(dirname "${bin_dir}")
-root_dir=$(dirname "${demo_dir}")
+root_dir=$(dirname "${bin_dir}")
 
 python "${root_dir}/manage.py" "$@"

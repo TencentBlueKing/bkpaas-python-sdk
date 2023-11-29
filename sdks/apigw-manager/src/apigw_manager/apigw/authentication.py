@@ -61,7 +61,6 @@ class ApiGatewayJWTMiddleware:
         )
 
     def __call__(self, request):
-
         jwt = self.provider.provide(request)
         if not jwt:
             return self.get_response(request)

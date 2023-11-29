@@ -10,13 +10,13 @@
 """
 
 from functools import partial
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional  # noqa
 
-from prometheus_client import REGISTRY, CollectorRegistry, Counter, Histogram
-from requests import Response
+from prometheus_client import REGISTRY, CollectorRegistry, Counter, Histogram  # noqa
+from requests import Response  # noqa
 
 from bkapi_client_core import session
-from bkapi_client_core.base import Operation
+from bkapi_client_core.base import Operation  # noqa
 from bkapi_client_core.config import HookEvent
 from bkapi_client_core.utils import allow_fail
 
@@ -72,7 +72,6 @@ class HookCollector:
         duration_buckets,  # type: List[float]
         bytes_buckets,  # type: List[float]
     ):
-
         self.metric_requests_duration_seconds = Histogram(
             "bkapi_requests_duration_seconds",
             "Histogram of requests duration by operation, method",
@@ -126,7 +125,7 @@ class HookCollector:
         self,
         response,  # type: Response
         bkapi_operation,  # type: Operation
-        **kwargs  # type: Any
+        **kwargs,  # type: Any
     ):
         name = str(bkapi_operation)
         method = response.request.method
@@ -205,7 +204,7 @@ def enable(
     """
     Enable bkapi prometheus collector
     """
-    global _GLOBAL_COLLECTOR
+    global _GLOBAL_COLLECTOR  # noqa
 
     if _GLOBAL_COLLECTOR:
         return False
@@ -218,3 +217,5 @@ def enable(
         bytes_buckets=bytes_buckets,
     )
     _GLOBAL_COLLECTOR.enable_hooks()
+
+    return True

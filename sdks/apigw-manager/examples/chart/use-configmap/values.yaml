@@ -1,0 +1,25 @@
+apigatewaySync:
+  enabled: true
+  image: "hub.bktencent.com/blueking/apigw-manager:latest"
+  configMapMounts:
+    - name: "sync-apigw-base"
+      filePath: "files/support-files/*"
+      mountPath: "/data/"
+    - name: "sync-apigw-bin"
+      filePath: "files/support-files/bin/*"
+      mountPath: "/data/bin/"
+    - name: "sync-apigw-apidocs-zh"
+      filePath: "files/support-files/apidocs/zh/*"
+      mountPath: "/data/apidocs/zh/"
+    - name: "sync-apigw-apidocs-en"
+      filePath: "files/support-files/apidocs/en/*"
+      mountPath: "/data/apidocs/en/"
+  extraEnvVars:
+    - name: BK_APIGW_NAME
+      value: "bk-demo"
+    - name: BK_APP_CODE
+      value: "bk-demo"
+    - name: BK_APP_SECRET
+      value: "secret"
+    - name: BK_API_URL_TMPL
+      value: "http://bkapi.example.com/api/{api_name}"

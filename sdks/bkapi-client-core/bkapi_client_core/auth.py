@@ -9,10 +9,10 @@
  * specific language governing permissions and limitations under the License.
 """
 import json
-from typing import Dict, Optional
+from typing import Dict, Optional  # noqa
 
 from requests.auth import AuthBase
-from requests.models import PreparedRequest
+from requests.models import PreparedRequest  # noqa
 
 
 class BKApiAuthorization(AuthBase):

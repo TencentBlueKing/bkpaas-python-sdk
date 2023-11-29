@@ -11,10 +11,10 @@
 import copy
 import json
 from functools import wraps
-from typing import Callable, Optional, Type, TypeVar
+from typing import Callable, Optional, Type, TypeVar  # noqa
 
 import curlify
-import requests
+import requests  # noqa
 
 
 def urljoin(base_url, path):

@@ -20,6 +20,10 @@ poetry.lock: pyproject.toml
 	poetry lock --no-update
 	touch poetry.lock
 
+.PHONY: requirements
+requirements: poetry.lock
+	poetry export -f requirements.txt --without-hashes --extras demo --with dev --output requirements_tox.txt
+
 README.rst: README.md
 	m2r --overwrite README.md
 

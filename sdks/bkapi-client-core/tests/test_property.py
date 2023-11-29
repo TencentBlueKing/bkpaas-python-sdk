@@ -60,8 +60,8 @@ class TestBindProperty:
         mock_cls.assert_not_called()
 
         # visit the attr
-        manager.attr
-        manager.attr
+        _ = manager.attr
+        _ = manager.attr
 
         mock_cls.assert_called_once_with(1, x=2)
         attr.bind.assert_called_once_with(mocker.ANY, manager)

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "apigw-manager"
-version = "2.0.2"
+version = "3.0.0"
 description = "The SDK for managing blueking gateway resource."
 readme = "README.md"
 authors = ["blueking <blueking@tencent.com>"]
@@ -20,8 +20,8 @@ setuptools = ">=21.0.0"
 urllib3 = ">=1.25.3"
 future = "0.18.2"
 pyyaml = ">=5.4.1"
+bkapi-client-core = ">=1.2.0"
 bkapi-bk-apigateway = "^1.0.11"
-bkapi-client-core = ">=1.1.3"
 pyjwt = {version = ">=1.6.4", optional = true}
 django-environ = {version = ">=0.8.1", optional = true}
 Django = {version = ">=1.11.1", optional = true}
@@ -37,30 +37,135 @@ demo = ["django-environ", "django", "PyMySQL", "pyjwt"]
 kubernetes = ["kubernetes"]
 
 [tool.poetry.dev-dependencies]
+pytest = "^7.0.1"
+pytest-cov = "^4.0.0"
+pytest-mock = "^3.6.1"
+pytest-django = "^4.5.0"
+pytest-pretty = {version = "^1.1.0", python = "~3.7.0"}
+Faker = "14.2.1"
+ruff = {version = "^0.1.3", python = "~3.7.0"}
+mypy = "*"
+pre-commit = "^2.17.0"
 m2r = "^0.2.1"
-pytest = "^6.2.2"
-pytest-cov = ">=2.8.1"
-black = "^20.8b1"
-isort = "^5.8.0"
-autoflake = "^1.4"
-pre-commit = "^2.11.1"
-mypy = "^0.812"
-flake8 = "^3.9.0"
-python-dateutil = "2.8.1,<3.0.0"
-Faker = "^6.6.3"
-pytest-mock = "^3.5.1"
 tox = "^3.23.0"
-ipython = "7.16.1"
-jedi = "0.17.2"
-pytest-django = "^4.1.0"
-python_dateutil = ">=2.5.3"
+ipython = "^7"
 twine = "^3.4.1"
 django = ">=1.11.1"
 kubernetes = "^24.2.0"
-
-[tool.black]
-line-length = 119
+types-PyYAML = "6.0.12.9"
+types-PyMySQL = "1.1.0.1"
 
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+ignore_missing_imports = true
+follow_imports = "skip"
+no_implicit_optional = true
+show_error_codes = true
+strict_optional = true
+pretty = true
+
+[[tool.mypy.overrides]]
+module = [
+    "*.migrations.*",
+]
+ignore_errors = true
+
+[tool.pytest.ini_options]
+addopts = "-p no:pastebin -p no:nose -p no:doctest -p no:warnings"
+testpaths = ["tests"]
+
+[tool.ruff]
+# https://docs.astral.sh/ruff/rules/
+select = [
+    "E",
+    "F",
+    "W",
+    "I",
+    "C90",
+    "B",
+    "PIE",
+    "C4",
+    "PL",
+    "RET",
+    "N",
+    "PERF",
+    "G",
+    "TRY",
+    "SIM",
+    "PT",
+]
+
+# Disable E501 until this issue is fixed: https://github.com/astral-sh/ruff/issues/3825
+ignore = [
+    # https://beta.ruff.rs/docs/rules/assert-raises-exception/
+    "B017",
+    # https://beta.ruff.rs/docs/rules/raise-without-from-inside-except/
+    "B904",
+    # https://beta.ruff.rs/docs/rules/zip-without-explicit-strict/
+    "B905",
+    # https://beta.ruff.rs/docs/rules/line-too-long/
+    "E501",
+    # https://beta.ruff.rs/docs/rules/ambiguous-variable-name/
+    "E741",
+    # https://beta.ruff.rs/docs/rules/unused-variable/
+    "F841",
+    # https://beta.ruff.rs/docs/rules/error-suffix-on-exception-name/
+    "N818",
+    # https://beta.ruff.rs/docs/rules/try-except-in-loop/
+    "PERF203",
+    # https://beta.ruff.rs/docs/rules/too-many-arguments/
+    "PLR0913",
+    # https://beta.ruff.rs/docs/rules/raise-vanilla-args/
+    "TRY003",
+    # https://beta.ruff.rs/docs/rules/reraise-no-cause/
+    "TRY200",
+    # https://beta.ruff.rs/docs/rules/try-consider-else/
+    "TRY300",
+    # https://beta.ruff.rs/docs/rules/raise-within-try/
+    "TRY301",
+    # https://beta.ruff.rs/docs/rules/magic-value-comparison/
+    "PLR2004",
+    # https://beta.ruff.rs/docs/rules/suppressible-exception/
+    "SIM105",
+    # https://beta.ruff.rs/docs/rules/open-file-with-context-handler/
+    "SIM115",
+]
+
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    "*/migrations/*",
+]
+
+# Same as Black.
+line-length = 119
+
+[tool.ruff.mccabe]
+# Unlike Flake8, default to a complexity level of 10.
+max-complexity = 12
+
+[tool.ruff.isort]
+relative-imports-order = "closest-to-furthest"
+known-first-party = ["apigw_manager"]

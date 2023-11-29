@@ -27,9 +27,9 @@ def csrf_client(client: Client):
 
 @pytest.fixture(autouse=True)
 def user_object(jwt_user, faker):
-    User = get_user_model()
+    user_model = get_user_model()
 
-    return User.objects.create_user(username=jwt_user["username"], password=faker.color_name())
+    return user_model.objects.create_user(username=jwt_user["username"], password=faker.color_name())
 
 
 def test_jwt_info(csrf_client: Client, jwt_headers: dict, jwt_decoded: dict, api_name):

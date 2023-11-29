@@ -14,13 +14,13 @@ import requests
 from bkapi_client_core import utils
 
 
-@pytest.fixture
+@pytest.fixture()
 def fake_request():
     return requests.Request("GET", "https://example.com/get").prepare()
 
 
 @pytest.mark.parametrize(
-    "base_url, path, expected",
+    ("base_url", "path", "expected"),
     [
         (None, "/test/", "/test/"),
         ("", "/test/", "/test/"),
@@ -46,7 +46,7 @@ def test_to_curl(fake_request):
 
 class TestSensitiveCleaner:
     @pytest.mark.parametrize(
-        "data, expected",
+        ("data", "expected"),
         [
             (
                 {
@@ -82,7 +82,7 @@ class TestSensitiveCleaner:
 
 class TestWrappedRequest:
     @pytest.mark.parametrize(
-        "headers, expected",
+        ("headers", "expected"),
         [
             (
                 {},
@@ -113,6 +113,6 @@ class TestCurlRequest:
         fake_request.prepare_headers({"x-token": "test", "x-bkapi-authorization": '{"bk_app_secret": "bar"}'})
         result = utils.CurlRequest(fake_request).to_curl()
         assert result == (
-            "curl -X GET -H 'X-Bkapi-Authorization: {\"bk_app_secret\": \"***\"}' "
+            'curl -X GET -H \'X-Bkapi-Authorization: {"bk_app_secret": "***"}\' '
             "-H 'x-token: test' 'https://example.com/get?foo=bar'"
         )

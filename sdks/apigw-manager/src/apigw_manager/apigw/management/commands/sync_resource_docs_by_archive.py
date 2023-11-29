@@ -29,7 +29,7 @@ class Command(SyncCommand):
             help="do nothing when dir or archive file does not exist",
         )
 
-    def do(self, manager, definition, safe_mode, *args, **kwargs):
+    def do(self, manager, definition, *args, **kwargs):
         # 1. 文档为归档文件
         archivefile = definition.get("archivefile")
         if archivefile and os.path.isfile(archivefile):
@@ -40,7 +40,7 @@ class Command(SyncCommand):
         # 2. 指定文档目录，需归档后同步
         basedir = definition.get("basedir")
         if not basedir or not os.path.isdir(basedir):
-            if safe_mode:
+            if kwargs.get("safe_mode"):
                 return
 
             raise ValueError("the docs dir does not exist or is not a directory: %s" % basedir)

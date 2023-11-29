@@ -52,7 +52,7 @@ def test_do(mocker, configuration, command, manager, resource_signature_manager)
 
 
 @pytest.mark.parametrize(
-    "added, deleted, dirty",
+    ("added", "deleted", "dirty"),
     [
         (True, True, True),
         (True, False, True),

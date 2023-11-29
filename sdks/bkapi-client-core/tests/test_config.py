@@ -28,7 +28,7 @@ def django_settings(faker):
 
 class TestDefaultsSettings:
     @pytest.fixture(autouse=True)
-    def setup(self, env):
+    def _setup(self, env):
         self.settings = Settings()
 
     def test_set_defaults_with_position_arg(self):
@@ -42,7 +42,7 @@ class TestDefaultsSettings:
 
 class TestEnvSettings:
     @pytest.fixture(autouse=True)
-    def setup(self, env):
+    def _setup(self, env):
         self.settings = Settings(env=env)
 
     def test_get_no_exists_in_env(self):
@@ -87,7 +87,7 @@ class TestEnvSettings:
 
 class TestDjangoSettings(TestEnvSettings):
     @pytest.fixture(autouse=True)
-    def setup(self, env, django_settings):
+    def _setup(self, env, django_settings):
         self.settings = Settings(env=env, settings=django_settings)
 
     def test_get_no_exists_in_settings(self):

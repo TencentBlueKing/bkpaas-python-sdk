@@ -1,9 +1,18 @@
 ## Change logs
 
-### 2.0.2
-- 优化请求 bk-apigateway 接口失败时，打印的错误消息
+### 3.0.0
 - 添加指令 add_related_apps，支持为网关添加关联应用
 - definition.yaml 添加 spec_version 字段，指定配置文件版本号
+- Django Command 中，通过参数 --gateway-name 指定网关
+- 基础镜像 apigw-manager 中，调整指令名称
+  - sync-apigateway 改为 sync-apigateway.sh
+  - apigw-manager 改为 apigw-manager.sh
+  - call_command 改为 call_command_or_warning
+  - call_definition_command 改为 call_definition_command_or_warning
+  - must_call_definition_command 改为 call_definition_command_or_exit
+- 基础镜像 apigw-manager 中，sync-apigateway.sh 中去除指令 apply_apigw_permissions
+- 优化请求 bk-apigateway 接口失败时，打印的错误消息
+- 优化 README.md，提供 examples
 
 ### 2.0.1
 - 修复镜像 sync-apigateway 中，同步任务失败时，脚本退出码为 0 的问题

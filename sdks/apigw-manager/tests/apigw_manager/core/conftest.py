@@ -8,42 +8,42 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+import pytest
 from faker import Faker
-from pytest import fixture
 from pytest_mock import MockerFixture
 
 from apigw_manager.core import configuration
 
 
-@fixture()
+@pytest.fixture()
 def config():
     return configuration.Configuration()
 
 
-@fixture()
+@pytest.fixture()
 def bk_app_code(faker: Faker, config: configuration.Configuration):
     config.bk_app_code = faker.color
     return config.bk_app_code
 
 
-@fixture()
+@pytest.fixture()
 def bk_app_secret(faker: Faker, config: configuration.Configuration):
     config.bk_app_secret = faker.ssn
     return config.bk_app_secret
 
 
-@fixture()
+@pytest.fixture()
 def api_name(faker: Faker, config: configuration.Configuration):
     config.api_name = faker.color
     return config.api_name
 
 
-@fixture()
+@pytest.fixture()
 def api_cache(mocker: MockerFixture, config: configuration.Configuration):
     config.api_cache = mocker.MagicMock()
     return config.api_cache
 
 
-@fixture()
+@pytest.fixture()
 def api_instance(mocker: MockerFixture, config: configuration.Configuration):
     return mocker.MagicMock()

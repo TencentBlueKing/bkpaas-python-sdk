@@ -10,15 +10,15 @@
 """
 import json
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional  # noqa
 
-from requests import Response
+from requests import Response  # noqa
 from requests.exceptions import HTTPError, RequestException
 from requests.sessions import merge_setting
 from requests.structures import CaseInsensitiveDict
 
 from bkapi_client_core.auth import BKApiAuthorization
-from bkapi_client_core.base import Operation
+from bkapi_client_core.base import Operation  # noqa
 from bkapi_client_core.config import HookEvent
 from bkapi_client_core.exceptions import (
     APIGatewayResponseError,
@@ -47,7 +47,7 @@ class RequestContextBuilder(object):
         endpoint,  # type: str
         data=None,  # type: Any
         path="",  # type: str
-        **request_context  # type: Dict[str, Any]
+        **request_context,  # type: Dict[str, Any]
     ):
         # type: (...) -> Dict[str, Any]
         self.build_url(request_context, endpoint, path)

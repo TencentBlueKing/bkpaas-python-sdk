@@ -48,7 +48,7 @@ class TestGetConfiguration:
         assert configuration.jwt_provider_cls == settings.BK_APIGW_JWT_PROVIDER_CLS
 
     @pytest.mark.parametrize(
-        "kwargs, expected",
+        ("kwargs", "expected"),
         [
             (
                 {},
@@ -73,7 +73,7 @@ class TestGetConfiguration:
         assert configuration.host == expected
 
     @pytest.mark.parametrize(
-        "fake_settings, expected",
+        ("fake_settings", "expected"),
         [
             (
                 {},

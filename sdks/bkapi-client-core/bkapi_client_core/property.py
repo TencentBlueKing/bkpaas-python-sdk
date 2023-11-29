@@ -8,7 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
-from typing import Any, Type, TypeVar
+from typing import Any, Type, TypeVar  # noqa
 
 from typing_extensions import Protocol
 
@@ -36,7 +36,7 @@ class BindProperty(object):
         self,
         cls,  # type: Type[BindableProtocol]
         *args,  # type: Any
-        **kwargs  # type: Any
+        **kwargs,  # type: Any
     ):
         self._name = ""
         self._property_id = "_bind_property_id_%s" % id(self)
