@@ -44,20 +44,20 @@ definition_file="/data/definition.yaml"
 resources_file="/data/resources.yaml"
 
 title "begin to db migrate"
-call_command migrate apigw
+call_command_or_warning migrate apigw
 
 title "syncing apigateway"
-must_call_definition_command sync_apigw_config "${definition_file}" --gateway-name=${gateway_name}
-must_call_definition_command sync_apigw_stage "${definition_file}" --gateway-name=${gateway_name}
-must_call_definition_command sync_apigw_resources "${resources_file}" --gateway-name=${gateway_name} --delete
-must_call_definition_command sync_resource_docs_by_archive "${definition_file}" --gateway-name=${gateway_name} --safe-mode
-must_call_definition_command grant_apigw_permissions "${definition_file}" --gateway-name=${gateway_name}
+call_definition_command_or_exit sync_apigw_config "${definition_file}" --gateway-name=${gateway_name}
+call_definition_command_or_exit sync_apigw_stage "${definition_file}" --gateway-name=${gateway_name}
+call_definition_command_or_exit sync_apigw_resources "${resources_file}" --gateway-name=${gateway_name} --delete
+call_definition_command_or_exit sync_resource_docs_by_archive "${definition_file}" --gateway-name=${gateway_name} --safe-mode
+call_definition_command_or_exit grant_apigw_permissions "${definition_file}" --gateway-name=${gateway_name}
 
 title "fetch apigateway public key"
 apigw-manager.sh fetch_apigw_public_key --gateway-name=${gateway_name} --print > "apigateway.pub"
 
 title "releasing"
-must_call_definition_command create_version_and_release_apigw "${definition_file}" --gateway-name=${gateway_name}
+call_definition_command_or_exit create_version_and_release_apigw "${definition_file}" --gateway-name=${gateway_name}
 
 log_info "done"
 ```
@@ -67,9 +67,9 @@ log_info "done"
 - `apigw-manager.sh`: 单纯执行一个 Django Command 指令，出错返回非 0 错误码，不退出脚本，源码 [apigw-manager.sh](../bin/apigw-manager.sh)
 
 functions.sh 中的 bash 函数：
-- `call_command`: 执行一个 Django Command 指令，出错返回非 0 错误码，不退出脚本
-- `call_definition_command`: 执行一个 Django Command 指令，出错时打印告警日志，不退出脚本
-- `must_call_definition_command`: 执行一个 Django Command 指令，出错退出脚本执行
+- `call_command_or_warning`: 执行一个 Django Command 指令，出错返回非 0 错误码，不退出脚本
+- `call_definition_command_or_warning`: 执行一个 Django Command 指令，出错时打印告警日志，不退出脚本
+- `call_definition_command_or_exit`: 执行一个 Django Command 指令，出错退出脚本执行
 - `title`: 打印标题
 - `log_info`: 打印 info 日志
 - `log_warn`: 打印 warning 日志
@@ -256,13 +256,13 @@ docker run --rm \
 ### 支持同步指令
 
 ```bash
-must_call_definition_command add_related_apps "${definition_file}" --gateway-name=${gateway_name}  # 可选，为网关添加关联应用，关联应用可以通过网关 bk-apigateway 提供的接口管理网关数据
-must_call_definition_command apply_apigw_permissions "${definition_file}" --gateway-name=${gateway_name}  # 可选，申请网关权限
-must_call_definition_command create_version_and_release_apigw "${definition_file}" --gateway-name=${gateway_name}  # 创建资源版本并发布；指定参数 --generate-sdks 时，会同时生成资源版本对应的网关 SDK
+call_definition_command_or_exit add_related_apps "${definition_file}" --gateway-name=${gateway_name}  # 可选，为网关添加关联应用，关联应用可以通过网关 bk-apigateway 提供的接口管理网关数据
+call_definition_command_or_exit apply_apigw_permissions "${definition_file}" --gateway-name=${gateway_name}  # 可选，申请网关权限
+call_definition_command_or_exit create_version_and_release_apigw "${definition_file}" --gateway-name=${gateway_name}  # 创建资源版本并发布；指定参数 --generate-sdks 时，会同时生成资源版本对应的网关 SDK
 apigw-manager.sh fetch_apigw_public_key --gateway-name=${gateway_name} --print > "apigateway.pub"  # 获取网关公钥，存放到文件 apigateway.pub
-must_call_definition_command grant_apigw_permissions "${definition_file}" --gateway-name=${gateway_name}  # 可选，为应用主动授权
-must_call_definition_command sync_apigw_config "${definition_file}" --gateway-name=${gateway_name}  # 同步网关基本信息
-must_call_definition_command sync_apigw_resources "${resources_file}" --gateway-name=${gateway_name} --delete  # 同步网关资源；--delete 将删除网关中未在 resources.yaml 存在的资源
-must_call_definition_command sync_apigw_stage "${definition_file}" --gateway-name=${gateway_name}  # 同步网关环境信息
-must_call_definition_command sync_resource_docs_by_archive "${definition_file}" --gateway-name=${gateway_name} --safe-mode  # 可选，同步资源文档
+call_definition_command_or_exit grant_apigw_permissions "${definition_file}" --gateway-name=${gateway_name}  # 可选，为应用主动授权
+call_definition_command_or_exit sync_apigw_config "${definition_file}" --gateway-name=${gateway_name}  # 同步网关基本信息
+call_definition_command_or_exit sync_apigw_resources "${resources_file}" --gateway-name=${gateway_name} --delete  # 同步网关资源；--delete 将删除网关中未在 resources.yaml 存在的资源
+call_definition_command_or_exit sync_apigw_stage "${definition_file}" --gateway-name=${gateway_name}  # 同步网关环境信息
+call_definition_command_or_exit sync_resource_docs_by_archive "${definition_file}" --gateway-name=${gateway_name} --safe-mode  # 可选，同步资源文档
 ```

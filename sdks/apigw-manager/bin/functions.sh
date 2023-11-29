@@ -23,7 +23,7 @@ title() {
     echo "====== $1 ======"
 }
 
-call_command() {
+call_command_or_warning() {
     command=$1
     shift
 
@@ -40,7 +40,22 @@ call_command() {
     return 0
 }
 
-call_definition_command() {
+call_command_or_exit() {
+    command=$1
+    shift
+
+    call_command_or_warning "${command}" "$@"
+    status=$?
+
+    if [ ${status} -ne 0 ]; then
+        log_error "Crash and exit during command ${command}"
+        exit ${status}
+    fi
+
+    return 0
+}
+
+call_definition_command_or_warning() {
     command=$1
     definition=$2
     shift 2
@@ -51,7 +66,7 @@ call_definition_command() {
         return 0
     fi
 
-    call_command "${command}" -f "${definition}" "$@"
+    call_command_or_warning "${command}" -f "${definition}" "$@"
     status=$?
     
     if [ ${status} -ne 0 ]; then
@@ -62,16 +77,16 @@ call_definition_command() {
     return 0
 }
 
-must_call_definition_command() {
+call_definition_command_or_exit() {
     command=$1
     definition=$2
     shift 2
 
-    call_definition_command "${command}" "${definition}" "$@"
+    call_definition_command_or_warning "${command}" "${definition}" "$@"
     status=$?
 
     if [ ${status} -ne 0 ]; then
-        log_error "Crash during command ${command}"
+        log_error "Crash and exit during command ${command}"
         exit ${status}
     fi
 
