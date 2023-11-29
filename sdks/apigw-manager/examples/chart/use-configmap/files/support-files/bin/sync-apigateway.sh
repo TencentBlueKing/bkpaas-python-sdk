@@ -21,7 +21,7 @@ call_definition_command_or_exit sync_resource_docs_by_archive "${definition_file
 call_definition_command_or_exit grant_apigw_permissions "${definition_file}" --gateway-name=${gateway_name}
 
 title "fetch apigateway public key"
-apigw-manager.sh fetch_apigw_public_key --gateway-name=${gateway_name} --print > "apigateway.pub"
+apigw-manager.sh fetch_apigw_public_key --gateway-name=${gateway_name} --print > "/tmp/apigateway.pub"
 
 title "releasing"
 call_definition_command_or_exit create_version_and_release_apigw "${definition_file}" --gateway-name=${gateway_name}
