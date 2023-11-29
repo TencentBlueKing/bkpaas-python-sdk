@@ -31,7 +31,7 @@ jobs:
         cache-dependency-path: 'sdks/apigw-manager/requirements_dev.txt'
 
     - name: Install dependencies
-      run: pip install -r sdks/apigw-manager/requirements_dev.txt --extras=demo -i https://pypi.org/simple/
+      run: pip install -r sdks/apigw-manager/requirements_dev.txt -i https://pypi.org/simple/
 
     - name: Test with tox
       run: tox
