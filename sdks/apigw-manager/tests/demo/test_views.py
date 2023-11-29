@@ -36,7 +36,7 @@ def test_jwt_info(csrf_client: Client, jwt_headers: dict, jwt_decoded: dict, fak
     response = csrf_client.post("/test/jwt", **jwt_headers)
     result = response.json()
 
-    assert result["api_name"] == fake_gateway_name
+    assert result["gateway_name"] == fake_gateway_name
     assert result["payload"] == jwt_decoded
 
 

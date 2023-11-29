@@ -108,6 +108,7 @@ class CachePublicKeyProvider(SettingsPublicKeyProvider):
 class DecodedJWT:
     def __init__(self, api_name: str, payload: dict) -> None:
         self.api_name = api_name
+        self.gateway_name = api_name
         self.payload = payload
 
 
@@ -173,8 +174,11 @@ class DefaultJWTProvider(JWTProvider):
 
 class DummyEnvPayloadJWTProvider(JWTProvider):
     def provide(self, request: HttpRequest) -> DecodedJWT:
+        gateway_name = os.getenv("APIGW_MANAGER_DUMMY_GATEWAY_NAME", "") or os.getenv(
+            "APIGW_MANAGER_DUMMY_API_NAME", ""
+        )
         return DecodedJWT(
-            api_name=os.getenv("APIGW_MANAGER_DUMMY_API_NAME", ""),
+            api_name=gateway_name,
             payload={
                 "app": {"app_code": os.getenv("APIGW_MANAGER_DUMMY_PAYLOAD_APP_CODE", "")},
                 "user": {"username": os.getenv("APIGW_MANAGER_DUMMY_PAYLOAD_USERNAME", "")},

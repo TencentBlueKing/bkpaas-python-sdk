@@ -114,6 +114,7 @@ class TestApiGatewayJWTMiddleware:
         self.middleware(apigw_request)
         mock_response.assert_called_with(apigw_request)
 
+        assert apigw_request.jwt.gateway_name == fake_gateway_name
         assert apigw_request.jwt.api_name == fake_gateway_name
         assert apigw_request._dont_enforce_csrf_checks
 

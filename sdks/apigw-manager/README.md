@@ -237,7 +237,7 @@ AUTHENTICATION_BACKENDS += [
 
 #### ApiGatewayJWTGenericMiddleware
 认证 JWT 信息，在 `request` 中注入 `jwt` 对象，有以下属性：
-- `api_name`：传入的网关名称；
+- `gateway_name`：传入的网关名称；
 
 #### ApiGatewayJWTAppMiddleware
 解析 JWT 中的应用信息，在 `request` 中注入 `app` 对象，有以下属性：
@@ -273,9 +273,9 @@ BK_APIGW_JWT_PROVIDER_CLS = "apigw-manager.apigw.providers.DummyEnvPayloadJWTPro
 同时提供以下环境变量
 
 ```
-APIGW_MANAGER_DUMMY_API_NAME # JWT 中的 API name
-APIGW_MANAGER_DUMMY_PAYLOAD_APP_CODE # JWT payload 中的 app_code
-APIGW_MANAGER_DUMMY_PAYLOAD_USERNAME # JWT payload 中的 username
+APIGW_MANAGER_DUMMY_GATEWAY_NAME      # JWT 中的网关名
+APIGW_MANAGER_DUMMY_PAYLOAD_APP_CODE  # JWT payload 中的 app_code
+APIGW_MANAGER_DUMMY_PAYLOAD_USERNAME  # JWT payload 中的 username
 ```
 
 ## FAQ
