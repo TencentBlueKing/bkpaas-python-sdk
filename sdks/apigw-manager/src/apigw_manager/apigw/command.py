@@ -93,7 +93,7 @@ class DefinitionCommand(ApiCommand):
             self.stderr.write(str(err))
             sys.exit(1)
 
-    def do(self, manager, definition, *args, **kwargs):
+    def do(self, manager, definition, configuration, *args, **kwargs):
         pass
 
 

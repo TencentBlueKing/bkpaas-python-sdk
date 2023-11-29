@@ -29,7 +29,7 @@ class Command(SyncCommand):
             help="strategy scope type",
         )
 
-    def do(self, manager, definition, scope_type, *args, **kwargs):
+    def do(self, manager, definition, *args, **kwargs):
         logger.warning(
             "sync_apigw_strategies is deprecated starting with version 2.0.0, "
             "it will be removed in version 3.0.0, and now it does nothing."
