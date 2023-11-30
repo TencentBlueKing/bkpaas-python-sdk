@@ -13,6 +13,19 @@
 - 基础镜像 apigw-manager 中，sync-apigateway.sh 中去除指令 apply_apigw_permissions
 - 优化请求 bk-apigateway 接口失败时，打印的错误消息
 - 优化 README.md，提供 examples
+- 以下函数中的参数名 api_name 改为 gateway_name
+  - ApiGatewayJWTUserMiddleware.get_user
+  - UserModelBackend.authenticate
+  - PublicKeyProvider.provide
+  - SettingsPublicKeyProvider.provide
+  - CachePublicKeyProvider.provide
+- 以下函数中参数名 default_api_name 改为 default_gateway_name
+  - CachePublicKeyProvider.__init__
+  - DefaultJWTProvider.__init__
+  - DummyEnvPayloadJWTProvider.__init__
+  - JWTProvider.__init__
+  - PublicKeyProvider.__init__
+  - SettingsPublicKeyProvider.__init__
 
 ### 2.0.1
 - 修复镜像 sync-apigateway 中，同步任务失败时，脚本退出码为 0 的问题

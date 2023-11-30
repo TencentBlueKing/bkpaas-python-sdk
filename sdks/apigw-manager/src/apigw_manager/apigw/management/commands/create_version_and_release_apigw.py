@@ -59,9 +59,9 @@ class Command(DefinitionCommand):
 
         return defined_version
 
-    def _should_create_resource_version(self, manager, api_name, defined_version, latest_version):
+    def _should_create_resource_version(self, manager, gateway_name, defined_version, latest_version):
         # 版本一致，且没有变更
-        if latest_version and defined_version.public == latest_version.public and not manager.is_dirty(api_name):
+        if latest_version and defined_version.public == latest_version.public and not manager.is_dirty(gateway_name):
             return False
         return True
 

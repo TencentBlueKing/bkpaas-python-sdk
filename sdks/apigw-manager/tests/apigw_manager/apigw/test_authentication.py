@@ -62,7 +62,7 @@ def apigw_request(jwt_encoded, mock_request):
 @pytest.fixture()
 def jwt_request(fake_gateway_name, jwt_decoded, mock_request):
     mock_request.jwt = providers.DecodedJWT(
-        api_name=fake_gateway_name,
+        gateway_name=fake_gateway_name,
         payload=jwt_decoded,
     )
 
@@ -85,7 +85,7 @@ class TestApiGatewayJWTMiddleware:
 
     def test_default_config(self, fake_gateway_name, jwt_algorithm):
         assert isinstance(self.middleware.provider, DefaultJWTProvider)
-        assert self.middleware.provider.default_api_name == fake_gateway_name
+        assert self.middleware.provider.default_gateway_name == fake_gateway_name
         assert self.middleware.provider.algorithm == jwt_algorithm
         assert self.middleware.provider.allow_invalid_jwt_token is False
         assert isinstance(self.middleware.provider.public_key_provider, SettingsPublicKeyProvider)
@@ -245,11 +245,11 @@ class TestUserModelBackend:
         self.backend.user_maker = self.user_maker
 
     def test_authenticate_user(self, mock_request):
-        user = self.backend.authenticate(mock_request, api_name="test", bk_username="admin", verified=True)
+        user = self.backend.authenticate(mock_request, gateway_name="test", bk_username="admin", verified=True)
         assert not isinstance(user, AnonymousUser)
         self.user_maker.assert_called_with("admin")
 
     def test_authenticate_anonymou_user(self, mock_request):
-        user = self.backend.authenticate(mock_request, api_name="test", bk_username="admin", verified=False)
+        user = self.backend.authenticate(mock_request, gateway_name="test", bk_username="admin", verified=False)
         assert isinstance(user, AnonymousUser)
         self.user_maker.assert_not_called()

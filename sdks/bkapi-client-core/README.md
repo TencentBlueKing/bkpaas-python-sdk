@@ -105,17 +105,17 @@ with client:
 ## SDK 配置说明
 SDK 支持通过配置更改一些默认的行为，Django settings 配置优先级高于环境变量。
 
-| 变量名                               | 描述                                   | 类型   | 格式                              | 默认值                     | Django 配置 | 环境变量 | 别名              |
-| ------------------------------------ | -------------------------------------- | ------ | --------------------------------- | -------------------------- | ----------- | -------- | ----------------- |
-| BK_APP_CODE                          | 应用代号                               | string | `"my_app"`                        |                            | 支持        | 支持     | BKPAAS_APP_ID     |
-| BK_APP_SECRET                        | 应用密钥                               | string | `"my_secret"`                     |                            | 支持        | 支持     | BKPAAS_APP_SECRET |
-| DEFAULT_STAGE_MAPPINGS               | 指定对应网关的默认环境                 | dict   | `{"my_gateway": "prod"}`          |                            | 支持        |          |                   |
-| BK_API_CLIENT_ENABLE_SSL_VERIFY      | 是否开启 SSL 证书验证                  | bool   | `True`                            | `False`                    | 支持        |          |                   |
-| BK_API_AUTHORIZATION_COOKIES_MAPPING | 指定 Cookie 和认证参数的映射关系       | dict   | `{"key": "cookie"}`               | `{"bk_token": "bk_token"}` | 支持        |          |                   |
-| BK_API_URL_TMPL                      | 网关地址模板，支持 `{api_name}` 占位符 | string | `"http://{api_name}.example.com"` |                            | 支持        | 支持     |                   |
-| BK_COMPONENT_API_URL                 | 组件 API 网关地址                      | string | `"http://esb.example.com"`        |                            | 支持        | 支持     |                   |
-| DEFAULT_BK_API_VER                   | 默认组件版本号                         | string | `"v1"`                            | `"v2"`                     | 支持        | 支持     |                   |
-| BK_API_USE_TEST_ENV                  | 是否使用组件测试环境                   | bool   | `False`                           | `False`                    | 支持        |          |                   |
+| 变量名                               | 描述                                                     | 类型   | 格式                                                                 | 默认值                     | Django 配置 | 环境变量 | 别名              |
+| ------------------------------------ | -------------------------------------------------------- | ------ | -------------------------------------------------------------------- | -------------------------- | ----------- | -------- | ----------------- |
+| BK_APP_CODE                          | 应用代号                                                 | string | `"my_app"`                                                           |                            | 支持        | 支持     | BKPAAS_APP_ID     |
+| BK_APP_SECRET                        | 应用密钥                                                 | string | `"my_secret"`                                                        |                            | 支持        | 支持     | BKPAAS_APP_SECRET |
+| DEFAULT_STAGE_MAPPINGS               | 指定对应网关的默认环境                                   | dict   | `{"my_gateway": "prod"}`                                             |                            | 支持        |          |                   |
+| BK_API_CLIENT_ENABLE_SSL_VERIFY      | 是否开启 SSL 证书验证                                    | bool   | `True`                                                               | `False`                    | 支持        |          |                   |
+| BK_API_AUTHORIZATION_COOKIES_MAPPING | 指定 Cookie 和认证参数的映射关系                         | dict   | `{"key": "cookie"}`                                                  | `{"bk_token": "bk_token"}` | 支持        |          |                   |
+| BK_API_URL_TMPL                      | 网关地址模板，支持 `{gateway_name}`, `{api_name}` 占位符 | string | `http://{gateway_name}.example.com`, `http://{api_name}.example.com` |                            | 支持        | 支持     |                   |
+| BK_COMPONENT_API_URL                 | 组件 API 网关地址                                        | string | `"http://esb.example.com"`                                           |                            | 支持        | 支持     |                   |
+| DEFAULT_BK_API_VER                   | 默认组件版本号                                           | string | `"v1"`                                                               | `"v2"`                     | 支持        | 支持     |                   |
+| BK_API_USE_TEST_ENV                  | 是否使用组件测试环境                                     | bool   | `False`                                                              | `False`                    | 支持        |          |                   |
 
 
 ## 模型

@@ -73,17 +73,17 @@ class TestHandler:
         mock_get_from_cache = mocker.patch.object(Handler, "_get_from_cache", return_value=(False, None))
         mock_put_into_cache = mocker.patch.object(Handler, "_put_into_cache", return_value=None)
 
-        api_name = faker.pystr()
+        gateway_name = faker.pystr()
         kwargs = {
-            "api_name": api_name,
+            "gateway_name": gateway_name,
             "foo": "bar",
         }
 
         handler._call_with_cache(operation, **kwargs)
 
         cache_key = {
-            "api_name": api_name,
-            "kwargs": {"api_name": api_name, "foo": "bar"},
+            "gateway_name": gateway_name,
+            "kwargs": {"gateway_name": gateway_name, "foo": "bar"},
         }
         mock_get_from_cache.assert_called_once_with(operation_id, cache_key)
         mock_put_into_cache.assert_called_once_with(operation_id, cache_key, result)

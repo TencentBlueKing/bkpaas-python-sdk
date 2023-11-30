@@ -54,10 +54,10 @@ class ApiGatewayJWTMiddleware:
         )
         self.provider = jwt_provider_cls(
             jwt_key_name=self.JWT_KEY_NAME,
-            default_api_name=configuration.gateway_name,
+            default_gateway_name=configuration.gateway_name,
             algorithm=getattr(settings, "APIGW_JWT_ALGORITHM", self.ALGORITHM),
             allow_invalid_jwt_token=getattr(settings, "APIGW_ALLOW_INVALID_JWT_TOKEN", False),
-            public_key_provider=self.PUBLIC_KEY_PROVIDER_CLS(default_api_name=configuration.gateway_name),
+            public_key_provider=self.PUBLIC_KEY_PROVIDER_CLS(default_gateway_name=configuration.gateway_name),
         )
 
     def __call__(self, request):
@@ -111,12 +111,14 @@ class ApiGatewayJWTUserMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
-    def get_user(self, request, api_name=None, bk_username=None, verified=False, **credentials):
-        # 传递 api_name 参数的用途：
+    def get_user(self, request, gateway_name=None, bk_username=None, verified=False, **credentials):
+        # 传递 gateway_name 参数的用途：
         # 1. 来明确标识这个请求来自于网关
         # 2. 用户已经过认证，后端无需再认证
         # 3. 避免非预期调用激活对应后端使得用户认证被绕过
-        return auth.authenticate(request, api_name=api_name, bk_username=bk_username, verified=verified, **credentials)
+        return auth.authenticate(
+            request, gateway_name=gateway_name, bk_username=bk_username, verified=verified, **credentials
+        )
 
     def __call__(self, request):
         jwt_info = getattr(request, "jwt", None)
@@ -130,7 +132,7 @@ class ApiGatewayJWTUserMiddleware:
         jwt_user = (jwt_info.payload.get("user") or {}).copy()
         jwt_user.setdefault("bk_username", jwt_user.pop("username", None))
 
-        request.user = self.get_user(request, api_name=jwt_info.api_name, **jwt_user)
+        request.user = self.get_user(request, gateway_name=jwt_info.gateway_name, **jwt_user)
         return self.get_response(request)
 
 
@@ -152,7 +154,7 @@ class UserModelBackend(ModelBackend):
         user.username = bk_username  # type: ignore
         return user
 
-    def authenticate(self, request, api_name, bk_username, verified, **credentials):
+    def authenticate(self, request, gateway_name, bk_username, verified, **credentials):
         if not verified:
             return self.make_anonymous_user(bk_username=bk_username)
         return self.user_maker(bk_username)

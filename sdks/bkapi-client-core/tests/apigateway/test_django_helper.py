@@ -18,6 +18,7 @@ from bkapi_client_core.apigateway import django_helper
     [
         ("http://example.com", "http://", "http://example.com"),
         (None, "http://{api_name}.example.com", "http://{api_name}.example.com"),
+        (None, "http://{gateway_name}.example.com", "http://{gateway_name}.example.com"),
         (None, "http://{bkapi_api_name}.example.com", "http://{bkapi_api_name}.example.com"),
         (None, "http://{test}.example.com", "http://{test}.example.com"),
         (None, "", ""),

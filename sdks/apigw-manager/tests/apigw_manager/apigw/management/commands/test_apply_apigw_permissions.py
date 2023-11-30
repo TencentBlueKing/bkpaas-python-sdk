@@ -23,7 +23,7 @@ def test_do(mock_manager, command, configuration):
         mock_manager,
         [
             {"api_name": "test1"},
-            {"api_name": "test2"},
+            {"gateway_name": "test2"},
         ],
     )
 

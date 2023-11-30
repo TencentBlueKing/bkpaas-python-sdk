@@ -39,8 +39,8 @@ class TestSettingsPublicKeyProvider:
     def _setup_provider(self):
         self.provider = SettingsPublicKeyProvider("testing")
 
-    def test_default_api_name(self):
-        assert self.provider.default_api_name == "testing"
+    def test_default_gateway_name(self):
+        assert self.provider.default_gateway_name == "testing"
 
     def test_provide_public_key_not_set(self, settings, fake_gateway_name):
         assert not hasattr(settings, "APIGW_PUBLIC_KEY")
@@ -52,9 +52,9 @@ class TestSettingsPublicKeyProvider:
 
 
 class TestCachePublicKeyProvider:
-    def test_default_api_name(self):
+    def test_default_gateway_name(self):
         provider = CachePublicKeyProvider("testing")
-        assert provider.default_api_name == "testing"
+        assert provider.default_gateway_name == "testing"
 
     def test_provide_from_cache(self, fake_gateway_name, django_jwt_cache):
         jwt_issuer = "blueking"
@@ -129,5 +129,6 @@ class TestDefaultJWTProvider:
     def test_provide(self, provider, jwt_request, fake_gateway_name, jwt_decoded):
         decoded = provider.provide(jwt_request)
 
+        assert decoded.gateway_name == fake_gateway_name
         assert decoded.api_name == fake_gateway_name
         assert decoded.payload == jwt_decoded
