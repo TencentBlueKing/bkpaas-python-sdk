@@ -61,7 +61,7 @@ def test_do(mocker, configuration, command, manager, resource_signature_manager)
     ],
 )
 def test_update_signature(mocker, command, configuration, resource_signature_manager, added, deleted, dirty):
-    command.update_signature(configuration.gateway_name, {}, added, deleted)
+    command._update_signature(configuration.gateway_name, {}, added, deleted)
     resource_signature_manager.update_signature(configuration.gateway_name, mocker.ANY)
 
     if dirty:
