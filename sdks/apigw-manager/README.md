@@ -285,12 +285,12 @@ APIGW_MANAGER_DUMMY_PAYLOAD_USERNAME  # JWT payload 中的 username
 非 Django 项目，需要项目获取网关公钥，并解析请求头中的 X-Bkapi-JWT；获取网关公钥的方案请参考下文。
 
 解析 X-Bkapi-JWT 时，可根据 jwt header 中的 kid 获取当前网关名，例如：
-```json
+```
 {
     "iat": 1701399603,
     "typ": "JWT",
-    "kid": "my-gateway",  # 网关名称
-    "alg": "RS512"        # 加密算法
+    "kid": "my-gateway",   # 网关名称
+    "alg": "RS512"         # 加密算法
 }
 ```
 
@@ -327,7 +327,7 @@ python manage.py fetch_apigw_public_key
 python manage.py fetch_apigw_public_key --gateway-name my-gateway
 ```
 
-#### 2. 直接获取网关公钥，并配置到项目配置文件中
+#### 2. 直接获取网关公钥，配置到项目配置文件
 
 服务仅需接入一些固定的网关部署环境时，可在网关管理端，网关基本信息中查询网关公钥，并配置到项目配置文件。
 
@@ -337,11 +337,15 @@ python manage.py fetch_apigw_public_key --gateway-name my-gateway
 
 API 网关提供了公钥查询接口，后端服务可按需根据接口拉取网关公钥，接口信息如下：
 ```bash
-# 请将 bkapi.example.com 替换为网关 API 地址，将 gateway_name 替换为待查询公钥的网关名，并提供正确的蓝鲸应用账号
-curl -X GET 'https://bkapi.example.com/api/bk-apigateway/prod/api/v1/apis/{gateway_name}/public_key/' -H 'X-Bkapi-Authorization: {"bk_app_code": "my-app", "bk_app_secret": "secret"}'
+# 将 bkapi.example.com 替换为网关 API 地址，
+# 将 gateway_name 替换为待查询公钥的网关名，
+# 提供正确的蓝鲸应用账号
+curl -X GET 'https://bkapi.example.com/api/bk-apigateway/prod/api/v1/apis/{gateway_name}/public_key/' \
+  -H 'X-Bkapi-Authorization: {"bk_app_code": "my-app", "bk_app_secret": "secret"}'
 ```
 
 响应样例：
+
 ```json
 {
     "data": {
