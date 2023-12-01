@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bkapi-client-core"
-version = "1.2.0"
+version = "1.2.1"
 description = "A toolkit for buiding blueking API clients."
 readme = "README.md"
 authors = ["blueking <blueking@tencent.com>"]
@@ -184,7 +184,6 @@ python =
 
 [testenv]
 deps =
-  -r requirements_tox.txt
   requests2-20: requests==2.20
   requests2-26: requests==2.26
 commands =
