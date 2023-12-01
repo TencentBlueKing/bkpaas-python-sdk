@@ -8,10 +8,16 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+
 import pytest
 from django.core.cache import caches
 
-from apigw_manager.apigw.providers import CachePublicKeyProvider, DefaultJWTProvider, SettingsPublicKeyProvider
+from apigw_manager.apigw.providers import (
+    CachePublicKeyProvider,
+    DefaultJWTProvider,
+    DummyEnvPayloadJWTProvider,
+    SettingsPublicKeyProvider,
+)
 
 
 @pytest.fixture()
@@ -132,3 +138,47 @@ class TestDefaultJWTProvider:
         assert decoded.gateway_name == fake_gateway_name
         assert decoded.api_name == fake_gateway_name
         assert decoded.payload == jwt_decoded
+
+
+class TestDummyEnvPayloadJWTProvider:
+    @pytest.mark.parametrize(
+        ("envs", "expected"),
+        [
+            (
+                {
+                    "APIGW_MANAGER_DUMMY_GATEWAY_NAME": "my-gateway",
+                    "APIGW_MANAGER_DUMMY_PAYLOAD_APP_CODE": "my-app",
+                    "APIGW_MANAGER_DUMMY_PAYLOAD_USERNAME": "admin",
+                },
+                {
+                    "gateway_name": "my-gateway",
+                    "payload": {
+                        "app": {"app_code": "my-app", "verified": True},
+                        "user": {"username": "admin", "verified": True},
+                    },
+                },
+            ),
+            (
+                {
+                    "APIGW_MANAGER_DUMMY_GATEWAY_NAME": "my-gateway",
+                    "APIGW_MANAGER_DUMMY_PAYLOAD_APP_CODE": "",
+                    "APIGW_MANAGER_DUMMY_PAYLOAD_USERNAME": "",
+                },
+                {
+                    "gateway_name": "my-gateway",
+                    "payload": {
+                        "app": {"app_code": "", "verified": False},
+                        "user": {"username": "", "verified": False},
+                    },
+                },
+            ),
+        ],
+    )
+    def test_provide(self, monkeypatch, envs, expected):
+        for key, value in envs.items():
+            monkeypatch.setenv(key, value)
+
+        provider = DummyEnvPayloadJWTProvider("", "", "", False, SettingsPublicKeyProvider(""))
+        jwt = provider.provide(None)
+        assert jwt.gateway_name == expected["gateway_name"]
+        assert jwt.payload == expected["payload"]
