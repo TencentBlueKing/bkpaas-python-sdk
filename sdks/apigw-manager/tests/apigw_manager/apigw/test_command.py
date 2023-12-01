@@ -21,15 +21,15 @@ class TestApiCommand:
     def test_get_configuration(self, configuration):
         result = self.command.get_configuration()
 
-        assert configuration.api_name == result.api_name
+        assert configuration.gateway_name == result.gateway_name
         assert configuration.host == result.host
 
     def test_get_configuration_with_args(self, faker):
-        api_name = faker.color
+        gateway_name = faker.color
         host = faker.url()
-        result = self.command.get_configuration(api_name=api_name, host=host)
+        result = self.command.get_configuration(gateway_name=gateway_name, host=host)
 
-        assert api_name == result.api_name
+        assert gateway_name == result.gateway_name
         assert host.startswith(result.host)
 
 

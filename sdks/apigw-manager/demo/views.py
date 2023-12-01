@@ -18,7 +18,7 @@ def jwt_info(request):
     if jwt:
         data.update(
             {
-                "api_name": request.jwt.api_name,
+                "gateway_name": request.jwt.gateway_name,
                 "payload": request.jwt.payload,
             }
         )

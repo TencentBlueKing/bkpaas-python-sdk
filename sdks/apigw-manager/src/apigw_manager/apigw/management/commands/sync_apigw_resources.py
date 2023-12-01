@@ -30,15 +30,15 @@ class Command(SyncCommand):
             help="delete extraneous resources from existing resources",
         )
 
-    def update_signature(self, api_name, definition, added, deleted):
+    def _update_signature(self, gateway_name, definition, added, deleted):
         signature = hashlib.md5(json.dumps(definition, sort_keys=True).encode("utf-8")).hexdigest()
 
         manager = self.ResourceSignatureManager()
-        manager.update_signature(api_name, signature)
+        manager.update_signature(gateway_name, signature)
 
         # 管理端明确报告有资源的增删，可能有人工手动修改的原因，签名不一定能发现问题，所以需要显式标记
         if added > 0 or deleted > 0:
-            manager.mark_dirty(api_name)
+            manager.mark_dirty(gateway_name)
 
     def do(self, manager, definition, configuration, *args, **kwargs):
         result = manager.sync_resources_config(content=definition, delete=kwargs["delete"])
@@ -52,4 +52,4 @@ class Command(SyncCommand):
             % (added_count, updated_count, deleted_count)
         )
 
-        self.update_signature(configuration.api_name, definition, added_count, deleted_count)
+        self._update_signature(configuration.gateway_name, definition, added_count, deleted_count)

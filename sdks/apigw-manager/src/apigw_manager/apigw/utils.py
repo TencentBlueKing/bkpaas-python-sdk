@@ -22,7 +22,7 @@ def get_configuration(**kwargs):
     """Generate management configuration according to the settings"""
 
     settings_mappings = [
-        ("BK_APIGW_NAME", "api_name"),
+        ("BK_APIGW_NAME", "gateway_name"),
         ("BK_APP_CODE", "bk_app_code"),
         ("BK_APP_SECRET", "bk_app_secret"),
         ("BK_APIGW_JWT_PROVIDER_CLS", "jwt_provider_cls"),
@@ -55,8 +55,9 @@ def _get_host_from_settings():
 
     tmpl = settings.get(SettingKeys.BK_API_URL_TMPL)
     if tmpl:
-        # API 网关 admin API 对应网关名为 bk-apigateway
-        return "%s/prod/" % tmpl.format(api_name="bk-apigateway").rstrip("/")
+        # API 网关 admin API 对应网关名为 bk-apigateway；
+        # 兼容 tmpl 中使用 gateway_name, api_name 两种场景
+        return "%s/prod/" % tmpl.format(gateway_name="bk-apigateway", api_name="bk-apigateway").rstrip("/")
 
     return ""
 

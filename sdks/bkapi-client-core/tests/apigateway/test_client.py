@@ -27,6 +27,13 @@ class TestAPIGatewayClient:
         client = MyClient()
         assert client.name == "my_api"
 
+    def test_client_name_with_gateway_name(self):
+        class MyClient(APIGatewayClient):
+            _gateway_name = "my_api"
+
+        client = MyClient()
+        assert client.name == "my_api"
+
     def test_init_with_args(self, faker):
         endpoint = faker.pystr()
         stage = faker.pystr()

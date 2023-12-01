@@ -16,7 +16,7 @@ class SecretPublicKeyManager(BasePublicKeyManager):
         config.load_incluster_config(configuration)
         self.client = CoreV1Api(api_client=api_client.ApiClient(configuration=configuration))
 
-    def get(self, api_name, issuer=None):
+    def get(self, gateway_name, issuer=None):
         try:
             secret = self.client.read_namespaced_secret(self._get_name(issuer), self.namespace)
         except exceptions.ApiException as err:
@@ -27,14 +27,14 @@ class SecretPublicKeyManager(BasePublicKeyManager):
 
         public_keys = getattr(secret, "data", None) or {}
 
-        if api_name not in public_keys:
+        if gateway_name not in public_keys:
             return None
 
-        value = public_keys[api_name]
+        value = public_keys[gateway_name]
 
         return base64.b64decode(value).decode()
 
-    def set(self, api_name, public_key, issuer=None):
+    def set(self, gateway_name, public_key, issuer=None):
         name = self._get_name(issuer)
         secret = V1Secret(
             metadata=V1ObjectMeta(
@@ -42,12 +42,13 @@ class SecretPublicKeyManager(BasePublicKeyManager):
                 namespace=self.namespace,
                 annotations={
                     "bkgateway/issuer": issuer or "",
-                    "bkgateway/api_name": api_name,
+                    "bkgateway/gateway_name": gateway_name,
+                    "bkgateway/api_name": gateway_name,
                 },
             ),
             kind="Secret",
             type="Opaque",
-            string_data={api_name: public_key},
+            string_data={gateway_name: public_key},
         )
 
         try:

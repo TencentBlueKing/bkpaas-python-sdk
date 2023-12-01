@@ -23,7 +23,7 @@ def test_do(mock_manager, command, configuration):
         mock_manager,
         [
             {"api_name": "test1"},
-            {"api_name": "test2"},
+            {"gateway_name": "test2"},
         ],
     )
 
@@ -35,5 +35,6 @@ def test_do(mock_manager, command, configuration):
     mock_manager.apply_permission.assert_any_call(
         target_app_code=configuration.bk_app_code,
         api_name="test2",
+        gateway_name="test2",
         grant_dimension="api",
     )

@@ -18,6 +18,8 @@ from bkapi_client_core.utils import urljoin
 
 class APIGatewayClient(BaseClient):
     _default_stage = "prod"
+    _gateway_name = ""
+    # _api_name 为兼容逻辑，推荐使用 _gateway_name
     _api_name = ""
     name = "bkapi"
 
@@ -32,7 +34,7 @@ class APIGatewayClient(BaseClient):
             self._stage = stage
         else:
             stage_mappings = settings.get(SettingKeys.DEFAULT_STAGE_MAPPINGS) or {}
-            self._stage = stage_mappings.get(self._api_name, self._default_stage)
+            self._stage = stage_mappings.get(self._get_gateway_name(), self._default_stage)
 
         # The path of the APIGateway API contains stage name,
         # so, add it to endpoint as a path variable, in order to switch stage
@@ -41,12 +43,18 @@ class APIGatewayClient(BaseClient):
         super(APIGatewayClient, self).__init__(
             endpoint=endpoint,
             session=session,
-            name=self._api_name,
+            name=self._get_gateway_name(),
         )
 
     def _get_endpoint(self):
         # type: (...) -> str
 
-        # In order to prevent `api_name`, `stage_name` from conflicting with other path variables,
+        # In order to prevent `gateway_name`, `api_name`, `stage_name` from conflicting with other path variables,
         # render the endpoint first.
-        return self._endpoint.format(api_name=self._api_name, stage_name=self._stage)
+        gateway_name = self._get_gateway_name()
+        # 兼容 endpoint 中包含 gateway_name，api_name
+        return self._endpoint.format(gateway_name=gateway_name, api_name=gateway_name, stage_name=self._stage)
+
+    def _get_gateway_name(self):
+        # type: (...) -> str
+        return self._gateway_name or self._api_name

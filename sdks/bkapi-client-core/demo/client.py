@@ -16,6 +16,6 @@ class Group(OperationGroup):
 
 
 class Client(APIGatewayClient):
-    _api_name = "test"
+    _gateway_name = "test"
 
     api = bind_property(Group)

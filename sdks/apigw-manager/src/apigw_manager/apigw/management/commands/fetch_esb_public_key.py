@@ -15,6 +15,6 @@ from apigw_manager.apigw.management.commands.fetch_apigw_public_key import Comma
 class Command(BaseCommand):
     """Get the esb public key and store it into the database"""
 
-    def handle(self, api_name, *args, **kwargs):
-        for gateway_name in ["bk-esb", "apigw"]:
-            super(Command, self).handle(gateway_name, *args, **kwargs)
+    def handle(self, gateway_name, *args, **kwargs):
+        for _gateway_name in ["bk-esb", "apigw"]:
+            super(Command, self).handle(_gateway_name, *args, **kwargs)

@@ -18,14 +18,11 @@ bkapi_client_core/__init__.py: pyproject.toml
 .PHONY: version
 version: bkapi_client_core/__init__.py
 
-requirements.txt: poetry.lock
+.PHONY: requirements
+requirements: poetry.lock
 	poetry export -f requirements.txt --without-hashes | grep -v "index-url" > requirements.txt
-
-requirements_dev.txt: requirements.txt
 	poetry export -f requirements.txt --without-hashes --with dev | grep -v "index-url" > requirements_dev.txt
-
-requirements_tox.txt: requirements_dev.txt
-	grep -E 'pytest|mock|django|prometheus-client' requirements_dev.txt > requirements_tox.txt
+	poetry export -f requirements.txt --without-hashes --with dev | grep -v "index-url" > requirements_tox.txt
 
 .PHONY: isort
 isort:

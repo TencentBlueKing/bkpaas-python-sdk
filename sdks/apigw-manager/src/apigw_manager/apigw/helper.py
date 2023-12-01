@@ -106,62 +106,62 @@ class ContextManager:
 
 class BasePublicKeyManager(ABC):
     @abstractmethod
-    def get(self, api_name, issuer=None):
+    def get(self, gateway_name, issuer=None):
         return ""
 
     @abstractmethod
-    def set(self, api_name, public_key, issuer=None):
+    def set(self, gateway_name, public_key, issuer=None):
         return False
 
-    def get_best_matched(self, api_name, issuer=None):
-        public_key = self.get(api_name, issuer)
+    def get_best_matched(self, gateway_name, issuer=None):
+        public_key = self.get(gateway_name, issuer)
         if public_key:
             return public_key
 
         if issuer:
             logger.warning(
                 "please re-update %s public_key according to command fetch_apigw_public_key",
-                api_name,
+                gateway_name,
             )
 
-        return self.get(api_name, issuer=None)
+        return self.get(gateway_name, issuer=None)
 
     def current(self):
         configuration = get_configuration()
-        return self.get(configuration.api_name)
+        return self.get(configuration.gateway_name)
 
 
 class PublicKeyManager(ContextManager, BasePublicKeyManager):
     scope = "public_key"
 
-    def get(self, api_name, issuer=None):
-        key = self._get_key(api_name, issuer)
+    def get(self, gateway_name, issuer=None):
+        key = self._get_key(gateway_name, issuer)
         return self.get_value(key, None)
 
-    def set(self, api_name, public_key, issuer=None):
-        key = self._get_key(api_name, issuer)
+    def set(self, gateway_name, public_key, issuer=None):
+        key = self._get_key(gateway_name, issuer)
         self.set_value(key, public_key)
 
-    def _get_key(self, api_name, issuer=None):
+    def _get_key(self, gateway_name, issuer=None):
         if issuer:
-            return "%s:%s" % (issuer, api_name)
-        return api_name
+            return "%s:%s" % (issuer, gateway_name)
+        return gateway_name
 
 
 class ReleaseVersionManager(ContextManager):
     scope = "release_version"
 
-    def increase(self, api_name):
+    def increase(self, gateway_name):
         current = 0
 
         with atomic():
             try:
-                current = int(self.get_value(api_name, "v0").strip("v"))
+                current = int(self.get_value(gateway_name, "v0").strip("v"))
             except Exception:
                 pass
 
             version = "v%s" % str(current + 1)
-            self.set_value(api_name, version)
+            self.set_value(gateway_name, version)
 
         return version
 
@@ -173,34 +173,34 @@ class ResourceSignatureManager(ContextManager):
     # 2. 其他明确需要发布的场景，比如同步接口时，发现有资源的增删
     # 原则是，如果有涉及到需发布的变更，就要设置 dirty，发布后重置，尽可能避免漏发的情况
 
-    def get(self, api_name):
-        value = self.get_value(api_name)
+    def get(self, gateway_name):
+        value = self.get_value(gateway_name)
         if not value:
             return {}
 
         return json.loads(value)
 
-    def set(self, api_name, is_dirty, signature):
-        self.set_value(api_name, json.dumps({"is_dirty": is_dirty, "signature": signature}))
+    def set(self, gateway_name, is_dirty, signature):
+        self.set_value(gateway_name, json.dumps({"is_dirty": is_dirty, "signature": signature}))
 
-    def get_signature(self, api_name):
-        saved = self.get(api_name)
+    def get_signature(self, gateway_name):
+        saved = self.get(gateway_name)
         return saved.get("signature", "")
 
-    def is_dirty(self, api_name, default=False):
-        saved = self.get(api_name)
+    def is_dirty(self, gateway_name, default=False):
+        saved = self.get(gateway_name)
         return saved.get("is_dirty", default)
 
-    def mark_dirty(self, api_name):
-        self.set(api_name, True, self.get_signature(api_name))
+    def mark_dirty(self, gateway_name):
+        self.set(gateway_name, True, self.get_signature(gateway_name))
 
-    def reset_dirty(self, api_name):
-        self.set(api_name, False, self.get_signature(api_name))
+    def reset_dirty(self, gateway_name):
+        self.set(gateway_name, False, self.get_signature(gateway_name))
 
-    def update_signature(self, api_name, signature):
-        saved = self.get(api_name)
+    def update_signature(self, gateway_name, signature):
+        saved = self.get(gateway_name)
         last_signature = saved.get("signature")
-        self.set(api_name, saved.get("is_dirty") or last_signature != signature, signature)
+        self.set(gateway_name, saved.get("is_dirty") or last_signature != signature, signature)
 
 
 def make_default_public_key_manager() -> BasePublicKeyManager:

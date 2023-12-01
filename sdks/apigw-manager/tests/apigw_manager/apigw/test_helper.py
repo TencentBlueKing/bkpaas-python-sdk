@@ -104,33 +104,33 @@ class TestPublicKeyManager:
     def _setup_manager(self):
         self.manager = PublicKeyManager()
 
-    def test_get_not_found(self, api_name):
-        assert self.manager.get(api_name) is None
+    def test_get_not_found(self, fake_gateway_name):
+        assert self.manager.get(fake_gateway_name) is None
 
-    def test_get(self, api_name, faker):
+    def test_get(self, fake_gateway_name, faker):
         context = Context.objects.create(
             scope=self.manager.scope,
-            key=api_name,
+            key=fake_gateway_name,
             value=faker.pystr(),
         )
-        assert self.manager.get(api_name) == context.value
+        assert self.manager.get(fake_gateway_name) == context.value
 
     def test_best_matched(self, faker):
         jwt_issuer = faker.pystr()
-        api_name = faker.pystr()
+        gateway_name = faker.pystr()
 
         context1 = Context.objects.create(
-            key="%s:%s" % (jwt_issuer, api_name), scope=self.manager.scope, value=faker.pystr()
+            key="%s:%s" % (jwt_issuer, gateway_name), scope=self.manager.scope, value=faker.pystr()
         )
-        context2 = Context.objects.create(key=api_name, scope=self.manager.scope, value=faker.pystr())
+        context2 = Context.objects.create(key=gateway_name, scope=self.manager.scope, value=faker.pystr())
 
-        public_key = self.manager.get_best_matched(api_name)
+        public_key = self.manager.get_best_matched(gateway_name)
         assert public_key == context2.value
 
-        public_key = self.manager.get_best_matched(api_name, jwt_issuer)
+        public_key = self.manager.get_best_matched(gateway_name, jwt_issuer)
         assert public_key == context1.value
 
-        public_key = self.manager.get_best_matched(api_name, "not-exist")
+        public_key = self.manager.get_best_matched(gateway_name, "not-exist")
         assert public_key == context2.value
 
         public_key = self.manager.get_best_matched("not-exist")
@@ -139,19 +139,19 @@ class TestPublicKeyManager:
         public_key = self.manager.get_best_matched("not-exist", jwt_issuer)
         assert public_key is None
 
-    def test_set(self, api_name, faker):
-        self.manager.set(api_name, faker.pystr())
-        self.manager.set(api_name, faker.pystr())
-        self.manager.set(api_name, faker.pystr(), faker.pystr())
+    def test_set(self, fake_gateway_name, faker):
+        self.manager.set(fake_gateway_name, faker.pystr())
+        self.manager.set(fake_gateway_name, faker.pystr())
+        self.manager.set(fake_gateway_name, faker.pystr(), faker.pystr())
 
     def test_get_key(self):
         assert self.manager._get_key("foo") == "foo"
         assert self.manager._get_key("foo", "bar") == "bar:foo"
 
-    def test_current(self, api_name, faker):
+    def test_current(self, fake_gateway_name, faker):
         context = Context.objects.create(
             scope=self.manager.scope,
-            key=api_name,
+            key=fake_gateway_name,
             value=faker.pystr(),
         )
 
@@ -164,10 +164,10 @@ class TestReleaseVersionManager:
         self.manager = ReleaseVersionManager()
 
     def test_increase(self, faker):
-        api_name = faker.pystr()
+        gateway_name = faker.pystr()
 
         for excepted in ["v1", "v2", "v3"]:
-            assert self.manager.increase(api_name) == excepted
+            assert self.manager.increase(gateway_name) == excepted
 
 
 class TestResourceSignatureManager:
@@ -179,9 +179,9 @@ class TestResourceSignatureManager:
         assert self.manager.get(faker.pystr()) == {}
 
     def test_get(self, faker):
-        api_name = faker.pystr()
-        self.manager.set(api_name, False, "signature")
-        assert self.manager.get(api_name) == {
+        gateway_name = faker.pystr()
+        self.manager.set(gateway_name, False, "signature")
+        assert self.manager.get(gateway_name) == {
             "is_dirty": False,
             "signature": "signature",
         }
@@ -190,47 +190,47 @@ class TestResourceSignatureManager:
         assert self.manager.get_signature(faker.pystr()) == ""
 
     def test_get_signature(self, faker):
-        api_name = faker.pystr()
-        self.manager.set(api_name, False, "signature")
-        assert self.manager.get_signature(api_name) == "signature"
+        gateway_name = faker.pystr()
+        self.manager.set(gateway_name, False, "signature")
+        assert self.manager.get_signature(gateway_name) == "signature"
 
     @pytest.mark.parametrize(
         "is_dirty",
         [True, False],
     )
     def test_is_dirty(self, faker, is_dirty):
-        api_name = faker.pystr()
-        self.manager.set(api_name, is_dirty, "signature")
-        assert self.manager.is_dirty(api_name) == is_dirty
+        gateway_name = faker.pystr()
+        self.manager.set(gateway_name, is_dirty, "signature")
+        assert self.manager.is_dirty(gateway_name) == is_dirty
 
     @pytest.mark.parametrize(
         "is_dirty",
         [True, False],
     )
     def test_is_dirty_default(self, faker, is_dirty):
-        api_name = faker.pystr()
-        assert self.manager.is_dirty(api_name, is_dirty) == is_dirty
+        gateway_name = faker.pystr()
+        assert self.manager.is_dirty(gateway_name, is_dirty) == is_dirty
 
     def test_mark_dirty(self, faker):
-        api_name = faker.pystr()
-        self.manager.mark_dirty(api_name)
-        assert self.manager.get(api_name) == {
+        gateway_name = faker.pystr()
+        self.manager.mark_dirty(gateway_name)
+        assert self.manager.get(gateway_name) == {
             "is_dirty": True,
             "signature": "",
         }
 
     def test_reset_dirty(self, faker):
-        api_name = faker.pystr()
-        self.manager.reset_dirty(api_name)
-        assert self.manager.get(api_name) == {
+        gateway_name = faker.pystr()
+        self.manager.reset_dirty(gateway_name)
+        assert self.manager.get(gateway_name) == {
             "is_dirty": False,
             "signature": "",
         }
 
     def test_update_signature_at_first_time(self, faker):
-        api_name = faker.pystr()
-        self.manager.update_signature(api_name, "signature")
-        assert self.manager.get(api_name) == {
+        gateway_name = faker.pystr()
+        self.manager.update_signature(gateway_name, "signature")
+        assert self.manager.get(gateway_name) == {
             "is_dirty": True,
             "signature": "signature",
         }
@@ -240,21 +240,21 @@ class TestResourceSignatureManager:
         [True, False],
     )
     def test_update_signature_not_change(self, faker, is_dirty):
-        api_name = faker.pystr()
-        self.manager.set(api_name, is_dirty, "signature")
+        gateway_name = faker.pystr()
+        self.manager.set(gateway_name, is_dirty, "signature")
 
-        self.manager.update_signature(api_name, "signature")
-        assert self.manager.get(api_name) == {
+        self.manager.update_signature(gateway_name, "signature")
+        assert self.manager.get(gateway_name) == {
             "is_dirty": is_dirty,
             "signature": "signature",
         }
 
     def test_update_signature_changed(self, faker):
-        api_name = faker.pystr()
-        self.manager.set(api_name, False, "")
+        gateway_name = faker.pystr()
+        self.manager.set(gateway_name, False, "")
 
-        self.manager.update_signature(api_name, "signature")
-        assert self.manager.get(api_name) == {
+        self.manager.update_signature(gateway_name, "signature")
+        assert self.manager.get(gateway_name) == {
             "is_dirty": True,
             "signature": "signature",
         }

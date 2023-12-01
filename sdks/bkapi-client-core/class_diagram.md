@@ -52,7 +52,7 @@ ManagerProtocol <|.. BaseClient
 
 class APIGatewayClient {
 	_default_stage
-	_api_name
+	_gateway_name
 }
 
 BaseClient <|-- APIGatewayClient
