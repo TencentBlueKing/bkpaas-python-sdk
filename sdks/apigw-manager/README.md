@@ -267,7 +267,7 @@ auth.authenticate(request, username=username, verified=verified)
 在 Django settings 中提供如下配置
 
 ```python
-BK_APIGW_JWT_PROVIDER_CLS = "apigw-manager.apigw.providers.DummyEnvPayloadJWTProvider"
+BK_APIGW_JWT_PROVIDER_CLS = "apigw_manager.apigw.providers.DummyEnvPayloadJWTProvider"
 ```
 
 同时提供以下环境变量
