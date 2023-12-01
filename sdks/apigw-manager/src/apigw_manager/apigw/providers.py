@@ -94,7 +94,7 @@ class CachePublicKeyProvider(SettingsPublicKeyProvider):
         if cached_value:
             return cached_value
 
-        public_key = self.public_key_manager.get_best_matched(gateway_name or self.default_gateway_name, jwt_issuer)
+        public_key = self.public_key_manager.get_best_matched(gateway_name, jwt_issuer)
         if not public_key:
             return super(CachePublicKeyProvider, self).provide(gateway_name, jwt_issuer)
 
@@ -158,7 +158,7 @@ class DefaultJWTProvider(JWTProvider):
             gateway_name = jwt_header.get("kid") or self.default_gateway_name
             public_key = self.public_key_provider.provide(gateway_name, jwt_header.get("iss"))
             if not public_key:
-                logger.warning("no public key found")
+                logger.warning("no public key found, gateway=%s, issuer=%s", gateway_name, jwt_header.get("iss"))
                 return None
 
             algorithm = jwt_header.get("alg") or self.algorithm
