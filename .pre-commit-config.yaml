@@ -12,24 +12,25 @@ repos:
         language: system
         exclude: "^(.*/poetry.lock|.*/requirements.txt|.*/requirements_dev.txt)|sdks/apigw-manager/build.yml"
         entry: bash -c "if [[ -d pre_commit_hooks ]]; then pre_commit_hooks/ip.sh $@; fi"
+
       # See ./pyproject.toml for below tool's version and settings
-      - id: isort
-        name: isort
-        # Set language to disable pre-commit's virtual-env
+      # 总是使用 --force-exclude 来让 ruff 配置文件中的 exclude 生效
+      - id: ruff-check-fix
+        name: ruff-check-fix
         language: system
         types: [python]
-        exclude: "^(sdks/apigw-manager/.*|sdks/bkapi-client-core/.*)$"
-        entry: poetry run isort --settings-path=pyproject.toml
-      - id: black
-        name: black
+        # 修复包导入顺序问题，类似 isort 工具
+        entry: poetry run ruff check --force-exclude --select I --fix  
+      - id: ruff-format
+        name: ruff-format
         language: system
         types: [python]
-        entry: poetry run black --config=pyproject.toml
-      - id: flake8
-        name: flak8
+        entry: poetry run ruff format --force-exclude 
+      - id: ruff-check
+        name: ruff-check
         language: system
         types: [python]
-        entry: poetry run pflake8 --config=pyproject.toml
+        entry: poetry run ruff check --force-exclude 
 
       # mypy hooks for each Python project, the hooks must be separated because different
       # project might use their own configurations
@@ -50,18 +51,6 @@ repos:
   # sdk bkapi-client-core
   - repo: local
     hooks:
-      - id: format
-        name: run ruff-formatter for "bkapi-client-core"
-        language: python
-        types: [python]
-        entry: bash -c 'cd sdks/bkapi-client-core/ && ruff format --config=pyproject.toml --force-exclude .'
-        files: sdks/bkapi-client-core/
-      - id: ruff
-        name: run ruff for "bkapi-client-core"
-        language: python
-        types: [python]
-        entry: bash -c 'cd sdks/bkapi-client-core/ && ruff --config=pyproject.toml --force-exclude --fix .'
-        files: sdks/bkapi-client-core/
       - id: mypy
         name: run mypy for "bkapi-client-core"
         language: python
@@ -71,18 +60,6 @@ repos:
   # sdk apigw-manager
   - repo: local
     hooks:
-      - id: format
-        name: run ruff-formatter for "apigw-manager"
-        language: python
-        types: [python]
-        entry: bash -c 'cd sdks/apigw-manager/ && ruff format --config=pyproject.toml --force-exclude .'
-        files: sdks/apigw-manager/
-      - id: ruff
-        name: run ruff for "apigw-manager"
-        language: python
-        types: [python]
-        entry: bash -c 'cd sdks/apigw-manager/ && ruff --config=pyproject.toml --force-exclude --fix .'
-        files: sdks/apigw-manager/
       - id: mypy
         name: run mypy for "apigw-manager"
         language: python
