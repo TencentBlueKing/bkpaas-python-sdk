@@ -213,24 +213,32 @@ resource_docs:
 
 ### 场景一：Django 项目
 
-如果后端服务需要认证 API 网关传递过来的请求头 X-Bkapi-JWT，可在 settings MIDDLEWARE 中加入以下 Django 中间件：
+要在后端服务中认证 API 网关传递过来的请求头 `X-Bkapi-JWT`，可以通过在 settings 中的 MIDDLEWARE 中添加以下 Django 中间件。这样，在请求处理过程中，会自动解析请求头中的 X-Bkapi-JWT，并将相关信息添加到 request 对象中。
 
 ```python
 MIDDLEWARE += [
     "apigw_manager.apigw.authentication.ApiGatewayJWTGenericMiddleware",  # JWT 认证，解析请求头中的 X-Bkapi-JWT，获取 request.jwt 对象
     "apigw_manager.apigw.authentication.ApiGatewayJWTAppMiddleware",  # 根据 request.jwt，获取 request.app 对象
-    "apigw_manager.apigw.authentication.ApiGatewayJWTUserMiddleware",  # 根据 request.jwt，获取 request.user 对象
 ]
 ```
 
-如需获取 request.user 对象，还需要在 settings AUTHENTICATION_BACKENDS 中加入：
+添加以上两个中间件后，request 对象中将会添加 `request.jwt` 和 `request.app` 两个对象。这些对象包含了网关名、当前请求的蓝鲸应用 ID 等信息。具体内容可参考下文。
+
+如果需要在 request 对象中获取当前请求用户 `request.user` 对象，除了上面的中间件外，还需要添加一个中间件以及 AUTHENTICATION_BACKENDS：
+
 ```python
+# 添加中间件
+MIDDLEWARE += [
+    "apigw_manager.apigw.authentication.ApiGatewayJWTUserMiddleware",  # 根据 request.jwt，获取 request.user 对象
+]
+
+# 添加 AUTHENTICATION_BACKENDS
 AUTHENTICATION_BACKENDS += [
     "apigw_manager.apigw.authentication.UserModelBackend",
 ]
 ```
 
-注意，Django 中间件 ApiGatewayJWTGenericMiddleware 解析 X-Bkapi-JWT 时，需要获取网关公钥，SDK 默认从以下两个位置获取网关公钥：
+注意，Django 中间件 ApiGatewayJWTGenericMiddleware 解析 `X-Bkapi-JWT` 时，需要获取网关公钥，SDK 默认从以下两个位置获取网关公钥：
 - SDK model Context (库表 apigw_manager_context)，需提前执行 `python manage.py fetch_apigw_public_key` 拉取并保存网关公钥
 - settings.APIGW_PUBLIC_KEY，可在网关页面中手动获取公钥，并配置到 settings 中
 
@@ -241,21 +249,27 @@ AUTHENTICATION_BACKENDS += [
 - `gateway_name`：传入的网关名称；
 
 ##### ApiGatewayJWTAppMiddleware
-根据 request.jwt，在 `request` 中注入 `app` 对象，有以下属性：
+根据 `request.jwt`，在 `request` 中注入 `app` 对象，有以下属性：
 - `bk_app_code`：调用接口的应用；
 - `verified`：应用是否经过认证；
 
 ##### ApiGatewayJWTUserMiddleware
-根据 request.jwt，在 `request` 中注入 `user` 对象，该对象通过以下调用获取：
+根据 `request.jwt`，在 `request` 中注入 `user` 对象:
+- 如果用户通过认证：其为一个 Django User Model 对象，用户名为当前请求用户的用户名
+- 如果用户未通过认证，其为一个 Django AnonymousUser 对象，用户名为当前请求用户的用户名
+
+如果中间件 `ApiGatewayJWTUserMiddleware` 中获取用户的逻辑不满足需求，可以继承此中间件并自定义用户获取方法 `get_user`，例如：：
+
 ```python
-def get_user(self, request, gateway_name=None, bk_username=None, verified=False, **credentials):
-    return auth.authenticate(
-        request, gateway_name=gateway_name, bk_username=bk_username, verified=verified, **credentials
-    )
+class MyJWTUserMiddleware(ApiGatewayJWTUserMiddleware):
+  def get_user(self, request, gateway_name=None, bk_username=None, verified=False, **credentials):
+      ...
+      return auth.authenticate(
+          request, gateway_name=gateway_name, bk_username=bk_username, verified=verified, **credentials
+      )
 ```
 
-因使用 auth.authenticate 获取用户，所以需要在 settings AUTHENTICATION_BACKENDS 中添加对应的用户认证后端，才能获取到 request.user 对象。
-如果该中间件认证逻辑不满足需求，可继承此中间件，重载 `get_user` 方法。
+注意：在自定义中间件 `ApiGatewayJWTUserMiddleware` 时，如果继续使用 `auth.authenticate` 获取用户，请确保正确设置用户认证后端，以遵循 Django `AUTHENTICATION_BACKENDS` 相关规则。
 
 #### 用户认证后端
 
@@ -273,7 +287,7 @@ def get_user(self, request, gateway_name=None, bk_username=None, verified=False,
 BK_APIGW_JWT_PROVIDER_CLS = "apigw_manager.apigw.providers.DummyEnvPayloadJWTProvider"
 ```
 
-同时提供以下环境变量（非 settings)
+同时提供以下环境变量（非 Django settings)
 ```
 APIGW_MANAGER_DUMMY_GATEWAY_NAME      # JWT 中的网关名
 APIGW_MANAGER_DUMMY_PAYLOAD_APP_CODE  # JWT payload 中的 app_code
@@ -350,12 +364,10 @@ curl -X GET 'https://bkapi.example.com/api/bk-apigateway/prod/api/v1/apis/{gatew
 ```json
 {
     "data": {
-        "issuer": "",
         "public_key": "your public key"
     }
 }
 ```
 
 注意事项：
-- **issuer**：一般情况下，签发者为空字符串；如果一个后端需要对接到多个 API 网关部署环境，可让不同部署环境的网关配置不同的 issuer（在部署网关时，可通过环境变量 BK_APIGW_JWT_ISSUER 指定），后端服务可根据 `网关名` + `issuer` 区分不同部署环境的网关公钥。
-- 拉取公钥时，需要对数据进行缓存，不能高并发拉取
+- 拉取公钥时，不能实时拉取，需要添加缓存（实时拉取会导致整体接口性能下降）
