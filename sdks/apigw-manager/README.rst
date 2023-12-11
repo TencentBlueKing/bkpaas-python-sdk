@@ -238,88 +238,91 @@ definition.yaml 中可以使用 Django 模版语法引用和渲染变量，内�
 校验请求来自 API 网关
 ---------------------
 
-如果应用需要认证 API 网关传递过来的 JWT 信息，在 MIDDLEWARE 中加入：
+场景一：Django 项目
+^^^^^^^^^^^^^^^^^^^
+
+如果后端服务需要认证 API 网关传递过来的请求头 X-Bkapi-JWT，可在 settings MIDDLEWARE 中加入以下 Django 中间件：
 
 .. code-block:: python
 
    MIDDLEWARE += [
-       'apigw_manager.apigw.authentication.ApiGatewayJWTGenericMiddleware',  # JWT 认证
-       'apigw_manager.apigw.authentication.ApiGatewayJWTAppMiddleware',  # JWT 透传的应用信息
-       'apigw_manager.apigw.authentication.ApiGatewayJWTUserMiddleware',  # JWT 透传的用户信息
+       "apigw_manager.apigw.authentication.ApiGatewayJWTGenericMiddleware",  # JWT 认证，解析请求头中的 X-Bkapi-JWT，获取 request.jwt 对象
+       "apigw_manager.apigw.authentication.ApiGatewayJWTAppMiddleware",  # 根据 request.jwt，获取 request.app 对象
+       "apigw_manager.apigw.authentication.ApiGatewayJWTUserMiddleware",  # 根据 request.jwt，获取 request.user 对象
    ]
 
-..
-
-   **请确保应用进程在启动前执行了 python manage.py fetch_apigw_public_key 命令，否则中间件可能无法正常工作**
-   如果因某些因素不方便使用命令自动获取网关公钥，可以在网关页面中手动获取公钥，配置到 ``settings.APIGW_PUBLIC_KEY`` 中。
-
-
-注意中间件的优先级，请加到其他中间件之前。
-
-apigw_manager 默认提供了一个基于 User Model 实现的 authentication backend，如需使用，在 AUTHENTICATION_BACKENDS 中加入：
+如需获取 request.user 对象，还需要在 settings AUTHENTICATION_BACKENDS 中加入：
 
 .. code-block:: python
 
    AUTHENTICATION_BACKENDS += [
-       'apigw_manager.apigw.authentication.UserModelBackend',
+       "apigw_manager.apigw.authentication.UserModelBackend",
    ]
 
+注意，Django 中间件 ApiGatewayJWTGenericMiddleware 解析 X-Bkapi-JWT 时，需要获取网关公钥，SDK 默认从以下两个位置获取网关公钥：
+
+
+* SDK model Context (库表 apigw_manager_context)，需提前执行 ``python manage.py fetch_apigw_public_key`` 拉取并保存网关公钥
+* settings.APIGW_PUBLIC_KEY，可在网关页面中手动获取公钥，并配置到 settings 中
+
 Django 中间件
-^^^^^^^^^^^^^
+~~~~~~~~~~~~~
 
 ApiGatewayJWTGenericMiddleware
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""""""""""""
 
-认证 JWT 信息，在 ``request`` 中注入 ``jwt`` 对象，有以下属性：
+利用网关公钥，解析请求头中的 X-Bkapi-JWT，在 ``request`` 中注入 ``jwt`` 对象，有以下属性：
 
 
 * ``gateway_name``\ ：传入的网关名称；
 
 ApiGatewayJWTAppMiddleware
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""""""""
 
-解析 JWT 中的应用信息，在 ``request`` 中注入 ``app`` 对象，有以下属性：
+根据 request.jwt，在 ``request`` 中注入 ``app`` 对象，有以下属性：
 
 
 * ``bk_app_code``\ ：调用接口的应用；
 * ``verified``\ ：应用是否经过认证；
 
 ApiGatewayJWTUserMiddleware
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"""""""""""""""""""""""""""
 
-解析 JWT 中的用户信息，在 ``request`` 中注入 ``user`` 对象，该对象通过以下调用获取：
+根据 request.jwt，在 ``request`` 中注入 ``user`` 对象，该对象通过以下调用获取：
 
 .. code-block:: python
 
-   auth.authenticate(request, username=username, verified=verified)
+   def get_user(self, request, gateway_name=None, bk_username=None, verified=False, **credentials):
+       return auth.authenticate(
+           request, gateway_name=gateway_name, bk_username=bk_username, verified=verified, **credentials
+       )
 
-因此，请选择或实现合适的 authentication backend。
-如果该中间件认证逻辑不符合应用预期，可继承此中间件，重载 ``get_user`` 方法进行调整；
+因使用 auth.authenticate 获取用户，所以需要在 settings AUTHENTICATION_BACKENDS 中添加对应的用户认证后端，才能获取到 request.user 对象。
+如果该中间件认证逻辑不满足需求，可继承此中间件，重载 ``get_user`` 方法。
 
 用户认证后端
-^^^^^^^^^^^^
+~~~~~~~~~~~~
 
 UserModelBackend
-~~~~~~~~~~~~~~~~
+""""""""""""""""
 
 
-* 已认证的用户名，通过 ``UserModel`` 根据 ``username`` 获取用户，不存在时返回 ``None``\ ；
+* 已认证的用户名，根据 ``UserModel`` 创建一个用户对象，不存在时返回 ``None``\ ；
 * 未认证的用户名，返回 ``AnonymousUser``\ ，可通过继承后修改 ``make_anonymous_user`` 的实现来定制具体字段；
 
 本地开发测试
-^^^^^^^^^^^^
+~~~~~~~~~~~~
 
-如果使用了 ``ApiGatewayJWTGenericMiddleware`` 中间件，在本地开发测试时在请求中带上合法的 JWT 是相对来说较困难的，这个时候我们可以通过使用测试用的 ``JWTProvider`` 来解决这个问题
+本地开发测试时，接口可能未接入 API 网关，此时中间件 ``ApiGatewayJWTGenericMiddleware`` 无法获取请求头中的 X-Bkapi-JWT。
+为方便测试，SDK 提供了一个 Dummy JWT Provider，用于根据环境变量直接构造一个 request.jwt 对象。
 
-在项目根目录下创建 ``local_provider.py`` 文件，并提供测试用 ``JWTProvider``
-
-在 Django settings 中提供如下配置
+在项目中添加本地开发配置文件 ``local_settings.py``\ ，并将其导入到 settings；然后，在此本地开发配置文件中添加配置：
 
 .. code-block:: python
 
    BK_APIGW_JWT_PROVIDER_CLS = "apigw_manager.apigw.providers.DummyEnvPayloadJWTProvider"
 
-同时提供以下环境变量
+同时提供以下环境变量（非 settings)
 
 .. code-block::
 
@@ -327,15 +330,92 @@ UserModelBackend
    APIGW_MANAGER_DUMMY_PAYLOAD_APP_CODE  # JWT payload 中的 app_code
    APIGW_MANAGER_DUMMY_PAYLOAD_USERNAME  # JWT payload 中的 username
 
-FAQ
----
+场景二：非 Django 项目
+^^^^^^^^^^^^^^^^^^^^^^
 
-Docker 镜像方案如何获得网关公钥
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+非 Django 项目，需要项目获取网关公钥，并解析请求头中的 X-Bkapi-JWT；获取网关公钥的方案请参考下文。
+
+解析 X-Bkapi-JWT 时，可根据 jwt header 中的 kid 获取当前网关名，例如：
+
+.. code-block::
+
+   {
+       "iat": 1701399603,
+       "typ": "JWT",
+       "kid": "my-gateway",   # 网关名称
+       "alg": "RS512"         # 加密算法
+   }
+
+可从 jwt 内容中获取网关认证的应用、用户信息，例如：
+
+.. code-block::
+
+   {
+     "user": {                  # 用户信息
+       "bk_username": "admin",  # 用户名，解析时需同时支持 bk_username、username 两个 key，如 user.get("bk_username") or user.get("username", "")
+       "verified": true         # 用户是否通过认证，true 表示通过认证，false 表示未通过认证
+     },
+     "app": {                    # 蓝鲸应用信息
+       "bk_app_code": "my-app",  # 蓝鲸应用ID，解析时需同时支持 bk_app_code、app_code 两个 key，如 app.get("bk_app_code") or app.get("app_code", "")
+       "verified": true          # 应用是否通过认证，true 表示通过认证，false 表示未通过认证
+     },
+     "exp": 1701401103,      # 过期时间
+     "nbf": 1701399303,      # Not Before 时间
+     "iss": "APIGW"          # 签发者
+   }
+
+如何获取网关公钥
+^^^^^^^^^^^^^^^^
+
+后端服务如需解析 API 网关发送的请求头 X-Bkapi-JWT，需要提前获取该网关的公钥。获取网关公钥，有以下方案。
+
+1. 根据 SDK 提供的 Django Command 拉取
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+在同步网关数据时，直接添加以下 Command 拉取网关公钥。网关公钥将保存在 model Context 对应的库表 apigw_manager_context 中，SDK 提供的 Django 中间件将从表中读取网关公钥。
+
+.. code-block:: bash
+
+   # 默认拉取 settings.BK_APIGW_NAME 对应网关的公钥
+   python manage.py fetch_apigw_public_key
+
+   # 拉取指定网关的公钥
+   python manage.py fetch_apigw_public_key --gateway-name my-gateway
+
+2. 直接获取网关公钥，配置到项目配置文件
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+服务仅需接入一些固定的网关部署环境时，可在网关管理端，网关基本信息中查询网关公钥，并配置到项目配置文件。
+
+蓝鲸官方网关，需要自动注册并获取网关公钥，可联系蓝鲸官方运营同学，在服务部署前，由官方提前创建网关，并设置网关公钥、私钥，同时将网关公钥同步给后端服务。
+具体可参考 helm-charts 仓库的 README。
+
+3. 通过网关公开接口，拉取网关公钥
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+API 网关提供了公钥查询接口，后端服务可按需根据接口拉取网关公钥，接口信息如下：
+
+.. code-block:: bash
+
+   # 将 bkapi.example.com 替换为网关 API 地址，
+   # 将 gateway_name 替换为待查询公钥的网关名，
+   # 提供正确的蓝鲸应用账号
+   curl -X GET 'https://bkapi.example.com/api/bk-apigateway/prod/api/v1/apis/{gateway_name}/public_key/' \
+     -H 'X-Bkapi-Authorization: {"bk_app_code": "my-app", "bk_app_secret": "secret"}'
+
+响应样例：
+
+.. code-block:: json
+
+   {
+       "data": {
+           "issuer": "",
+           "public_key": "your public key"
+       }
+   }
+
+注意事项：
 
 
-#. 可设置环境变量 ``APIGW_PUBLIC_KEY_PATH``\ （默认值：apigateway.pub），同步后可读取该文件获取；
-#. 可设置环境变量 ``DATABASE_URL``\ ，指定外部数据库，同步后可通过执行以下 SQL 查询：
-   .. code-block:: sql
-
-       select value from apigw_manager_context where scope="public_key" and key="<BK_APIGW_NAME>";
+* **issuer**\ ：一般情况下，签发者为空字符串；如果一个后端需要对接到多个 API 网关部署环境，可让不同部署环境的网关配置不同的 issuer（在部署网关时，可通过环境变量 BK_APIGW_JWT_ISSUER 指定），后端服务可根据 ``网关名`` + ``issuer`` 区分不同部署环境的网关公钥。
+* 拉取公钥时，需要对数据进行缓存，不能高并发拉取

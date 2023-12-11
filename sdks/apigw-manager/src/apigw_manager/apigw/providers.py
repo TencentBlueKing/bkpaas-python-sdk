@@ -178,10 +178,12 @@ class DummyEnvPayloadJWTProvider(JWTProvider):
         gateway_name = os.getenv("APIGW_MANAGER_DUMMY_GATEWAY_NAME", "") or os.getenv(
             "APIGW_MANAGER_DUMMY_API_NAME", ""
         )
+        bk_app_code = os.getenv("APIGW_MANAGER_DUMMY_PAYLOAD_APP_CODE", "")
+        bk_username = os.getenv("APIGW_MANAGER_DUMMY_PAYLOAD_USERNAME", "")
         return DecodedJWT(
             gateway_name=gateway_name,
             payload={
-                "app": {"app_code": os.getenv("APIGW_MANAGER_DUMMY_PAYLOAD_APP_CODE", "")},
-                "user": {"username": os.getenv("APIGW_MANAGER_DUMMY_PAYLOAD_USERNAME", "")},
+                "app": {"app_code": bk_app_code, "verified": bool(bk_app_code)},
+                "user": {"username": bk_username, "verified": bool(bk_username)},
             },
         )

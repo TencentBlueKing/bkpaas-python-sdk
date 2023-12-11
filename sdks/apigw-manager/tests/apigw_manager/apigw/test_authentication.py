@@ -239,17 +239,17 @@ class TestApiGatewayJWTUserMiddleware:
 
 class TestUserModelBackend:
     @pytest.fixture(autouse=True)
-    def _setup_backend(self, mocker):
-        self.user_maker = mocker.MagicMock()
+    def _setup_backend(self):
         self.backend = authentication.UserModelBackend()
-        self.backend.user_maker = self.user_maker
 
     def test_authenticate_user(self, mock_request):
         user = self.backend.authenticate(mock_request, gateway_name="test", bk_username="admin", verified=True)
         assert not isinstance(user, AnonymousUser)
-        self.user_maker.assert_called_with("admin")
+        assert user.username == "admin"
+        assert user.is_authenticated is True
 
-    def test_authenticate_anonymou_user(self, mock_request):
+    def test_authenticate_anonymous_user(self, mock_request):
         user = self.backend.authenticate(mock_request, gateway_name="test", bk_username="admin", verified=False)
         assert isinstance(user, AnonymousUser)
-        self.user_maker.assert_not_called()
+        assert user.username == "admin"
+        assert user.is_authenticated is False

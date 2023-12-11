@@ -144,10 +144,9 @@ class UserModelBackend(ModelBackend):
 
         user_model = get_user_model()
 
-        if hasattr(user_model.objects, "get_by_natural_key"):
-            self.user_maker = user_model.objects.get_by_natural_key  # type: ignore
-        else:
-            self.user_maker = lambda x: user_model.objects.filter(username=x).last()
+        # 未将用户保存到 db，防止未预期添加用户数据
+        # 未查询 db 中用户，因用户可能在 db 中不存在
+        self.user_maker = lambda username: user_model(**{user_model.USERNAME_FIELD: username})
 
     def make_anonymous_user(self, bk_username=None):
         user = AnonymousUser()
