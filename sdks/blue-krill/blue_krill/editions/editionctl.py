@@ -25,21 +25,21 @@ from typing import Any, Collection, Dict, Iterator, List, Optional, Set, Type
 
 import click
 import toml
-from pydantic import BaseModel, ValidationError, Field
+from pydantic import BaseModel, Field, ValidationError
 from toml.decoder import TomlDecodeError
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
 # Set up logging as a console output
 hdr = logging.StreamHandler()
-hdr.setFormatter(logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s'))
+hdr.setFormatter(logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s"))
 logger = logging.getLogger(__name__)
 logger.addHandler(hdr)
 
-__version__ = '0.1.0'
+__version__ = "0.1.0"
 
 # The default file name of config file
-DEFAULT_CONFIG_FILE_NAME = 'editionctl.toml'
+DEFAULT_CONFIG_FILE_NAME = "editionctl.toml"
 
 
 class FileLinker(abc.ABC):
@@ -114,9 +114,9 @@ def get_linker(type_: str) -> FileLinker:
 
 
 @click.group()
-@click.option('--log-level', default="INFO", type=click.Choice(['DEBUG', "INFO", "WARNING", "ERROR", "CRITICAL"]))
+@click.option("--log-level", default="INFO", type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]))
 @click.option(
-    '--settings-path',
+    "--settings-path",
     required=False,
     help='Path fo config file, by default editionctl will try to use "editionctl.toml" in current directory',
 )
@@ -129,7 +129,7 @@ def main(ctx, settings_path, log_level):
         settings_path = Path.cwd() / DEFAULT_CONFIG_FILE_NAME
 
     ctx.ensure_object(dict)
-    ctx.obj['settings_path'] = settings_path
+    ctx.obj["settings_path"] = settings_path
 
 
 class EditionConf(BaseModel):
@@ -166,14 +166,14 @@ class Configuration(BaseModel):
         return self.editions_root or self.get_project_root()
 
     def get_linker_type(self) -> str:
-        return self.linker_type or 'default'
+        return self.linker_type or "default"
 
     def get_edition(self, name: str) -> EditionConf:
         """Get edition conf object by name"""
         for obj in self.editions:
             if obj.name == name:
                 return obj
-        raise KeyError(f'Edition with name: {name} not found')
+        raise KeyError(f"Edition with name: {name} not found")
 
     def get_edition_directory(self, name: str) -> Path:
         """Get edition's directory"""
@@ -205,7 +205,7 @@ def get_configuration_or_quit(settings_path: PathLike, **overwrites) -> Configur
         logger.critical('Settings file: "%s" is not a valid TOML file, detail: %s', settings_path, e)
         sys.exit(1)
     except Exception as e:  # pylint: disable=broad-except
-        logger.critical('Unable to process settings file, error detail: %s', settings_path, e)
+        logger.critical("Unable to process settings file, file: %s, error detail: %s", settings_path, e)
         sys.exit(1)
 
 
@@ -229,7 +229,7 @@ def activate(ctx, edition_name_in_pos, edition_name, linker_type):
     if linker_type:
         settings["linker_type"] = linker_type
 
-    config = get_configuration_or_quit(ctx.obj['settings_path'], **settings)
+    config = get_configuration_or_quit(ctx.obj["settings_path"], **settings)
 
     edition_name = edition_name_in_pos or edition_name
     if not edition_name:
@@ -239,8 +239,8 @@ def activate(ctx, edition_name_in_pos, edition_name, linker_type):
     try:
         migrator = EditionFileMigrater(config, edition_name)
         migrator.migrate()
-    except RuntimeError as err:
-        logger.exception("unable to finish the migration: %s", err)
+    except RuntimeError:
+        logger.exception("unable to finish the migration")
     except ConfigurationError as err:
         logger.critical("Configuration error: %s", err)
     else:
@@ -300,8 +300,8 @@ class EditionMetaData:
                 )
                 result.external_files = data["external_files"]
                 return result
-        except Exception as e:
-            logger.exception(f"Unable to load metadata file: {e}")
+        except Exception:
+            logger.exception("Unable to load metadata file")
             raise InvalidMetadataFile("metadata file is invalid")
 
     def add_files(self, relative_paths: Collection[Path]):
@@ -360,7 +360,7 @@ class EditionFileMigrater:
         try:
             return self.config.get_edition(self.edition_name)
         except KeyError as e:
-            raise RuntimeError('Can not read edition config: %s', e)
+            raise RuntimeError("Can not read edition config: %s", e)
 
     def migrate(self):
         """Migration edition specified files to project root directory
@@ -371,7 +371,7 @@ class EditionFileMigrater:
         edition_dir = self.config.get_edition_directory(self.edition_name)
         if not edition_dir.exists():
             logger.critical(f"Edition directory: {edition_dir} does not exists, please check your files.")
-            raise ConfigurationError('Wrong edition dir')
+            raise ConfigurationError("Wrong edition dir")
 
         last_metadata = load_current_metadata(self.config)
         if last_metadata and self.should_reset(last_metadata):
@@ -379,7 +379,7 @@ class EditionFileMigrater:
 
         delete_files = []
         if last_metadata:
-            delete_files = [Path(f['file']) for f in last_metadata.external_files]
+            delete_files = [Path(f["file"]) for f in last_metadata.external_files]
 
         result = DirectorySyncer(self.linker).sync_files(
             source_dir=edition_dir,
@@ -404,7 +404,7 @@ class EditionFileMigrater:
 @click.pass_context
 def reset(ctx):
     """Reset activated edition"""
-    config = get_configuration_or_quit(ctx.obj['settings_path'])
+    config = get_configuration_or_quit(ctx.obj["settings_path"])
     reset_project(config)
 
 
@@ -416,10 +416,10 @@ def reset_project(config: Configuration):
     """
     metadata = load_current_metadata(config)
     if metadata is None:
-        logger.info('No metadata can be found, resetting aborted')
+        logger.info("No metadata can be found, resetting aborted")
         return
 
-    logger.info('Resetting project.')
+    logger.info("Resetting project.")
     for filepath in metadata.list_managed_files():
         logger.debug(f"Unlinking file {filepath}.")
         try:
@@ -448,7 +448,7 @@ class SyncResult:
 class DirectorySyncer:
     """A simple directory syncer"""
 
-    ignore_patterns = ('*.pyc', '*.pyo', 'CVS', 'tmp', '.git', '.svn', '__pycache__')
+    ignore_patterns = ("*.pyc", "*.pyo", "CVS", "tmp", ".git", ".svn", "__pycache__")
 
     def __init__(self, file_linker: FileLinker):
         self.file_linker = file_linker
@@ -472,11 +472,11 @@ class DirectorySyncer:
         delete_files = set(delete_files)
 
         result = SyncResult()
-        for root, dirs, files in os.walk(source_dir, followlinks=False):
+        for root, dirs, raw_files in os.walk(source_dir, followlinks=False):
             # Ignore dirs and files which should be ignored
             # See: https://stackoverflow.com/questions/19859840/excluding-directories-in-os-walk
             dirs[:] = [d for d in dirs if not self.should_ignore(d)]
-            files = [f for f in files if not self.should_ignore(f)]
+            files = [f for f in raw_files if not self.should_ignore(f)]
 
             rel_path = root[len(str(source_dir)) :].lstrip(os.path.sep)
             dst_path = target_dir / rel_path
@@ -502,7 +502,7 @@ class DirectorySyncer:
                 if file_path.is_absolute():
                     continue
                 if file_path not in result.added_files_relative:
-                    logger.debug('Delete file %s.', file_path)
+                    logger.debug("Delete file %s.", file_path)
                     try:
                         self.file_linker.unlink(target_dir / file_path)
                     except FileNotFoundError:
@@ -515,7 +515,7 @@ class DirectorySyncer:
 @click.pass_context
 def info(ctx):
     """Print current edition information"""
-    config = get_configuration_or_quit(ctx.obj['settings_path'])
+    config = get_configuration_or_quit(ctx.obj["settings_path"])
     try:
         metadata = EditionMetaData.from_existed_project(config.get_project_root())
     except MetadataNotFound:
@@ -533,7 +533,7 @@ def help(ctx):
     logger.info("Example config file:")
     print(
         dedent(
-            '''
+            """
         # 存放主版本源码文件目录，留空默认为当前目录
         # project_root = 'src/'
         # 存放各版本特殊源码文件的目录，留空默认等于 `project_root`
@@ -553,7 +553,7 @@ def help(ctx):
         name = "EE"
         # 源码在 `editions_root` 里的相对路径，默认与 `name` 相等
         rel_directory = 'ee'
-    '''
+    """
         )
     )
 
@@ -564,7 +564,7 @@ def develop(ctx):
     """Enter develop mode, auto trigger edition activate procedure after files under current
     edtion directory have been modified.
     """
-    config = get_configuration_or_quit(ctx.obj['settings_path'])
+    config = get_configuration_or_quit(ctx.obj["settings_path"])
     project_root = config.get_project_root()
     try:
         metadata = EditionMetaData.from_existed_project(project_root)
