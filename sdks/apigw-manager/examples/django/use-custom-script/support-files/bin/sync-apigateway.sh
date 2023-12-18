@@ -7,7 +7,9 @@
 # 如果任何命令返回一个非零退出状态（错误），脚本将会立即终止执行
 set -e
 
-# 待同步网关名，直接指定网关名，则不需要配置 django settings BK_APIGW_NAME
+# 待同步网关名，需修改为实际网关名；
+# - 如在下面指令的参数中，指定了参数 --gateway-name=${gateway_name}，则使用该参数指定的网关名
+# - 如在下面指令的参数中，未指定参数 --gateway-name，则使用 Django settings BK_APIGW_NAME
 gateway_name="bk-demo"
 
 # 待同步网关、资源定义文件
