@@ -3,7 +3,9 @@
 # 加载 apigw-manager 原始镜像中的通用函数
 source /apigw-manager/bin/functions.sh
 
-# 待同步网关名
+# 待同步网关名，需修改为实际网关名；
+# - 如在下面指令的参数中，指定了参数 --gateway-name=${gateway_name}，则使用该参数指定的网关名
+# - 如在下面指令的参数中，未指定参数 --gateway-name，则使用 Django settings BK_APIGW_NAME
 gateway_name="bk-demo"
 
 # 待同步网关、资源定义文件

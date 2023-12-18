@@ -142,10 +142,10 @@ grant_permissions:
 
 # 应用申请指定网关所有资源的权限，待网关管理员审批后，应用才可访问网关资源；
 # 用于命令 `apply_apigw_permissions`
-apply_permissions:
-  - gateway_name: "{{ settings.BK_APIGW_NAME }}"
-    # 权限维度，可选值：gateway，按网关授权，包括网关下所有资源，以及未来新创建的资源
-    grant_dimension: "gateway"
+# apply_permissions:
+#   - gateway_name: "{{ settings.BK_APIGW_NAME }}"
+#     # 权限维度，可选值：gateway，按网关授权，包括网关下所有资源，以及未来新创建的资源
+#     grant_dimension: "gateway"
 
 # 为网关添加关联应用，关联应用可以通过网关 bk-apigateway 的接口操作网关数据；每个网关最多可有 10 个关联应用；
 # 用于命令 `add_related_apps`
@@ -173,6 +173,8 @@ resource_docs:
 #### 2. resources.yaml
 
 用于定义资源配置，建议通过网关管理端导出。为了方便用户直接使用网关导出的资源文件，资源定义默认没有命名空间。
+
+样例可参考：[resources.yaml](examples/django/use-custom-script/support-files/resources.yaml)
 
 #### 3. apidocs（可选）
 
@@ -208,6 +210,54 @@ resource_docs:
 ### 方案二：通过镜像方式同步
 
 此方案适用于非 Django 项目，具体请参考 [sync-apigateway-with-docker.md](docs/sync-apigateway-with-docker.md)
+
+
+## 如何获取网关公钥
+
+后端服务如需解析 API 网关发送的请求头 X-Bkapi-JWT，需要提前获取该网关的公钥。获取网关公钥，有以下方案。
+
+### 1. 根据 SDK 提供的 Django Command 拉取
+
+在同步网关数据时，直接添加以下 Command 拉取网关公钥。网关公钥将保存在 model Context 对应的库表 apigw_manager_context 中，SDK 提供的 Django 中间件将从表中读取网关公钥。
+
+```bash
+# 默认拉取 settings.BK_APIGW_NAME 对应网关的公钥
+python manage.py fetch_apigw_public_key
+
+# 拉取指定网关的公钥
+python manage.py fetch_apigw_public_key --gateway-name my-gateway
+```
+
+### 2. 直接获取网关公钥，配置到项目配置文件
+
+服务仅需接入一些固定的网关部署环境时，可在网关管理端，网关基本信息中查询网关公钥，并配置到项目配置文件。
+
+蓝鲸官方网关，需要自动注册并获取网关公钥，可联系蓝鲸官方运营同学，在服务部署前，由官方提前创建网关，并设置网关公钥、私钥，同时将网关公钥同步给后端服务。
+具体可参考 helm-charts 仓库的 README。
+
+### 3. 通过网关公开接口，拉取网关公钥
+
+API 网关提供了公钥查询接口，后端服务可按需根据接口拉取网关公钥，接口信息如下：
+```bash
+# 将 bkapi.example.com 替换为网关 API 地址，
+# 将 gateway_name 替换为待查询公钥的网关名，
+# 提供正确的蓝鲸应用账号
+curl -X GET 'https://bkapi.example.com/api/bk-apigateway/prod/api/v1/apis/{gateway_name}/public_key/' \
+  -H 'X-Bkapi-Authorization: {"bk_app_code": "my-app", "bk_app_secret": "secret"}'
+```
+
+响应样例：
+
+```json
+{
+    "data": {
+        "public_key": "your public key"
+    }
+}
+```
+
+注意事项：
+- 拉取公钥时，不能实时拉取，需要添加缓存（实时拉取会导致整体接口性能下降）
 
 ## 校验请求来自 API 网关
 
@@ -296,7 +346,7 @@ APIGW_MANAGER_DUMMY_PAYLOAD_USERNAME  # JWT payload 中的 username
 
 ### 场景二：非 Django 项目
 
-非 Django 项目，需要项目获取网关公钥，并解析请求头中的 X-Bkapi-JWT；获取网关公钥的方案请参考下文。
+非 Django 项目，需要项目获取网关公钥，并解析请求头中的 X-Bkapi-JWT；获取网关公钥的方案请参考上文。
 
 解析 X-Bkapi-JWT 时，可根据 jwt header 中的 kid 获取当前网关名，例如：
 ```
@@ -324,50 +374,3 @@ APIGW_MANAGER_DUMMY_PAYLOAD_USERNAME  # JWT payload 中的 username
   "iss": "APIGW"          # 签发者
 }
 ```
-
-### 如何获取网关公钥
-
-后端服务如需解析 API 网关发送的请求头 X-Bkapi-JWT，需要提前获取该网关的公钥。获取网关公钥，有以下方案。
-
-#### 1. 根据 SDK 提供的 Django Command 拉取
-
-在同步网关数据时，直接添加以下 Command 拉取网关公钥。网关公钥将保存在 model Context 对应的库表 apigw_manager_context 中，SDK 提供的 Django 中间件将从表中读取网关公钥。
-
-```bash
-# 默认拉取 settings.BK_APIGW_NAME 对应网关的公钥
-python manage.py fetch_apigw_public_key
-
-# 拉取指定网关的公钥
-python manage.py fetch_apigw_public_key --gateway-name my-gateway
-```
-
-#### 2. 直接获取网关公钥，配置到项目配置文件
-
-服务仅需接入一些固定的网关部署环境时，可在网关管理端，网关基本信息中查询网关公钥，并配置到项目配置文件。
-
-蓝鲸官方网关，需要自动注册并获取网关公钥，可联系蓝鲸官方运营同学，在服务部署前，由官方提前创建网关，并设置网关公钥、私钥，同时将网关公钥同步给后端服务。
-具体可参考 helm-charts 仓库的 README。
-
-#### 3. 通过网关公开接口，拉取网关公钥
-
-API 网关提供了公钥查询接口，后端服务可按需根据接口拉取网关公钥，接口信息如下：
-```bash
-# 将 bkapi.example.com 替换为网关 API 地址，
-# 将 gateway_name 替换为待查询公钥的网关名，
-# 提供正确的蓝鲸应用账号
-curl -X GET 'https://bkapi.example.com/api/bk-apigateway/prod/api/v1/apis/{gateway_name}/public_key/' \
-  -H 'X-Bkapi-Authorization: {"bk_app_code": "my-app", "bk_app_secret": "secret"}'
-```
-
-响应样例：
-
-```json
-{
-    "data": {
-        "public_key": "your public key"
-    }
-}
-```
-
-注意事项：
-- 拉取公钥时，不能实时拉取，需要添加缓存（实时拉取会导致整体接口性能下降）
