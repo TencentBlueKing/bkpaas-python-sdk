@@ -1,5 +1,8 @@
 # 版本历史
 
+## 2.0.7
+- 将认证信息标准化到请求头 X-Bkapi-Authorization 中
+
 ## 2.0.6
 - TokenRequestBackend.request_username 支持国际化
 

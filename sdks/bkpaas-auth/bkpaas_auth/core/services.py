@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import logging
 from typing import Dict
 
@@ -10,6 +11,7 @@ from bkpaas_auth.core.exceptions import ServiceError
 from bkpaas_auth.core.http import http_get
 from bkpaas_auth.core.user_info import BkUserInfo, RtxUserInfo
 from bkpaas_auth.utils import scrub_data
+
 
 logger = logging.getLogger(__name__)
 
@@ -38,14 +40,18 @@ def _get_and_cache_user_info(cache_key, user_params, response_ok_checker):
     if cached_result:
         return cached_result
 
-    params = dict(user_params, **get_app_credentials())
-    is_success, result = http_get(conf.TOKEN_USER_INFO_ENDPOINT, params=params)
+    is_success, result = http_get(
+        conf.TOKEN_USER_INFO_ENDPOINT,
+        headers={
+            "X-Bkapi-Authorization": json.dumps(dict(user_params, **get_app_credentials())),
+        },
+    )
     if not is_success:
         raise ServiceError('Unable to get user info')
 
     if not response_ok_checker(result):
         logger.error(
-            f'Get user info fail, url: {conf.TOKEN_USER_INFO_ENDPOINT}, params: {scrub_data(params)}'
+            f'Get user info fail, url: {conf.TOKEN_USER_INFO_ENDPOINT}, params: {scrub_data(user_params)}'
             f', response: {result}',
         )
         return

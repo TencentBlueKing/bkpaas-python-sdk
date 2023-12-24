@@ -2,6 +2,7 @@
 """Access token for blueking
 """
 import datetime
+import json
 import logging
 
 from django.utils.timezone import now
@@ -32,9 +33,11 @@ class TokenRequestBackend(AbstractRequestBackend):
         """Get username through credentials"""
         is_success, resp = http_get(
             bkauth_settings.USER_COOKIE_VERIFY_URL,
-            params=dict(credentials, **get_app_credentials()),
             timeout=10,
-            headers={'blueking-language': get_language()},
+            headers={
+                'blueking-language': get_language(),
+                "X-Bkapi-Authorization": json.dumps(dict(credentials, **get_app_credentials())),
+            },
         )
         if not is_success:
             raise ServiceError('unable to fetch token services')
