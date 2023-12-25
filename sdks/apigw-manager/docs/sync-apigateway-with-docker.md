@@ -104,7 +104,7 @@ functions.sh 中的 bash 函数：
 步骤2：在 chart values.yaml 中添加配置
 ```yaml
 apigatewaySync:
-  image: "hub.bktencent.com/blueking/apigw-manager:latest"
+  image: "hub.bktencent.com/blueking/apigw-manager:3.0.0"
   configMapMounts:
     - name: "sync-apigw-base"
       filePath: "files/support-files/*"
@@ -202,7 +202,7 @@ spec:
 
 步骤2. 构建 Dockerfile，参考：
 ```Dockerfile
-FROM hub.bktencent.com/blueking/apigw-manager:latest
+FROM hub.bktencent.com/blueking/apigw-manager:3.0.0
 
 COPY support-files /data/
 ```
@@ -251,7 +251,7 @@ docker run --rm \
     -e BK_API_URL_TMPL=<BK_API_URL_TMPL> \
     -e BK_APP_CODE=<BK_APP_CODE> \
     -e BK_APP_SECRET=<BK_APP_SECRET> \
-    hub.bktencent.com/blueking/apigw-manager:latest
+    hub.bktencent.com/blueking/apigw-manager:3.0.0
 ```
 
 
