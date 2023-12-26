@@ -45,6 +45,7 @@ def _get_and_cache_user_info(cache_key, user_params, response_ok_checker):
         headers={
             "X-Bkapi-Authorization": json.dumps(dict(user_params, **get_app_credentials())),
         },
+        params=user_params,
     )
     if not is_success:
         raise ServiceError('Unable to get user info')

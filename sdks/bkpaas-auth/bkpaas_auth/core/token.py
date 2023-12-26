@@ -38,6 +38,7 @@ class TokenRequestBackend(AbstractRequestBackend):
                 'blueking-language': get_language(),
                 "X-Bkapi-Authorization": json.dumps(dict(credentials, **get_app_credentials())),
             },
+            params=credentials,
         )
         if not is_success:
             raise ServiceError('unable to fetch token services')

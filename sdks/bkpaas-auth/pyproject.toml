@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bkpaas-auth"
-version = "2.0.7"
+version = "2.0.8"
 description = "User authentication django app for blueking internal projects"
 readme = "README.md"
 authors = ["blueking <blueking@tencent.com>"]
