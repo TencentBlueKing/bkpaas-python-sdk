@@ -1,5 +1,8 @@
 ## Change logs
 
+### 3.0.1
+- 修复指令 fetch_esb_public_key 指令参数问题
+
 ### 3.0.0
 - 添加指令 add_related_apps，支持为网关添加关联应用
 - definition.yaml 添加 spec_version 字段，指定配置文件版本号
