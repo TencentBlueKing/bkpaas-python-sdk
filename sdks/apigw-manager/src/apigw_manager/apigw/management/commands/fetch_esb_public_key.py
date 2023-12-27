@@ -17,4 +17,4 @@ class Command(BaseCommand):
 
     def handle(self, gateway_name, *args, **kwargs):
         for _gateway_name in ["bk-esb", "apigw"]:
-            super(Command, self).handle(_gateway_name, *args, **kwargs)
+            super(Command, self).handle(*args, gateway_name=_gateway_name, **kwargs)
