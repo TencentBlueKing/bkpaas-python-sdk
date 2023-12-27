@@ -26,13 +26,13 @@ class Command(FetchCommand):
         parser.add_argument("--bk-app-secret", dest="bk_app_secret", help="app secret")
         parser.add_argument("--no-save", default=False, action="store_true", help="do not save the public key")
 
-    def do(self, manager, configuration, print_, no_save, *args, **kwargs):
+    def do(self, manager, configuration, *args, **kwargs):
         result = manager.public_key()
 
-        if print_:
+        if kwargs.get("print_"):
             print(result["public_key"])
 
-        if no_save:
+        if kwargs.get("no_save"):
             return
 
         public_key_manager = helper.make_default_public_key_manager()

@@ -8,6 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+import copy
 
 from apigw_manager.apigw.management.commands.fetch_apigw_public_key import Command as BaseCommand
 
@@ -16,5 +17,8 @@ class Command(BaseCommand):
     """Get the esb public key and store it into the database"""
 
     def handle(self, gateway_name, *args, **kwargs):
+        copied_kwargs = copy.deepcopy(kwargs)
+
         for _gateway_name in ["bk-esb", "apigw"]:
-            super(Command, self).handle(_gateway_name, *args, **kwargs)
+            copied_kwargs["gateway_name"] = _gateway_name
+            super(Command, self).handle(*args, **copied_kwargs)
