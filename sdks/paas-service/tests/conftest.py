@@ -42,6 +42,14 @@ def instance(service, plan):
 
 
 @pytest.fixture
+def instance_with_credentials(service, plan):
+    credentials = """
+    {"host": "host.test", "port": "0000", "name": "bkapp-test", "user": "bkapp-test", "password": "password"}
+    """
+    return ServiceInstance.objects.create(service=service, plan=plan,credentials=credentials)
+
+
+@pytest.fixture
 def spec_def(service):
     spec_def = SpecDefinition.objects.create(
         **{
