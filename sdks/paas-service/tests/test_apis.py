@@ -278,7 +278,7 @@ class TestSvcInstanceViewSet:
         view = SvcInstanceViewSet.as_view({'get': 'retrieve_by_name'})
 
         request = rf.get(
-            f'/{service.pk}/instances/{name}/',
+            f'/{service.pk}/instances/name/{name}/',
         )
         request.client = platform_client
 
