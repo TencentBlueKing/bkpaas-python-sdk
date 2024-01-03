@@ -278,11 +278,24 @@ class TestSvcInstanceViewSet:
         view = SvcInstanceViewSet.as_view({'get': 'retrieve_by_name'})
 
         request = rf.get(
-            f'/{service.pk}/instances/name/{name}/',
+            f'/{service.pk}/?name={name}',
         )
         request.client = platform_client
 
-        response = view(request, service_id=service.pk, name=name)
+        response = view(request, service_id=service.pk)
         response.render()
         assert response.status_code == 200
         assert response.data['uuid'] == str(instance_with_credentials.uuid)
+
+    def test_retrieve_by_name_when_not_found(self, rf, service, platform_client):
+        name = 'test'
+        view = SvcInstanceViewSet.as_view({'get': 'retrieve_by_name'})
+
+        request = rf.get(
+            f'/{service.pk}/?name={name}',
+        )
+        request.client = platform_client
+
+        response = view(request, service_id=service.pk)
+        response.render()
+        assert response.status_code == 404

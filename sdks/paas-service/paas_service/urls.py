@@ -40,7 +40,7 @@ urlpatterns += [
         name='api.services.instances_creation',
     ),
     url(
-        r'^services/(?P<service_id>[0-9a-f-]{32,36})/instances/name/(?P<name>[0-9a-fA-Z-]+)/$',
+        r'^services/(?P<service_id>[0-9a-f-]{32,36})/instances/$',
         views.SvcInstanceViewSet.as_view({'get': 'retrieve_by_name'}),
         name='api.services.instances_retrieve_by_name',
     ),
