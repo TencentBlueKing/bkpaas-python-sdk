@@ -177,6 +177,20 @@ class SvcInstanceViewSet(viewsets.ViewSet):
         instance.prerender(request)
         return Response(serializers.ServiceInstanceSLZ(instance).data)
 
+    @m_verified_client_required
+    def retrieve_by_fields(self, request, service_id):
+        """Retrieve an instance by fields"""
+        qs = ServiceInstance.objects.filter(service__uuid=service_id)
+        # 由于 name 在 credentials 加密字段中， 所以不能直接使用 filter 过滤
+        # 只能遍历所有 ServiceInstance 来查找
+        name = request.GET.get("name")
+        for instance in qs:
+            credentials = instance.get_credentials()
+            if credentials.get('name') == name:
+                instance.prerender(request)
+                return Response(serializers.ServiceInstanceSLZ(instance).data)
+        return Response(status=404)
+
     @verified_client_role_require('internal_platform')
     def update(self, request, instance_id):
         return Response(data={'detail': 'not available'}, status=400)

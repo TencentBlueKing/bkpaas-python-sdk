@@ -40,6 +40,11 @@ urlpatterns += [
         name='api.services.instances_creation',
     ),
     url(
+        r'^services/(?P<service_id>[0-9a-f-]{32,36})/instances/$',
+        views.SvcInstanceViewSet.as_view({'get': 'retrieve_by_fields'}),
+        name='api.services.instances_retrieve_by_fields',
+    ),
+    url(
         r'^services/(?P<service_id>[0-9a-f-]{32,36})/client-side-instances/(?P<instance_id>[0-9a-f-]{32,36})/$',
         views.ClientSideSvcInstanceViewSet.as_view({'post': 'create'}),
         name='api.services.client_side_instances_creation',

@@ -20,7 +20,7 @@ import json
 
 import pytest
 from paas_service.models import Plan, Service, ServiceInstanceConfig, SpecDefinition, Specification
-from paas_service.views import PlanManageViewSet, ServiceManageViewSet, SvcInstanceConfigViewSet
+from paas_service.views import PlanManageViewSet, ServiceManageViewSet, SvcInstanceConfigViewSet, SvcInstanceViewSet
 
 pytestmark = pytest.mark.django_db
 spec_def_data = {
@@ -270,3 +270,32 @@ class TestPlanManageViewSet:
 
         spec = plan.specifications.get(definition=spec_def)
         assert spec.value == "Bar"
+
+
+class TestSvcInstanceViewSet:
+    def test_retrieve_by_fields(self, rf, service, instance_with_credentials, platform_client):
+        name = instance_with_credentials.get_credentials().get('name')
+        view = SvcInstanceViewSet.as_view({'get': 'retrieve_by_fields'})
+
+        request = rf.get(
+            f'/{service.pk}/?name={name}',
+        )
+        request.client = platform_client
+
+        response = view(request, service_id=service.pk)
+        response.render()
+        assert response.status_code == 200
+        assert response.data['uuid'] == str(instance_with_credentials.uuid)
+
+    def test_retrieve_by_fields_when_not_found(self, rf, service, platform_client):
+        name = 'test'
+        view = SvcInstanceViewSet.as_view({'get': 'retrieve_by_fields'})
+
+        request = rf.get(
+            f'/{service.pk}/?name={name}',
+        )
+        request.client = platform_client
+
+        response = view(request, service_id=service.pk)
+        response.render()
+        assert response.status_code == 404
