@@ -178,7 +178,7 @@ class SvcInstanceViewSet(viewsets.ViewSet):
         return Response(serializers.ServiceInstanceSLZ(instance).data)
 
     @m_verified_client_required
-    def retrieve_by_name(self, request, service_id):
+    def retrieve_by_fields(self, request, service_id):
         """Retrieve an instance by name"""
         qs = ServiceInstance.objects.filter(service__uuid=service_id)
         # 由于 name 在 credentials 加密字段中， 所以不能直接使用 filter 过滤

@@ -41,8 +41,8 @@ urlpatterns += [
     ),
     url(
         r'^services/(?P<service_id>[0-9a-f-]{32,36})/instances/$',
-        views.SvcInstanceViewSet.as_view({'get': 'retrieve_by_name'}),
-        name='api.services.instances_retrieve_by_name',
+        views.SvcInstanceViewSet.as_view({'get': 'retrieve_by_fields'}),
+        name='api.services.instances_retrieve_by_fields',
     ),
     url(
         r'^services/(?P<service_id>[0-9a-f-]{32,36})/client-side-instances/(?P<instance_id>[0-9a-f-]{32,36})/$',
