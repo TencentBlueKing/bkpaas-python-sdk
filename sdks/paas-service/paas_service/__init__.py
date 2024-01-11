@@ -16,6 +16,6 @@ limitations under the License.
 We undertake not to change the open source license (MIT license) applicable
 to the current version of the project delivered to anyone in the future.
 """
-__version__ = '1.1.4'
+__version__ = '1.1.5'
 
 default_app_config = 'paas_service.apps.PaaSServiceConfig'

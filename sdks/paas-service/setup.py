@@ -31,7 +31,7 @@ readme = ''
 setup(
     long_description=readme,
     name='paas_service',
-    version='1.1.3',
+    version='1.1.5',
     python_requires='<3.11,>=3.6.2',
     author='blueking',
     author_email='blueking@tencent.com',
