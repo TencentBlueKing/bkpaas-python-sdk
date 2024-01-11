@@ -52,7 +52,7 @@ stages:
     reviews:
       flows:
       - name: 审批组
-        reviewers: ["raymondhzu", "jamesge", "jiayuan", "shabbywu", "schneesu"]
+        reviewers: ["raymondhzu", "jamesge", "jiayuan", "shabbywu", "schneesu","SheepSheepChen"]
   jobs:
     publish:
       name: publish
