@@ -1,5 +1,7 @@
 ## 通过镜像方式同步网关
 
+#### 镜像说明
+
 网关提供基础镜像 apigw-manager，用于同步网关数据到 API 网关。基础镜像通过 [Dockerfile](../Dockerfile) 进行构建，该镜像封装了 [demo](../demo) 项目，可读取 /data/ 目录，直接进行网关注册和同步操作，目录约定：
 - */data/definition.yaml*：网关定义文件，用于注册网关；
 - */data/resources.yaml*：资源定义文件，用于同步网关资源，可通过网关导出；
