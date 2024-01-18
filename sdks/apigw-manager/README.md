@@ -3,11 +3,12 @@
 蓝鲸 API 网关管理 SDK 是一个用于管理 API 网关的工具，它提供了一套完整的工具和功能，可以帮助您更轻松地管理 API 网关，提高系统的安全性和可靠性。
 
 1. Django Command：SDK 提供了 Django Command，支持网关注册、同步、发布等功能。您可以根据需要编排指令，以满足您的特定需求，并集成到您的项目自动执行 API 网关同步过程，以便更轻松地管理 API 网关。
+
 2. Docker 镜像：对于非 Django 项目，提供了 Docker 基础镜像，封装了 SDK 同步网关的相关功能，以便非 Django 项目轻松管理 API 网关。
+
 3. Django 中间件：SDK 还提供了 Django 中间件，用于解析 API 网关请求后端接口时添加的请求头 X-Bkapi-JWT，以方便后端服务校验请求是否来自 API 网关。这个中间件可以确保只有来自蓝鲸 API 网关的请求才能访问您的后端服务，从而提高系统的安全性。
 
 ## 安装
-
 基础安装：
 
 ```shell
@@ -28,14 +29,12 @@ pip install "apigw-manager[cryptography]"
 ## 根据 YAML 同步网关配置
 
 SDK 同步网关配置到 API 网关，支持多种方案:
-
 - 直接使用 Django Command 同步：此方案适用于 Django 项目；Django 项目，可直接执行 SDK 提供的 Django Command 指令
 - 通过镜像方式同步：此方案适用于非 Django 项目；非 Django 项目，无法直接执行 SDK 提供的 Django Command 指令
 
 ### 准备工作
 
 同步网关配置到 API 网关，需要准备网关配置、资源配置、资源文档、自定义同步脚本等数据，可参考目录：
-
 ```
 support-files
 ├── definition.yaml         # 维护网关、环境、资源文档路径、主动授权、发布等配置，但不包含资源配置
@@ -70,14 +69,12 @@ support-files
 ```
 
 definition.yaml 中可以使用 Django 模版语法引用和渲染变量，内置以下变量：
-
 - `settings`：Django 提供的配置对象
 - `environ`：环境变量
 
 推荐在一个文件中统一进行定义，用命名空间区分不同配置间的定义，definition.yaml 样例：
 
 ```yaml
-  
 # definition.yaml 配置文件版本号，必填，固定值 1
 spec_version: 1
 
@@ -176,7 +173,6 @@ resource_docs:
 ```
 
 **注意：**
-
 - 同步资源后，需要创建版本并发布才能生效，发布数据定义于 definition.yaml `release`
 - 资源配置 resources.yaml 变更时，需要更新 definition.yaml `release` 中的版本号 version，以便正确创建资源版本及 SDK
 
@@ -192,7 +188,6 @@ resource_docs:
 将资源的中文文档放到目录 `zh` 下，英文文档放到目录 `en` 下，如果某语言文档不存在，可忽略对应目录。
 
 文档文件目录样例如下：
-
 ```
 .
 ├── en
@@ -205,7 +200,6 @@ resource_docs:
 
 导入资源文档时，可以直接使用资源文档归档文件，也可以使用资源文档目录。参考上文 definition.yaml 样例，
 在项目 definition.yaml 文件中，修改资源文档相关配置 resource_docs：
-
 ```yaml
 resource_docs:
   # 资源文档的归档文件，可为 tar.gz，zip 格式文件；创建归档文件可使用指令 `tar czvf xxx.tgz en zh`
@@ -222,6 +216,7 @@ resource_docs:
 ### 方案二：通过镜像方式同步
 
 此方案适用于非 Django 项目，具体请参考 [sync-apigateway-with-docker.md](docs/sync-apigateway-with-docker.md)
+
 
 ## 如何获取网关公钥
 
@@ -249,7 +244,6 @@ python manage.py fetch_apigw_public_key --gateway-name my-gateway
 ### 3. 通过网关公开接口，拉取网关公钥
 
 API 网关提供了公钥查询接口，后端服务可按需根据接口拉取网关公钥，接口信息如下：
-
 ```bash
 # 将 bkapi.example.com 替换为网关 API 地址，
 # 将 gateway_name 替换为待查询公钥的网关名，
@@ -269,7 +263,6 @@ curl -X GET 'https://bkapi.example.com/api/bk-apigateway/prod/api/v1/apis/{gatew
 ```
 
 注意事项：
-
 - 拉取公钥时，不能实时拉取，需要添加缓存（实时拉取会导致整体接口性能下降）
 
 ## 校验请求来自 API 网关
@@ -302,29 +295,22 @@ AUTHENTICATION_BACKENDS += [
 ```
 
 注意，Django 中间件 ApiGatewayJWTGenericMiddleware 解析 `X-Bkapi-JWT` 时，需要获取网关公钥，SDK 默认从以下两个位置获取网关公钥：
-
 - SDK model Context (库表 apigw_manager_context)，需提前执行 `python manage.py fetch_apigw_public_key` 拉取并保存网关公钥
 - settings.APIGW_PUBLIC_KEY，可在网关页面中手动获取公钥，并配置到 settings 中
 
 #### Django 中间件
 
 ##### ApiGatewayJWTGenericMiddleware
-
 利用网关公钥，解析请求头中的 X-Bkapi-JWT，在 `request` 中注入 `jwt` 对象，有以下属性：
-
 - `gateway_name`：传入的网关名称；
 
 ##### ApiGatewayJWTAppMiddleware
-
 根据 `request.jwt`，在 `request` 中注入 `app` 对象，有以下属性：
-
 - `bk_app_code`：调用接口的应用；
 - `verified`：应用是否经过认证；
 
 ##### ApiGatewayJWTUserMiddleware
-
 根据 `request.jwt`，在 `request` 中注入 `user` 对象:
-
 - 如果用户通过认证：其为一个 Django User Model 对象，用户名为当前请求用户的用户名
 - 如果用户未通过认证，其为一个 Django AnonymousUser 对象，用户名为当前请求用户的用户名
 
@@ -344,7 +330,6 @@ class MyJWTUserMiddleware(ApiGatewayJWTUserMiddleware):
 #### 用户认证后端
 
 ##### UserModelBackend
-
 - 已认证的用户名，根据 `UserModel` 创建一个用户对象，不存在时返回 `None`；
 - 未认证的用户名，返回 `AnonymousUser`，可通过继承后修改 `make_anonymous_user` 的实现来定制具体字段；
 
@@ -354,13 +339,11 @@ class MyJWTUserMiddleware(ApiGatewayJWTUserMiddleware):
 为方便测试，SDK 提供了一个 Dummy JWT Provider，用于根据环境变量直接构造一个 request.jwt 对象。
 
 在项目中添加本地开发配置文件 `local_settings.py`，并将其导入到 settings；然后，在此本地开发配置文件中添加配置：
-
 ```python
 BK_APIGW_JWT_PROVIDER_CLS = "apigw_manager.apigw.providers.DummyEnvPayloadJWTProvider"
 ```
 
 同时提供以下环境变量（非 Django settings)
-
 ```
 APIGW_MANAGER_DUMMY_GATEWAY_NAME      # JWT 中的网关名
 APIGW_MANAGER_DUMMY_PAYLOAD_APP_CODE  # JWT payload 中的 app_code
@@ -372,7 +355,6 @@ APIGW_MANAGER_DUMMY_PAYLOAD_USERNAME  # JWT payload 中的 username
 非 Django 项目，需要项目获取网关公钥，并解析请求头中的 X-Bkapi-JWT；获取网关公钥的方案请参考上文。
 
 解析 X-Bkapi-JWT 时，可根据 jwt header 中的 kid 获取当前网关名，例如：
-
 ```
 {
     "iat": 1701399603,
@@ -383,7 +365,6 @@ APIGW_MANAGER_DUMMY_PAYLOAD_USERNAME  # JWT payload 中的 username
 ```
 
 可从 jwt 内容中获取网关认证的应用、用户信息，例如：
-
 ```
 {
   "user": {                  # 用户信息

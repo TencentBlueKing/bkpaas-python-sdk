@@ -1,13 +1,11 @@
 ### 直接使用 Django Command 同步网关
 
 项目安装 SDK apigw-manager 后，可以直接执行 SDK 提供的 Django Command。
-
 - 准备文件的样例 [examples/django/use-custom-script](../examples/django/use-custom-script)
 
 #### 步骤1. 准备自定义同步脚本
 
 创建一个 bash 脚本，如 `sync-apigateway.sh`，使用 SDK 提供的 Django Command 定义网关配置的同步脚本，样例如下：
-
 ```shell
 #!/bin/bash
 
@@ -51,7 +49,6 @@ echo "gateway sync definition end"
 ```
 
 如果需要更灵活的控制，也可以采用自定义 Django Command 的方案，例如：
-
 ```python
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -62,7 +59,7 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         if not getattr(settings, "SYNC_APIGATEWAY_ENABLED", True):
             return
-
+        
         # 待同步网关名，需修改为实际网关名；直接指定网关名，则不需要配置 Django settings BK_APIGW_NAME
         gateway_name = "bk-demo"
 
@@ -116,7 +113,6 @@ INSTALLED_APPS += [
 #### 步骤5. 同步网关数据到 API 网关
 
 chart 部署方案，可采用 K8S Job 同步，样例如下：
-
 ```yaml
 apiVersion: batch/v1
 kind: Job
@@ -126,23 +122,23 @@ spec:
   template:
     spec:
       containers:
-        - command:
-            - bash
-          args:
-            - support-files/bin/sync-apigateway.sh
-          ## 自定义 Django Command 时，可直接执行 Command 指令
-          # -c
-          # "python manage.py sync_apigateway"
-          image: "hub.bktencent.com/blueking/my-image:1.0.0"
-          imagePullPolicy: "IfNotPresent"
-          name: sync-apigateway
+      - command:
+        - bash
+        args:
+        - support-files/bin/sync-apigateway.sh
+        ## 自定义 Django Command 时，可直接执行 Command 指令
+        # -c
+        # "python manage.py sync_apigateway"
+        image: "hub.bktencent.com/blueking/my-image:1.0.0"
+        imagePullPolicy: "IfNotPresent"
+        name: sync-apigateway
 ```
 
 二进制部署方案，在部署阶段直接执行 sync-apigateway.sh 脚本：
-
 ```shell
 bash support-files/bin/sync-apigateway.sh
 ```
+
 
 ### 支持的 Django Command 列表
 
