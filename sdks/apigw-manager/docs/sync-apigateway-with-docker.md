@@ -6,6 +6,13 @@
 - */data/apidocs*：文档目录，可通过网关导出后解压；
 - */data/bin/sync-apigateway.sh*：自定义同步脚本；镜像提供默认同步脚本：[sync-apigateway.sh](../bin/sync-apigateway.sh)，如不满足需求，可自定义同步脚本
 
+>  如果自定义了 `sync-apigateway.sh`时，由于因为自定义的 sh 和 依赖的functions.sh 不在一个目录，引用 functions.sh 需要指定绝对地址,`sync-apigateway.sh`中相比镜像默认脚本这个地方需要注意修改：
+
+```shell
+# 加载 apigw-manager 原始镜像中的通用函数
+source /apigw-manager/bin/functions.sh
+```
+
 镜像执行同步时，需要额外的环境变量支持：
 - `BK_APIGW_NAME`：网关名称；
 - `BK_API_URL_TMPL`：云网关 API 地址模板，例如：http://bkapi.example.com/api/{api_name}；
@@ -258,13 +265,22 @@ docker run --rm \
 ### 支持同步指令
 
 ```bash
-call_definition_command_or_exit add_related_apps "${definition_file}" --gateway-name=${gateway_name}  # 可选，为网关添加关联应用，关联应用可以通过网关 bk-apigateway 提供的接口管理网关数据
-call_definition_command_or_exit apply_apigw_permissions "${definition_file}" --gateway-name=${gateway_name}  # 可选，申请网关权限
-call_definition_command_or_exit create_version_and_release_apigw "${definition_file}" --gateway-name=${gateway_name}  # 创建资源版本并发布；指定参数 --generate-sdks 时，会同时生成资源版本对应的网关 SDK
-apigw-manager.sh fetch_apigw_public_key --gateway-name=${gateway_name} --print > "apigateway.pub"  # 获取网关公钥，存放到文件 apigateway.pub
-call_definition_command_or_exit grant_apigw_permissions "${definition_file}" --gateway-name=${gateway_name}  # 可选，为应用主动授权
-call_definition_command_or_exit sync_apigw_config "${definition_file}" --gateway-name=${gateway_name}  # 同步网关基本信息
-call_definition_command_or_exit sync_apigw_resources "${resources_file}" --gateway-name=${gateway_name} --delete  # 同步网关资源；--delete 将删除网关中未在 resources.yaml 存在的资源
-call_definition_command_or_exit sync_apigw_stage "${definition_file}" --gateway-name=${gateway_name}  # 同步网关环境信息
-call_definition_command_or_exit sync_resource_docs_by_archive "${definition_file}" --gateway-name=${gateway_name} --safe-mode  # 可选，同步资源文档
+# 可选，为网关添加关联应用，关联应用可以通过网关 bk-apigateway 提供的接口管理网关数据
+call_definition_command_or_exit add_related_apps "${definition_file}" --gateway-name=${gateway_name} 
+# 可选，申请网关权限 
+call_definition_command_or_exit apply_apigw_permissions "${definition_file}" --gateway-name=${gateway_name}  
+# 创建资源版本并发布；指定参数 --generate-sdks 时，会同时生成资源版本对应的网关 SDK
+call_definition_command_or_exit create_version_and_release_apigw "${definition_file}" --gateway-name=${gateway_name} 
+# 获取网关公钥，存放到文件 apigateway.pub 
+apigw-manager.sh fetch_apigw_public_key --gateway-name=${gateway_name} --print > "apigateway.pub"  
+# 可选，为应用主动授权
+call_definition_command_or_exit grant_apigw_permissions "${definition_file}" --gateway-name=${gateway_name}  
+# 同步网关基本信息
+call_definition_command_or_exit sync_apigw_config "${definition_file}" --gateway-name=${gateway_name}  
+# 同步网关资源；--delete 将删除网关中未在 resources.yaml 存在的资源
+call_definition_command_or_exit sync_apigw_resources "${resources_file}" --gateway-name=${gateway_name} --delete 
+# 同步网关环境信息
+call_definition_command_or_exit sync_apigw_stage "${definition_file}" --gateway-name=${gateway_name}  
+# 可选，同步资源文档
+call_definition_command_or_exit sync_resource_docs_by_archive "${definition_file}" --gateway-name=${gateway_name} --safe-mode  
 ```
