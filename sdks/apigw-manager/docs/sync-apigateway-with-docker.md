@@ -23,13 +23,13 @@
 
 同步脚本 `sync-apigateway.sh`，脚本允许通过额外的环境变量设置同步脚本当中一些命令参数：
 
-- `SYNC_APIGW_CONFIG_ARGS`: 用于命令 `sync_apigw_config`
-- `SYNC_APIGW_STAGE_ARGS`: 用于命令 `sync_apigw_stage`
-- `APPLY_APIGW_PERMISSIONS_ARGS`: 用于命令 `apply_apigw_permissions`
-- `GRANT_APIGW_PERMISSIONS_ARGS`: 用于命令 `grant_apigw_permissions`
-- `SYNC_APIGW_RESOURCES_ARGS`: 默认值："--delete"，用于命令 `sync_apigw_resources`
-- `SYNC_RESOURCE_DOCS_BY_ARCHIVE_ARGS`: 默认值: "--safe-mode"，用于命令 `sync_resource_docs_by_archive`
-- `CREATE_VERSION_AND_RELEASE_APIGW_ARGS`: 默认值："--generate-sdks"，用于命令 `create_version_and_release_apigw`
+- `SYNC_APIGW_CONFIG_ARGS`: 用于命令 `sync_apigw_config`, 同步网关基础配置
+- `SYNC_APIGW_STAGE_ARGS`: 用于命令 `sync_apigw_stage`, 同步环境配置
+- `APPLY_APIGW_PERMISSIONS_ARGS`: 用于命令 `apply_apigw_permissions`，申请网关资源权限
+- `GRANT_APIGW_PERMISSIONS_ARGS`: 用于命令 `grant_apigw_permissions`，授权网关权限
+- `SYNC_APIGW_RESOURCES_ARGS`: 默认值："--delete"，用于命令 `sync_apigw_resources`，同步网关资源
+- `SYNC_RESOURCE_DOCS_BY_ARCHIVE_ARGS`: 默认值: "--safe-mode"，用于命令 `sync_resource_docs_by_archive`，同步网关文档
+- `CREATE_VERSION_AND_RELEASE_APIGW_ARGS`: 默认值："--generate-sdks"，用于命令 `create_version_and_release_apigw`,创建资源版本并发布
 
 
 基础镜像提供了一些自定义同步脚本常用的 bash 函数，以及执行 Django Command 指令的辅助脚本：
