@@ -287,7 +287,10 @@ call_definition_command_or_exit grant_apigw_permissions "${definition_file}" --g
 # 同步网关基本信息
 call_definition_command_or_exit sync_apigw_config "${definition_file}" --gateway-name=${gateway_name}
   
-# 同步网关资源；--delete 将删除网关中未在 resources.yaml 存在的资源
+# 同步网关资源
+# 
+# --delete: 当资源在服务端存在，却未出现在资源定义文件中时，默认将被忽略
+#   指定本参数会强制删除这类资源，以保证服务端资源和文件内容完全一致。
 call_definition_command_or_exit sync_apigw_resources "${resources_file}" --gateway-name=${gateway_name} --delete
  
 # 同步网关环境信息
