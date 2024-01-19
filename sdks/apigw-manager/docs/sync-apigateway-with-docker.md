@@ -21,7 +21,7 @@
   - 单文件大小 >= 1MB 时，可创建自定义镜像
 - 二进制：可直接通过外部文件挂载
 
-基础镜像提供了同步脚本 [sync-apigateway.sh](../bin/sync-apigateway.sh)，脚本允许通过额外的环境变量设置同步脚本当中一些命令参数：
+同步脚本 `sync-apigateway.sh`，脚本允许通过额外的环境变量设置同步脚本当中一些命令参数：
 
 - `SYNC_APIGW_CONFIG_ARGS`: 用于命令 `sync_apigw_config`
 - `SYNC_APIGW_STAGE_ARGS`: 用于命令 `sync_apigw_stage`
@@ -32,11 +32,9 @@
 - `CREATE_VERSION_AND_RELEASE_APIGW_ARGS`: 默认值："--generate-sdks"，用于命令 `create_version_and_release_apigw`
 
 
-基础镜像提供一些常用的 bash 函数，以及执行 Django Command 指令的辅助脚本：
+基础镜像提供了一些自定义同步脚本常用的 bash 函数，以及执行 Django Command 指令的辅助脚本：
 
-- `functions.sh`，定义一些常用 bash 函数，源码 [functions.sh](../bin/functions.sh)
-- `apigw-manager.sh`: 单纯执行一个 Django Command 指令，出错返回非 0
-  错误码，不退出脚本，源码 [apigw-manager.sh](../bin/apigw-manager.sh)
+- `functions.sh`，定义一些常用 bash 函数，源码 [/apigw-manager/bin/functions.sh](../bin/functions.sh)
 
 functions.sh 中的 bash 函数：
 
