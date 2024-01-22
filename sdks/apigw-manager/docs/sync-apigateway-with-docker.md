@@ -1,10 +1,13 @@
 ## 通过镜像方式同步网关
 
+#### 镜像说明
+
 网关提供基础镜像 apigw-manager，用于同步网关数据到 API 网关。基础镜像通过 [Dockerfile](../Dockerfile) 进行构建，该镜像封装了 [demo](../demo) 项目，可读取 /data/ 目录，直接进行网关注册和同步操作，目录约定：
 - */data/definition.yaml*：网关定义文件，用于注册网关；
 - */data/resources.yaml*：资源定义文件，用于同步网关资源，可通过网关导出；
 - */data/apidocs*：文档目录，可通过网关导出后解压；
-- */data/bin/sync-apigateway.sh*：自定义同步脚本；镜像提供默认同步脚本：[sync-apigateway.sh](../bin/sync-apigateway.sh)，如不满足需求，可自定义同步脚本
+- */data/bin/sync-apigateway.sh*：自定义同步脚本;
+
 
 镜像执行同步时，需要额外的环境变量支持：
 - `BK_APIGW_NAME`：网关名称；
@@ -18,18 +21,36 @@
   - 单文件大小 >= 1MB 时，可创建自定义镜像
 - 二进制：可直接通过外部文件挂载
 
+同步脚本 `sync-apigateway.sh`，脚本允许通过额外的环境变量设置同步脚本当中一些命令参数：
+
+- `SYNC_APIGW_CONFIG_ARGS`: 用于命令 `sync_apigw_config`, 同步网关基础配置
+- `SYNC_APIGW_STAGE_ARGS`: 用于命令 `sync_apigw_stage`, 同步环境配置
+- `APPLY_APIGW_PERMISSIONS_ARGS`: 用于命令 `apply_apigw_permissions`，申请网关资源权限
+- `GRANT_APIGW_PERMISSIONS_ARGS`: 用于命令 `grant_apigw_permissions`，授权网关权限
+- `SYNC_APIGW_RESOURCES_ARGS`: 默认值："--delete"，用于命令 `sync_apigw_resources`，同步网关资源
+- `SYNC_RESOURCE_DOCS_BY_ARCHIVE_ARGS`: 默认值: "--safe-mode"，用于命令 `sync_resource_docs_by_archive`，同步网关文档
+- `CREATE_VERSION_AND_RELEASE_APIGW_ARGS`: 默认值："--generate-sdks"，用于命令 `create_version_and_release_apigw`,创建资源版本并发布
+
+
+基础镜像提供了一些自定义同步脚本常用的 bash 函数，以及执行 Django Command 指令的辅助脚本：
+
+- `functions.sh`，定义一些常用 bash 函数，源码 [/apigw-manager/bin/functions.sh](../bin/functions.sh)
+
+functions.sh 中的 bash 函数：
+
+- `call_command_or_warning`: 执行一个 Django Command 指令，出错返回非 0 错误码，不退出脚本
+- `call_definition_command_or_warning`: 执行一个 Django Command 指令，出错时打印告警日志，不退出脚本
+- `call_definition_command_or_exit`: 执行一个 Django Command 指令，出错退出脚本执行
+- `title`: 打印标题
+- `log_info`: 打印 info 日志
+- `log_warn`: 打印 warning 日志
+- `log_error`: 打印 error 日志
+
+
 #### 准备工作
 
-基础镜像提供了同步脚本 [sync-apigateway.sh](../bin/sync-apigateway.sh)，脚本允许通过额外的环境变量设置命令参数：
-- `SYNC_APIGW_CONFIG_ARGS`: 用于命令 `sync_apigw_config`
-- `SYNC_APIGW_STAGE_ARGS`: 用于命令 `sync_apigw_stage`
-- `APPLY_APIGW_PERMISSIONS_ARGS`: 用于命令 `apply_apigw_permissions`
-- `GRANT_APIGW_PERMISSIONS_ARGS`: 用于命令 `grant_apigw_permissions`
-- `SYNC_APIGW_RESOURCES_ARGS`: 默认值："--delete"，用于命令 `sync_apigw_resources`
-- `SYNC_RESOURCE_DOCS_BY_ARCHIVE_ARGS`: 默认值: "--safe-mode"，用于命令 `sync_resource_docs_by_archive`
-- `CREATE_VERSION_AND_RELEASE_APIGW_ARGS`: 默认值："--generate-sdks"，用于命令 `create_version_and_release_apigw`
+准备自定义同步脚本，镜像执行时指定使用自定义同步脚本即可。自定义同步脚本样例 [sync-apigateway.sh](../examples/chart/use-custom-docker-image/my-apigw-manager/support-files/bin/sync-apigateway.sh) 如下：
 
-如果基础镜像提供的同步脚本不满足需求，可以自定义同步脚本，镜像执行时指定使用自定义同步脚本即可。自定义同步脚本样例如下：
 ```bash
 #!/bin/bash
 
@@ -64,18 +85,6 @@ call_definition_command_or_exit create_version_and_release_apigw "${definition_f
 log_info "done"
 ```
 
-基础镜像提供一些常用的 bash 函数，以及执行 Django Command 指令的辅助脚本：
-- `functions.sh`，定义一些常用 bash 函数，源码 [functions.sh](../bin/functions.sh)
-- `apigw-manager.sh`: 单纯执行一个 Django Command 指令，出错返回非 0 错误码，不退出脚本，源码 [apigw-manager.sh](../bin/apigw-manager.sh)
-
-functions.sh 中的 bash 函数：
-- `call_command_or_warning`: 执行一个 Django Command 指令，出错返回非 0 错误码，不退出脚本
-- `call_definition_command_or_warning`: 执行一个 Django Command 指令，出错时打印告警日志，不退出脚本
-- `call_definition_command_or_exit`: 执行一个 Django Command 指令，出错退出脚本执行
-- `title`: 打印标题
-- `log_info`: 打印 info 日志
-- `log_warn`: 打印 warning 日志
-- `log_error`: 打印 error 日志
 
 #### 使用方式一：chart + ConfigMap
 
@@ -258,13 +267,34 @@ docker run --rm \
 ### 支持同步指令
 
 ```bash
-call_definition_command_or_exit add_related_apps "${definition_file}" --gateway-name=${gateway_name}  # 可选，为网关添加关联应用，关联应用可以通过网关 bk-apigateway 提供的接口管理网关数据
-call_definition_command_or_exit apply_apigw_permissions "${definition_file}" --gateway-name=${gateway_name}  # 可选，申请网关权限
-call_definition_command_or_exit create_version_and_release_apigw "${definition_file}" --gateway-name=${gateway_name}  # 创建资源版本并发布；指定参数 --generate-sdks 时，会同时生成资源版本对应的网关 SDK
-apigw-manager.sh fetch_apigw_public_key --gateway-name=${gateway_name} --print > "apigateway.pub"  # 获取网关公钥，存放到文件 apigateway.pub
-call_definition_command_or_exit grant_apigw_permissions "${definition_file}" --gateway-name=${gateway_name}  # 可选，为应用主动授权
-call_definition_command_or_exit sync_apigw_config "${definition_file}" --gateway-name=${gateway_name}  # 同步网关基本信息
-call_definition_command_or_exit sync_apigw_resources "${resources_file}" --gateway-name=${gateway_name} --delete  # 同步网关资源；--delete 将删除网关中未在 resources.yaml 存在的资源
-call_definition_command_or_exit sync_apigw_stage "${definition_file}" --gateway-name=${gateway_name}  # 同步网关环境信息
-call_definition_command_or_exit sync_resource_docs_by_archive "${definition_file}" --gateway-name=${gateway_name} --safe-mode  # 可选，同步资源文档
+#可选，为网关添加关联应用，关联应用可以通过网关 bk-apigateway 提供的接口管理网关数据
+call_definition_command_or_exit add_related_apps "${definition_file}" --gateway-name=${gateway_name}
+
+#可选，申请网关权限 
+call_definition_command_or_exit apply_apigw_permissions "${definition_file}" --gateway-name=${gateway_name} 
+ 
+#创建资源版本并发布；指定参数 --generate-sdks 时，会同时生成资源版本对应的网关 SDK
+call_definition_command_or_exit create_version_and_release_apigw "${definition_file}" --gateway-name=${gateway_name}
+ 
+# 获取网关公钥，存放到文件 apigateway.pub 
+apigw-manager.sh fetch_apigw_public_key --gateway-name=${gateway_name} --print > "apigateway.pub" 
+ 
+# 可选，为应用主动授权
+call_definition_command_or_exit grant_apigw_permissions "${definition_file}" --gateway-name=${gateway_name} 
+
+# 同步网关基本信息
+call_definition_command_or_exit sync_apigw_config "${definition_file}" --gateway-name=${gateway_name}
+  
+# 同步网关资源
+# 
+# --delete: 当资源在服务端存在，却未出现在资源定义文件中时，指定本参数会强制删除这类资源，以保证服务端资源和文件内容完全一致。
+#           如果未指定本参数，将忽略未出现的资源
+call_definition_command_or_exit sync_apigw_resources "${resources_file}" --gateway-name=${gateway_name} --delete
+ 
+# 同步网关环境信息
+call_definition_command_or_exit sync_apigw_stage "${definition_file}" --gateway-name=${gateway_name} 
+ 
+# 可选，同步资源文档
+call_definition_command_or_exit sync_resource_docs_by_archive "${definition_file}" --gateway-name=${gateway_name} --safe-mode
+  
 ```

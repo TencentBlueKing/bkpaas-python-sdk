@@ -133,12 +133,18 @@ stage:
     #   set:
     #     X-Token: "token"
 
-# 主动授权，网关主动给应用，添加访问网关所有资源的权限；
+# 主动授权，网关主动给应用，添加访问网关所有资源或者具体某个资源的权限；
 # 用于命令 `grant_apigw_permissions`
 grant_permissions:
   - bk_app_code: "{{ settings.BK_APP_CODE }}"
-    # 授权维度，可选值：gateway，按网关授权，包括网关下所有资源，以及未来新创建的资源
+    # 授权维度，可选值：
+    # gateway: 按网关授权，包括网关下所有资源，以及未来新创建的资源
+    # resource: 按资源维度授权
     grant_dimension: "gateway"
+    # 如果是按照 resource 维度授权,需要提供如下的具体resource_name
+    # resource_names:
+    #   - resource_name_1 
+    #   - resource_name_2   
 
 # 应用申请指定网关所有资源的权限，待网关管理员审批后，应用才可访问网关资源；
 # 用于命令 `apply_apigw_permissions`
