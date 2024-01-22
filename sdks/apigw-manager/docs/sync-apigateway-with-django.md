@@ -32,8 +32,8 @@ python manage.py sync_apigw_stage --gateway-name=${gateway_name} --file="${defin
 
 # 同步网关资源
 # 
-# --delete: 当资源在服务端存在，却未出现在资源定义文件中时，默认将被忽略
-#   指定本参数会强制删除这类资源，以保证服务端资源和文件内容完全一致。
+# --delete: 当资源在服务端存在，却未出现在资源定义文件中时，指定本参数会强制删除这类资源，以保证服务端资源和文件内容完全一致。
+#           如果未指定本参数，将忽略未出现的资源
 python manage.py sync_apigw_resources --delete --gateway-name=${gateway_name} --file="${resources_file}"
 
 # 可选，同步资源文档
