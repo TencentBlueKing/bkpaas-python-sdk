@@ -167,9 +167,9 @@ related_apps:
 #   - get_user.md
 resource_docs:
   # 资源文档的归档文件，可为 tar.gz，zip 格式文件
-  archivefile: "{{ settings.BK_APIGW_RESOURCE_DOCS_ARCHIVE_FILE }}"
+  archivefile: "{{ settings.BK_APIGW_RESOURCE_DOCS_ARCHIVE_FILE }}" ## 环境变量方式："{{ environ.BK_APIGW_RESOURCE_DOCS_ARCHIVE_FILE }}"
   # 资源文档目录，basedir 与 archivefile 二者至少一个有效，若同时存在，则 archivefile 优先
-  basedir: "{{ settings.BK_APIGW_RESOURCE_DOCS_BASE_DIR }}"
+  basedir: "{{ settings.BK_APIGW_RESOURCE_DOCS_BASE_DIR }}" ## 环境变量方式："{{ environ.BK_APIGW_RESOURCE_DOCS_BASE_DIR }}"
 ```
 
 **注意：**
@@ -382,11 +382,11 @@ APIGW_MANAGER_DUMMY_PAYLOAD_USERNAME  # JWT payload 中的 username
 ```
 ## FAQ
 ### 1.同步过程中报错：`call_definition_command_or_exit: command not found`
-> 这种大概率是自定义脚本有问题，参照文档，按照对应目录下的 examples 的同步脚本即可。
+这种大概率是自定义脚本有问题，参照文档，按照对应目录下的 examples 的同步脚本即可。
 
 ### 2.执行同步命令时报错：`Error responded by API Gateway, status_code:_code: 404, request_id:, error_code: 1640401, API not found`
-> 这种大概率是网关URL `BK_API_URL_TMPL` 漏配或者配错了。eg: BK_API_URL_TMPL: http://bkapi.example.com/api/{api_name}"
+这种大概率是网关URL `BK_API_URL_TMPL` 漏配或者配错了。eg: BK_API_URL_TMPL: http://bkapi.example.com/api/{api_name}"l, 注意 {api_name}是占位符需要保留
 
 ### 3.同步过程中报错: `校验失败: api_type: api_type 为 1 时，网关名 name 需以 bk- 开头。`
-> 这个是因为 `definition.yaml` 定义的 apigateway.api_type为 1，标记网关为官方网关，网关名需以 `bk-` 开头，可选；非官方网关，可去除此配置
-> 当设置为 1 时,则 `sync-apigateway.sh`里面的 `gateway_name` 参数需要以 bk- 开头
+这个是因为 `definition.yaml` 定义的 apigateway.api_type为 1，标记网关为官方网关，网关名需以 `bk-` 开头，可选；非官方网关，可去除此配置
+当设置为 1 时,则 `sync-apigateway.sh`里面的 `gateway_name` 参数需要以 bk- 开头
