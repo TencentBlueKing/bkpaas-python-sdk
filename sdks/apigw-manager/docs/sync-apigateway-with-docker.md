@@ -11,7 +11,7 @@
 
 镜像执行同步时，需要额外的环境变量支持：
 - `BK_APIGW_NAME`：网关名称；
-- `BK_API_URL_TMPL`：云网关 API 地址模板，例如：http://bkapi.example.com/api/{api_name}；
+- `BK_API_URL_TMPL`：云网关 API 地址模板，例如：网关host是：`bkapi.example.com`，则对应的值为：http://bkapi.example.com/api/{api_name} 注意：{api_name} 这个是占位符。
 - `BK_APP_CODE`：应用名称；
 - `BK_APP_SECRET`：应用密钥；
 

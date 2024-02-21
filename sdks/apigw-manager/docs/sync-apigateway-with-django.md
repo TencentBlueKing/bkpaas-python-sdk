@@ -102,7 +102,7 @@ BK_APIGW_NAME = "my-gateway-name"
 # 需将 bkapi.example.com 替换为真实的云 API 域名；
 # 在 PaaS 3.0 部署的应用，可从环境变量中获取 BK_API_URL_TMPL，不需要额外配置；
 # 实际上，SDK 将调用网关 bk-apigateway 接口将数据同步到 API 网关
-BK_API_URL_TMPL = "http://bkapi.example.com/api/{api_name}/"
+BK_API_URL_TMPL = "http://bkapi.example.com/api/{api_name}/" ## 例如：网关host是：`bkapi.example.com`，则对应的值为：http://bkapi.example.com/api/{api_name} 注意：{api_name} 这个是占位符。
 ```
 
 在 INSTALLED_APPS 中加入以下配置，SDK 将创建表 `apigw_manager_context` 用于存储一些中间数据：

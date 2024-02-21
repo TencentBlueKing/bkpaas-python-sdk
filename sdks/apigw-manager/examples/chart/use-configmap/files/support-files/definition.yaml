@@ -25,6 +25,24 @@ stage:
         - host: "https://httpbin.org"
           weight: 100
 
+# 支持定义多个stage,如果定义多个，则同步脚本需要添加对应的同步命令，并指明：namespace(默认：stage) eg：stage2
+# 同步脚本 sync-apigateway.sh 需要新增以下命令:
+# call_definition_command_or_exit sync_apigw_stage "${definition_file}" --gateway-name=${gateway_name} --namespace="stage2"
+
+#stage2:
+#  name: "test"
+#  description: "这是一个测试"
+#  description_en: "This is a test"
+#  proxy_http:
+#    timeout: 60
+#    upstreams:
+#      loadbalance: "roundrobin"
+#      hosts:
+#        - host: "https://httpbin.org"
+#          weight: 100
+
+
+
 # 资源文档
 # 资源文档的目录格式样例如下，en 为英文文档，zh 为中文文档：
 # ./

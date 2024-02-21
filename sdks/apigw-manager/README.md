@@ -69,8 +69,8 @@ support-files
 ```
 
 definition.yaml 中可以使用 Django 模版语法引用和渲染变量，内置以下变量：
-- `settings`：Django 提供的配置对象
-- `environ`：环境变量
+- `settings`：Django 提供的配置对象,优先适合用于使用 Django Command 同步
+- `environ`：环境变量,推荐镜像同步方式使用
 
 推荐在一个文件中统一进行定义，用命名空间区分不同配置间的定义，definition.yaml 样例：
 
@@ -136,7 +136,7 @@ stage:
 # 主动授权，网关主动给应用，添加访问网关所有资源或者具体某个资源的权限；
 # 用于命令 `grant_apigw_permissions`
 grant_permissions:
-  - bk_app_code: "{{ settings.BK_APP_CODE }}"
+  - bk_app_code: "{{ settings.BK_APP_CODE }}" ## 环境变量方式："{{ environ.BK_APP_CODE }}"
     # 授权维度，可选值：
     # gateway: 按网关授权，包括网关下所有资源，以及未来新创建的资源
     # resource: 按资源维度授权
@@ -149,14 +149,14 @@ grant_permissions:
 # 应用申请指定网关所有资源的权限，待网关管理员审批后，应用才可访问网关资源；
 # 用于命令 `apply_apigw_permissions`
 # apply_permissions:
-#   - gateway_name: "{{ settings.BK_APIGW_NAME }}"
+#   - gateway_name: "{{ settings.BK_APIGW_NAME }}" ## 环境变量方式："{{ environ.BK_APIGW_NAME }}"
 #     # 权限维度，可选值：gateway，按网关授权，包括网关下所有资源，以及未来新创建的资源
 #     grant_dimension: "gateway"
 
 # 为网关添加关联应用，关联应用可以通过网关 bk-apigateway 的接口操作网关数据；每个网关最多可有 10 个关联应用；
 # 用于命令 `add_related_apps`
 related_apps:
-  - "{{ settings.BK_APP_CODE }}"
+  - "{{ settings.BK_APP_CODE }}" ## 环境变量方式："{{ environ.BK_APP_CODE }}"
 
 # 定义资源文档路径，用于命令 `sync_resource_docs_by_archive`；
 # 资源文档的目录格式样例如下，en 为英文文档，zh 为中文文档，创建归档文件可使用指令 `tar czvf xxx.tgz en zh`：
@@ -167,9 +167,9 @@ related_apps:
 #   - get_user.md
 resource_docs:
   # 资源文档的归档文件，可为 tar.gz，zip 格式文件
-  archivefile: "{{ settings.BK_APIGW_RESOURCE_DOCS_ARCHIVE_FILE }}"
+  archivefile: "{{ settings.BK_APIGW_RESOURCE_DOCS_ARCHIVE_FILE }}" ## 环境变量方式："{{ environ.BK_APIGW_RESOURCE_DOCS_ARCHIVE_FILE }}"
   # 资源文档目录，basedir 与 archivefile 二者至少一个有效，若同时存在，则 archivefile 优先
-  basedir: "{{ settings.BK_APIGW_RESOURCE_DOCS_BASE_DIR }}"
+  basedir: "{{ settings.BK_APIGW_RESOURCE_DOCS_BASE_DIR }}" ## 环境变量方式："{{ environ.BK_APIGW_RESOURCE_DOCS_BASE_DIR }}"
 ```
 
 **注意：**
@@ -380,3 +380,13 @@ APIGW_MANAGER_DUMMY_PAYLOAD_USERNAME  # JWT payload 中的 username
   "iss": "APIGW"          # 签发者
 }
 ```
+## FAQ
+### 1.同步过程中报错：`call_definition_command_or_exit: command not found`
+这种大概率是自定义脚本有问题，参照文档，按照对应目录下的 examples 的同步脚本即可。
+
+### 2.执行同步命令时报错：`Error responded by API Gateway, status_code:_code: 404, request_id:, error_code: 1640401, API not found`
+这种大概率是网关URL `BK_API_URL_TMPL` 漏配或者配错了。eg: BK_API_URL_TMPL: http://bkapi.example.com/api/{api_name}"l, 注意 {api_name}是占位符需要保留
+
+### 3.同步过程中报错: `校验失败: api_type: api_type 为 1 时，网关名 name 需以 bk- 开头。`
+这个是因为 `definition.yaml` 定义的 apigateway.api_type为 1，标记网关为官方网关，网关名需以 `bk-` 开头，可选；非官方网关，可去除此配置
+当设置为 1 时,则 `sync-apigateway.sh`里面的 `gateway_name` 参数需要以 bk- 开头
