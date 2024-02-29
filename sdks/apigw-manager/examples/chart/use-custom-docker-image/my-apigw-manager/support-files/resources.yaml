@@ -32,3 +32,25 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         descriptionEn:
+        # 插件配置
+        # pluginConfigs:
+        #     - type: bk-rate-limit
+        #       yaml: |-
+        #         rates:
+        #           __default:
+        #           - period: 1
+        #             tokens: 100
+        #     - type: bk-header-rewrite
+        #       yaml: |-
+        #         set:
+        #           - key: test
+        #             value: '2'
+        #         remove: []
+        #     - type: bk-cors
+        #       yaml: |-
+        #         allow_origins: '*'
+        #         allow_methods: '*'
+        #         allow_headers: '*'
+        #         expose_headers: '*'
+        #         max_age: 86400
+        #         allow_credential: false

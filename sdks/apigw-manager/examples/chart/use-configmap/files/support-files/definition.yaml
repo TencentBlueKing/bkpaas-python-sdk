@@ -24,7 +24,30 @@ stage:
       hosts:
         - host: "https://httpbin.org"
           weight: 100
+  # 环境插件配置
+  # plugin_configs:
+  #     - type: bk-rate-limit
+  #       yaml: |-
+  #         rates:
+  #           __default:
+  #           - period: 1
+  #             tokens: 100
+  #     - type: bk-header-rewrite
+  #       yaml: |-
+  #         set:
+  #           - key: test
+  #             value: '2'
+  #         remove: []
+  #     - type: bk-cors
+  #       yaml: |-
+  #         allow_origins: '*'
+  #         allow_methods: '*'
+  #         allow_headers: '*'
+  #         expose_headers: '*'
+  #         max_age: 86400
+  #         allow_credential: false
 
+  
 # 支持定义多个stage,如果定义多个，则同步脚本需要添加对应的同步命令，并指明：namespace(默认：stage) eg：stage2
 # 同步脚本 sync-apigateway.sh 需要新增以下命令:
 # call_definition_command_or_exit sync_apigw_stage "${definition_file}" --gateway-name=${gateway_name} --namespace="stage2"
