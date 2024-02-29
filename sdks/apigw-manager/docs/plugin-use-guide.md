@@ -2,6 +2,7 @@
 插件配置支持主要在 `stage`(definition.yaml) 和 `resource`(resource.yaml) 两个维度上，资源配置的插件优先级最高。
 > 注意：所有配置均以yaml配置同步为主，eg： 如果通过yaml配置的插件配置则会覆盖掉用户在网关管理页面创建的插件配置，如果yaml没有配置该插件，则也不会移除
 > 用户之前在页面创建的插件配置，不过yaml如果没有配置上一次yaml配置的插件，则会移除上一次yaml配置的插件。
+> `CORS` 插件和 `IP 访问保护插件` 不推荐在yaml配置绑定在环境上。
 
 ## 跨域资源共享（CORS）插件
 
@@ -79,20 +80,6 @@
 2  yaml: |-
 3    rates:
 4      __default:
-5        - period: 1
+5      - period: 1
 6          tokens: 100
-```
-
-
-
-## 网关错误使用HTTP状态码200插件（不推荐）
-
-此插件没有配置参数。
-
-### 配置例子
-
-```yaml
-1- type: bk-status-rewrite
-2  yaml: '{}'
-3    # 该插件无需配置参数
 ```
