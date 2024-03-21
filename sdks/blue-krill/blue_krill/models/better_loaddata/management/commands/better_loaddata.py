@@ -8,6 +8,12 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+"""
+This command is similar to Django's built-in "loaddata" command with one difference, it expands
+environment variables in the fixture data.
+
+WARNING: This command is deprecated and might be removed in the future, please don't use it.
+"""
 import os
 from contextlib import contextmanager
 
@@ -20,7 +26,7 @@ from django.db import DEFAULT_DB_ALIAS, models
 SKIP_ENV_VAR_RENDER_TERM = "SKIP_ENV_VAR_RENDER"
 
 
-def Deserializer(object_list, *, using=DEFAULT_DB_ALIAS, ignorenonexistent=False, **options):
+def Deserializer(object_list, *, using=DEFAULT_DB_ALIAS, ignorenonexistent=False, **options):  # noqa
     """
     Deserialize simple Python objects back into Django ORM instances.
 
@@ -33,7 +39,7 @@ def Deserializer(object_list, *, using=DEFAULT_DB_ALIAS, ignorenonexistent=False
     for d in object_list:
         # Look up the model and starting build a dict of data for it.
         try:
-            Model = _get_model(d["model"])
+            Model = _get_model(d["model"])  # noqa: N806
         except base.DeserializationError:
             if ignorenonexistent:
                 continue
@@ -84,7 +90,7 @@ def Deserializer(object_list, *, using=DEFAULT_DB_ALIAS, ignorenonexistent=False
             else:
                 try:
                     if isinstance(field_value, (str, bytes)) and _should_render_by_env_vars():
-                        field_value = os.path.expandvars(field_value)
+                        field_value = os.path.expandvars(field_value)  # noqa: PLW2901
                     data[field.name] = field.to_python(field_value)
                 except Exception as e:
                     raise base.DeserializationError.WithData(e, d["model"], d.get("pk"), field_value)
