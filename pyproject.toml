@@ -117,7 +117,7 @@ known-first-party = [
   "bkpaas_auth",
   "bkapi_client_core",
   "bkapi_component",
-  "bk_storages",
+  "bkstorages",
   "apigw_manager",
 ]
 
