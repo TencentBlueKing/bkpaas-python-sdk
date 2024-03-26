@@ -20,6 +20,14 @@ class BkLoginGroup(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/bk_login/get_user/",
     )
 
+    # 用户登录态验证
+    is_login = bind_property(
+        Operation,
+        name="is_login",
+        method="GET",
+        path="/api/c/compapi{bk_api_ver}/bk_login/is_login/",
+    )
+
 
 class CcGroup(OperationGroup):
     # 新加主机锁
@@ -1286,38 +1294,6 @@ class CcGroup(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/cc/batch_update_quoted_inst/",
     )
 
-    # 批量查询业务敏感信息
-    find_biz_sensitive_batch = bind_property(
-        Operation,
-        name="find_biz_sensitive_batch",
-        method="POST",
-        path="/api/c/compapi{bk_api_ver}/cc/find_biz_sensitive_batch/",
-    )
-
-    # 批量查询主机快照
-    find_host_snapshot_batch = bind_property(
-        Operation,
-        name="find_host_snapshot_batch",
-        method="POST",
-        path="/api/c/compapi{bk_api_ver}/cc/find_host_snapshot_batch/",
-    )
-
-    # 查询业务在cc1.0还是在cc3.0
-    get_biz_location = bind_property(
-        Operation,
-        name="get_biz_location",
-        method="POST",
-        path="/api/c/compapi{bk_api_ver}/cc/get_biz_location/",
-    )
-
-    # 根据主机IP及云区域ID查询该主机所属业务是在cc1.0还是在cc3.0
-    get_host_location = bind_property(
-        Operation,
-        name="get_host_location",
-        method="POST",
-        path="/api/c/compapi{bk_api_ver}/cc/get_host_location/",
-    )
-
     # 查询容器集群
     list_kube_cluster = bind_property(
         Operation,
@@ -1372,6 +1348,39 @@ class CcGroup(OperationGroup):
         name="list_quoted_inst",
         method="POST",
         path="/api/c/compapi{bk_api_ver}/cc/list_quoted_inst/",
+    )
+
+    # --- 以下api只在te上云版可用 ---
+    # 批量查询业务敏感信息
+    find_biz_sensitive_batch = bind_property(
+        Operation,
+        name="find_biz_sensitive_batch",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/find_biz_sensitive_batch/",
+    )
+
+    # 批量查询主机快照
+    find_host_snapshot_batch = bind_property(
+        Operation,
+        name="find_host_snapshot_batch",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/find_host_snapshot_batch/",
+    )
+
+    # 查询业务在cc1.0还是在cc3.0
+    get_biz_location = bind_property(
+        Operation,
+        name="get_biz_location",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/get_biz_location/",
+    )
+
+    # 根据主机IP及云区域ID查询该主机所属业务是在cc1.0还是在cc3.0
+    get_host_location = bind_property(
+        Operation,
+        name="get_host_location",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/get_host_location/",
     )
 
     # 查询业务、obs产品和规划产品三者之间的关系
@@ -1429,6 +1438,7 @@ class CcGroup(OperationGroup):
         method="POST",
         path="/api/c/compapi{bk_api_ver}/cc/update_event_subscribe/",
     )
+    # --- 以上api只在te上云版可用 ---
 
 
 class CmsiGroup(OperationGroup):
@@ -1480,6 +1490,7 @@ class CmsiGroup(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/cmsi/send_weixin/",
     )
 
+    # --- 以下api只在te上云版可用 ---
     # 添加企业微信发件人
     new_wecom_sender = bind_property(
         Operation,
@@ -1519,7 +1530,7 @@ class CmsiGroup(OperationGroup):
         method="POST",
         path="/api/c/compapi{bk_api_ver}/cmsi/send_wecom_robot/",
     )
-
+    # --- 以上api只在te上云版可用 ---
 
 class GseGroup(OperationGroup):
     # Agent心跳信息查询
@@ -2638,6 +2649,142 @@ class MonitorV3Group(OperationGroup):
         name="update_partial_strategy_v3",
         method="POST",
         path="/api/c/compapi{bk_api_ver}/monitor_v3/update_partial_strategy_v3/",
+    )
+
+    # 批量删除轮值规则
+    delete_duty_rules = bind_property(
+        Operation,
+        name="delete_duty_rules",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/delete_duty_rules/",
+    )
+
+    # 删除分派组
+    delete_rule_group = bind_property(
+        Operation,
+        name="delete_rule_group",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/delete_rule_group/",
+    )
+
+    # 批量删除用户组
+    delete_user_groups = bind_property(
+        Operation,
+        name="delete_user_groups",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/delete_user_groups/",
+    )
+
+    # 指标通用查询
+    get_metric_list = bind_property(
+        Operation,
+        name="get_metric_list",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/get_metric_list/",
+    )
+
+    # 事件检索
+    grafana_log_query = bind_property(
+        Operation,
+        name="grafana_log_query",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/grafana_log_query/",
+    )
+
+    # 判断结果表中是否存在指定data_label
+    metadata_is_data_label_exist = bind_property(
+        Operation,
+        name="metadata_is_data_label_exist",
+        method="GET",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/metadata_is_data_label_exist/",
+    )
+
+    # 根据space_uid查询data_source
+    metadata_query_data_source_by_space_uid = bind_property(
+        Operation,
+        name="metadata_query_data_source_by_space_uid",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/metadata_query_data_source_by_space_uid/",
+    )
+
+    # 预览轮值规则
+    preview_duty_rule = bind_property(
+        Operation,
+        name="preview_duty_rule",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/preview_duty_rule/",
+    )
+
+    # 预览一个组的轮值规则
+    preview_user_group = bind_property(
+        Operation,
+        name="preview_user_group",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/preview_user_group/",
+    )
+
+    # 保存轮值规则
+    save_duty_rule = bind_property(
+        Operation,
+        name="save_duty_rule",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/save_duty_rule/",
+    )
+
+    # 保存分派组
+    save_rule_group = bind_property(
+        Operation,
+        name="save_rule_group",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/save_rule_group/",
+    )
+
+    # 保存用户组
+    save_user_group = bind_property(
+        Operation,
+        name="save_user_group",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/save_user_group/",
+    )
+
+    # 查询轮值规则组
+    search_duty_rules = bind_property(
+        Operation,
+        name="search_duty_rules",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/search_duty_rules/",
+    )
+
+    # 查询单个轮值规则的详情
+    search_duty_rule_detail = bind_property(
+        Operation,
+        name="search_duty_rule_detail",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/search_duty_rule_detail/",
+    )
+
+    # 查询分派组
+    search_rule_groups = bind_property(
+        Operation,
+        name="search_rule_groups",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/search_rule_groups/",
+    )
+
+    # 查询用户组(新版)
+    search_user_groups = bind_property(
+        Operation,
+        name="search_user_groups",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/search_user_groups/",
+    )
+
+    # 查询单个用户组详情
+    search_user_group_detail = bind_property(
+        Operation,
+        name="search_user_group_detail",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/search_user_group_detail/",
     )
 
 
