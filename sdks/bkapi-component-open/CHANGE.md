@@ -1,7 +1,7 @@
 ## Change logs
 
 ### 2.1.0
-- 添加 cc, cmsi, jobv3 组件 API
+- 添加 cc, cmsi, jobv3, monitor_v3 组件 API
 
 ### 2.0.0
 - 添加 cc, itsm, monitor_v3, sops 组件 API
