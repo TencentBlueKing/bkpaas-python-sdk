@@ -17,6 +17,10 @@ class BkLoginGroup(OperationGroup):
     def get_user(self) -> Operation:
         """获取用户信息"""
 
+    @property
+    def is_login(self) -> Operation:
+        """用户登录态验证"""
+
 
 class CcGroup(OperationGroup):
 
@@ -640,6 +644,90 @@ class CcGroup(OperationGroup):
     def update_set_template(self) -> Operation:
         """编辑集群模板"""
 
+    @property
+    def batch_create_quoted_inst(self) -> Operation:
+        """批量创建被引用的模型的实例"""
+
+    @property
+    def batch_delete_quoted_inst(self) -> Operation:
+        """批量删除被引用的模型的实例"""
+
+    @property
+    def batch_update_quoted_inst(self) -> Operation:
+        """批量更新被引用的模型的实例"""
+
+    @property
+    def find_biz_sensitive_batch(self) -> Operation:
+        """批量查询业务敏感信息"""
+
+    @property
+    def find_host_snapshot_batch(self) -> Operation:
+        """批量查询主机快照"""
+
+    @property
+    def get_biz_location(self) -> Operation:
+        """查询业务在cc1.0还是在cc3.0"""
+
+    @property
+    def get_host_location(self) -> Operation:
+        """根据主机IP及云区域ID查询该主机所属业务是在cc1.0还是在cc3.0"""
+
+    @property
+    def list_kube_cluster(self) -> Operation:
+        """查询容器集群"""
+
+    @property
+    def list_kube_container(self) -> Operation:
+        """查询Container列表"""
+
+    @property
+    def list_kube_namespace(self) -> Operation:
+        """查询namespace"""
+
+    @property
+    def list_kube_node(self) -> Operation:
+        """查询容器节点"""
+
+    @property
+    def list_kube_pod(self) -> Operation:
+        """查询Pod列表"""
+
+    @property
+    def list_kube_workload(self) -> Operation:
+        """查询workload"""
+
+    @property
+    def list_quoted_inst(self) -> Operation:
+        """查询被引用的模型的实例列表"""
+
+    @property
+    def search_cost_info_relation(self) -> Operation:
+        """查询业务、obs产品和规划产品三者之间的关系"""
+
+    @property
+    def search_process_instances(self) -> Operation:
+        """根据条件查询业务下的进程实例详情"""
+
+    @property
+    def search_subscription(self) -> Operation:
+        """查询订阅"""
+
+    @property
+    def subscribe_event(self) -> Operation:
+        """订阅事件"""
+
+    @property
+    def unsubcribe_event(self) -> Operation:
+        """退订事件"""
+
+    @property
+    def update_biz_sensitive(self) -> Operation:
+        """更新业务敏感信息"""
+
+    @property
+    def update_event_subscribe(self) -> Operation:
+        """修改订阅"""
+
 
 class CmsiGroup(OperationGroup):
 
@@ -666,6 +754,26 @@ class CmsiGroup(OperationGroup):
     @property
     def send_weixin(self) -> Operation:
         """发送微信消息"""
+
+    @property
+    def new_wecom_sender(self) -> Operation:
+        """添加企业微信发件人"""
+
+    @property
+    def query_wecom_sender(self) -> Operation:
+        """查询企业微信发件人"""
+
+    @property
+    def send_rtx(self) -> Operation:
+        """发送企业微信"""
+
+    @property
+    def send_wecom_app(self) -> Operation:
+        """发送企业微信应用号消息"""
+
+    @property
+    def send_wecom_robot(self) -> Operation:
+        """发送企业微信机器人消息"""
 
 
 class GseGroup(OperationGroup):
@@ -859,6 +967,110 @@ class Jobv3Group(OperationGroup):
     @property
     def update_cron_status(self) -> Operation:
         """更新定时作业状态，如启动或暂停"""
+
+    @property
+    def callback_protocol(self) -> Operation:
+        """作业类回调报文描述"""
+
+    @property
+    def check_script(self) -> Operation:
+        """高危脚本检测"""
+
+    @property
+    def create_account(self) -> Operation:
+        """创建账号"""
+
+    @property
+    def create_dangerous_rule(self) -> Operation:
+        """创建高危语句规则"""
+
+    @property
+    def create_public_script(self) -> Operation:
+        """创建公共脚本"""
+
+    @property
+    def create_public_script_version(self) -> Operation:
+        """新建公共脚本版本"""
+
+    @property
+    def create_script(self) -> Operation:
+        """创建脚本"""
+
+    @property
+    def create_script_version(self) -> Operation:
+        """新建脚本版本"""
+
+    @property
+    def delete_account(self) -> Operation:
+        """删除账号"""
+
+    @property
+    def delete_dangerous_rule(self) -> Operation:
+        """删除高危语句规则"""
+
+    @property
+    def delete_public_script(self) -> Operation:
+        """删除公共脚本"""
+
+    @property
+    def delete_public_script_version(self) -> Operation:
+        """删除公共脚本版本"""
+
+    @property
+    def delete_script(self) -> Operation:
+        """删除脚本"""
+
+    @property
+    def delete_script_version(self) -> Operation:
+        """删除脚本版本"""
+
+    @property
+    def disable_dangerous_rule(self) -> Operation:
+        """停用高危语句规则"""
+
+    @property
+    def disable_public_script_version(self) -> Operation:
+        """禁用公共脚本版本"""
+
+    @property
+    def disable_script_version(self) -> Operation:
+        """禁用脚本版本"""
+
+    @property
+    def enable_dangerous_rule(self) -> Operation:
+        """启用高危语句规则"""
+
+    @property
+    def get_dangerous_rule_list(self) -> Operation:
+        """查看高危语句规则列表"""
+
+    @property
+    def publish_public_script_version(self) -> Operation:
+        """发布公共脚本版本"""
+
+    @property
+    def publish_script_version(self) -> Operation:
+        """发布脚本版本"""
+
+    @property
+    def update_dangerous_rule(self) -> Operation:
+        """修改高危语句规则"""
+
+    @property
+    def update_public_script_basic(self) -> Operation:
+        """更新公共脚本基础信息"""
+
+    @property
+    def update_public_script_version(self) -> Operation:
+        """修改公共脚本版本"""
+
+    @property
+    def update_script_basic(self) -> Operation:
+        """更新脚本基础信息"""
+
+    @property
+    def update_script_version(self) -> Operation:
+        """修改脚本版本信息"""
 
 
 class MonitorV3Group(OperationGroup):
@@ -1130,6 +1342,74 @@ class MonitorV3Group(OperationGroup):
     @property
     def update_partial_strategy_v3(self) -> Operation:
         """批量更新策略局部配置"""
+
+    @property
+    def delete_duty_rules(self) -> Operation:
+        """批量删除轮值规则"""
+
+    @property
+    def delete_rule_group(self) -> Operation:
+        """删除分派组"""
+
+    @property
+    def delete_user_groups(self) -> Operation:
+        """批量删除用户组"""
+
+    @property
+    def get_metric_list(self) -> Operation:
+        """指标通用查询"""
+
+    @property
+    def grafana_log_query(self) -> Operation:
+        """事件检索"""
+
+    @property
+    def metadata_is_data_label_exist(self) -> Operation:
+        """判断结果表中是否存在指定data_label"""
+
+    @property
+    def metadata_query_data_source_by_space_uid(self) -> Operation:
+        """根据space_uid查询data_source"""
+
+    @property
+    def preview_duty_rule(self) -> Operation:
+        """预览轮值规则"""
+
+    @property
+    def preview_user_group(self) -> Operation:
+        """预览一个组的轮值规则"""
+
+    @property
+    def save_duty_rule(self) -> Operation:
+        """保存轮值规则"""
+
+    @property
+    def save_rule_group(self) -> Operation:
+        """保存分派组"""
+
+    @property
+    def save_user_group(self) -> Operation:
+        """保存用户组"""
+
+    @property
+    def search_duty_rules(self) -> Operation:
+        """查询轮值规则组"""
+
+    @property
+    def search_duty_rule_detail(self) -> Operation:
+        """查询单个轮值规则的详情"""
+
+    @property
+    def search_rule_groups(self) -> Operation:
+        """查询分派组"""
+
+    @property
+    def search_user_groups(self) -> Operation:
+        """查询用户组(新版)"""
+
+    @property
+    def search_user_group_detail(self) -> Operation:
+        """查询单个用户组详情"""
 
 
 class SopsGroup(OperationGroup):

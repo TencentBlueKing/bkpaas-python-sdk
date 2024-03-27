@@ -20,6 +20,14 @@ class BkLoginGroup(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/bk_login/get_user/",
     )
 
+    # 用户登录态验证
+    is_login = bind_property(
+        Operation,
+        name="is_login",
+        method="GET",
+        path="/api/c/compapi{bk_api_ver}/bk_login/is_login/",
+    )
+
 
 class CcGroup(OperationGroup):
     # 新加主机锁
@@ -1262,6 +1270,176 @@ class CcGroup(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/cc/update_set_template/",
     )
 
+    # 批量创建被引用的模型的实例
+    batch_create_quoted_inst = bind_property(
+        Operation,
+        name="batch_create_quoted_inst",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/batch_create_quoted_inst/",
+    )
+
+    # 批量删除被引用的模型的实例
+    batch_delete_quoted_inst = bind_property(
+        Operation,
+        name="batch_delete_quoted_inst",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/batch_delete_quoted_inst/",
+    )
+
+    # 批量更新被引用的模型的实例
+    batch_update_quoted_inst = bind_property(
+        Operation,
+        name="batch_update_quoted_inst",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/batch_update_quoted_inst/",
+    )
+
+    # 查询容器集群
+    list_kube_cluster = bind_property(
+        Operation,
+        name="list_kube_cluster",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/list_kube_cluster/",
+    )
+
+    # 查询Container列表
+    list_kube_container = bind_property(
+        Operation,
+        name="list_kube_container",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/list_kube_container/",
+    )
+
+    # 查询namespace
+    list_kube_namespace = bind_property(
+        Operation,
+        name="list_kube_namespace",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/list_kube_namespace/",
+    )
+
+    # 查询容器节点
+    list_kube_node = bind_property(
+        Operation,
+        name="list_kube_node",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/list_kube_node/",
+    )
+
+    # 查询Pod列表
+    list_kube_pod = bind_property(
+        Operation,
+        name="list_kube_pod",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/list_kube_pod/",
+    )
+
+    # 查询workload
+    list_kube_workload = bind_property(
+        Operation,
+        name="list_kube_workload",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/list_kube_workload/",
+    )
+
+    # 查询被引用的模型的实例列表
+    list_quoted_inst = bind_property(
+        Operation,
+        name="list_quoted_inst",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/list_quoted_inst/",
+    )
+
+    # --- 以下api只在te上云版可用 ---
+    # 批量查询业务敏感信息
+    find_biz_sensitive_batch = bind_property(
+        Operation,
+        name="find_biz_sensitive_batch",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/find_biz_sensitive_batch/",
+    )
+
+    # 批量查询主机快照
+    find_host_snapshot_batch = bind_property(
+        Operation,
+        name="find_host_snapshot_batch",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/find_host_snapshot_batch/",
+    )
+
+    # 查询业务在cc1.0还是在cc3.0
+    get_biz_location = bind_property(
+        Operation,
+        name="get_biz_location",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/get_biz_location/",
+    )
+
+    # 根据主机IP及云区域ID查询该主机所属业务是在cc1.0还是在cc3.0
+    get_host_location = bind_property(
+        Operation,
+        name="get_host_location",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/get_host_location/",
+    )
+
+    # 查询业务、obs产品和规划产品三者之间的关系
+    search_cost_info_relation = bind_property(
+        Operation,
+        name="search_cost_info_relation",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/search_cost_info_relation/",
+    )
+
+    # 根据条件查询业务下的进程实例详情
+    search_process_instances = bind_property(
+        Operation,
+        name="search_process_instances",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/search_process_instances/",
+    )
+
+    # 查询订阅
+    search_subscription = bind_property(
+        Operation,
+        name="search_subscription",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/search_subscription/",
+    )
+
+    # 订阅事件
+    subscribe_event = bind_property(
+        Operation,
+        name="subscribe_event",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/subscribe_event/",
+    )
+
+    # 退订事件
+    unsubcribe_event = bind_property(
+        Operation,
+        name="unsubcribe_event",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/unsubcribe_event/",
+    )
+
+    # 更新业务敏感信息
+    update_biz_sensitive = bind_property(
+        Operation,
+        name="update_biz_sensitive",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/update_biz_sensitive/",
+    )
+
+    # 修改订阅
+    update_event_subscribe = bind_property(
+        Operation,
+        name="update_event_subscribe",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cc/update_event_subscribe/",
+    )
+    # --- 以上api只在te上云版可用 ---
+
 
 class CmsiGroup(OperationGroup):
     # 查询消息发送类型
@@ -1312,6 +1490,47 @@ class CmsiGroup(OperationGroup):
         path="/api/c/compapi{bk_api_ver}/cmsi/send_weixin/",
     )
 
+    # --- 以下api只在te上云版可用 ---
+    # 添加企业微信发件人
+    new_wecom_sender = bind_property(
+        Operation,
+        name="new_wecom_sender",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cmsi/new_wecom_sender/",
+    )
+
+    # 查询企业微信发件人
+    query_wecom_sender = bind_property(
+        Operation,
+        name="query_wecom_sender",
+        method="GET",
+        path="/api/c/compapi{bk_api_ver}/cmsi/query_wecom_sender/",
+    )
+
+    # 发送企业微信
+    send_rtx = bind_property(
+        Operation,
+        name="send_rtx",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cmsi/send_rtx/",
+    )
+
+    # 发送企业微信应用号消息
+    send_wecom_app = bind_property(
+        Operation,
+        name="send_wecom_app",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cmsi/send_wecom_app/",
+    )
+
+    # 发送企业微信机器人消息
+    send_wecom_robot = bind_property(
+        Operation,
+        name="send_wecom_robot",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/cmsi/send_wecom_robot/",
+    )
+    # --- 以上api只在te上云版可用 ---
 
 class GseGroup(OperationGroup):
     # Agent心跳信息查询
@@ -1684,6 +1903,214 @@ class Jobv3Group(OperationGroup):
         name="update_cron_status",
         method="POST",
         path="/api/c/compapi{bk_api_ver}/jobv3/update_cron_status/",
+    )
+
+    # 作业类回调报文描述
+    callback_protocol = bind_property(
+        Operation,
+        name="callback_protocol",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/callback_protocol/",
+    )
+
+    # 高危脚本检测
+    check_script = bind_property(
+        Operation,
+        name="check_script",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/check_script/",
+    )
+
+    # 创建账号
+    create_account = bind_property(
+        Operation,
+        name="create_account",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/create_account/",
+    )
+
+    # 创建高危语句规则
+    create_dangerous_rule = bind_property(
+        Operation,
+        name="create_dangerous_rule",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/create_dangerous_rule/",
+    )
+
+    # 创建公共脚本
+    create_public_script = bind_property(
+        Operation,
+        name="create_public_script",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/create_public_script/",
+    )
+
+    # 新建公共脚本版本
+    create_public_script_version = bind_property(
+        Operation,
+        name="create_public_script_version",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/create_public_script_version/",
+    )
+
+    # 创建脚本
+    create_script = bind_property(
+        Operation,
+        name="create_script",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/create_script/",
+    )
+
+    # 新建脚本版本
+    create_script_version = bind_property(
+        Operation,
+        name="create_script_version",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/create_script_version/",
+    )
+
+    # 删除账号
+    delete_account = bind_property(
+        Operation,
+        name="delete_account",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/delete_account/",
+    )
+
+    # 删除高危语句规则
+    delete_dangerous_rule = bind_property(
+        Operation,
+        name="delete_dangerous_rule",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/delete_dangerous_rule/",
+    )
+
+    # 删除公共脚本
+    delete_public_script = bind_property(
+        Operation,
+        name="delete_public_script",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/delete_public_script/",
+    )
+
+    # 删除公共脚本版本
+    delete_public_script_version = bind_property(
+        Operation,
+        name="delete_public_script_version",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/delete_public_script_version/",
+    )
+
+    # 删除脚本
+    delete_script = bind_property(
+        Operation,
+        name="delete_script",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/delete_script/",
+    )
+
+    # 删除脚本版本
+    delete_script_version = bind_property(
+        Operation,
+        name="delete_script_version",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/delete_script_version/",
+    )
+
+    # 停用高危语句规则
+    disable_dangerous_rule = bind_property(
+        Operation,
+        name="disable_dangerous_rule",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/disable_dangerous_rule/",
+    )
+
+    # 禁用公共脚本版本
+    disable_public_script_version = bind_property(
+        Operation,
+        name="disable_public_script_version",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/disable_public_script_version/",
+    )
+
+    # 禁用脚本版本
+    disable_script_version = bind_property(
+        Operation,
+        name="disable_script_version",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/disable_script_version/",
+    )
+
+    # 启用高危语句规则
+    enable_dangerous_rule = bind_property(
+        Operation,
+        name="enable_dangerous_rule",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/enable_dangerous_rule/",
+    )
+
+    # 查看高危语句规则列表
+    get_dangerous_rule_list = bind_property(
+        Operation,
+        name="get_dangerous_rule_list",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/get_dangerous_rule_list/",
+    )
+
+    # 发布公共脚本版本
+    publish_public_script_version = bind_property(
+        Operation,
+        name="publish_public_script_version",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/publish_public_script_version/",
+    )
+
+    # 发布脚本版本
+    publish_script_version = bind_property(
+        Operation,
+        name="publish_script_version",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/publish_script_version/",
+    )
+
+    # 修改高危语句规则
+    update_dangerous_rule = bind_property(
+        Operation,
+        name="update_dangerous_rule",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/update_dangerous_rule/",
+    )
+
+    # 更新公共脚本基础信息
+    update_public_script_basic = bind_property(
+        Operation,
+        name="update_public_script_basic",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/update_public_script_basic/",
+    )
+
+    # 修改公共脚本版本
+    update_public_script_version = bind_property(
+        Operation,
+        name="update_public_script_version",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/update_public_script_version/",
+    )
+
+    # 更新脚本基础信息
+    update_script_basic = bind_property(
+        Operation,
+        name="update_script_basic",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/update_script_basic/",
+    )
+
+    # 修改脚本版本信息
+    update_script_version = bind_property(
+        Operation,
+        name="update_script_version",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/jobv3/update_script_version/",
     )
 
 
@@ -2222,6 +2649,142 @@ class MonitorV3Group(OperationGroup):
         name="update_partial_strategy_v3",
         method="POST",
         path="/api/c/compapi{bk_api_ver}/monitor_v3/update_partial_strategy_v3/",
+    )
+
+    # 批量删除轮值规则
+    delete_duty_rules = bind_property(
+        Operation,
+        name="delete_duty_rules",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/delete_duty_rules/",
+    )
+
+    # 删除分派组
+    delete_rule_group = bind_property(
+        Operation,
+        name="delete_rule_group",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/delete_rule_group/",
+    )
+
+    # 批量删除用户组
+    delete_user_groups = bind_property(
+        Operation,
+        name="delete_user_groups",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/delete_user_groups/",
+    )
+
+    # 指标通用查询
+    get_metric_list = bind_property(
+        Operation,
+        name="get_metric_list",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/get_metric_list/",
+    )
+
+    # 事件检索
+    grafana_log_query = bind_property(
+        Operation,
+        name="grafana_log_query",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/grafana_log_query/",
+    )
+
+    # 判断结果表中是否存在指定data_label
+    metadata_is_data_label_exist = bind_property(
+        Operation,
+        name="metadata_is_data_label_exist",
+        method="GET",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/metadata_is_data_label_exist/",
+    )
+
+    # 根据space_uid查询data_source
+    metadata_query_data_source_by_space_uid = bind_property(
+        Operation,
+        name="metadata_query_data_source_by_space_uid",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/metadata_query_data_source_by_space_uid/",
+    )
+
+    # 预览轮值规则
+    preview_duty_rule = bind_property(
+        Operation,
+        name="preview_duty_rule",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/preview_duty_rule/",
+    )
+
+    # 预览一个组的轮值规则
+    preview_user_group = bind_property(
+        Operation,
+        name="preview_user_group",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/preview_user_group/",
+    )
+
+    # 保存轮值规则
+    save_duty_rule = bind_property(
+        Operation,
+        name="save_duty_rule",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/save_duty_rule/",
+    )
+
+    # 保存分派组
+    save_rule_group = bind_property(
+        Operation,
+        name="save_rule_group",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/save_rule_group/",
+    )
+
+    # 保存用户组
+    save_user_group = bind_property(
+        Operation,
+        name="save_user_group",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/save_user_group/",
+    )
+
+    # 查询轮值规则组
+    search_duty_rules = bind_property(
+        Operation,
+        name="search_duty_rules",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/search_duty_rules/",
+    )
+
+    # 查询单个轮值规则的详情
+    search_duty_rule_detail = bind_property(
+        Operation,
+        name="search_duty_rule_detail",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/search_duty_rule_detail/",
+    )
+
+    # 查询分派组
+    search_rule_groups = bind_property(
+        Operation,
+        name="search_rule_groups",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/search_rule_groups/",
+    )
+
+    # 查询用户组(新版)
+    search_user_groups = bind_property(
+        Operation,
+        name="search_user_groups",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/search_user_groups/",
+    )
+
+    # 查询单个用户组详情
+    search_user_group_detail = bind_property(
+        Operation,
+        name="search_user_group_detail",
+        method="POST",
+        path="/api/c/compapi{bk_api_ver}/monitor_v3/search_user_group_detail/",
     )
 
 
