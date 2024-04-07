@@ -1,5 +1,9 @@
 ## Change logs
 
+### 1.2.6
+
+- Loosen the version restriction on sub-dep `cryptography`
+
 ### 1.2.5
 
 - Feature: MySQLProbe support both pymysql and mysqlclient
