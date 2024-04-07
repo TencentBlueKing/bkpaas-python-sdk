@@ -1,5 +1,9 @@
 ## Change logs
 
+### 2.0.3
+
+- Loosen the version restriction on sub-dep `cryptography`
+
 ### 2.0.2
 
 - Fix: configure the correct SM4 encryption algorithm
@@ -12,6 +16,10 @@
 
 - Feature: support use pydantic 1.7+ & 2.0+
 - Deprecated: drop support for python 3.6 & 3.7
+
+### 1.2.6
+
+- Loosen the version restriction on sub-dep `cryptography`
 
 ### 1.2.5
 
