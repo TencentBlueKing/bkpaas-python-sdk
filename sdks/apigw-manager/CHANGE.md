@@ -1,5 +1,8 @@
 ## Change logs
 
+### 3.0.2
+- 更新依赖 future 版本
+
 ### 3.0.1
 - 修复指令 fetch_esb_public_key 指令参数问题
 
