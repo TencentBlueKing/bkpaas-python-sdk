@@ -1,4 +1,6 @@
 # 版本历史
+# 1.1.6
+- Loosen the version restriction on sub-dep `pyjwt`
 
 # 1.1.5
 - 支持通过 name 查询 service instance
