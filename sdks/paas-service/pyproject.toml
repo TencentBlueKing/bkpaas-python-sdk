@@ -24,7 +24,7 @@ default = true
 python = ">=3.6.2,<3.11"
 blue-krill = ">=1.0.15"
 jsonfield = "*"
-pyjwt = "^1.6.4"
+pyjwt = "*"
 django-translated-fields = "*"
 
 [tool.poetry.dev-dependencies]
