@@ -58,6 +58,14 @@ class TestEncryptFromDjangoSetting:
             assert encrypted.startswith("sm4ctr")
             assert encrypt_handler.decrypt(encrypted) == text
 
+    def test_default_encrypt(self):
+        with override_settings(BKKRILL_ENCRYPT_SECRET_KEY=Fernet.generate_key()):
+            encrypt_handler = EncryptHandler()
+            text = random_string(10)
+            encrypted = encrypt_handler.encrypt(text)
+            assert encrypted.startswith("bkcrypt$")
+            assert encrypt_handler.decrypt(encrypted) == text
+
 
 def test_decrypt_legacy():
     encrypted_s = '40Ot6vrbuGI='

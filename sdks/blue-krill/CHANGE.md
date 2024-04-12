@@ -1,5 +1,9 @@
 ## Change logs
 
+### 1.2.7
+
+- Fix：支持不配置加密算法类型，使用默认类型 Fernet
+
 ### 1.2.6
 
 - Loosen the version restriction on sub-dep `cryptography`
