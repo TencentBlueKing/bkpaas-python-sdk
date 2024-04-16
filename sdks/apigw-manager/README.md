@@ -133,6 +133,24 @@ stage:
     #   set:
     #     X-Token: "token"
 
+
+# 支持定义多个stage,如果定义多个，则同步脚本需要添加对应的同步命令，并指明：namespace(默认：stage) eg：stage2
+# 同步脚本 sync-apigateway.sh 需要新增以下命令:
+# python manage.py sync_apigw_stage --gateway-name=${gateway_name} --file="${definition_file}" --namespace="stage2"
+
+#stage2:
+#  name: "test"
+#  description: "这是一个测试"
+#  description_en: "This is a test"
+#  proxy_http:
+#    timeout: 60
+#    upstreams:
+#      loadbalance: "roundrobin"
+#      hosts:
+#        - host: "https://httpbin.org"
+#          weight: 100
+
+
 # 主动授权，网关主动给应用，添加访问网关所有资源或者具体某个资源的权限；
 # 用于命令 `grant_apigw_permissions`
 grant_permissions:
@@ -208,6 +226,54 @@ resource_docs:
   # basedir: "{{ settings.BK_APIGW_RESOURCE_DOCS_BASE_DIR }}"
   basedir: "support-files/apidocs/"
 ```
+
+#### 4. 国际化支持
+
+##### 网关描述国际化
+在 definition.yaml 中利用字段 description_en 指定英文描述。样例：
+
+```yaml
+apigateway:
+  description: "xxxx"
+  description_en: "This is the English description"
+  is_public: true
+  maintainers:
+    - "admin"
+```
+##### 环境描述国际化
+在 definition.yaml 中利用字段 description_en 指定英文描述。样例：
+
+```yaml
+stage:
+  name: "prod"
+  description: "xxx"
+  description_en: "This is the English description"
+```
+##### 资源描述国际化
+可以在resources.yaml对应的 `x-bk-apigateway-resource` 的 `descriptionEn` 指定英文描述
+```yaml
+x-bk-apigateway-resource:
+isPublic: false
+allowApplyPermission: false
+matchSubpath: false
+backend:
+  type: HTTP
+  method: get
+  path: /anything
+  matchSubpath: false
+  timeout: 0
+  upstreams: {}
+  transformHeaders: {}
+authConfig:
+  appVerifiedRequired: true
+  userVerifiedRequired: false
+  resourcePermissionRequired: false
+descriptionEn: anything
+
+```
+
+
+
 
 ### 方案一：直接使用 Django Command 同步
 
