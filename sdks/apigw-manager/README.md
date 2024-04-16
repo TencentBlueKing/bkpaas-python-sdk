@@ -271,10 +271,6 @@ authConfig:
 descriptionEn: anything
 
 ```
-
-
-
-
 ### 方案一：直接使用 Django Command 同步
 
 此方案适用于 Django 项目，具体请参考 [sync-apigateway-with-django.md](docs/sync-apigateway-with-django.md)
