@@ -1,5 +1,8 @@
 # 版本历史
 
+## 2.1.0
+- fix:  修复 APIGatewayAuthBackend 不兼容 ^3.0.0 以上的 apigw_manager
+
 ## 2.0.8
 - 将认证信息标准化到请求头 X-Bkapi-Authorization 中
 
