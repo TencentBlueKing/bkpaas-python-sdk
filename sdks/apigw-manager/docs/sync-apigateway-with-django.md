@@ -217,6 +217,7 @@ python manage.py sync_rest_framework
 - gateway-name: 同步到网关的网关名称, 如果没填, 会尝试到Django `settings.BK_APIGW_NAME`, 如果还是取不到, 会使用环境变量中的`BKPAAS_APP_CODE`作为网关名
 - define-dir: 生成`definition.yaml`与`resources.yaml`的目录, 默认`support-files/apigateway`
 - sync: 是否同步到网关, 默认true, 如果为false, 只生成`definition.yaml`与`resources.yaml`, 不同步配置到网关
+- definition-file: 自定义`definition.yaml`文件的路径, 如果不配置会自动生成
 
 此命令依赖PaaS V3提供的环境变量用于生成配置, 如果您的项目不是部署再PaaS V3上, 可以尝试添加以下环境变量
 

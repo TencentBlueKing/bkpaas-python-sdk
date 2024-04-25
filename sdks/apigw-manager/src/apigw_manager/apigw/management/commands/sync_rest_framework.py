@@ -46,6 +46,7 @@ class Command(BaseCommand):
             default=True,
             help="whether sync to gateway",
         )
+        parser.add_argument("--definition-file", help="definition file")
 
     def handle(self, *args, **kwargs):
         gateway_name = (
@@ -68,10 +69,13 @@ class Command(BaseCommand):
             os.makedirs(define_dir, exist_ok=True)
 
         # 创建definition.yaml
-        self.stdout.write("create definition.yaml")
-        definition_path = os.path.join(define_dir, "definition.yaml")
-        with open(definition_path, "w", encoding="utf-8") as f:
-            f.write(self.default_definition())
+        if not kwargs.get("definition_file"):
+            self.stdout.write("create definition.yaml")
+            definition_path = os.path.join(define_dir, "definition.yaml")
+            with open(definition_path, "w", encoding="utf-8") as f:
+                f.write(self.default_definition())
+        else:
+            definition_path = kwargs.get("definition_file")
 
         # 创建resources.yaml
         self.stdout.write("create resources.yaml")
