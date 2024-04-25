@@ -397,7 +397,11 @@ class MyJWTUserMiddleware(ApiGatewayJWTUserMiddleware):
 
 #### Django REST Framework 项目
 
-在Django REST Framework 项目如果你不希望直接使用以上介绍的Django中间件, 你可以DRF原生的配置来校验来自 API 网关的请求, 在Django settings中配置:
+注意: 以下DRF配置与前一节介绍的Django中间件配置二选一即可, 建议在DRF项目中使用REST_FRAMEWORK的配置
+
+在Django REST Framework 项目如果您不希望直接使用以上介绍的Django中间件, 您可以DRF原生的配置来校验来自 API 网关的请求, 在Django settings中配置:
+
+如果您的项目所有的api都需要走网关认证, 可以在Django settings中配置全局的网关JWT认证:
 
 ```python
 REST_FRAMEWORK = {
@@ -405,9 +409,28 @@ REST_FRAMEWORK = {
 }
 ```
 
-以上配置会向request对象注入`request.jwt`, `request.app`, `request.user`, 其中`request.user`使用 `auth.authenticate` 获取用户，请确保正确设置用户认证后端，以遵循 Django `AUTHENTICATION_BACKENDS` 相关规则。
+如果您的项目只有部份api需要接入网关, 您可以单独为部份api配置网关JWT认证:
 
-注意: 以上DRF配置与前一节介绍的Django中间件配置二选一即可, 建议在DRF项目中使用REST_FRAMEWORK的配置
+```python
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from apigw_manager.apigw.rest_framework.authentication import ApiGatewayJWTAuthentication
+
+
+class ExampleView(APIView):
+    authentication_classes = (ApiGatewayJWTAuthentication,)  # 配置认证类
+    permission_classes = (IsAuthenticated,) 
+
+    def get(self, request, format=None):
+        content = {
+            'username': request.user.username
+        }
+        return Response(content)
+```
+
+以上配置会向request对象注入`request.jwt`, `request.app`, `request.user`, 其中`request.user`使用 `auth.authenticate` 获取用户，请确保正确设置用户认证后端，以遵循 Django `AUTHENTICATION_BACKENDS` 相关规则。
 
 #### 本地开发测试
 

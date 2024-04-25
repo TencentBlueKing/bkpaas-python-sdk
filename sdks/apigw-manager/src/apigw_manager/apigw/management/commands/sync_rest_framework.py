@@ -35,10 +35,10 @@ class Command(BaseCommand):
             help="api name, if not set, use APP_CODE",
         )
         parser.add_argument(
-            "--define-path",
+            "--define-dir",
             type=str,
             default="support-files/apigateway",
-            help="define file path",
+            help="define file directory",
         )
         parser.add_argument(
             "--sync",
@@ -57,25 +57,25 @@ class Command(BaseCommand):
             self.stdout.write("api name is required")
             os.exit(1)
 
-        define_path = kwargs.get("define_path")
-        if not define_path:
-            self.stdout.write("define path is required")
+        define_dir = kwargs.get("define_dir")
+        if not define_dir:
+            self.stdout.write("define dir is required")
             os.exit(1)
 
         # 创建define path
-        if not os.path.isdir(define_path):
-            self.stdout.write("create define path: %s" % define_path)
-            os.makedirs(define_path, exist_ok=True)
+        if not os.path.isdir(define_dir):
+            self.stdout.write("create define dir: %s" % define_dir)
+            os.makedirs(define_dir, exist_ok=True)
 
         # 创建definition.yaml
         self.stdout.write("create definition.yaml")
-        definition_path = os.path.join(define_path, "definition.yaml")
+        definition_path = os.path.join(define_dir, "definition.yaml")
         with open(definition_path, "w", encoding="utf-8") as f:
             f.write(self.default_definition())
 
         # 创建resources.yaml
         self.stdout.write("create resources.yaml")
-        resources_path = os.path.join(define_path, "resources.yaml")
+        resources_path = os.path.join(define_dir, "resources.yaml")
 
         call_command("spectacular", f"--file={resources_path}")
 
