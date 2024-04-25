@@ -1,14 +1,14 @@
 [tool.poetry]
 name = "blue-krill"
-version = "2.0.2"
+version = "2.0.4"
 description = "Tools and common packages for blueking PaaS platform."
 include = ["blue_krill/py.typed"]
 readme = "README.md"
 authors = ["blueking <blueking@tencent.com>"]
 license = "MIT"
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
 ]
 
 [project.urls]
@@ -17,9 +17,9 @@ Repository = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.11"
-dataclasses = {version = "^0.7", python = ">=3.6.2,<3.7"}
-cryptography = "^3.0.0"
-django-environ = "^0.8.1"
+dataclasses = { version = ">=0.7", python = ">=3.6.2,<3.7" }
+cryptography = ">=3.0.0"
+django-environ = ">=0.8.1"
 pyjwt = ">=1.7.1"
 requests = "*"
 six = "*"
@@ -27,7 +27,7 @@ click = "*"
 pydantic = "*"
 toml = "*"
 python-editor = "^1.0.4"
-watchdog = "^1.0.2"
+watchdog = "*"
 curlify = "^2.2.1"
 bk-crypto-python-sdk = "^1.0.4"
 

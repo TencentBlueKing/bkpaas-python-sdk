@@ -24,20 +24,17 @@ def get_default_secret_key():
 
         return settings.BKKRILL_ENCRYPT_SECRET_KEY
     except ImportError:
-        logger.exception("you should supply a default secret key")
-        raise
+        return None
 
 
 def get_default_encrypt_cipher_type():
     """获取默认的加密算法"""
-
     try:
         from django.conf import settings
 
-        return settings.ENCRYPT_CIPHER_TYPE
+        return getattr(settings, 'ENCRYPT_CIPHER_TYPE', 'FernetCipher')
     except ImportError:
-        logger.exception("you should supply a encrypt cipher type")
-        raise
+        return 'FernetCipher'
 
 
 def encrypt_string(s: str, key: Optional[bytes] = None) -> str:

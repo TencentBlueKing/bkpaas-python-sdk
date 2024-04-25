@@ -22,22 +22,22 @@ from bkstorages.backends.bkrepo import BKGenericRepoClient, BKRepoFile, BKRepoSt
 from tests.utils import generate_random_string
 
 
-@pytest.fixture
+@pytest.fixture()
 def username():
     return generate_random_string()
 
 
-@pytest.fixture
+@pytest.fixture()
 def password():
     return generate_random_string()
 
 
-@pytest.fixture
+@pytest.fixture()
 def endpoint():
-    return "http://dummy.com"
+    return "http://example.com"
 
 
-@pytest.fixture
+@pytest.fixture()
 def session():
     return requests.session()
 
@@ -45,20 +45,20 @@ def session():
 @pytest.fixture()
 def adapter(session):
     adapter = requests_mock.Adapter()
-    session.mount('http://', adapter)
+    session.mount("http://", adapter)
     return adapter
 
 
-@pytest.fixture
-def bk_repo_cli(session, username, password, endpoint):
-    bk_repo_cli = BKGenericRepoClient(
+@pytest.fixture()
+def bk_repo_client(session, username, password, endpoint):
+    bk_repo_client = BKGenericRepoClient(
         bucket="dummy-bucket", username=username, password=password, project="dummy-project", endpoint_url=endpoint
     )
-    with mock.patch.object(bk_repo_cli, "get_client", lambda: session):
-        yield bk_repo_cli
+    with mock.patch.object(bk_repo_client, "get_client", return_value=session):
+        yield bk_repo_client
 
 
-@pytest.fixture
+@pytest.fixture()
 def make_dummy_file(adapter, endpoint):
     def core(key, content):
         def fake_upload(request):
@@ -66,11 +66,11 @@ def make_dummy_file(adapter, endpoint):
             return True
 
         g = adapter.register_uri(
-            'GET', urljoin(endpoint, f'/generic/dummy-project/dummy-bucket/{key}'), body=io.BytesIO(content)
+            "GET", urljoin(endpoint, f"/generic/dummy-project/dummy-bucket/{key}"), body=io.BytesIO(content)
         )
         adapter.register_uri(
-            'PUT',
-            urljoin(endpoint, f'/generic/dummy-project/dummy-bucket/{key}'),
+            "PUT",
+            urljoin(endpoint, f"/generic/dummy-project/dummy-bucket/{key}"),
             json={"code": 0, "message": ""},
             additional_matcher=fake_upload,
         )
@@ -78,10 +78,10 @@ def make_dummy_file(adapter, endpoint):
     return core
 
 
-@pytest.fixture
-def bk_repo_storage(bk_repo_cli):
+@pytest.fixture()
+def bk_repo_storage(bk_repo_client):
     storage = BKRepoStorage()
-    storage.client = bk_repo_cli
+    storage.client = bk_repo_client
     return storage
 
 
@@ -115,7 +115,7 @@ def file(name):
 
 class TestBKRepoStorage:
     @pytest.mark.parametrize(
-        "mock_responses, expect_directories, expect_files",
+        ("mock_responses", "expect_directories", "expect_files"),
         [
             (([folder("d-a"), folder("d-b"), file("f-a")],), ["d-a", "d-b"], ["f-a"]),
             (
@@ -129,11 +129,11 @@ class TestBKRepoStorage:
         path = "dummy-key"
         for idx, records in enumerate(mock_responses):
             adapter.register_uri(
-                'GET',
+                "GET",
                 urljoin(
                     endpoint,
-                    f'/repository/api/node/page/dummy-project/dummy-bucket/'
-                    f'{path}?pageSize=1000&PageNumber={idx + 1}&includeFolder=True',
+                    f"/repository/api/node/page/dummy-project/dummy-bucket/"
+                    f"{path}?pageSize=1000&PageNumber={idx + 1}&includeFolder=True",
                 ),
                 json={"code": 0, "message": 0, "data": {"totalPages": len(mock_responses), "records": records}},
             )
@@ -148,30 +148,48 @@ class TestBKRepoStorage:
         content = b"aaa"
         fh = File(io.BytesIO(content))
         adapter.register_uri(
-            "PUT", urljoin(endpoint, f'/generic/dummy-project/dummy-bucket/{filename}'), json={"code": 0}
+            "PUT", urljoin(endpoint, f"/generic/dummy-project/dummy-bucket/{filename}"), json={"code": 0}
         )
         assert bk_repo_storage.save(filename, fh)
         assert adapter.called
         assert adapter.last_request.headers["Content-Length"] == str(len(content))
         assert fh.name == filename
 
-    def test_save_with_name(self, bk_repo_storage, adapter, endpoint):
-        key = "foo/bar"
-        filename = "baz.py"
-        content = b"aaa"
-        fh = File(io.BytesIO(content), name=filename)
-        adapter.register_uri("PUT", urljoin(endpoint, f'/generic/dummy-project/dummy-bucket/{key}'), json={"code": 0})
-        assert bk_repo_storage.save(key, fh)
-        assert adapter.called
-        assert adapter.last_request.headers["Content-Length"] == str(len(content))
-        assert fh.name == filename
+    @pytest.mark.parametrize(
+        ("root_path", "name", "has_error", "expected_key"),
+        [
+            ("", "foo/bar", False, "foo/bar"),
+            ("", "/foo/bar", False, "foo/bar"),
+            ("/foo-prefix", "/bar/baz", False, "foo-prefix/bar/baz"),
+            # Invalid paths
+            ("/foo-prefix", "../../../bar", True, ""),
+        ],
+    )
+    def test_save_with_name(self, root_path, name, has_error, expected_key, bk_repo_client, adapter, endpoint):
+        storage = BKRepoStorage(root_path=root_path)
+        storage.client = bk_repo_client
+
+        filename = "foobar.py"
+        content = b"import this"
+        fh = File(io.BytesIO(content), name="foobar.py")
+        adapter.register_uri(
+            "PUT", urljoin(endpoint, f"/generic/dummy-project/dummy-bucket/{expected_key}"), json={"code": 0}
+        )
+        if has_error:
+            with pytest.raises(ValueError, match="joined path"):
+                storage.save(name, fh)
+        else:
+            assert storage.save(name, fh)
+            assert adapter.called
+            assert adapter.last_request.headers["Content-Length"] == str(len(content))
+            assert fh.name == filename
 
 
 @pytest.mark.parametrize(
-    "gmt, expected",
+    ("gmt", "expected"),
     [
-        ('Fri, 03 Dec 2021 10:55:04 GMT', datetime.datetime(2021, 12, 3, 10, 55, 4)),
-        ('Thu, 15 Aug 2019 03:02:38 GMT', datetime.datetime(2019, 8, 15, 3, 2, 38)),
+        ("Fri, 03 Dec 2021 10:55:04 GMT", datetime.datetime(2021, 12, 3, 10, 55, 4)),
+        ("Thu, 15 Aug 2019 03:02:38 GMT", datetime.datetime(2019, 8, 15, 3, 2, 38)),
     ],
 )
 def test_parse_gmt_datetime(gmt, expected):

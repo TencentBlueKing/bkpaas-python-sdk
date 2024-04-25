@@ -1,5 +1,13 @@
 ## Change logs
 
+### 2.0.4
+
+- Fix：支持不配置加密算法类型，使用默认类型 Fernet
+
+### 2.0.3
+
+- Loosen the version restriction on sub-dep `cryptography`
+
 ### 2.0.2
 
 - Fix: configure the correct SM4 encryption algorithm
@@ -12,6 +20,10 @@
 
 - Feature: support use pydantic 1.7+ & 2.0+
 - Deprecated: drop support for python 3.6 & 3.7
+
+### 1.2.6
+
+- Loosen the version restriction on sub-dep `cryptography`
 
 ### 1.2.5
 
