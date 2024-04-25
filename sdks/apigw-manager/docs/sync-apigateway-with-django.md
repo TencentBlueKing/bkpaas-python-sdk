@@ -207,7 +207,7 @@ INSTALLED_APPS = [
 python manage.py sync_rest_framework
 ```
 
-此命令有一下可选参数:
+此命令有以下可选参数:
 
 - api-name: 同步到网关的网关名称, 如果没填, 会尝试到Django `settings.BK_APIGW_NAME`, 如果还是取不到, 会使用环境变量中的`BKPAAS_APP_CODE`作为网关名
 - define-path: 生成`definition.yaml`与`resources.yaml`的目录, 默认`support-files/apigateway`
