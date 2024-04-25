@@ -29,10 +29,10 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--api-name",
+            "--gateway-name",
             type=str,
             default="",
-            help="api name, if not set, use APP_CODE",
+            help="gateway name, if not set, use APP_CODE",
         )
         parser.add_argument(
             "--define-dir",
@@ -49,7 +49,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         gateway_name = (
-            kwargs.get("api_name")
+            kwargs.get("gateway_name")
             or getattr(settings, "BK_APIGW_NAME")
             or os.environ.get("BKPAAS_APP_CODE")
         )
