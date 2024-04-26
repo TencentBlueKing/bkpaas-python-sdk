@@ -13,6 +13,10 @@ import os
 from django.conf import settings
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
+from drf_spectacular.management.commands.spectacular import SchemaValidationError
+from drf_spectacular.renderers import OpenApiYamlRenderer
+from drf_spectacular.settings import spectacular_settings
+from drf_spectacular.validation import validate_schema
 
 
 class Command(BaseCommand):
@@ -47,6 +51,11 @@ class Command(BaseCommand):
             help="whether sync to gateway",
         )
         parser.add_argument("--definition-file", help="definition file")
+        parser.add_argument(
+            "--tag",
+            nargs="*",
+            help="if set only generate the specified tags api to resources.yaml",
+        )
 
     def handle(self, *args, **kwargs):
         gateway_name = (
@@ -81,7 +90,8 @@ class Command(BaseCommand):
         self.stdout.write("create resources.yaml")
         resources_path = os.path.join(define_dir, "resources.yaml")
 
-        call_command("spectacular", f"--file={resources_path}")
+        tags = kwargs.get("tag")
+        self.gen_resources(resources_path, tags)
 
         if not kwargs.get("sync"):
             self.stdout.write("skip sync")
@@ -131,6 +141,41 @@ class Command(BaseCommand):
             f"--file={definition_path}",
             "--generate-sdks=true",
         )
+
+    def gen_resources(self, resources_path, tags):
+        if tags:
+
+            def custom_postprocessing_hook(result, generator, request, public):
+                paths = result.get("paths", None)
+                if not paths:
+                    return result
+
+                api_to_delete = []
+                for uri, methods in paths.items():
+                    for method, info in methods.items():
+                        if not set(tags).intersection(info.get("tags", [])):
+                            api_to_delete.append((uri, method))
+
+                for uri, method in api_to_delete:
+                    del paths[uri][method]
+
+                result["paths"] = {k: v for k, v in paths.items() if v}
+                return result
+
+            spectacular_settings.POSTPROCESSING_HOOKS.append(custom_postprocessing_hook)
+
+        generator = spectacular_settings.DEFAULT_GENERATOR_CLASS()
+        renderer = OpenApiYamlRenderer()
+        schema = generator.get_schema(request=None, public=True)
+
+        try:
+            validate_schema(schema)
+        except Exception as e:
+            raise SchemaValidationError(e)
+
+        output = renderer.render(schema, renderer_context={})
+        with open(resources_path, "wb") as f:
+            f.write(output)
 
     def default_definition(self):
         return """{% load apigw_extras %}

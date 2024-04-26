@@ -218,9 +218,45 @@ python manage.py sync_rest_framework
 - define-dir: 生成`definition.yaml`与`resources.yaml`的目录, 默认`support-files/apigateway`
 - sync: 是否同步到网关, 默认true, 如果为false, 只生成`definition.yaml`与`resources.yaml`, 不同步配置到网关
 - definition-file: 自定义`definition.yaml`文件的路径, 如果不配置会自动生成
+- tag: 您可以在您需要到处到网关的api上配置自定义tag, 然后通过命令行参数 tag 指定要导出的api, tag支持配置多个, 不配会到处所有api到`resources.yaml`
 
 此命令依赖PaaS V3提供的环境变量用于生成配置, 如果您的项目不是部署再PaaS V3上, 可以尝试添加以下环境变量
 
 - BKPAAS_APP_CODE
 - BKPAAS_ENVIRONMENT
 - BKPAAS_DEFAULT_PREALLOCATED_URLS
+
+#### 指定api导出到网关
+
+比如您有以下example api, 您希望在注册网关时只注册该api, 而忽略其它的api
+
+```python
+from drf_spectacular.utils import extend_schema
+from rest_framework import generics, serializers
+from rest_framework.response import Response
+
+
+class ExampleAPISerializer(serializers.Serializer):
+    name = serializers.CharField()
+    age = serializers.IntegerField()
+
+
+class ExampleAPIView(generics.GenericAPIView):
+    serializer_class = ExampleAPISerializer
+
+    @extend_schema(tags=["open"])  # 注意这里: 对api打上open tag
+    def get(self, request, *args, **kwargs):
+        return Response({})
+```
+
+您可以在执行命令时指定tag导出:
+
+```
+python manage.py sync_rest_framework --tag=open
+```
+
+tag 参数支持同时传多个:
+
+```
+python manage.py sync_rest_framework --tag=web --tag=open
+```
