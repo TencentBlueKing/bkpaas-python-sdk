@@ -218,7 +218,7 @@ python manage.py sync_rest_framework
 - define-dir: 生成`definition.yaml`与`resources.yaml`的目录, 默认`support-files/apigateway`
 - sync: 是否同步到网关, 默认true, 如果为false, 只生成`definition.yaml`与`resources.yaml`, 不同步配置到网关
 - definition-file: 自定义`definition.yaml`文件的路径, 如果不配置会自动生成
-- tag: 您可以在您需要到处到网关的api上配置自定义tag, 然后通过命令行参数 tag 指定要导出的api, tag支持配置多个, 不配会到处所有api到`resources.yaml`
+- tag: 您可以在您需要导出到网关的api上配置自定义tag, 然后通过命令行参数 tag 指定要导出的api, tag支持配置多个, 不配会导出所有api到`resources.yaml`
 
 此命令依赖PaaS V3提供的环境变量用于生成配置, 如果您的项目不是部署再PaaS V3上, 可以尝试添加以下环境变量
 
