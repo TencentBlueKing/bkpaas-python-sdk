@@ -1,7 +1,7 @@
 # 插件配置说明
 插件配置支持主要在 `stage`(definition.yaml) 和 `resource`(resource.yaml) 两个维度上，资源配置的插件优先级最高。
-> 注意：所有配置均以yaml配置同步为主，eg： 如果通过yaml配置的插件配置则会覆盖掉用户在网关管理页面创建的插件配置，如果yaml没有配置该插件，则也不会移除
-> 用户之前在页面创建的插件配置，不过yaml如果没有配置上一次yaml配置的插件，则会移除上一次yaml配置的插件。
+> 注意：所有配置均以 yaml 配置同步为主，举例来说： 如果通过yaml配置的插件配置则会覆盖掉用户在网关管理页面创建的插件配置，如果 yaml 没有配置该插件，则也不会移除
+> 用户之前在页面创建的插件配置，不过 yaml 如果没有配置上一次yaml配置的插件，则会移除上一次 yaml 配置的插件。
 > `CORS` 插件和 `IP 访问保护插件` 不推荐在yaml配置绑定在环境上。
 
 ## 跨域资源共享（CORS）插件
@@ -38,12 +38,12 @@
 ### 配置例子
 
 ```yaml
-1- type: bk-header-rewrite
-2  yaml: |-
-3    set:
-4      - key: test
-5        value: '2'
-6    remove: []
+- type: bk-header-rewrite
+  yaml: |-
+    set:
+      - key: test
+        value: '2'
+    remove: []
 ```
 
 ## IP 访问保护插件
@@ -57,11 +57,11 @@
 ### 配置例子
 
 ```yaml
-1- type: bk-ip-restriction
-2  yaml: |-
-3    whitelist: '1.1.1.1'
-4    blacklist: '2.2.2.2'
-5    message: 'Your IP is not allowed'
+- type: bk-ip-restriction
+  yaml: |-
+    whitelist: '1.1.1.1'
+    blacklist: '2.2.2.2'
+    message: 'Your IP is not allowed'
 ```
 
 ## 频率控制插件
@@ -76,10 +76,10 @@
 ### 配置例子
 
 ```yaml
-1- type: bk-rate-limit
-2  yaml: |-
-3    rates:
-4      __default:
-5      - period: 1
-6          tokens: 100
+- type: bk-rate-limit
+  yaml: |-
+    rates:
+      __default:
+      - period: 1
+          tokens: 100
 ```
