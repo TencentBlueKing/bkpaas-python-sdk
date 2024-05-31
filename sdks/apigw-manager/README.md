@@ -69,8 +69,8 @@ support-files
 ```
 
 definition.yaml 中可以使用 Django 模版语法引用和渲染变量，内置以下变量：
-- `settings`：Django 提供的配置对象,优先适合用于使用 Django Command 同步
-- `environ`：环境变量,推荐镜像同步方式使用
+- `settings`：Django 提供的配置对象，优先适合用于使用 Django Command 同步
+- `environ`：环境变量，推荐镜像同步方式使用
 
 推荐在一个文件中统一进行定义，用命名空间区分不同配置间的定义，definition.yaml 样例：
 
@@ -127,11 +127,28 @@ stage:
         # 网关调用后端服务的默认域名或IP，不包含Path，比如：http://api.example.com
         - host: ""
           weight: 100
-    # Header转换；如未使用，可去除此配置
-    # transform_headers:
-    #   # 设置Headers
-    #   set:
-    #     X-Token: "token"
+    # 环境插件配置
+    # pluginConfigs:
+    #     - type: bk-rate-limit
+    #       yaml: |-
+    #         rates:
+    #           __default:
+    #           - period: 1
+    #             tokens: 100
+    #     - type: bk-header-rewrite
+    #       yaml: |-
+    #         set:
+    #           - key: test
+    #             value: '2'
+    #         remove: []
+    #     - type: bk-cors
+    #       yaml: |-
+    #         allow_origins: '*'
+    #         allow_methods: '*'
+    #         allow_headers: '*'
+    #         expose_headers: '*'
+    #         max_age: 86400
+    #         allow_credential: false
 
 
 # 支持定义多个stage,如果定义多个，则同步脚本需要添加对应的同步命令，并指明：namespace(默认：stage) eg：stage2
@@ -191,14 +208,16 @@ resource_docs:
 ```
 
 **注意：**
-- 同步资源后，需要创建版本并发布才能生效，发布数据定义于 definition.yaml `release`
+- 同步资源或者环境相关配置后，需要创建版本并发布才能生效，发布数据定义于 definition.yaml `release`
 - 资源配置 resources.yaml 变更时，需要更新 definition.yaml `release` 中的版本号 version，以便正确创建资源版本及 SDK
-
+- 详细的插件配置见：[插件配置说明](docs/plugin-use-guide.md)
 #### 2. resources.yaml
 
 用于定义资源配置，建议通过网关管理端导出。为了方便用户直接使用网关导出的资源文件，资源定义默认没有命名空间。
 
 样例可参考：[resources.yaml](examples/django/use-custom-script/support-files/resources.yaml)
+
+> 详细的插件配置见：[插件配置说明](docs/plugin-use-guide.md)
 
 #### 3. apidocs（可选）
 
@@ -447,8 +466,12 @@ APIGW_MANAGER_DUMMY_PAYLOAD_USERNAME  # JWT payload 中的 username
 这种大概率是自定义脚本有问题，参照文档，按照对应目录下的 examples 的同步脚本即可。
 
 ### 2.执行同步命令时报错：`Error responded by API Gateway, status_code:_code: 404, request_id:, error_code: 1640401, API not found`
-这种大概率是网关URL `BK_API_URL_TMPL` 漏配或者配错了。eg: BK_API_URL_TMPL: http://bkapi.example.com/api/{api_name}"l, 注意 {api_name}是占位符需要保留
+网关URL `BK_API_URL_TMPL` 漏配或者配错了(自定义脚本中存在错误)。举例说明: BK_API_URL_TMPL: http://bkapi.example.com/api/{api_name}"l, 注意 {api_name}是占位符需要保留
 
 ### 3.同步过程中报错: `校验失败: api_type: api_type 为 1 时，网关名 name 需以 bk- 开头。`
 这个是因为 `definition.yaml` 定义的 apigateway.api_type为 1，标记网关为官方网关，网关名需以 `bk-` 开头，可选；非官方网关，可去除此配置
 当设置为 1 时,则 `sync-apigateway.sh`里面的 `gateway_name` 参数需要以 bk- 开头
+
+### 4.definition.yaml 指定了一个环境，为啥发布时却将其他环境也进行了发布？
+definition.yaml 指定的环境配置适用于 `sync_apigw_stage` 命令，而资源发布 `create_version_and_release_apigw` 需要通过指定 --stage prod test 等方式来指定，未指定则
+会发布所有该网关存在的环境

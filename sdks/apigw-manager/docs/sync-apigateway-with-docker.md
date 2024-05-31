@@ -267,13 +267,13 @@ docker run --rm \
 ### 支持同步指令
 
 ```bash
-#可选，为网关添加关联应用，关联应用可以通过网关 bk-apigateway 提供的接口管理网关数据
+# 可选，为网关添加关联应用，关联应用可以通过网关 bk-apigateway 提供的接口管理网关数据
 call_definition_command_or_exit add_related_apps "${definition_file}" --gateway-name=${gateway_name}
 
-#可选，申请网关权限 
+# 可选，申请网关权限 
 call_definition_command_or_exit apply_apigw_permissions "${definition_file}" --gateway-name=${gateway_name} 
  
-#创建资源版本并发布；指定参数 --generate-sdks 时，会同时生成资源版本对应的网关 SDK
+# 创建资源版本并发布；指定参数 --generate-sdks 时，会同时生成资源版本对应的网关 SDK, 指定 --stage stage1 stage2 时会发布指定环境,不设置则发布所有环境
 call_definition_command_or_exit create_version_and_release_apigw "${definition_file}" --gateway-name=${gateway_name}
  
 # 获取网关公钥，存放到文件 apigateway.pub 
