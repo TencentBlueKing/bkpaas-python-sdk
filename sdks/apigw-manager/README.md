@@ -118,8 +118,8 @@ stage:
   # vars:
   #   key: "value"
   # 代理配置
-    
-  # 网关版本 1.13.1 的配置方式，只支持设置 default 后端服务
+  # proxy_http 与 backends 二选一， 推荐使用 backends 方式配置
+  # 网关版本 <= 1.13.3, 只支持一个后端服务, 默认是 default
   #  proxy_http:
   #    timeout: 60
   #    # 负载均衡类型 + Hosts
@@ -130,9 +130,11 @@ stage:
   #        - host: ""
   #          weight: 100
     
-  # 网关版本 1.13.1之后引入backend配置方式,支持多后端服务
+  # 网关版本 1.13.3之后引入 backend 配置方式,支持多后端服务
+  # 注意: 资源中引用的 backend 一定要配置， 否则会导入失败,不配置则会选择 default 后端服务
+  #      如果 backends 没有配置 default 且 resource 未指定 backend 则会导致版本发布校验失败
   backends:
-    - name: "default" # 如果选择 backends 方式，不设置 proxy_http, default 一定要设置
+    - name: "default"
       config:
         timeout: 60
         loadbalance: "roundrobin"
