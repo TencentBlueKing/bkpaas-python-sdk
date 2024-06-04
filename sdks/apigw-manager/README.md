@@ -128,7 +128,7 @@ stage:
         - host: ""
           weight: 100
     # 环境插件配置
-    # pluginConfigs:
+    # plugin_configs:
     #     - type: bk-rate-limit
     #       yaml: |-
     #         rates:
