@@ -130,7 +130,7 @@ stage:
   #        - host: ""
   #          weight: 100
     
-  # 网关版本 1.13.3之后引入 backend 配置方式,支持多后端服务
+  # 网关版本 1.13.3之后引入 backends 配置方式,支持多后端服务
   # 注意: 资源中引用的 backend 一定要配置， 否则会导入失败,不配置则会选择 default 后端服务
   #      如果 backends 没有配置 default 且 resource 未指定 backend 则会导致版本发布校验失败
   backends:
