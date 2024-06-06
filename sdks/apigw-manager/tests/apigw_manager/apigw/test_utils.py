@@ -52,16 +52,16 @@ class TestGetConfiguration:
         ("kwargs", "expected"),
         [
             (
-                    {},
-                    "",
+                {},
+                "",
             ),
             (
-                    {"host": "http://apigw.svc/api/test/prod/"},
-                    "http://apigw.svc/api/test/prod",
+                {"host": "http://apigw.svc/api/test/prod/"},
+                "http://apigw.svc/api/test/prod",
             ),
             (
-                    {"host": "http://apigw.svc/api/test/prod"},
-                    "http://apigw.svc/api/test/prod",
+                {"host": "http://apigw.svc/api/test/prod"},
+                "http://apigw.svc/api/test/prod",
             ),
         ],
     )
@@ -77,24 +77,24 @@ class TestGetConfiguration:
         ("fake_settings", "expected"),
         [
             (
-                    {},
-                    "",
+                {},
+                "",
             ),
             (
-                    {
-                        "BK_APIGATEWAY_API_STAGE_URL": "http://apigw.svc/api/bk-apigateway/prod",
-                    },
-                    "http://apigw.svc/api/bk-apigateway/prod",
+                {
+                    "BK_APIGATEWAY_API_STAGE_URL": "http://apigw.svc/api/bk-apigateway/prod",
+                },
+                "http://apigw.svc/api/bk-apigateway/prod",
             ),
             (
-                    {"BK_API_URL_TMPL": "http://apigw.svc/api/{api_name}/"},
-                    "http://apigw.svc/api/bk-apigateway/prod",
+                {"BK_API_URL_TMPL": "http://apigw.svc/api/{api_name}/"},
+                "http://apigw.svc/api/bk-apigateway/prod",
             ),
             (
-                    {
-                        "BK_API_URL_TMPL": "http://apigw.svc/api/{api_name}",
-                    },
-                    "http://apigw.svc/api/bk-apigateway/prod",
+                {
+                    "BK_API_URL_TMPL": "http://apigw.svc/api/{api_name}",
+                },
+                "http://apigw.svc/api/bk-apigateway/prod",
             ),
         ],
     )
