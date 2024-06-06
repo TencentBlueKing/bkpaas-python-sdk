@@ -17,12 +17,6 @@ from bkapi_client_core.config import settings as bkapi_settings
 def _reset_bkapi_settings():
     bkapi_settings.reset()
 
-
-@pytest.fixture(autouse=True)
-def _mark_django_db(db):
-    pass
-
-
 @pytest.fixture()
 def fake_gateway_name(settings, faker):
     gateway_name = faker.pystr()
