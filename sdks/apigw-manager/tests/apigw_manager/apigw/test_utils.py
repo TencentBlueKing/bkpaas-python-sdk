@@ -14,8 +14,9 @@ import zipfile
 
 import pytest
 from django.conf import settings
+from packaging.version import InvalidVersion
 
-from apigw_manager.apigw.utils import ZipArchiveFile, get_configuration, parse_value_list
+from apigw_manager.apigw.utils import ZipArchiveFile, get_configuration, parse_value_list, parse_version
 
 
 class TestGetConfiguration:
@@ -140,3 +141,25 @@ class TestZipArchiveFile:
         file_path = os.path.join(settings.BASE_DIR, "tests", "files", "docs")
         result = ZipArchiveFile._get_archived_files(file_path)
         assert result == {os.path.join(file_path, "zh", "get.md"): os.path.join("zh", "get.md")}
+
+
+class TestVersion:
+
+    def test_valid_versions(self):
+        valid_versions = [
+            "1.0.0",
+            "2.1.0-alpha",
+            "3.0.0-beta.1",
+            "4.0.0-rc.1",
+            "5.0.0+build.1",
+            "6.0.0-alpha+build.1",
+            "7.0.0-feature-layered-alpha2",
+            "8.0.0-feature-layered-alpha.2",
+            "3.14.1-feature-layered-alpha2"
+        ]
+        for version in valid_versions:
+            try:
+                parse_version(version)
+            except InvalidVersion:
+                pytest.fail(f"Valid version '{version}' raised InvalidVersion")
+
