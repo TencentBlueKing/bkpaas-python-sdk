@@ -118,15 +118,39 @@ stage:
   # vars:
   #   key: "value"
   # 代理配置
-  proxy_http:
-    timeout: 60
-    # 负载均衡类型 + Hosts
-    upstreams:
-      loadbalance: "roundrobin"
-      hosts:
-        # 网关调用后端服务的默认域名或IP，不包含Path，比如：http://api.example.com
-        - host: ""
-          weight: 100
+  # proxy_http 与 backends 二选一， 推荐使用 backends 方式配置
+  # 网关版本 <= 1.13.3, 只支持一个后端服务, 默认是 default
+  #  proxy_http:
+  #    timeout: 60
+  #    # 负载均衡类型 + Hosts
+  #    upstreams:
+  #      loadbalance: "roundrobin"
+  #      hosts:
+  #        # 网关调用后端服务的默认域名或IP，不包含Path，比如：http://api.example.com
+  #        - host: ""
+  #          weight: 100
+    
+  # 网关版本 1.13.3之后引入 backends 配置方式,支持多后端服务
+  # 注意: 资源中引用的 backend 一定要配置， 否则会导入失败,不配置则会选择 default 后端服务
+  #      如果 backends 没有配置 default 且 resource 未指定 backend 则会导致版本发布校验失败
+  backends:
+    - name: "default"
+      config:
+        timeout: 60
+        loadbalance: "roundrobin"
+        hosts:
+          # 网关调用后端服务的默认域名或IP，不包含Path，比如：http://api.example.com
+          - host: ""
+            weight: 100
+    
+    - name: "service1"
+      config:
+        timeout: 60
+        loadbalance: "roundrobin"
+        hosts:
+          - host: ""
+            weight: 100
+
     # 环境插件配置
     # plugin_configs:
     #     - type: bk-rate-limit
