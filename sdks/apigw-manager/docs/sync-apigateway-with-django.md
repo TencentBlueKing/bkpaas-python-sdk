@@ -176,3 +176,87 @@ python manage.py sync_apigw_stage --gateway-name=${gateway_name} --file="${defin
 # 可选，同步资源文档
 python manage.py sync_resource_docs_by_archive --gateway-name=${gateway_name} --file="${definition_file}"
 ```
+
+### 在PaaS V3上部署Django REST Framework项目同步网关
+
+如果您的项目部署在PaaS V3上并且使用Django REST Framework框架, apigw-manager提供了一个一键同步网关的命令, 您无需自行定义`definition.yaml`与`resources.yaml`, apigw-manager可以帮助您自动生成以上文件, 并同步配置到网关.
+
+以上功能依赖`drf-spectacular`库来自动生成`resources.yaml`, 使用前请确保您的项目能正常使用`drf-spectacular`生成`OpenAPI`文档, `drf-spectacular`的使用请参考:
+
+- https://github.com/tfranzel/drf-spectacular
+- https://drf-spectacular.readthedocs.io/en/latest/
+
+依赖库版本:
+
+- djangorestframework>=3.10.3
+- drf-spectacular>=0.21.1
+
+#### 安装apigw-manager
+
+```shell
+pip install "apigw-manager[djangorestframework]"
+```
+
+在Django settings INSTALLED_APPS中开启`apigw_manager.apigw`
+
+```python
+INSTALLED_APPS = [
+  ...
+  "apigw_manager.apigw",
+]
+```
+
+#### 执行同步网关命令
+
+```
+python manage.py sync_rest_framework
+```
+
+此命令有以下可选参数:
+
+- gateway-name: 同步到网关的网关名称, 如果没填, 会尝试到Django `settings.BK_APIGW_NAME`, 如果还是取不到, 会使用环境变量中的`BKPAAS_APP_CODE`作为网关名
+- define-dir: 生成`definition.yaml`与`resources.yaml`的目录, 默认`support-files/apigateway`
+- sync: 是否同步到网关, 默认true, 如果为false, 只生成`definition.yaml`与`resources.yaml`, 不同步配置到网关
+- definition-file: 自定义`definition.yaml`文件的路径, 如果不配置会自动生成
+- tag: 您可以在您需要导出到网关的api上配置自定义tag, 然后通过命令行参数 tag 指定要导出的api, tag支持配置多个, 不配会导出所有api到`resources.yaml`
+
+此命令依赖PaaS V3提供的环境变量用于生成配置, 如果您的项目不是部署再PaaS V3上, 可以尝试添加以下环境变量
+
+- BKPAAS_APP_CODE
+- BKPAAS_ENVIRONMENT
+- BKPAAS_DEFAULT_PREALLOCATED_URLS
+
+#### 指定api导出到网关
+
+比如您有以下example api, 您希望在注册网关时只注册该api, 而忽略其它的api
+
+```python
+from drf_spectacular.utils import extend_schema
+from rest_framework import generics, serializers
+from rest_framework.response import Response
+
+
+class ExampleAPISerializer(serializers.Serializer):
+    name = serializers.CharField()
+    age = serializers.IntegerField()
+
+
+class ExampleAPIView(generics.GenericAPIView):
+    serializer_class = ExampleAPISerializer
+
+    @extend_schema(tags=["open"])  # 注意这里: 对api打上open tag
+    def get(self, request, *args, **kwargs):
+        return Response({})
+```
+
+您可以在执行命令时指定tag导出:
+
+```
+python manage.py sync_rest_framework --tag=open
+```
+
+tag 参数支持同时传多个:
+
+```
+python manage.py sync_rest_framework --tag=web --tag=open
+```
