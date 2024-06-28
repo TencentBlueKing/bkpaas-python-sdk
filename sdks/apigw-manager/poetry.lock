@@ -1218,7 +1218,7 @@ kubernetes = ["kubernetes"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.1"
-content-hash = "6d2ef11764ecb00a47cf209dd9cc22f29e5f898aefb2d7c38274c4a5db9baf5a"
+content-hash = "928c65ead496b8ef935e6448bd03bf3ec72b883957c5e29d5e9f4f608cb1797f"
 
 [metadata.files]
 appnope = [
