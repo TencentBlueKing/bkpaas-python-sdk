@@ -74,9 +74,61 @@ definition.yaml 中可以使用 Django 模版语法引用和渲染变量，内�
 
 推荐在一个文件中统一进行定义，用命名空间区分不同配置间的定义，definition.yaml 样例：
 
-```yaml
-# definition.yaml 配置文件版本号，必填，固定值 1
+目前有两种配置文件版本：spec_version=1/2,主要区别就是stage相关的配置方式上有一些不一样。
+
+区别如下：
 spec_version: 1
+```yaml
+# definition.yaml 配置文件版本号，必填，固定值 1/2
+spec_version: 1
+stage:
+  name: "prod"
+  description: "描述"
+  description_en: "English description"
+  proxy_http:
+    timeout: "65"
+    upstreams:
+      loadbalance: "roundrobin"
+      hosts:
+        - host: "http://httpbin"
+          weight: 100
+```
+
+spec_version: 2
+```yaml
+# definition.yaml 配置文件版本号，必填，固定值 1/2
+spec_version: 2
+stages:
+  - name: "prod"
+    description: "描述"
+    description_en: "English description"
+    vars:
+      status_500: "500"
+    backends:
+      - name: "default"
+        config:
+          timeout: 60
+          loadbalance: "roundrobin"
+          hosts:
+            - host: "http://httpbin"
+              weight: 100
+
+      - name: "unknownbackend"
+        config:
+          timeout: 60
+          loadbalance: "roundrobin"
+          hosts:
+            - host: "http://unknownbackend"
+              weight: 100
+```
+
+
+
+整体的样例：
+
+```yaml
+# definition.yaml 配置文件版本号，必填，固定值 1/2
+spec_version: 2 
 
 # 定义发布内容，用于命令 `create_version_and_release_apigw`
 release:
@@ -109,47 +161,47 @@ apigateway:
     - "admin"
 
 # 定义环境信息，用于命令 `sync_apigw_stage`
-stage:
-  name: "prod"
-  description: "描述"
-  # 环境的英文名，蓝鲸官方网关需提供，以支持国际化
-  description_en: "English description"
-  # 环境变量；如未使用，可去除此配置
-  # vars:
-  #   key: "value"
-  # 代理配置
-  # proxy_http 与 backends 二选一， 推荐使用 backends 方式配置
-  # 网关版本 <= 1.13.3, 只支持一个后端服务, 默认是 default
-  #  proxy_http:
-  #    timeout: 60
-  #    # 负载均衡类型 + Hosts
-  #    upstreams:
-  #      loadbalance: "roundrobin"
-  #      hosts:
-  #        # 网关调用后端服务的默认域名或IP，不包含Path，比如：http://api.example.com
-  #        - host: ""
-  #          weight: 100
-    
-  # 网关版本 1.13.3之后引入 backends 配置方式,支持多后端服务
-  # 注意: 资源中引用的 backend 一定要配置， 否则会导入失败,不配置则会选择 default 后端服务
-  #      如果 backends 没有配置 default 且 resource 未指定 backend 则会导致版本发布校验失败
-  backends:
+stages:
+  - name: "prod"
+    description: "描述"
+    # 环境的英文名，蓝鲸官方网关需提供，以支持国际化
+    description_en: "English description"
+    # 环境变量；如未使用，可去除此配置
+    # vars:
+    #   key: "value"
+    # 代理配置
+    # proxy_http 与 backends 二选一， 推荐使用 backends 方式配置
+    # 网关版本 <= 1.13.3, 只支持一个后端服务, 默认是 default
+    #  proxy_http:
+    #    timeout: 60
+    #    # 负载均衡类型 + Hosts
+    #    upstreams:
+    #      loadbalance: "roundrobin"
+    #      hosts:
+    #        # 网关调用后端服务的默认域名或IP，不包含Path，比如：http://api.example.com
+    #        - host: ""
+    #          weight: 100
+
+    # 网关版本 1.13.3之后引入 backends 配置方式,支持多后端服务
+    # 注意: 资源中引用的 backend 一定要配置， 否则会导入失败,不配置则会选  择 default 后端服务
+    #      如果 backends 没有配置 default 且 resource 未指定 backend 则会导致版本发布校验失败
+    backends:
     - name: "default"
       config:
-        timeout: 60
-        loadbalance: "roundrobin"
-        hosts:
-          # 网关调用后端服务的默认域名或IP，不包含Path，比如：http://api.example.com
-          - host: ""
-            weight: 100
-    
+      timeout: 60
+      loadbalance: "roundrobin"
+      hosts:
+         # 网关调用后端服务的默认域名或IP，不包含Path，比如：      http://api.example.com
+        - host: ""
+          weight: 100
+
     - name: "service1"
       config:
-        timeout: 60
-        loadbalance: "roundrobin"
-        hosts:
-          - host: ""
-            weight: 100
+      timeout: 60
+      loadbalance: "roundrobin"
+      hosts:
+       - host: ""
+         weight: 100
 
     # 环境插件配置
     # plugin_configs:
@@ -174,22 +226,6 @@ stage:
     #         max_age: 86400
     #         allow_credential: false
 
-
-# 支持定义多个stage,如果定义多个，则同步脚本需要添加对应的同步命令，并指明：namespace(默认：stage) eg：stage2
-# 同步脚本 sync-apigateway.sh 需要新增以下命令:
-# python manage.py sync_apigw_stage --gateway-name=${gateway_name} --file="${definition_file}" --namespace="stage2"
-
-#stage2:
-#  name: "test"
-#  description: "这是一个测试"
-#  description_en: "This is a test"
-#  proxy_http:
-#    timeout: 60
-#    upstreams:
-#      loadbalance: "roundrobin"
-#      hosts:
-#        - host: "https://httpbin.org"
-#          weight: 100
 
 
 # 主动授权，网关主动给应用，添加访问网关所有资源或者具体某个资源的权限；

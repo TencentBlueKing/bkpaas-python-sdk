@@ -16,6 +16,20 @@ class Command(SyncCommand):
 
     default_namespace = "stage"
 
+    def get_definition(self, define, file, namespace, **kwargs):
+        definition = self.load_definition(define, file, **kwargs)
+        if definition is None:
+            return {}
+        if definition.spec_version == 2:
+            namespace = "stages"
+            self.default_namespace = "stages"
+        return super().get_definition(define, file, namespace, **kwargs)
+
     def do(self, manager, definition, *args, **kwargs):
-        result = manager.sync_stage_config(**definition)
-        print("API gateway stage synchronization completed, id %s, name %s" % (result["id"], result["name"]))
+        if self.default_namespace == "stages":
+            for stage_definition in definition:
+                result = manager.sync_stage_config(**stage_definition)
+                print("API gateway stage synchronization completed, id %s, name %s" % (result["id"], result["name"]))
+        else:
+            result = manager.sync_stage_config(**definition)
+            print("API gateway stage synchronization completed, id %s, name %s" % (result["id"], result["name"]))
