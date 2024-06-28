@@ -27,7 +27,8 @@ logger = logging.getLogger(__name__)
 class Definition:
     """Gateway model definitions"""
 
-    valid_spec_versions = ["1"]
+    valid_spec_versions = ["1", "2"]
+    spec_version = "1"
 
     @classmethod
     def load_from(cls, path, dictionary):
@@ -55,7 +56,9 @@ class Definition:
             return
 
         if str(spec_version) not in self.valid_spec_versions:
-            raise ValueError("spec_version configured in definition.yaml is wrong, choices: 1")
+            raise ValueError("spec_version configured in definition.yaml is wrong, choices: [1,2]")
+
+        self.spec_version = spec_version
 
     def _get_namespace_list(self, namespace):
         if not namespace:
@@ -168,6 +171,7 @@ class ReleaseVersionManager(ContextManager):
 
 class ResourceSignatureManager(ContextManager):
     scope = "resource_signature"
+
     # is_dirty 表示对环境资源进行了改动，但是还没有发布的状态，可能有两种更新的方式：
     # 1. 同步时，发现当前资源签名和上次不一致
     # 2. 其他明确需要发布的场景，比如同步接口时，发现有资源的增删
