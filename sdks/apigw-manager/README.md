@@ -75,11 +75,12 @@ definition.yaml 中可以使用 Django 模版语法引用和渲染变量，内�
 推荐在一个文件中统一进行定义，用命名空间区分不同配置间的定义，definition.yaml 样例：
 
 目前有两种配置文件版本：spec_version=1/2,主要区别就是stage相关的配置方式上有一些不一样。
-
+新接入系统请使用 spec_version=2， 就有系统如果需要配置多个stage/配置多个backend， 建议也升级到spec_version=2并变更相关yaml配置。
 区别如下：
 spec_version: 1
 ```yaml
 # definition.yaml 配置文件版本号，必填，固定值 1/2
+# 1：key为stage; 只支持单个 stage， 并且 proxy_http只能配置一个后端服务
 spec_version: 1
 stage:
   name: "prod"
@@ -90,13 +91,14 @@ stage:
     upstreams:
       loadbalance: "roundrobin"
       hosts:
-        - host: "http://httpbin"
+        - host: "http://httpbin.org"
           weight: 100
 ```
 
 spec_version: 2
 ```yaml
 # definition.yaml 配置文件版本号，必填，固定值 1/2
+# 2：key为stages; 支持多个stages，并且每个stage可以配置多个backend后端服务
 spec_version: 2
 stages:
   - name: "prod"
@@ -110,25 +112,25 @@ stages:
           timeout: 60
           loadbalance: "roundrobin"
           hosts:
-            - host: "http://httpbin"
+            - host: "http://httpbin.org"
               weight: 100
 
-      - name: "unknownbackend"
+      - name: "backend1"
         config:
           timeout: 60
           loadbalance: "roundrobin"
           hosts:
-            - host: "http://unknownbackend"
+            - host: "http://httpbin.org"
               weight: 100
 ```
-
+> 📢 注意：如果之前接入过的，建议将 sepc_version改成 2，并将原先 stage:改成 stages: []
 
 
 整体的样例：
 
 ```yaml
 # definition.yaml 配置文件版本号，必填，固定值 1/2
-spec_version: 2 
+spec_version: 2  # 如果之前接入过的，建议将 sepc_version改成 2，并将原先 stage:改成 stages: []
 
 # 定义发布内容，用于命令 `create_version_and_release_apigw`
 release:
@@ -172,16 +174,6 @@ stages:
     # 代理配置
     # proxy_http 与 backends 二选一， 推荐使用 backends 方式配置
     # 网关版本 <= 1.13.3, 只支持一个后端服务, 默认是 default
-    #  proxy_http:
-    #    timeout: 60
-    #    # 负载均衡类型 + Hosts
-    #    upstreams:
-    #      loadbalance: "roundrobin"
-    #      hosts:
-    #        # 网关调用后端服务的默认域名或IP，不包含Path，比如：http://api.example.com
-    #        - host: ""
-    #          weight: 100
-
     # 网关版本 1.13.3之后引入 backends 配置方式,支持多后端服务
     # 注意: 资源中引用的 backend 一定要配置， 否则会导入失败,不配置则会选  择 default 后端服务
     #      如果 backends 没有配置 default 且 resource 未指定 backend 则会导致版本发布校验失败
@@ -197,11 +189,11 @@ stages:
 
     - name: "service1"
       config:
-      timeout: 60
-      loadbalance: "roundrobin"
-      hosts:
-       - host: ""
-         weight: 100
+        timeout: 60
+        loadbalance: "roundrobin"
+        hosts:
+         - host: ""
+           weight: 100
 
     # 环境插件配置
     # plugin_configs:

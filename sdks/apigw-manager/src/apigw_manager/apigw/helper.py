@@ -47,7 +47,7 @@ class Definition:
         loaded = yaml_load(definition)
 
         self._check_spec_version(loaded)
-
+        self.spec_version = definition.get("spec_version")
         self.loaded = loaded
 
     def _check_spec_version(self, definition):
@@ -57,8 +57,6 @@ class Definition:
 
         if str(spec_version) not in self.valid_spec_versions:
             raise ValueError("spec_version configured in definition.yaml is wrong, choices: [1,2]")
-
-        self.spec_version = spec_version
 
     def _get_namespace_list(self, namespace):
         if not namespace:
