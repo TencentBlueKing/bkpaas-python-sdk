@@ -47,7 +47,7 @@ class Definition:
         loaded = yaml_load(definition)
 
         self._check_spec_version(loaded)
-        self.spec_version = definition.get("spec_version")
+        self.spec_version = loaded.get("spec_version")
         self.loaded = loaded
 
     def _check_spec_version(self, definition):
