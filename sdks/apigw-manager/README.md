@@ -151,13 +151,6 @@ apigateway:
   is_public: true
   # 标记网关为官方网关，网关名需以 `bk-` 开头，可选；非官方网关，可去除此配置
   api_type: 1
-  # 应用请求网关时，是否允许从请求参数 (querystring, body) 中获取蓝鲸认证信息，默认值为 true；
-  # 如果为 false，则只能从请求头 X-Bkapi-Authorization 获取蓝鲸认证信息；
-  # 新接入的网关，可以设置为 false，已接入的网关，待推动所有调用者将认证信息放到请求头后，可设置为 false
-  allow_auth_from_params: false
-  # 网关请求后端时，是否删除请求参数 (querystring, body) 中的蓝鲸认证敏感信息，比如 bk_token，为 true 表示允许删除；
-  # 待请求网关的所有调用者，将认证参数放到请求头 X-Bkapi-Authorization 时，可将此值设置为 false
-  allow_delete_sensitive_params: false
   # 网关维护人员，仅维护人员有管理网关的权限
   maintainers:
     - "admin"
