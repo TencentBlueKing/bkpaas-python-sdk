@@ -1,3 +1,3 @@
-FROM hub.bktencent.com/blueking/apigw-manager:3.0.1
+FROM hub.bktencent.com/blueking/apigw-manager:3.0.4
 
 COPY support-files /data/
