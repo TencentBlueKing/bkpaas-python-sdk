@@ -74,9 +74,63 @@ definition.yaml 中可以使用 Django 模版语法引用和渲染变量，内�
 
 推荐在一个文件中统一进行定义，用命名空间区分不同配置间的定义，definition.yaml 样例：
 
-```yaml
-# definition.yaml 配置文件版本号，必填，固定值 1
+目前有两种配置文件版本：spec_version=1/2,主要区别就是stage相关的配置方式上有一些不一样。
+新接入系统请使用 spec_version=2， 旧有系统如果需要配置多个stage/配置多个backend， 建议也升级到spec_version=2并变更相关yaml配置。
+区别如下：
 spec_version: 1
+```yaml
+# definition.yaml 配置文件版本号，必填，固定值 1/2
+# 1：key为stage; 只支持单个 stage， 并且 proxy_http只能配置一个后端服务
+spec_version: 1
+stage:
+  name: "prod"
+  description: "描述"
+  description_en: "English description"
+  proxy_http:
+    timeout: "65"
+    upstreams:
+      loadbalance: "roundrobin"
+      hosts:
+        - host: "http://httpbin.org"
+          weight: 100
+```
+
+spec_version: 2
+```yaml
+# definition.yaml 配置文件版本号，必填，固定值 1/2
+# 2：key为stages; 支持多个stages，并且每个stage可以配置多个backend后端服务
+spec_version: 2
+stages:
+  - name: "prod"
+    description: "描述"
+    description_en: "English description"
+    vars:
+      status_500: "500"
+    backends:
+      - name: "default"
+        config:
+          timeout: 60
+          loadbalance: "roundrobin"
+          hosts:
+            - host: "http://httpbin.org"
+              weight: 100
+
+      - name: "backend1"
+        config:
+          timeout: 60
+          loadbalance: "roundrobin"
+          hosts:
+            - host: "http://httpbin.org"
+              weight: 100
+```
+> 📢 注意：如果之前接入过的，建议将 sepc_version改成 2，并将原先 `stage:{}`改成 `stages: []`
+
+
+整体的样例：
+
+```yaml
+# definition.yaml 配置文件版本号，必填，固定值 1/2
+spec_version: 2  # 如果之前接入过的，建议将 sepc_version改成 2，并将原先 stage:改成 stages: []
 
 # 定义发布内容，用于命令 `create_version_and_release_apigw`
 release:
@@ -97,52 +151,35 @@ apigateway:
   is_public: true
   # 标记网关为官方网关，网关名需以 `bk-` 开头，可选；非官方网关，可去除此配置
   api_type: 1
-  # 应用请求网关时，是否允许从请求参数 (querystring, body) 中获取蓝鲸认证信息，默认值为 true；
-  # 如果为 false，则只能从请求头 X-Bkapi-Authorization 获取蓝鲸认证信息；
-  # 新接入的网关，可以设置为 false，已接入的网关，待推动所有调用者将认证信息放到请求头后，可设置为 false
-  allow_auth_from_params: false
-  # 网关请求后端时，是否删除请求参数 (querystring, body) 中的蓝鲸认证敏感信息，比如 bk_token，为 true 表示允许删除；
-  # 待请求网关的所有调用者，将认证参数放到请求头 X-Bkapi-Authorization 时，可将此值设置为 false
-  allow_delete_sensitive_params: false
   # 网关维护人员，仅维护人员有管理网关的权限
   maintainers:
     - "admin"
 
 # 定义环境信息，用于命令 `sync_apigw_stage`
-stage:
-  name: "prod"
-  description: "描述"
-  # 环境的英文名，蓝鲸官方网关需提供，以支持国际化
-  description_en: "English description"
-  # 环境变量；如未使用，可去除此配置
-  # vars:
-  #   key: "value"
-  # 代理配置
-  # proxy_http 与 backends 二选一， 推荐使用 backends 方式配置
-  # 网关版本 <= 1.13.3, 只支持一个后端服务, 默认是 default
-  #  proxy_http:
-  #    timeout: 60
-  #    # 负载均衡类型 + Hosts
-  #    upstreams:
-  #      loadbalance: "roundrobin"
-  #      hosts:
-  #        # 网关调用后端服务的默认域名或IP，不包含Path，比如：http://api.example.com
-  #        - host: ""
-  #          weight: 100
-    
-  # 网关版本 1.13.3之后引入 backends 配置方式,支持多后端服务
-  # 注意: 资源中引用的 backend 一定要配置， 否则会导入失败,不配置则会选择 default 后端服务
-  #      如果 backends 没有配置 default 且 resource 未指定 backend 则会导致版本发布校验失败
-  backends:
+stages:
+  - name: "prod"
+    description: "描述"
+    # 环境的英文名，蓝鲸官方网关需提供，以支持国际化
+    description_en: "English description"
+    # 环境变量；如未使用，可去除此配置
+    # vars:
+    #   key: "value"
+    # 代理配置
+    # proxy_http 与 backends 二选一， 推荐使用 backends 方式配置
+    # 网关版本 <= 1.13.3, 只支持一个后端服务, 默认是 default
+    # 网关版本 1.13.3之后引入 backends 配置方式,支持多后端服务
+    # 注意: 资源中引用的 backend 一定要配置， 否则会导入失败,不配置则会选  择 default 后端服务
+    #      如果 backends 没有配置 default 且 resource 未指定 backend 则会导致版本发布校验失败
+    backends:
     - name: "default"
       config:
-        timeout: 60
-        loadbalance: "roundrobin"
-        hosts:
-          # 网关调用后端服务的默认域名或IP，不包含Path，比如：http://api.example.com
-          - host: ""
-            weight: 100
-    
+      timeout: 60
+      loadbalance: "roundrobin"
+      hosts:
+        # 网关调用后端服务的默认域名或IP，不包含Path，比如：      http://api.example.com
+        - host: ""
+          weight: 100
+
     - name: "service1"
       config:
         timeout: 60
@@ -174,22 +211,6 @@ stage:
     #         max_age: 86400
     #         allow_credential: false
 
-
-# 支持定义多个stage,如果定义多个，则同步脚本需要添加对应的同步命令，并指明：namespace(默认：stage) eg：stage2
-# 同步脚本 sync-apigateway.sh 需要新增以下命令:
-# python manage.py sync_apigw_stage --gateway-name=${gateway_name} --file="${definition_file}" --namespace="stage2"
-
-#stage2:
-#  name: "test"
-#  description: "这是一个测试"
-#  description_en: "This is a test"
-#  proxy_http:
-#    timeout: 60
-#    upstreams:
-#      loadbalance: "roundrobin"
-#      hosts:
-#        - host: "https://httpbin.org"
-#          weight: 100
 
 
 # 主动授权，网关主动给应用，添加访问网关所有资源或者具体某个资源的权限；
