@@ -8,13 +8,14 @@
 * specific language governing permissions and limitations under the License.
 """
 
-from django.apps import AppConfig
+from apigw_manager.drf.scheme import ApiGatewayJWTAuthenticationScheme
 
 
-class DrfConfig(AppConfig):
-    default_auto_field = "django.db.models.BigAutoField"
-    name = "apigw_manager.drf"
-
-    def ready(self):
-        # init the scheme
-        from . import scheme  # noqa
+class TestApiGatewayJWTAuthenticationScheme:
+    def test_get_security_definition(self):
+        scheme = ApiGatewayJWTAuthenticationScheme(target=None)
+        assert scheme.get_security_definition(None) == {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-BKAPI-JWT",
+        }

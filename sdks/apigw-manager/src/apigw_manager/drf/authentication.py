@@ -1,12 +1,13 @@
 """
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+* TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
+* Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
+* Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at http://opensource.org/licenses/MIT
+* Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+* an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+* specific language governing permissions and limitations under the License.
 """
+
 import logging
 from collections import namedtuple
 from typing import ClassVar, Type
@@ -31,27 +32,20 @@ class ApiGatewayJWTAuthentication(BaseAuthentication):
     def __init__(self):
         configuration = get_configuration()
         jwt_provider_cls = import_string(
-            configuration.jwt_provider_cls
-            or "apigw_manager.apigw.providers.DefaultJWTProvider"
+            configuration.jwt_provider_cls or "apigw_manager.apigw.providers.DefaultJWTProvider"
         )
         self.provider = jwt_provider_cls(
             jwt_key_name=self.JWT_KEY_NAME,
             default_gateway_name=configuration.gateway_name,
             algorithm=getattr(settings, "APIGW_JWT_ALGORITHM", self.ALGORITHM),
-            allow_invalid_jwt_token=getattr(
-                settings, "APIGW_ALLOW_INVALID_JWT_TOKEN", False
-            ),
-            public_key_provider=self.PUBLIC_KEY_PROVIDER_CLS(
-                default_gateway_name=configuration.gateway_name
-            ),
+            allow_invalid_jwt_token=getattr(settings, "APIGW_ALLOW_INVALID_JWT_TOKEN", False),
+            public_key_provider=self.PUBLIC_KEY_PROVIDER_CLS(default_gateway_name=configuration.gateway_name),
         )
 
     def authenticate(self, request):
         jwt = self.provider.provide(request)
         if not jwt:
-            logger.error(
-                "[ApiGatewayJWTAuthentication] can not found jwt in request header"
-            )
+            logger.error("[ApiGatewayJWTAuthentication] can not found jwt in request header")
             return None
 
         request.jwt = jwt

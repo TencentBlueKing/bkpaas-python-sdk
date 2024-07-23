@@ -1,16 +1,19 @@
 """
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+* TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
+* Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
+* Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at http://opensource.org/licenses/MIT
+* Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+* an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+* specific language governing permissions and limitations under the License.
 """
+
 import os
 import random
 import string
 import sys
+
+from typing import Dict
 
 
 def gen_apigateway_resource_config(
@@ -21,7 +24,7 @@ def gen_apigateway_resource_config(
     resource_permission_required: bool = False,
     description_en: str = "",
     match_subpath: bool = False,
-) -> dict[str, dict[str, any]]:
+) -> Dict[str, Dict[str, any]]:
     # resource_permission_required  need app_verified_required
     if not app_verified_required:
         resource_permission_required = False
@@ -73,15 +76,12 @@ def get_logging_config_dict(
         }
     else:
         rand_str = "".join(random.sample(string.ascii_letters + string.digits, 4))
-        log_name_prefix = "{}-{}".format(
-            os.getenv("BKPAAS_PROCESS_TYPE", "web"), rand_str
-        )
+        log_name_prefix = "{}-{}".format(os.getenv("BKPAAS_PROCESS_TYPE", "web"), rand_str)
 
         logging_format = {
             "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
             "fmt": (
-                "%(levelname)s %(asctime)s %(pathname)s %(lineno)d "
-                "%(funcName)s %(process)d %(thread)d %(message)s"
+                "%(levelname)s %(asctime)s %(pathname)s %(lineno)d " "%(funcName)s %(process)d %(thread)d %(message)s"
             ),
         }
     if not os.path.exists(log_dir):
@@ -132,9 +132,7 @@ def get_logging_config_dict(
             "apigw_manager": {
                 "class": log_class,
                 "formatter": "verbose",
-                "filename": os.path.join(
-                    log_dir, "%s-apigw_manager.log" % log_name_prefix
-                ),
+                "filename": os.path.join(log_dir, "%s-apigw_manager.log" % log_name_prefix),
                 "maxBytes": 1024 * 1024 * 10,
                 "backupCount": 5,
             },
@@ -189,9 +187,7 @@ def get_default_database_config_dict(settings_module):
     if os.getenv("GCS_MYSQL_NAME") and os.getenv("MYSQL_NAME"):
         db_prefix = settings_module.get("DB_PREFIX", "")
         if not db_prefix:
-            raise EnvironmentError(
-                "no DB_PREFIX config while multiple " "databases found in environment"
-            )
+            raise EnvironmentError("no DB_PREFIX config while multiple " "databases found in environment")
     elif os.getenv("GCS_MYSQL_NAME"):
         db_prefix = "GCS_MYSQL"
     elif os.getenv("MYSQL_NAME"):

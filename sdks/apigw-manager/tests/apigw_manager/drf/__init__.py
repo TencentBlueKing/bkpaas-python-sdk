@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
 * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
@@ -7,14 +8,3 @@
 * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 * specific language governing permissions and limitations under the License.
 """
-
-from django.apps import AppConfig
-
-
-class DrfConfig(AppConfig):
-    default_auto_field = "django.db.models.BigAutoField"
-    name = "apigw_manager.drf"
-
-    def ready(self):
-        # init the scheme
-        from . import scheme  # noqa

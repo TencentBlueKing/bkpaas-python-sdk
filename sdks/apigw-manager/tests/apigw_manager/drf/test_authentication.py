@@ -8,13 +8,21 @@
 * specific language governing permissions and limitations under the License.
 """
 
-from django.apps import AppConfig
+import pytest
+from unittest.mock import Mock
+from apigw_manager.drf.authentication import ApiGatewayJWTAuthentication
 
 
-class DrfConfig(AppConfig):
-    default_auto_field = "django.db.models.BigAutoField"
-    name = "apigw_manager.drf"
+class TestApiGatewayJWTAuthentication:
+    def test_authenticate_header(self):
+        authentication = ApiGatewayJWTAuthentication()
+        header = authentication.authenticate_header(Mock())
 
-    def ready(self):
-        # init the scheme
-        from . import scheme  # noqa
+        assert header == "HTTP_X_BKAPI_JWT"
+
+    def test_make_app(self):
+        authentication = ApiGatewayJWTAuthentication()
+        app = authentication.make_app(bk_app_code="my_app", verified=True)
+
+        assert app.bk_app_code == "my_app"
+        assert app.verified

@@ -1,12 +1,13 @@
 """
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+* TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
+* Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
+* Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at http://opensource.org/licenses/MIT
+* Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+* an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+* specific language governing permissions and limitations under the License.
 """
+
 """
 this command will generate the resources.yaml from the drf_spectacular config of the apis under project
 
@@ -79,19 +80,13 @@ class Command(BaseCommand):
         tags = kwargs.get("tag")
         if tags:
             print(f"get tags, will only use the apis with tags: {tags}")
-            spectacular_settings.POSTPROCESSING_HOOKS.append(
-                post_process_only_keep_the_apis_with_specified_tags(tags)
-            )
+            spectacular_settings.POSTPROCESSING_HOOKS.append(post_process_only_keep_the_apis_with_specified_tags(tags))
         else:
             print("no argument --tag, will use all apis under the project")
 
         # TODO: validate the extensions?
-        print(
-            f"process the project sub_path={settings.BK_APIGW_DEFAULT_STAGE_BACKEND_SUBPATH}"
-        )
-        spectacular_settings.POSTPROCESSING_HOOKS.append(
-            post_process_inject_method_and_path
-        )
+        print(f"process the project sub_path={settings.BK_APIGW_DEFAULT_STAGE_BACKEND_SUBPATH}")
+        spectacular_settings.POSTPROCESSING_HOOKS.append(post_process_inject_method_and_path)
 
         generator = spectacular_settings.DEFAULT_GENERATOR_CLASS()
         renderer = OpenApiYamlRenderer()
