@@ -8,11 +8,10 @@
 # specific language governing permissions and limitations under the License.
 
 """
-this command will generate the resources.yaml from the drf_spectacular config of the apis under project
+this command will generate the definition.yaml
 
-if only want part of the apis:
-1. add the `tags` in `@extend_schema` of each method in the views.py
-2. call this command with tag, e.g. `python manage.py generate_resource_yaml.py --tag=foo --tag=bar`
+it will copy a template definition.yaml from apigw_manager into the project. And if the version of apigw_manager changes,
+the template definition.yaml will be updated.
 """
 
 import os
