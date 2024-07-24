@@ -20,6 +20,7 @@ reference: https://github.com/TencentBlueKing/bkpaas-python-sdk/blob/master/sdks
 
 import os
 
+from pathlib import Path
 from django.conf import settings
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
@@ -28,23 +29,25 @@ from django.core.management.base import BaseCommand
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         gateway_name = settings.BK_APIGW_NAME
-        definition_file_path = os.path.join(settings.BASE_DIR, "definition.yaml")
-        resources_file_path = os.path.join(settings.BASE_DIR, "resources.yaml")
 
-        print(f"call sync_apigw_config with definition: {definition_file_path}")
+        file_dir = Path(settings.BASE_DIR)
+        definition_file_path = file_dir / "definition.yaml"
+        resources_file_path = file_dir / "resources.yaml"
+
+        self.stdout.write(f"call sync_apigw_config with definition: {definition_file_path}")
         call_command(
             "sync_apigw_config",
             f"--gateway-name={gateway_name}",
             f"--file={definition_file_path}",
         )
 
-        print(f"call sync_apigw_stage with definition: {definition_file_path}")
+        self.stdout.write(f"call sync_apigw_stage with definition: {definition_file_path}")
         call_command(
             "sync_apigw_stage",
             f"--gateway-name={gateway_name}",
             f"--file={definition_file_path}",
         )
-        print(f"call sync_apigw_resources with resources: {resources_file_path}")
+        self.stdout.write(f"call sync_apigw_resources with resources: {resources_file_path}")
         call_command(
             "sync_apigw_resources",
             f"--gateway-name={gateway_name}",
@@ -52,7 +55,7 @@ class Command(BaseCommand):
             f"--file={resources_file_path}",
         )
 
-        print(
+        self.stdout.write(
             f"call create_version_and_release_apigw with definition: {definition_file_path}, stage: {settings.BK_APIGW_DEFAULT_STAGE_NAME}"
         )
         call_command(
@@ -62,12 +65,12 @@ class Command(BaseCommand):
             f"--stage={settings.BK_APIGW_DEFAULT_STAGE_NAME}",
         )
 
-        print(f"call grant_apigw_permissions with definition: {definition_file_path}")
+        self.stdout.write(f"call grant_apigw_permissions with definition: {definition_file_path}")
         call_command(
             "grant_apigw_permissions",
             f"--gateway-name={gateway_name}",
             f"--file={definition_file_path}",
         )
 
-        print(f"call fetch_apigw_public_key {gateway_name}")
+        self.stdout.write(f"call fetch_apigw_public_key {gateway_name}")
         call_command("fetch_apigw_public_key", f"--gateway-name={gateway_name}")

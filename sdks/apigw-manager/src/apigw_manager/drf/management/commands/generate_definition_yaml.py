@@ -20,17 +20,18 @@ import shutil
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from pathlib import Path
 
 
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        source_file = os.path.join(current_dir, "data", "definition.yaml")
+        current_dir = Path(__file__).resolve().parent
+        source_file = current_dir / "data" / "definition.yaml"
 
-        define_dir = settings.BASE_DIR
-        definition_path = os.path.join(define_dir, "definition.yaml")
+        define_dir = Path(settings.BASE_DIR)
+        definition_path = define_dir / "definition.yaml"
 
-        print(f"will generate {definition_path} from {source_file}")
+        self.stdout.write(f"will generate {definition_path} from {source_file}")
         shutil.copyfile(source_file, definition_path)
 
-        print(f"generated {definition_path} from {source_file} success")
+        self.stdout.write(f"generated {definition_path} from {source_file} success")

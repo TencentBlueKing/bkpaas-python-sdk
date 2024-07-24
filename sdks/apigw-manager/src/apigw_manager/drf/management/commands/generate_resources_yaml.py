@@ -24,6 +24,7 @@ from drf_spectacular.management.commands.spectacular import SchemaValidationErro
 from drf_spectacular.renderers import OpenApiYamlRenderer
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.validation import validate_schema
+from pathlib import Path
 
 
 def post_process_only_keep_the_apis_with_specified_tags(tags: List) -> callable:
@@ -73,34 +74,34 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **kwargs):
-        define_dir = settings.BASE_DIR
-        resources_path = os.path.join(define_dir, "resources.yaml")
-        print(f"will generate {resources_path}")
+        define_dir = Path(settings.BASE_DIR)
+        resources_path = define_dir / "resources.yaml"
+        self.stdout.write(f"will generate {resources_path}")
 
         tags = kwargs.get("tag")
         if tags:
-            print(f"get tags, will only use the apis with tags: {tags}")
+            self.stdout.write(f"get tags, will only use the apis with tags: {tags}")
             spectacular_settings.POSTPROCESSING_HOOKS.append(post_process_only_keep_the_apis_with_specified_tags(tags))
         else:
-            print("no argument --tag, will use all apis under the project")
+            self.stdout.write("no argument --tag, will use all apis under the project")
 
         # TODO: validate the extensions?
-        print(f"process the project sub_path={settings.BK_APIGW_DEFAULT_STAGE_BACKEND_SUBPATH}")
+        self.stdout.write(f"process the project sub_path={settings.BK_APIGW_DEFAULT_STAGE_BACKEND_SUBPATH}")
         spectacular_settings.POSTPROCESSING_HOOKS.append(post_process_inject_method_and_path)
 
         generator = spectacular_settings.DEFAULT_GENERATOR_CLASS()
         renderer = OpenApiYamlRenderer()
         schema = generator.get_schema(request=None, public=True)
 
-        print("validate schema of all apis")
+        self.stdout.write("validate schema of all apis")
         try:
             validate_schema(schema)
-            print("schema validated")
+            self.stdout.write("schema validated")
         except Exception as e:
-            print(f"schema validation failed: {str(e)}")
+            self.stdout.write(f"schema validation failed: {str(e)}")
             raise SchemaValidationError(e)
 
-        print(f"render resources.yaml to {resources_path}")
+        self.stdout.write(f"render resources.yaml to {resources_path}")
         output = renderer.render(schema, renderer_context={})
         with open(resources_path, "wb") as f:
             f.write(output)

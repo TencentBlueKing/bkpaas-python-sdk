@@ -20,6 +20,8 @@ from rest_framework.authentication import BaseAuthentication
 
 logger = logging.getLogger(__name__)
 
+App = namedtuple("App", ["bk_app_code", "verified"])
+
 
 class ApiGatewayJWTAuthentication(BaseAuthentication):
     """the authentication inherit from BaseAuthentication of rest_framework
@@ -33,8 +35,6 @@ class ApiGatewayJWTAuthentication(BaseAuthentication):
     JWT_KEY_NAME = "HTTP_X_BKAPI_JWT"
     ALGORITHM = "RS512"
     PUBLIC_KEY_PROVIDER_CLS: ClassVar[Type[PublicKeyProvider]] = CachePublicKeyProvider
-
-    App = namedtuple("App", ["bk_app_code", "verified"])
 
     def __init__(self):
         configuration = get_configuration()
@@ -81,8 +81,8 @@ class ApiGatewayJWTAuthentication(BaseAuthentication):
     def authenticate_header(self, request):
         return self.JWT_KEY_NAME
 
-    def make_app(self, bk_app_code=None, verified=False, **jwt_app):
-        return self.App(
+    def make_app(self, bk_app_code=None, verified=False, **jwt_app) -> App:
+        return App(
             bk_app_code=bk_app_code,
             verified=verified,
         )
