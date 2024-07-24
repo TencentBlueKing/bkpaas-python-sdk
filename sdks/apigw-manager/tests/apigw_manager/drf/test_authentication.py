@@ -7,6 +7,7 @@
 * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 * specific language governing permissions and limitations under the License.
 """
+
 from typing import Optional
 
 import pytest
@@ -19,13 +20,14 @@ class MockEmptyProvider(PublicKeyProvider):
     def provide(self, gateway_name: str, jwt_issuer: Optional[str] = None) -> Optional[str]:
         return None
 
+
 class MockJwtProvider(PublicKeyProvider):
     def provide(self, gateway_name: str, jwt_issuer: Optional[str] = None) -> Optional[str]:
         jwt = Mock()
         jwt.payload = {
             "app": {"app_code": "mock_app", "verified": True},
             "user": {"username": "mock_user"},
-                        }
+        }
         jwt.gateway_name = "mock_gateway"
 
         return jwt

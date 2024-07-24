@@ -7,6 +7,7 @@
 * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 * specific language governing permissions and limitations under the License.
 """
+
 import pytest
 
 from unittest.mock import Mock
@@ -16,13 +17,16 @@ from apigw_manager.drf.management.commands.generate_resources_yaml import (
     post_process_only_keep_the_apis_with_specified_tags,
 )
 
+
 @pytest.fixture()
 def django_settings_subpath_empty(settings):
     settings.BK_APIGW_DEFAULT_STAGE_BACKEND_SUBPATH = ""
 
+
 @pytest.fixture()
 def django_settings_subpath(settings):
     settings.BK_APIGW_DEFAULT_STAGE_BACKEND_SUBPATH = "/mock"
+
 
 class TestPostProcess:
     def test_only_keep_the_apis_with_specified_tags(self):
@@ -53,9 +57,11 @@ class TestPostProcess:
             }
         }
         data3 = f(result3, Mock(), Mock(), Mock())
-        assert data3 == {"paths": {
-            "/api/v1/xxx": {"get": {"tags": ["open"]}},
-        }}
+        assert data3 == {
+            "paths": {
+                "/api/v1/xxx": {"get": {"tags": ["open"]}},
+            }
+        }
 
     def test_post_process_inject_method_and_path_no_subpath(self, django_settings_subpath_empty):
         f = post_process_inject_method_and_path
@@ -75,7 +81,12 @@ class TestPostProcess:
         data2 = f(result2, Mock(), Mock(), Mock())
         assert data2 == {
             "paths": {
-                "/api/v1/xxx": {"get": {"tags": ["open"],  "x-bk-apigateway-resource": { "backend": { "method": "get", "path": "/api/v1/xxx"}}}},
+                "/api/v1/xxx": {
+                    "get": {
+                        "tags": ["open"],
+                        "x-bk-apigateway-resource": {"backend": {"method": "get", "path": "/api/v1/xxx"}},
+                    }
+                },
             }
         }
 
@@ -97,12 +108,11 @@ class TestPostProcess:
         data2 = f(result2, Mock(), Mock(), Mock())
         assert data2 == {
             "paths": {
-                "/api/v1/xxx": {"get": {"tags": ["open"],  "x-bk-apigateway-resource": { "backend": { "method": "get", "path": "/mock/api/v1/xxx"}}}},
+                "/api/v1/xxx": {
+                    "get": {
+                        "tags": ["open"],
+                        "x-bk-apigateway-resource": {"backend": {"method": "get", "path": "/mock/api/v1/xxx"}},
+                    }
+                },
             }
         }
-
-
-
-
-
-

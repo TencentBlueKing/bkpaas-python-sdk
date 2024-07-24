@@ -1,19 +1,18 @@
-"""
-* TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
-* Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
-* Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at http://opensource.org/licenses/MIT
-* Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
-* an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
-* specific language governing permissions and limitations under the License.
-"""
+# -*- coding: utf-8 -*-
+# TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
+# Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at http://opensource.org/licenses/MIT
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+# an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+# specific language governing permissions and limitations under the License.
 
 import os
 import random
 import string
 import sys
 
-from typing import Dict
+from typing import Dict, List, Optional
 
 
 def gen_apigateway_resource_config(
@@ -23,11 +22,15 @@ def gen_apigateway_resource_config(
     app_verified_required: bool = False,
     resource_permission_required: bool = False,
     description_en: str = "",
+    plugin_configs: Optional[List[Dict]] = None,
     match_subpath: bool = False,
 ) -> Dict[str, Dict[str, any]]:
     # resource_permission_required  need app_verified_required
     if not app_verified_required:
         resource_permission_required = False
+
+    if not plugin_configs:
+        plugin_configs = []
 
     return {
         "x-bk-apigateway-resource": {
@@ -42,7 +45,7 @@ def gen_apigateway_resource_config(
                 "matchSubpath": match_subpath,
                 "timeout": 0,
             },
-            "pluginConfigs": [],
+            "pluginConfigs": plugin_configs,
             "allowApplyPermission": allow_apply_permission,
             "authConfig": {
                 "userVerifiedRequired": user_verified_required,
