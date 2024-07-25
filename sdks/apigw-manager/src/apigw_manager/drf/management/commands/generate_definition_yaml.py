@@ -14,7 +14,6 @@ it will copy a template definition.yaml from apigw_manager into the project. And
 the template definition.yaml will be updated.
 """
 
-import os
 import shutil
 
 from django.conf import settings

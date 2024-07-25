@@ -199,12 +199,6 @@ def get_logging_config_dict(
                 "level": log_level,
                 "propagate": True,
             },
-            # FIXME: remove this when move drf into apigw_manager
-            "drf": {
-                "handlers": ["apigw_manager"],
-                "level": log_level,
-                "propagate": True,
-            },
         },
     }
 

@@ -15,7 +15,6 @@ if only want part of the apis:
 2. call this command with tag, e.g. `python manage.py generate_resource_yaml.py --tag=foo --tag=bar`
 """
 
-import os
 from typing import List
 
 from django.conf import settings
@@ -85,7 +84,6 @@ class Command(BaseCommand):
         else:
             self.stdout.write("no argument --tag, will use all apis under the project")
 
-        # TODO: validate the extensions?
         self.stdout.write(f"process the project sub_path={settings.BK_APIGW_DEFAULT_STAGE_BACKEND_SUBPATH}")
         spectacular_settings.POSTPROCESSING_HOOKS.append(post_process_inject_method_and_path)
 

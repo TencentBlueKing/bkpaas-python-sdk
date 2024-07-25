@@ -40,6 +40,13 @@ stages:
             - host: "{{ settings.BK_APIGW_DEFAULT_STAGE_BACKEND_HOST }}"
               weight: 100
     # TODO: support plugin_configs
+    {% if settings.BK_APIGW_DEFAULT_STAGE_PLUGIN_CONFIGS %}
+    plugin_configs:
+      {% for plugin_config in settings.BK_APIGW_DEFAULT_STAGE_PLUGIN_CONFIGS %}
+      - type: "{{ plugin_config.type }}"
+        yaml: "{{ plugin_config.yaml }}"
+      {% endfor %}
+    {% endif %}
 
 {% if settings.BK_APIGW_GRANT_PERMISSION_DIMENSION_GATEWAY_APP_CODES %}
 grant_permissions:
