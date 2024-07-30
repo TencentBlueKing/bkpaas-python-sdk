@@ -6,3 +6,17 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
+
+from drf_spectacular.extensions import OpenApiAuthenticationExtension
+
+
+class ApiGatewayJWTAuthenticationScheme(OpenApiAuthenticationExtension):
+    target_class = "apigw_manager.drf.authentication.ApiGatewayJWTAuthentication"  # full import path OR class ref
+    name = "ApiGatewayJWTAuthentication"  # name used in the schema
+
+    def get_security_definition(self, auto_schema):
+        return {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-BKAPI-JWT",
+        }

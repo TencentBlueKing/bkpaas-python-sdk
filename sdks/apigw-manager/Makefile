@@ -22,7 +22,7 @@ poetry.lock: pyproject.toml
 
 .PHONY: requirements
 requirements: poetry.lock
-	poetry export -f requirements.txt --without-hashes --extras demo --with dev --output requirements_tox.txt
+	poetry export -f requirements.txt --without-hashes --extras demo --extras drf --with dev --output requirements_tox.txt
 
 README.rst: README.md
 	m2r --overwrite README.md
