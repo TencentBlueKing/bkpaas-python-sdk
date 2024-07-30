@@ -166,7 +166,6 @@ def build_bk_ip_restriction(
                 {
                     "whitelist": literal_unicode("\n".join(whitelist)),
                 },
-                # Dumper=Dumper,
             ),
         }
 
@@ -178,7 +177,6 @@ def build_bk_ip_restriction(
                 {
                     "blacklist": literal_unicode("\n".join(blacklist)),
                 },
-                # Dumper=Dumper,
             ),
         }
 

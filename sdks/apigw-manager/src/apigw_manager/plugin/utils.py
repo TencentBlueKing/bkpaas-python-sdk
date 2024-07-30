@@ -60,19 +60,3 @@ def yaml_text_indent(text: str, indent: int) -> str:
     indent_spaces = " " * indent
     other_lines = [f"{indent_spaces}{line}" for line in lines[1:]]
     return "\n".join([first_line] + other_lines)
-
-
-# NOTE:
-# multiline_str_presenter:  yaml: |
-
-
-# def multiline_str_presenter(dumper, data):
-#     text_list = [line.rstrip() for line in data.splitlines()]
-#     fix_data = "\n".join(text_list)
-#     if len(text_list) > 1:
-#         return dumper.represent_scalar("tag:yaml.org,2002:str", fix_data, style="|")
-#     return dumper.represent_scalar("tag:yaml.org,2002:str", fix_data)
-
-
-# Dumper.add_multi_representer(str, multiline_str_presenter)
-# yaml.add_multi_representer(str, multiline_str_presenter)
