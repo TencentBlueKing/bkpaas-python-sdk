@@ -43,8 +43,9 @@ stages:
     {% if settings.BK_APIGW_DEFAULT_STAGE_PLUGIN_CONFIGS %}
     plugin_configs:
       {% for plugin_config in settings.BK_APIGW_DEFAULT_STAGE_PLUGIN_CONFIGS %}
-      - type: "{{ plugin_config.type }}"
-        yaml: "{{ plugin_config.yaml }}"
+      - type: {{ plugin_config.type }}
+        yaml: |-
+          {{ plugin_config.yaml }}
       {% endfor %}
     {% endif %}
 
