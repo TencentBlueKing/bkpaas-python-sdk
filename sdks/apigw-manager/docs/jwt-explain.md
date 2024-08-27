@@ -12,7 +12,7 @@
 
 在同步网关数据时，直接添加以下 Command 拉取网关公钥。网关公钥将保存在 model Context 对应的库表 apigw_manager_context 中，SDK 提供的 Django 中间件将从表中读取网关公钥。
 
-```bash
+```python
 # 默认拉取 settings.BK_APIGW_NAME 对应网关的公钥
 python manage.py fetch_apigw_public_key
 
@@ -30,6 +30,7 @@ python manage.py fetch_apigw_public_key --gateway-name my-gateway
 ### 3. 通过网关公开接口，拉取网关公钥
 
 API 网关提供了公钥查询接口，后端服务可按需根据接口拉取网关公钥，接口信息如下：
+
 ```bash
 # 将 bkapi.example.com 替换为网关 API 地址，
 # 将 gateway_name 替换为待查询公钥的网关名，
@@ -49,6 +50,7 @@ curl -X GET 'https://bkapi.example.com/api/bk-apigateway/prod/api/v1/apis/{gatew
 ```
 
 注意事项：
+
 - 拉取公钥时，不能实时拉取，需要添加缓存（实时拉取会导致整体接口性能下降）
 
 ## 校验请求来自 API 网关
@@ -81,8 +83,11 @@ AUTHENTICATION_BACKENDS += [
 ```
 
 注意，Django 中间件 ApiGatewayJWTGenericMiddleware 解析 `X-Bkapi-JWT` 时，需要获取网关公钥，SDK 默认从以下两个位置获取网关公钥：
+
 - SDK model Context (库表 apigw_manager_context)，需提前执行 `python manage.py fetch_apigw_public_key` 拉取并保存网关公钥
+
 - settings.APIGW_PUBLIC_KEY，可在网关基本页面/API公钥通过点击`复制`按钮或者`下载`获取公钥，并配置到 settings 中。
+
 > 公钥示例：
 > ```shell
 > -----BEGIN PUBLIC KEY-----
@@ -90,21 +95,26 @@ AUTHENTICATION_BACKENDS += [
 > -----END PUBLIC KEY-----
 > ```
 
-
-
 #### Django 中间件
 
 ##### ApiGatewayJWTGenericMiddleware
+
 利用网关公钥，解析请求头中的 X-Bkapi-JWT，在 `request` 中注入 `jwt` 对象，有以下属性：
+
 - `gateway_name`：传入的网关名称；
 
 ##### ApiGatewayJWTAppMiddleware
+
 根据 `request.jwt`，在 `request` 中注入 `app` 对象，有以下属性：
+
 - `bk_app_code`：调用接口的应用；
+
 - `verified`：应用是否经过认证；
 
 ##### ApiGatewayJWTUserMiddleware
+
 根据 `request.jwt`，在 `request` 中注入 `user` 对象:
+
 - 如果用户通过认证：其为一个 Django User Model 对象，用户名为当前请求用户的用户名
 - 如果用户未通过认证，其为一个 Django AnonymousUser 对象，用户名为当前请求用户的用户名
 
@@ -124,6 +134,7 @@ class MyJWTUserMiddleware(ApiGatewayJWTUserMiddleware):
 #### 用户认证后端
 
 ##### UserModelBackend
+
 - 已认证的用户名，根据 `UserModel` 创建一个用户对象，不存在时返回 `None`；
 - 未认证的用户名，返回 `AnonymousUser`，可通过继承后修改 `make_anonymous_user` 的实现来定制具体字段；
 
@@ -133,12 +144,14 @@ class MyJWTUserMiddleware(ApiGatewayJWTUserMiddleware):
 为方便测试，SDK 提供了一个 Dummy JWT Provider，用于根据环境变量直接构造一个 request.jwt 对象。
 
 在项目中添加本地开发配置文件 `local_settings.py`，并将其导入到 settings；然后，在此本地开发配置文件中添加配置：
+
 ```python
 BK_APIGW_JWT_PROVIDER_CLS = "apigw_manager.apigw.providers.DummyEnvPayloadJWTProvider"
 ```
 
 同时提供以下环境变量（非 Django settings)
-```
+
+```python
 APIGW_MANAGER_DUMMY_GATEWAY_NAME      # JWT 中的网关名
 APIGW_MANAGER_DUMMY_PAYLOAD_APP_CODE  # JWT payload 中的 app_code
 APIGW_MANAGER_DUMMY_PAYLOAD_USERNAME  # JWT payload 中的 username
@@ -149,7 +162,8 @@ APIGW_MANAGER_DUMMY_PAYLOAD_USERNAME  # JWT payload 中的 username
 非 Django 项目，需要项目获取网关公钥，并解析请求头中的 X-Bkapi-JWT；获取网关公钥的方案请参考上文。
 
 解析 X-Bkapi-JWT 时，可根据 jwt header 中的 kid 获取当前网关名，例如：
-```
+
+```json
 {
     "iat": 1701399603,
     "typ": "JWT",
@@ -159,7 +173,8 @@ APIGW_MANAGER_DUMMY_PAYLOAD_USERNAME  # JWT payload 中的 username
 ```
 
 可从 jwt 内容中获取网关认证的应用、用户信息，例如：
-```
+
+```json
 {
   "user": {                  # 用户信息
     "bk_username": "admin",  # 用户名，解析时需同时支持 bk_username、username 两个 key，如 user.get("bk_username") or user.get("username", "")

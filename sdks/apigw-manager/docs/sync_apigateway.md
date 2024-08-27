@@ -2,13 +2,15 @@
 # 根据 YAML 同步网关配置
 
 SDK 同步网关配置到 API 网关，支持多种方案:
-- 直接使用 Django Command 同步：此方案适用于 Django 项目；Django 项目，可直接执行 SDK 提供的 Django Command 指令
-- 通过镜像方式同步：此方案适用于非 Django 项目；非 Django 项目，无法直接执行 SDK 提供的 Django Command 指令
+
+- [直接使用 Django Command 同步](./sync-apigateway-with-django.md)：此方案适用于 Django 项目；Django 项目，可直接执行 SDK 提供的 Django Command 指令
+- [通过镜像方式同步](./sync-apigateway-with-docker.md)：此方案适用于非 Django 项目；非 Django 项目，无法直接执行 SDK 提供的 Django Command 指令
 
 ## 准备工作
 
 同步网关配置到 API 网关，需要准备网关配置、资源配置、资源文档、自定义同步脚本等数据，可参考目录：
-```
+
+```shell
 support-files
 ├── definition.yaml         # 维护网关、环境、资源文档路径、主动授权、发布等配置，但不包含资源配置
 ├── resources.yaml          # 维护资源配置；资源配置可通过 API 网关管理端直接导出，数据量较大，因此单独管理
@@ -26,7 +28,7 @@ support-files
 
 用于定义网关、环境等配置，为了简化使用，使用以下模型进行处理：
 
-```
+```shell
   Template(definition.yaml)                     YAML
 +--------------------------+        +----------------------------+
 |                          |        |                            |       +--------------------------------------+
@@ -51,6 +53,7 @@ definition.yaml 中可以使用 Django 模版语法引用和渲染变量，内�
 新接入系统请使用 spec_version=2， 旧有系统如果需要配置多个stage/配置多个backend， 建议也升级到spec_version=2并变更相关yaml配置。
 区别如下：
 spec_version: 1
+
 ```yaml
 # definition.yaml 配置文件版本号，必填，固定值 1/2
 # 1：key为stage; 只支持单个 stage， 并且 proxy_http只能配置一个后端服务
@@ -69,6 +72,7 @@ stage:
 ```
 
 spec_version: 2
+
 ```yaml
 # definition.yaml 配置文件版本号，必填，固定值 1/2
 # 2：key为stages; 支持多个stages，并且每个stage可以配置多个backend后端服务
@@ -242,7 +246,7 @@ resource_docs:
 资源文档，资源文档为 markdown 格式。资源文档的文件名，应为 `资源名称` + `.md` 格式，假如资源名称为 get_user，则文档文件名应为 get_user.md。
 将资源的中文文档放到目录 `zh` 下，英文文档放到目录 `en` 下，如果某语言文档不存在，可忽略对应目录。
 
-## 文档目录及命名
+### 文档目录及命名
 资源文档为 markdown 格式，文件名，应为 资源名称 + .md 格式，例如：资源名称为 get_user 时，则其文档文件名应为 get_user.md
 
 文档文件目录样例如下：
@@ -255,7 +259,7 @@ resource_docs:
     ├── create_user.md
     └── get_user.md
 ```
-## 在资源文档中引用公共文档片段
+### 在资源文档中引用公共文档片段
 
 使用jinja2 include 复用公共部分
 
@@ -343,10 +347,12 @@ authConfig:
 descriptionEn: anything
 
 ```
-## 方案一：直接使用 Django Command 同步
+## 同步方案
+
+### 方案一：直接使用 Django Command 同步
 
 此方案适用于 Django 项目，具体请参考 [sync-apigateway-with-django.md](./sync-apigateway-with-django.md)
 
-## 方案二：通过镜像方式同步
+### 方案二：通过镜像方式同步
 
 此方案适用于非 Django 项目，具体请参考 [sync-apigateway-with-docker.md](./sync-apigateway-with-docker.md)
