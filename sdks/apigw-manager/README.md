@@ -24,9 +24,9 @@ pip install "apigw-manager[cryptography]"
 
 ## 功能使用
 
-- [根据 YAML 同步网关配置](./docs/sync_apigw.md)：通过预定义的 YAML 文件，您可以轻松地执行网关创建、更新、发布和资源同步操作，从而简化 API 网关管理过程。主要有以下两种方案：
-    - [直接使用 Django Command 同步](./sync-apigateway-with-django.md): 此方案适用于 Django 项目
-    - [通过镜像方式同步](./sync-apigateway-with-docker.md): 此方案适用于非 Django 项目
+- [根据 YAML 同步网关配置](./docs/sync_apigateway.md)：通过预定义的 YAML 文件，您可以轻松地执行网关创建、更新、发布和资源同步操作，从而简化 API 网关管理过程。主要有以下两种方案：
+   - [直接使用 Django Command 同步](./docs/sync-apigateway-with-django.md): 此方案适用于 Django 项目
+   - [通过镜像方式同步](./docs/sync-apigateway-with-docker.md): 此方案适用于非 Django 项目
 
 - [解析**JWT**](./docs/jwt-explain.md): 使用 Django 中间件，您可以解析蓝鲸 API 网关的 X-Bkapi-JWT 请求头，确保只有来自 API 网关的请求才能访问您的后端服务，提升系统安全性。
 
