@@ -39,7 +39,8 @@ python manage.py sync_apigw_resources --delete --gateway-name=${gateway_name} --
 # 可选，同步资源文档
 python manage.py sync_resource_docs_by_archive --gateway-name=${gateway_name} --file="${definition_file}"
 
-# 创建资源版本并发布；指定参数 --generate-sdks 时，会同时生成资源版本对应的网关 SDK  指定 --stage stage1 stage2 时会发布指定环境,不设置则发布所有环境
+# 创建资源版本、发布；指定参数 --generate-sdks 时，会同时生成资源版本对应的网关 SDK  指定 --stage stage1 stage2 时会发布指定环境,不设置则发布所有环境
+# 指定参数 --no-pub 则只生成版本，不发布
 python manage.py create_version_and_release_apigw --gateway-name=${gateway_name} --file="${definition_file}"
 
 # 可选，为应用主动授权
@@ -153,6 +154,7 @@ python manage.py add_related_apps --gateway-name=${gateway_name} --file="${defin
 python manage.py apply_apigw_permissions --gateway-name=${gateway_name} --file="${definition_file}"
 
 # 创建资源版本并发布；指定参数 --generate-sdks 时，会同时生成资源版本对应的网关 SDK 指定 --stage stage1 stage2 时会发布指定环境,不设置则发布所有环境
+# 指定参数 --no-pub 则只生成版本，不发布
 python manage.py create_version_and_release_apigw --gateway-name=${gateway_name} --file="${definition_file}"
 
 # 获取网关公钥

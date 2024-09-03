@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "apigw-manager"
-version = "3.1.0"
+version = "3.0.7"
 description = "The SDK for managing blueking gateway resource."
 readme = "README.md"
 authors = ["blueking <blueking@tencent.com>"]
@@ -29,14 +29,9 @@ cryptography = { version = ">=3.1.1", optional = true }
 packaging = { version = ">=20.4" }
 PyMySQL = { version = "^1.0.2", optional = true }
 kubernetes = { version = "*", optional = true }
-# if want to upgrade this package, should upgrade python version first; 3.15.2 is not compatible with python 3.6/3.7
-djangorestframework = { version = "<=3.15.1", optional = true }
-# if want to upgrade this package, should upgrade python version first; 0.27.2 is not compatible with python 3.6
-drf-spectacular = { version = "<=0.27.1", optional = true }
 
 [tool.poetry.extras]
 cryptography = ["cryptography", "pyjwt"]
-drf = ["django", "cryptography", "pyjwt", "djangorestframework", "drf-spectacular"]
 django = ["django", "pyjwt"]
 demo = ["django-environ", "django", "PyMySQL", "pyjwt"]
 kubernetes = ["kubernetes"]
