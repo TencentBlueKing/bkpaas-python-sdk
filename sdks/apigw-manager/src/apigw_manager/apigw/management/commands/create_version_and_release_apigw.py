@@ -35,6 +35,7 @@ class Command(DefinitionCommand):
         parser.add_argument("-c", "--comment", default="", help="release comment")
         parser.add_argument("-s", "--stage", default=[], nargs="+", help="release stages")
         parser.add_argument("--generate-sdks", default=False, action="store_true", help="with sdks generation")
+        parser.add_argument("--no-pub", default=False, action="store_true", help="only make version")
 
     def _parse_version_from_definition(self, definition):
         version = definition.get("version")
@@ -89,7 +90,7 @@ class Command(DefinitionCommand):
         except Exception as err:
             print("warning!! generate sdks failed: %s" % err)
 
-    def handle(self, stage, title, comment, generate_sdks, *args, **kwargs):
+    def handle(self, stage, title, comment, generate_sdks, no_pub, *args, **kwargs):
         configuration = self.get_configuration(**kwargs)
         definition = self.get_definition(**kwargs)
         defined_version = self._parse_version_from_definition(definition)
@@ -121,16 +122,18 @@ class Command(DefinitionCommand):
             generate_sdks = False
             print("resource_version %s already exists, skip creating" % latest_version)
 
-        result = releaser.release(
-            version=resource_version["version"],
-            title=title or resource_version.get("title", ""),
-            comment=comment or resource_version.get("comment", ""),
-            stage_names=stage,
-        )
-        print(
-            "API gateway released %s, title %s, stages %s"
-            % (result.get("version"), result["resource_version_title"], result["stage_names"])
-        )
+        # 如果没有设置不发布
+        if not no_pub:
+            result = releaser.release(
+                version=resource_version["version"],
+                title=title or resource_version.get("title", ""),
+                comment=comment or resource_version.get("comment", ""),
+                stage_names=stage,
+            )
+            print(
+                "API gateway released %s, title %s, stages %s"
+                % (result.get("version"), result["resource_version_title"], result["stage_names"])
+            )
 
         # create a sdk when released a new version
         if generate_sdks:
