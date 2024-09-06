@@ -1,6 +1,6 @@
 apigatewaySync:
   enabled: true
-  image: "hub.bktencent.com/blueking/apigw-manager:3.0.4"
+  image: "hub.bktencent.com/blueking/apigw-manager:3.1.1"
   configMapMounts:
     - name: "sync-apigw-base"
       filePath: "files/support-files/*"
