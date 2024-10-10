@@ -78,10 +78,10 @@ The encrypted new value is: gAAAAABfKUui5_YUVxoYEYQG61RSRX1Ll3s1dgkZ5nUEJbCxakWH
 ```raw
 ├── editionctl.toml
 ├── editions
-│   ├── ee
-│   │   └── ee.py
-│   └── te
-│       └── te.py
+│   ├── ee
+│   │   └── ee.py
+│   └── te
+│       └── te.py
 └── main
     └── main.py
 ```
@@ -294,8 +294,8 @@ REST_FRAMEWORK = {
 
 ```json
 {
-    "code": 'CREATE_ERROR',
-    "detail": '创建失败'
+    "code": "CREATE_ERROR",
+    "detail": "创建失败"
 }
 ```
 

@@ -1,5 +1,9 @@
 ## Change logs
 
+### 2.0.5
+
+- Feature: support python 3.11
+
 ### 2.0.4
 
 - Fix：支持不配置加密算法类型，使用默认类型 Fernet
