@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "blue-krill"
-version = "2.0.4"
+version = "2.0.5"
 description = "Tools and common packages for blueking PaaS platform."
 include = ["blue_krill/py.typed"]
 readme = "README.md"
@@ -16,7 +16,7 @@ Homepage = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
 Repository = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.11"
+python = ">=3.8,<3.12"
 dataclasses = { version = ">=0.7", python = ">=3.6.2,<3.7" }
 cryptography = ">=3.0.0"
 django-environ = ">=0.8.1"
@@ -29,7 +29,8 @@ toml = "*"
 python-editor = "^1.0.4"
 watchdog = "*"
 curlify = "^2.2.1"
-bk-crypto-python-sdk = "^1.0.4"
+bk-crypto-python-sdk = "^2.0.0"
+urllib3 = "1.26.16"
 
 [tool.poetry.dev-dependencies]
 redis = "^3.5.3"
@@ -53,7 +54,7 @@ black = "23.7.0"
 # mypy
 mypy = "^0.910"
 # install extension stubs if missing
-types-requests = "^2.25.0"
+types-requests = "2.31.0.6"
 types-setuptools = "^57.0.0"
 types-dataclasses = "^0.1.5"
 types-redis = "^3.5.4"
