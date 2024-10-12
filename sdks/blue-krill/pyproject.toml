@@ -30,7 +30,7 @@ python-editor = "^1.0.4"
 watchdog = "*"
 curlify = "^2.2.1"
 bk-crypto-python-sdk = "^2.0.0"
-urllib3 = "1.26.16"
+urllib3 = "^1.26.16"
 
 [tool.poetry.dev-dependencies]
 redis = "^3.5.3"
