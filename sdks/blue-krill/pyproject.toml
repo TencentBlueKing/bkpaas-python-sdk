@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "blue-krill"
-version = "2.0.5"
+version = "2.0.6"
 description = "Tools and common packages for blueking PaaS platform."
 include = ["blue_krill/py.typed"]
 readme = "README.md"

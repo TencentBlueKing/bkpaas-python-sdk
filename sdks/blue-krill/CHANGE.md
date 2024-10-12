@@ -1,5 +1,9 @@
 ## Change logs
 
+### 2.0.6
+
+- Fix: update urllib3 version
+
 ### 2.0.5
 
 - Feature: support python 3.11
