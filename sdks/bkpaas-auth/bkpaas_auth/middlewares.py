@@ -9,7 +9,7 @@ from django.conf import settings
 from django.contrib import auth
 from django.http import HttpRequest, HttpResponse
 from django.utils.deprecation import MiddlewareMixin
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 
 from bkpaas_auth.backends import UniversalAuthBackend
 from bkpaas_auth.core.constants import ACCESS_PERMISSION_DENIED_CODE
@@ -87,7 +87,7 @@ class CookieLoginMiddleware(MiddlewareMixin):
         request.session['bkpaas_authenticated_at'] = time.time()
         request.session['auth_credentials'] = credentials
         # python3 compatibility
-        request.session['user_token'] = force_text(pickle.dumps(user.token), 'latin1')
+        request.session['user_token'] = force_str(pickle.dumps(user.token), 'latin1')
 
         # Calling `auth.login` will rotate CSRF token and modify user session, only do this when the authenticated
         # user was different with the user stored in session. Otherwise CSRF token validation may fail due to the
