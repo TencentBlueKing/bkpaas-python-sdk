@@ -552,17 +552,6 @@ files = [
 ]
 
 [[package]]
-name = "types-cryptography"
-version = "3.3.23.2"
-description = "Typing stubs for cryptography"
-optional = false
-python-versions = "*"
-files = [
-    {file = "types-cryptography-3.3.23.2.tar.gz", hash = "sha256:09cc53f273dd4d8c29fa7ad11fefd9b734126d467960162397bc5e3e604dea75"},
-    {file = "types_cryptography-3.3.23.2-py3-none-any.whl", hash = "sha256:b965d548f148f8e87f353ccf2b7bd92719fdf6c845ff7cedf2abb393a0643e4f"},
-]
-
-[[package]]
 name = "types-mock"
 version = "4.0.15.2"
 description = "Typing stubs for mock"
@@ -640,4 +629,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4.0"
-content-hash = "34d78786c40a08de418a8141f1bfbd755c145a7441d42613f2c6b245c9783f9a"
+content-hash = "a10175a98ede058f93c129a2df3a46958a475e713371985f953d024e314544f7"
