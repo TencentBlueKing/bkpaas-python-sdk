@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bkpaas-auth"
-version = "2.1.0"
+version = "3.0.0"
 description = "User authentication django app for blueking internal projects"
 readme = "README.md"
 authors = ["blueking <blueking@tencent.com>"]
@@ -15,21 +15,19 @@ Homepage = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
 Repository = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
 
 [tool.poetry.dependencies]
-python = ">=3.6,<4.0"
-django = ">=1.11,<4.0"
+python = ">=3.8,<4.0"
+django = ">=4.2,<5.0"
 requests = "*"
 six = "*"
-cryptography = "*"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.4.1"
+pytest = "^6.2.5"
 pytest-django = "^3.8.0"
 mock = "^4.0.2"
-mypy = "^0.942"
+mypy = "^1.12.0"
 flake8 = "^3.8.4"
 rope = "^0.18.0"
 pytest-mock = "^3.4.0"
-types-cryptography = "^3.3.19"
 types-six = "^1.16.12"
 types-requests = "^2.27.16"
 types-mock = "^4.0.13"

@@ -79,7 +79,7 @@ class User(AbstractUserWithProvider):
 
         self.update_user_info(info_fields, overwrite_all=True)
         # Use chinesename as nickname
-        if not self.nickname and self.chinese_name:
+        if not self.nickname and self.chinese_name:  # type: ignore
             self.nickname = self.chinese_name
         self.token = token
 

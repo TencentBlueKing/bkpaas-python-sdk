@@ -34,11 +34,11 @@ def username():
 
 @pytest.fixture
 def dj_request(rf, bk_token):
-    request = rf.get('/')
-    SessionMiddleware().process_request(request)
-    AuthenticationMiddleware().process_request(request)
-    request.COOKIES['bk_token'] = bk_token
-    return request
+    req = rf.get('/')
+    SessionMiddleware(MagicMock()).process_request(req)
+    AuthenticationMiddleware(MagicMock()).process_request(req)
+    req.COOKIES['bk_token'] = bk_token
+    return req
 
 
 def create_uin_user(uin):
@@ -80,7 +80,7 @@ class TestCookieLoginMiddleware:
             assert isinstance(dj_request.user, AnonymousUser)
 
     def test_authenticated_user_has_no_access_permissions(self, db, dj_request):
-        middleware = FakeCookieLoginMiddleware()
+        middleware = FakeCookieLoginMiddleware(MagicMock())
         with patch("bkpaas_auth.backends.UniversalAuthBackend.get_credentials") as mocked_get_token:
             mocked_get_token.return_value = {'bk_token': dj_request.COOKIES['bk_token']}
             resp = middleware.process_request(dj_request)

@@ -80,7 +80,7 @@ jobs:
         run: tox
   build:
     runs-on: macos-latest
-    if: github.event.release && contains(github.event.release.tag_name, 'blue_krill')
+    if: github.event.release && contains(github.event.release.tag_name, 'blue-krill')
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
