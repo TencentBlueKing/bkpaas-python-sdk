@@ -42,6 +42,8 @@ class TokenRequestBackend(AbstractRequestBackend):
         )
         if not is_success:
             raise ServiceError('unable to fetch token services')
+        if not isinstance(resp, dict):
+            raise ValueError(f'response type expect dict, got: {resp}')
 
         # API 返回格式为：{"result": true, "code": 0, "message": "", "data": {"bk_username": "xxx"}}
         code = resp.get('code')
@@ -69,6 +71,8 @@ class RequestBackend(AbstractRequestBackend):
         is_success, resp = http_get(bkauth_settings.USER_COOKIE_VERIFY_URL, params=credentials, timeout=10)
         if not is_success:
             raise ServiceError('unable to fetch token services')
+        if not isinstance(resp, dict):
+            raise ValueError(f'response type expect dict, got: {resp}')
 
         # API 返回格式为：{"msg": "", "data": {"username": "xxx"}, "ret": 0}
         if resp.get('ret') != 0:

@@ -49,6 +49,8 @@ def _get_and_cache_user_info(cache_key, user_params, response_ok_checker):
     )
     if not is_success:
         raise ServiceError('Unable to get user info')
+    if not isinstance(result, dict):
+        raise ValueError(f'response type expect dict, got: {result}')
 
     if not response_ok_checker(result):
         logger.error(

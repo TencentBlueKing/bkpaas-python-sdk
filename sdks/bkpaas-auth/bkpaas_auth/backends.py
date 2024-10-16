@@ -37,6 +37,8 @@ class UniversalAuthBackend:
     """
 
     request: HttpRequest
+    plugin: Union[BkTicketPlugin, BkTokenPlugin]
+    request_backend: Union[RequestBackend, TokenRequestBackend]
 
     def __init__(self):
         self.backend_type = bkauth_settings.BACKEND_TYPE
@@ -215,11 +217,11 @@ class APIGatewayAuthBackend:
         if get_user_parameters == v3_parameters:
             authenticate = authenticate_with_signature_v3
         else:
-            authenticate = authenticate_with_signature_v1
+            authenticate = authenticate_with_signature_v1  # type: ignore
         del get_user_parameters
         del v3_parameters
     except ImportError:
-        authenticate = authenticate_with_signature_v1
+        authenticate = authenticate_with_signature_v1  # type: ignore
 
     def get_user(self, user_id):
         raise NotImplementedError(

@@ -49,7 +49,7 @@ class Settings:
 
     def reload(self):
         for f in fields(self):
-            setattr(self, f.name, f.default_factory())
+            setattr(self, f.name, f.default_factory())  # type: ignore
 
 
 bkauth_settings = Settings()
