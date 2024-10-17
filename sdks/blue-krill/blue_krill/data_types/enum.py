@@ -239,10 +239,12 @@ class StructuredEnum(OrigEnum, metaclass=StructuredEnumMeta):
         return [(field.real_value, field.label) for field in members.values()]
 
 
-if sys.version_info >= (3, 11):
+try:
+    # python 3.11+ required
     from enum import StrEnum, IntEnum
-
-
+except ImportError:
+    pass
+else:
     class StrStructuredEnum(StructuredEnum, StrEnum):
         """
         StrStructuredEnum ensures the literals in f-string / str.format() is real_value

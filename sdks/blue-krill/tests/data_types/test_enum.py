@@ -223,8 +223,11 @@ class TestStructuredEnum:
         assert UserType.get_values() == [1, 2, 3, 4]
 
 
-if sys.version_info >= (3, 11):
+try:
     from blue_krill.data_types.enum import StrStructuredEnum, IntStructuredEnum
+except ImportError:
+    pass
+else:
 
     class StrDemoEnum(StrStructuredEnum):
         FOO = "foo"
