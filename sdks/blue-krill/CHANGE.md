@@ -1,5 +1,9 @@
 ## Change logs
 
+### 2.0.7
+
+- Feature: (py 3.11+) add StrStructuredEnum, IntStructuredEnum class
+
 ### 2.0.6
 
 - Fix: update urllib3 version

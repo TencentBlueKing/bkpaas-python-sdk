@@ -8,6 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+import sys
 from typing import List, Type
 
 import pytest
@@ -220,3 +221,37 @@ class TestStructuredEnum:
 
     def test_get_values(self):
         assert UserType.get_values() == [1, 2, 3, 4]
+
+
+if sys.version_info >= (3, 11):
+    from blue_krill.data_types.enum import StrStructuredEnum, IntStructuredEnum
+
+    class StrDemoEnum(StrStructuredEnum):
+        FOO = "foo"
+        BAR = "bar"
+
+    class TestStrStructuredEnum:
+        def test_value_compare(self):
+            assert StrDemoEnum.FOO == "foo"
+            assert StrDemoEnum.BAR == "bar"
+
+        def test_string_formatting(self):
+            assert str(StrDemoEnum.BAR) == "bar"
+            assert "%s" % StrDemoEnum.FOO == "foo"
+            assert "{}".format(StrDemoEnum.BAR) == "bar"
+            assert f"{StrDemoEnum.FOO}-{StrDemoEnum.BAR}" == "foo-bar"
+
+    class IntDemoEnum(IntStructuredEnum):
+        FOO = 1
+        BAR = 2
+
+    class TestIntStructuredEnum:
+        def test_value_compare(self):
+            assert IntDemoEnum.FOO == 1
+            assert IntDemoEnum.BAR == 2
+
+        def test_string_formatting(self):
+            assert str(IntDemoEnum.BAR) == "2"
+            assert "%s" % IntDemoEnum.FOO == "1"
+            assert "{}".format(IntDemoEnum.BAR) == "2"
+            assert f"{IntDemoEnum.FOO}-{IntDemoEnum.BAR}" == "1-2"
