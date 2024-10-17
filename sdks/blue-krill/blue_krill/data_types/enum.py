@@ -9,7 +9,6 @@
  * specific language governing permissions and limitations under the License.
 """
 import dataclasses
-import sys
 from collections import OrderedDict
 from enum import Enum as OrigEnum
 from enum import EnumMeta, auto
