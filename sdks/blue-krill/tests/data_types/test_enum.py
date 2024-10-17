@@ -227,7 +227,6 @@ try:
 except ImportError:
     pass
 else:
-
     class StrDemoEnum(StrStructuredEnum):
         FOO = "foo"
         BAR = "bar"
@@ -235,7 +234,7 @@ else:
     class TestStrStructuredEnum:
         def test_value_compare(self):
             assert StrDemoEnum.FOO == "foo"
-            assert StrDemoEnum.BAR == "bar"
+            assert StrDemoEnum.BAR.value == "bar"
 
         def test_string_formatting(self):
             assert str(StrDemoEnum.BAR) == "bar"
@@ -250,7 +249,7 @@ else:
     class TestIntStructuredEnum:
         def test_value_compare(self):
             assert IntDemoEnum.FOO == 1
-            assert IntDemoEnum.BAR == 2
+            assert IntDemoEnum.BAR.value == 2
 
         def test_string_formatting(self):
             assert str(IntDemoEnum.BAR) == "2"
