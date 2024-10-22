@@ -232,14 +232,14 @@ resource_docs:
 **注意：**
 - 同步资源或者环境相关配置后，需要创建版本并发布才能生效，发布数据定义于 definition.yaml `release`
 - 资源配置 resources.yaml 变更时，需要更新 definition.yaml `release` 中的版本号 version，以便正确创建资源版本及 SDK
-- 详细的插件配置见：[插件配置说明](docs/plugin-use-guide.md)
+- 详细的插件配置见：[插件配置说明](./plugin-use-guide.md)
 ## 2. resources.yaml
 
 用于定义资源配置，建议通过网关管理端导出。为了方便用户直接使用网关导出的资源文件，资源定义默认没有命名空间。
 
-样例可参考：[resources.yaml](examples/django/use-custom-script/support-files/resources.yaml)
+样例可参考：[resources.yaml](../examples/django/use-custom-script/support-files/resources.yaml)
 
-> 详细的插件配置见：[插件配置说明](docs/plugin-use-guide.md)
+> 详细的插件配置见：[插件配置说明](./plugin-use-guide.md)
 
 ## 3. apidocs（可选）
 
