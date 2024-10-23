@@ -80,14 +80,14 @@ class ServiceManageViewSet(viewsets.ViewSet):
     def update(self, request, service_id):
         service = get_object_or_404(Service, pk=service_id)
         slz = serializers.ServiceUpsertSLZ(data=request.data, instance=service, partial=True)
-        slz.is_valid(True)
+        slz.is_valid(raise_exception=True)
         slz.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @verified_client_role_require('internal_platform')
     def create(self, request):
         slz = serializers.ServiceUpsertSLZ(data=request.data)
-        slz.is_valid(True)
+        slz.is_valid(raise_exception=True)
         slz.save()
         return Response(status=status.HTTP_201_CREATED)
 
@@ -104,7 +104,7 @@ class PlanManageViewSet(viewsets.ViewSet):
     @verified_client_role_require('internal_platform')
     def create(self, request):
         slz = serializers.PlanUpsertSLZ(data=request.data)
-        slz.is_valid(True)
+        slz.is_valid(raise_exception=True)
         slz.save()
         return Response(status=status.HTTP_201_CREATED)
 
@@ -112,8 +112,8 @@ class PlanManageViewSet(viewsets.ViewSet):
     def update(self, request, plan_id):
         plan = get_object_or_404(Plan, pk=plan_id)
         slz = serializers.PlanUpsertSLZ(data=request.data, instance=plan, partial=True)
-        slz.is_valid(True)
-        plan = slz.save()
+        slz.is_valid(raise_exception=True)
+        slz.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @verified_client_role_require('internal_platform')

@@ -16,10 +16,10 @@ limitations under the License.
 We undertake not to change the open source license (MIT license) applicable
 to the current version of the project delivered to anyone in the future.
 """
-from django.conf.urls import include, url
+from django.urls import include, re_path
 from django.contrib import admin
 
 urlpatterns = [
-    url('', include('paas_service.urls')),
-    url(r'^admin/', admin.site.urls),
+    re_path(r'^', include('paas_service.urls')),
+    re_path(r'^admin/', admin.site.urls),
 ]

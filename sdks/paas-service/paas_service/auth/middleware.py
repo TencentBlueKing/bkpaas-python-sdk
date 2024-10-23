@@ -19,13 +19,13 @@ to the current version of the project delivered to anyone in the future.
 import logging
 from typing import Optional
 
-from .backends import AuthFailedError, JWTClientAuthenticater
+from .backends import AuthFailedError, JWTClientAuthenticator
 
 logger = logging.getLogger(__name__)
 
 
 class VerifiedClientMiddleware(object):
-    """This middleware will inject request.verifed_client if current request has a valid
+    """This middleware will inject request.verified_client if current request has a valid
     signed JWT token in request headers
     """
 
@@ -52,7 +52,7 @@ class VerifiedClientMiddleware(object):
         request.client = None
         if token:
             try:
-                ret = JWTClientAuthenticater().authenticate(token=token)
+                ret = JWTClientAuthenticator().authenticate(token=token)
                 request.client = ret.client
             except AuthFailedError:
                 pass

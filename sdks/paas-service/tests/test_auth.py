@@ -37,7 +37,7 @@ class TestInstanceAuthBackend:
     @override_settings(PAAS_SERVICE_JWT_CLIENTS=PAAS_SERVICE_JWT_CLIENTS)
     def test_token_invalid(self, rf, instance):
         payload = {'iss': 'c1', 'service_instance_id': str(instance.uuid), 'expires_at': time.time() + 3600}
-        token = jwt.encode(payload, key='invald-secret', algorithm='HS256').decode()
+        token = jwt.encode(payload, key='invald-secret', algorithm='HS256')
         request = rf.request(QUERY_STRING=f"token={token}")
         request.session = {}
 
@@ -47,7 +47,7 @@ class TestInstanceAuthBackend:
     @override_settings(PAAS_SERVICE_JWT_CLIENTS=PAAS_SERVICE_JWT_CLIENTS)
     def test_expired_token(self, rf, instance):
         payload = {'iss': 'c1', 'service_instance_id': str(instance.uuid), 'expires_at': time.time() - 3600}
-        token = jwt.encode(payload, key='foobar', algorithm='HS256').decode()
+        token = jwt.encode(payload, key='foobar', algorithm='HS256')
         request = rf.request(QUERY_STRING=f"token={token}")
         request.session = {}
 
@@ -57,7 +57,7 @@ class TestInstanceAuthBackend:
     @override_settings(PAAS_SERVICE_JWT_CLIENTS=PAAS_SERVICE_JWT_CLIENTS)
     def test_normal_token(self, rf, instance):
         payload = {'iss': 'c1', 'service_instance_id': str(instance.uuid), 'expires_at': time.time() + 3600}
-        token = jwt.encode(payload, key='foobar', algorithm='HS256').decode()
+        token = jwt.encode(payload, key='foobar', algorithm='HS256')
         request = rf.request(QUERY_STRING=f"token={token}")
         request.session = {}
 
