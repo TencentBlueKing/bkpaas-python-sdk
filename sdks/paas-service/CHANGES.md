@@ -1,7 +1,7 @@
 # 版本历史
 
 ## 2.0.0
-- 支持 Py3.11，移除对 Py3.6, 3.7 的支持
+- 支持 Python 3.11，移除对 Python 3.6, 3.7 的支持
 
 ## 1.1.6
 - Loosen the version restriction on sub-dep `pyjwt`

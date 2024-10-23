@@ -67,7 +67,7 @@ class AuthResult:
 
 
 class JWTClientAuthenticator:
-    """Authenticate using JWT clients"""
+    """Authenticator using JWT clients"""
 
     def __init__(self):
         try:
