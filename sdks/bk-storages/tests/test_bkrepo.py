@@ -160,9 +160,9 @@ class TestBKRepoStorage:
         ("root_path", "name", "has_error", "expected_key"),
         [
             ("", "foo/bar", False, "foo/bar"),
+            # absolute or relative both are invalid paths
             ("", "/foo/bar", True, "foo/bar"),
             ("/foo-prefix", "/bar/baz", True, "foo-prefix/bar/baz"),
-            # Invalid paths
             ("/foo-prefix", "../../../bar", True, ""),
         ],
     )
