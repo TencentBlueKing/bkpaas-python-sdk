@@ -15,6 +15,7 @@ if only want part of the apis:
 2. call this command with tag, e.g. `python manage.py generate_resource_yaml.py --tag=foo --tag=bar`
 """
 
+from pathlib import Path
 from typing import List
 
 from django.conf import settings
@@ -23,7 +24,6 @@ from drf_spectacular.management.commands.spectacular import SchemaValidationErro
 from drf_spectacular.renderers import OpenApiYamlRenderer
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.validation import validate_schema
-from pathlib import Path
 
 
 def post_process_only_keep_the_apis_with_specified_tags(tags: List) -> callable:
@@ -51,7 +51,7 @@ def post_process_inject_method_and_path(result, generator, request, public):
     paths = result.get("paths", None)
     if not paths:
         return result
-    sub_path = settings.BK_APIGW_DEFAULT_STAGE_BACKEND_SUBPATH
+    sub_path = settings.BK_APIGW_STAGE_BACKEND_SUBPATH
 
     for uri, methods in paths.items():
         for method, info in methods.items():
@@ -84,7 +84,7 @@ class Command(BaseCommand):
         else:
             self.stdout.write("no argument --tag, will use all apis under the project")
 
-        self.stdout.write(f"process the project sub_path={settings.BK_APIGW_DEFAULT_STAGE_BACKEND_SUBPATH}")
+        self.stdout.write(f"process the project sub_path={settings.BK_APIGW_STAGE_BACKEND_SUBPATH}")
         spectacular_settings.POSTPROCESSING_HOOKS.append(post_process_inject_method_and_path)
 
         generator = spectacular_settings.DEFAULT_GENERATOR_CLASS()
