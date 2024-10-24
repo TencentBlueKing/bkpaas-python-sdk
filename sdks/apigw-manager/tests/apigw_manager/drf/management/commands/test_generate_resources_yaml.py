@@ -18,12 +18,12 @@ from apigw_manager.drf.management.commands.generate_resources_yaml import (
 
 @pytest.fixture()
 def django_settings_subpath_empty(settings):
-    settings.BK_APIGW_DEFAULT_STAGE_BACKEND_SUBPATH = ""
+    settings.BK_APIGW_STAGE_BACKEND_SUBPATH = ""
 
 
 @pytest.fixture()
 def django_settings_subpath(settings):
-    settings.BK_APIGW_DEFAULT_STAGE_BACKEND_SUBPATH = "/mock"
+    settings.BK_APIGW_STAGE_BACKEND_SUBPATH = "/mock"
 
 
 class TestPostProcess:
