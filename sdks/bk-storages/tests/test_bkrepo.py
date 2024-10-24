@@ -15,6 +15,7 @@ from unittest import mock
 import pytest
 import requests
 import requests_mock
+from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.base import File
 from six.moves.urllib_parse import urljoin
 
@@ -159,9 +160,9 @@ class TestBKRepoStorage:
         ("root_path", "name", "has_error", "expected_key"),
         [
             ("", "foo/bar", False, "foo/bar"),
-            ("", "/foo/bar", False, "foo/bar"),
-            ("/foo-prefix", "/bar/baz", False, "foo-prefix/bar/baz"),
-            # Invalid paths
+            # absolute or relative both are invalid paths
+            ("", "/foo/bar", True, "foo/bar"),
+            ("/foo-prefix", "/bar/baz", True, "foo-prefix/bar/baz"),
             ("/foo-prefix", "../../../bar", True, ""),
         ],
     )
@@ -176,7 +177,7 @@ class TestBKRepoStorage:
             "PUT", urljoin(endpoint, f"/generic/dummy-project/dummy-bucket/{expected_key}"), json={"code": 0}
         )
         if has_error:
-            with pytest.raises(ValueError, match="joined path"):
+            with pytest.raises(SuspiciousFileOperation):
                 storage.save(name, fh)
         else:
             assert storage.save(name, fh)
