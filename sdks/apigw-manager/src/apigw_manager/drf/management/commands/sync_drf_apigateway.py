@@ -24,6 +24,7 @@ the steps of syncing
 """
 
 from pathlib import Path
+
 from django.conf import settings
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
@@ -56,16 +57,17 @@ class Command(BaseCommand):
             f"--gateway-name={gateway_name}",
             "--delete",
             f"--file={resources_file_path}",
+            f"--doc_language={settings.BK_APIGW_RELEASE_DOC_LANGUAGE}",
         )
 
         self.stdout.write(
-            f"call create_version_and_release_apigw with definition: {definition_file_path}, stage: {settings.BK_APIGW_DEFAULT_STAGE_NAME}"
+            f"call create_version_and_release_apigw with definition: {definition_file_path}, stage: {settings.BK_APIGW_STAGE_NAME}"
         )
         call_command(
             "create_version_and_release_apigw",
             f"--gateway-name={gateway_name}",
             f"--file={definition_file_path}",
-            f"--stage={settings.BK_APIGW_DEFAULT_STAGE_NAME}",
+            f"--stage={settings.BK_APIGW_STAGE_NAME}",
         )
 
         self.stdout.write(f"call grant_apigw_permissions with definition: {definition_file_path}")
