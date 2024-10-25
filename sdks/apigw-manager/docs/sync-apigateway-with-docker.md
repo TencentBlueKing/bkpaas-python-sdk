@@ -72,6 +72,7 @@ call_command_or_warning migrate apigw
 title "syncing apigateway"
 call_definition_command_or_exit sync_apigw_config "${definition_file}" --gateway-name=${gateway_name}
 call_definition_command_or_exit sync_apigw_stage "${definition_file}" --gateway-name=${gateway_name}
+# --doc_language: en/zh  是否生成接口文档(中文/英文)
 call_definition_command_or_exit sync_apigw_resources "${resources_file}" --gateway-name=${gateway_name} --delete
 call_definition_command_or_exit sync_resource_docs_by_archive "${definition_file}" --gateway-name=${gateway_name} --safe-mode
 call_definition_command_or_exit grant_apigw_permissions "${definition_file}" --gateway-name=${gateway_name}
@@ -292,6 +293,7 @@ call_definition_command_or_exit sync_apigw_config "${definition_file}" --gateway
 # 
 # --delete: 当资源在服务端存在，却未出现在资源定义文件中时，指定本参数会强制删除这类资源，以保证服务端资源和文件内容完全一致。
 #           如果未指定本参数，将忽略未出现的资源
+# --doc_language: en/zh  是否生成接口文档(中文/英文)
 call_definition_command_or_exit sync_apigw_resources "${resources_file}" --gateway-name=${gateway_name} --delete
  
 # 同步网关环境信息
