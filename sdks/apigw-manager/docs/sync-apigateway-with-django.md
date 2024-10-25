@@ -34,6 +34,7 @@ python manage.py sync_apigw_stage --gateway-name=${gateway_name} --file="${defin
 # 
 # --delete: 当资源在服务端存在，却未出现在资源定义文件中时，指定本参数会强制删除这类资源，以保证服务端资源和文件内容完全一致。
 #           如果未指定本参数，将忽略未出现的资源
+# --doc_language: en/zh  是否生成接口文档(中文/英文)
 python manage.py sync_apigw_resources --delete --gateway-name=${gateway_name} --file="${resources_file}"
 
 # 可选，同步资源文档
@@ -169,7 +170,7 @@ python manage.py grant_apigw_permissions --gateway-name=${gateway_name} --file="
 # 同步网关基本信息
 python manage.py sync_apigw_config --gateway-name=${gateway_name} --file="${definition_file}"
 
-# 同步网关资源；--delete 将删除网关中未在 resources.yaml 存在的资源
+# 同步网关资源；--delete 将删除网关中未在 resources.yaml 存在的资源, 指定参数 --doc_language en/zh  是否生成接口文档(中文/英文)
 python manage.py sync_apigw_resources --delete --gateway-name=${gateway_name} --file="${resources_file}"
 
 # 同步网关环境信息
