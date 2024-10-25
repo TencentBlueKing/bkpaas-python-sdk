@@ -41,11 +41,12 @@ def test_do(mocker, configuration, command, manager, resource_signature_manager)
     manager.sync_resources_config.return_value = result
     definition = {}
 
-    command.do(manager, definition, configuration, delete=True)
+    command.do(manager, definition, configuration, delete=True,doc_language="en")
 
     manager.sync_resources_config.assert_called_once_with(
         content=definition,
         delete=True,
+        doc_language="en"
     )
     resource_signature_manager.update_signature.assert_called_once_with(configuration.gateway_name, mocker.ANY)
     resource_signature_manager.mark_dirty.assert_called_once_with(configuration.gateway_name)

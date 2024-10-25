@@ -30,6 +30,13 @@ class Command(SyncCommand):
             help="delete extraneous resources from existing resources",
         )
 
+        parser.add_argument(
+            "--doc_language",
+            type=str,
+            default=None,
+            help="language for gen api doc: en/zh",
+        )
+
     def _update_signature(self, gateway_name, definition, added, deleted):
         signature = hashlib.md5(json.dumps(definition, sort_keys=True).encode("utf-8")).hexdigest()
 
@@ -41,7 +48,15 @@ class Command(SyncCommand):
             manager.mark_dirty(gateway_name)
 
     def do(self, manager, definition, configuration, *args, **kwargs):
-        result = manager.sync_resources_config(content=definition, delete=kwargs["delete"])
+        sync_args = {
+            'content': definition,
+            'delete': kwargs["delete"],
+        }
+
+        if 'doc_language' in kwargs:
+            sync_args['doc_language'] = kwargs['doc_language']
+
+        result = manager.sync_resources_config(**sync_args)
 
         added_count = len(result["added"])
         deleted_count = len(result["deleted"])

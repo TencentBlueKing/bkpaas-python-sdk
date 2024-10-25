@@ -77,3 +77,8 @@ definition.yaml 指定的环境配置适用于 `sync_apigw_stage` 命令，而�
 ### 6. 注册网关资源时如果只想注册生成版本，不进行版本发布，该如何操作？
 
 `create_version_and_release_apigw` 是进行网关资源生成版本和发布的命令，可以通过指定 `--no-pub` 只进行版本生成，不进行资源发布。
+
+
+### 7. 同步网关资源的同时想直接根据 `resources.yaml` 即 swagger 或者 openapi3.0 生成文档，该如何操作？
+
+`sync_apigw_resources` 是进行网关资源同步命令，可以通过指定 `--doc_language`: en/zh 生成接口文档
