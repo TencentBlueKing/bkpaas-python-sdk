@@ -57,6 +57,7 @@ class Command(BaseCommand):
             f"--gateway-name={gateway_name}",
             "--delete",
             f"--file={resources_file_path}",
+            f"--doc_language={settings.BK_APIGW_RELEASE_DOC_LANGUAGE}",
         )
 
         self.stdout.write(
