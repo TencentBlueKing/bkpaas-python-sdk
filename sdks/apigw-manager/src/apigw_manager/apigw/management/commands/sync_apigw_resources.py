@@ -53,7 +53,7 @@ class Command(SyncCommand):
             'delete': kwargs["delete"],
         }
 
-        if 'doc_language' in kwargs:
+        if kwargs['doc_language']:
             sync_args['doc_language'] = kwargs['doc_language']
 
         result = manager.sync_resources_config(**sync_args)
