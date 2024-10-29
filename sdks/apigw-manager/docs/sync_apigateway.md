@@ -150,12 +150,12 @@ stages:
     backends:
     - name: "default"
       config:
-      timeout: 60
-      loadbalance: "roundrobin"
-      hosts:
-        # 网关调用后端服务的默认域名或IP，不包含Path，比如：      http://api.example.com
-        - host: ""
-          weight: 100
+        timeout: 60
+        loadbalance: "roundrobin"
+        hosts:
+          # 网关调用后端服务的默认域名或IP，不包含Path，比如：      http://api.example.com
+          - host: ""
+            weight: 100
 
     - name: "service1"
       config:
