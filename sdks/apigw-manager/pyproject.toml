@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "apigw-manager"
-version = "3.1.2"
+version = "3.2.0"
 description = "The SDK for managing blueking gateway resource."
 readme = "README.md"
 authors = ["blueking <blueking@tencent.com>"]
@@ -10,15 +10,15 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
 ]
 
+
 [project.urls]
 Homepage = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
 Repository = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
 
 [tool.poetry.dependencies]
-python = "^3.6.1"
+python = ">=3.8,<3.12"
 setuptools = ">=21.0.0"
 urllib3 = ">=1.25.3"
-future = ">=0.18.2"
 pyyaml = ">=5.4.1"
 bkapi-client-core = ">=1.2.0"
 bkapi-bk-apigateway = "^1.0.11"
@@ -29,10 +29,8 @@ cryptography = { version = ">=3.1.1", optional = true }
 packaging = { version = ">=20.4" }
 PyMySQL = { version = "^1.0.2", optional = true }
 kubernetes = { version = "*", optional = true }
-# if want to upgrade this package, should upgrade python version first; 3.15.2 is not compatible with python 3.6/3.7
-djangorestframework = { version = "<=3.15.1", optional = true }
-# if want to upgrade this package, should upgrade python version first; 0.27.2 is not compatible with python 3.6
-drf-spectacular = { version = "<=0.27.1", optional = true }
+djangorestframework = { version = ">=3.10.3", optional = true }
+drf-spectacular = { version = "<=0.27.2", optional = true }
 
 [tool.poetry.extras]
 cryptography = ["cryptography", "pyjwt"]
@@ -42,20 +40,21 @@ demo = ["django-environ", "django", "PyMySQL", "pyjwt"]
 kubernetes = ["kubernetes"]
 
 [tool.poetry.dev-dependencies]
-pytest = "^7.0.1"
-pytest-cov = "^4.0.0"
-pytest-mock = "^3.6.1"
-pytest-django = "^4.5.0"
-pytest-pretty = { version = "^1.1.0", python = "~3.7.0" }
-Faker = "14.2.1"
+pytest = "^8.3.3"
+pytest-cov = "^5.0.0"
+pytest-mock = "^3.14.0"
+pytest-django = "^4.9.0"
+pytest-pretty = "1.2.0"
+Faker = "33.0.0"
 mypy = "*"
-pre-commit = "^2.17.0"
+pre-commit = "^3"
 m2r = "^0.2.1"
-tox = "^3.23.0"
+tox = "4.23.2"
+tox-pyenv-redux = "^1.1.0"
 ipython = "^7"
-twine = "^3.4.1"
+twine = "5.1.1"
 django = ">=1.11.1"
-kubernetes = "^24.2.0"
+kubernetes = "31.0.0"
 types-PyYAML = "6.0.12.9"
 types-PyMySQL = "1.1.0.1"
 
