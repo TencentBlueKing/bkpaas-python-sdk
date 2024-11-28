@@ -1789,4 +1789,4 @@ kubernetes = ["kubernetes"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.14"
-content-hash = "d407550aed36b6eb5571c08ae3561c2002a95426766a9e68e0937e7d3f7a87e0"
+content-hash = "ae32cdc9d9f13a42e4a60d5b70c57154a65bf4d8797800d062d09c85ac63022a"
