@@ -1,8 +1,8 @@
 ## Change logs
 
-### 3.2.0
+### 4.0.0
 
-- drop support for python 3.6/3.7, request >=3.8 and < 3.12
+- [breaking change] drop support for python 3.6/3.7, request >=3.8 and < 3.13
 
 ### 3.1.2
 
