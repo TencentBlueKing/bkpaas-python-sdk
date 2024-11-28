@@ -16,7 +16,7 @@ Homepage = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
 Repository = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.14"
+python = ">=3.8,<3.13"
 setuptools = ">=21.0.0"
 urllib3 = ">=1.25.3"
 pyyaml = ">=5.4.2"
