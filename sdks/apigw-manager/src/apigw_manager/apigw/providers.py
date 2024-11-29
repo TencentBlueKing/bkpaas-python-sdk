@@ -19,7 +19,6 @@ from django.conf import settings
 from django.core.cache import caches
 from django.core.cache.backends.dummy import DummyCache
 from django.http.request import HttpRequest
-from future.utils import raise_from
 
 from apigw_manager.apigw.helper import make_default_public_key_manager
 
@@ -115,13 +114,13 @@ class DecodedJWT:
 
 class JWTProvider(metaclass=abc.ABCMeta):
     def __init__(
-            self,
-            jwt_key_name: str,
-            default_gateway_name: str,
-            algorithm: str,
-            allow_invalid_jwt_token: bool,
-            public_key_provider: PublicKeyProvider,
-            **kwargs,
+        self,
+        jwt_key_name: str,
+        default_gateway_name: str,
+        algorithm: str,
+        allow_invalid_jwt_token: bool,
+        public_key_provider: PublicKeyProvider,
+        **kwargs,
     ) -> None:
         self.jwt_key_name = jwt_key_name
         self.default_gateway_name = default_gateway_name
@@ -173,7 +172,7 @@ class DefaultJWTProvider(JWTProvider):
 
         except jwt.PyJWTError as e:
             if not self.allow_invalid_jwt_token:
-                raise_from(JWTTokenInvalid, e)
+                raise JWTTokenInvalid from e
 
         return None
 

@@ -1,5 +1,37 @@
 ## Change logs
+
+### 4.0.0
+
+- [breaking change] drop support for python 3.6/3.7, request >=3.8 and < 3.13
+
+### 3.1.2
+
+- fix: fix apigw doc link by @Han-Ya-Jun in #194
+- feat(apigw/sync_resource): support doc by @Han-Ya-Jun in #197
+- fix(apigw/sync_resource): fix bug by @Han-Ya-Jun in #198
+- feat(apigw_manager/drf): update to support multiple stages by @wklken in #196
+
+### 3.1.1
+
+- doc: opt apigw doc by @Han-Ya-Jun in #181
+- feat: support no-pub by @Han-Ya-Jun in #182
+- feat: update docker image version by @Han-Ya-Jun in #184
+
+### 3.1.0
+
+- add application drf for apigw-manager by @wklken in #178
+
+### 3.0.5
+
+- doc: fix image version by @Han-Ya-Jun in #175
+- fix: fix esb jwt get iss by @Han-Ya-Jun in #177
+
+### 3.0.4
+
+- feat: apigw-manager support stages by @Han-Ya-Jun in #174
+
 ### 3.0.3
+
 - 修复资源版本校验问题
 ### 3.0.2
 - 更新依赖 future 版本

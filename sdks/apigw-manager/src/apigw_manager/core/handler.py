@@ -14,7 +14,6 @@ import typing
 
 from bkapi.bk_apigateway.client import Client as BKAPIGatewayClient
 from bkapi_client_core.exceptions import ResponseError
-from future.utils import raise_from
 
 from apigw_manager.core.exceptions import ApiException, ApiResponseError, ApiResultError
 
@@ -96,7 +95,7 @@ class Handler(object):
             message = "%s\n%s\nResponse: %s" % (err, err.curl_command, err.response_text)
             raise ApiResponseError(message)
         except Exception as err:
-            raise_from(ApiException(operation_id), err)
+            raise ApiException(operation_id) from err
 
     def _parse_result(self, result, convertor, code=0):
         """Check the code and convert the result"""
