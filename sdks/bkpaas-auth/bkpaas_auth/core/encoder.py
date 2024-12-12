@@ -18,25 +18,29 @@ class BluekingUserIdEncoder:
     unencrypted_user_flag = "$$"
 
     def encode(self, provider_type: Union[int, ProviderType], username: Union[str, bytes]):
-        """Encode the provider type and username into a Blueking user ID.
+        """Encode the provider type and username into a BK user ID.
 
         :param provider_type: See constants.ProviderType
         :param username: The username format includes: uin (QQ login), username, uuid (latest user management rules)
-        :return: A hex string representing the Blueking user ID.
+        :return: A hex string representing the BK user ID.
         """
         id_prefix = ProviderType(provider_type).get_id_prefix()
         return self.unencrypted_user_flag + id_prefix + username
 
     def decode(self, user_id: Union[str, bytes]) -> Tuple[int, str]:
-        """Decode a given Blueking user ID into its constituent provider type and username.
+        """Decode a given BK user ID into its constituent provider type and username.
 
-        :param str user_id: Blueking user id
+        :param str user_id: BK user id
         :returns: (provider_type, username)
         """
+        # Ensure user_id is of type bytes for consistent handling
+        if isinstance(user_id, str):
+            user_id = ensure_binary(user_id)
+
         # Check if the user ID is unencrypted
         if user_id.startswith(self.unencrypted_user_flag):
             user_info = user_id[2:]
-            _provider_type, decoded_username = user_info[:2], user_info[2:]
+            _provider_type, decoded_username = user_info[:2].decode(), user_info[2:].decode()
         else:
             # Handle encrypted user ID
             _provider_type, encrypted_username = user_id[:2], user_id[2:]
