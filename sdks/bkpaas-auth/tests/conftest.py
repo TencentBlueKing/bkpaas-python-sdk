@@ -12,7 +12,7 @@ def setup_root_logger(level):
 
     handler = logging.StreamHandler(sys.stdout)
     handler.setLevel(level)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     handler.setFormatter(formatter)
     root.addHandler(handler)
 
@@ -23,36 +23,36 @@ def pytest_configure():
     settings.configure(
         DEBUG_PROPAGATE_EXCEPTIONS=True,
         DATABASES={
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': ':memory:',
+            "default": {
+                "ENGINE": "django.db.backends.sqlite3",
+                "NAME": ":memory:",
             }
         },
-        SECRET_KEY='not very secret in tests',
+        SECRET_KEY="not very secret in tests",
         TEMPLATES=[
             {
-                'BACKEND': 'django.template.backends.django.DjangoTemplates',
-                'APP_DIRS': True,
+                "BACKEND": "django.template.backends.django.DjangoTemplates",
+                "APP_DIRS": True,
             },
         ],
         USE_TZ=True,
-        TIME_ZONE='Asia/Shanghai',
+        TIME_ZONE="Asia/Shanghai",
         MIDDLEWARE=[],
         MIDDLEWARE_CLASSES=[],
         INSTALLED_APPS=(
-            'django.contrib.auth',
-            'django.contrib.contenttypes',
-            'django.contrib.sessions',
-            'tests',
+            "django.contrib.auth",
+            "django.contrib.contenttypes",
+            "django.contrib.sessions",
+            "tests",
         ),
         # bkauth settings
-        BKAUTH_BACKEND_TYPE='bk_token',
-        BKAUTH_TOKEN_APP_CODE='mock_app_code',
-        BKAUTH_TOKEN_SECRET_KEY='mock_app_key',
-        BKAUTH_TOKEN_GRANT_ENDPOINT='',
-        USER_ID='0221dbef87cd',
-        USER_NAME='user1',
-        USER_NICKNAME='user1中文名',
+        BKAUTH_BACKEND_TYPE="bk_token",
+        BKAUTH_TOKEN_APP_CODE="mock_app_code",
+        BKAUTH_TOKEN_SECRET_KEY="mock_app_key",
+        BKAUTH_TOKEN_GRANT_ENDPOINT="",
+        USER_ID="$$02user1",
+        USER_NAME="user1",
+        USER_NICKNAME="user1中文名",
         AUTHENTICATION_BACKENDS=["bkpaas_auth.backends.UniversalAuthBackend"],
     )
 
