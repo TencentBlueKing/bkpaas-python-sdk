@@ -33,20 +33,16 @@ class BluekingUserIdEncoder:
         :param str user_id: BK user id
         :returns: (provider_type, username)
         """
-        # Ensure user_id is of type bytes for consistent handling
-        if isinstance(user_id, str):
-            user_id = ensure_binary(user_id)
-
         # Check if the user ID is unencrypted
-        if user_id.startswith(self.unencrypted_user_flag):
+        if user_id[:2] == self.unencrypted_user_flag:
             user_info = user_id[2:]
-            _provider_type, decoded_username = user_info[:2].decode(), user_info[2:].decode()
+            _provider_type, _decoded_username = user_info[:2], user_info[2:]
         else:
             # Handle encrypted user ID
             _provider_type, encrypted_username = user_id[:2], user_id[2:]
-            decoded = ARC4(ensure_binary(self.secret_key)).decrypt(binascii.unhexlify(encrypted_username))
-            decoded_username = ensure_text(decoded)
+            _decoded_username = ARC4(ensure_binary(self.secret_key)).decrypt(binascii.unhexlify(encrypted_username))
 
+        decoded_username = ensure_text(_decoded_username)
         provider_type = int(_provider_type)
         return provider_type, decoded_username
 
