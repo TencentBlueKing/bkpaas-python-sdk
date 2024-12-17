@@ -60,6 +60,7 @@ class PlanSLZ(serializers.ModelSerializer):
 class ServiceListSLZ(ServiceSLZ):
     plans = serializers.ListField(child=PlanSLZ(), source='plans.all')
 
+
 class ServiceInstanceSLZ(serializers.ModelSerializer):
     def to_representation(self, instance: ServiceInstance):
         instance_info = super(ServiceInstanceSLZ, self).to_representation(instance)
