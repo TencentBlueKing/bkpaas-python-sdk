@@ -12,14 +12,14 @@ class AbstractUserWithProvider(models.AbstractBaseUser, models.AnonymousUser):
     """Basic user with provider type"""
 
     bkpaas_user_id = db_models.CharField(primary_key=True, max_length=255)
-    USERNAME_FIELD = 'bkpaas_user_id'
-    USERINFO_FIELDS = ('nickname', 'chinese_name', 'avatar_url', 'email', 'phone')
+    USERNAME_FIELD = "bkpaas_user_id"
+    USERINFO_FIELDS = ("tenant_id", "nickname", "chinese_name", "avatar_url", "email", "phone")
 
     def __init__(self, provider_type, username):
         if not provider_type:
-            self.bkpaas_user_id = '-1'
+            self.bkpaas_user_id = "-1"
         elif provider_type not in ProviderType:
-            raise ValueError('Invalid provider_type given!')
+            raise ValueError("Invalid provider_type given!")
         else:
             self.bkpaas_user_id = user_id_encoder.encode(provider_type, username)
 
@@ -64,7 +64,7 @@ class AbstractUserWithProvider(models.AbstractBaseUser, models.AnonymousUser):
 
     class Meta:
         abstract = True
-        app_label = 'bkpaas_auth'
+        app_label = "bkpaas_auth"
 
 
 class BasicUser(AbstractUserWithProvider):
@@ -106,4 +106,4 @@ class DatabaseUser(AbstractUserWithProvider):
         return obj
 
     class Meta:
-        app_label = 'bkpaas_auth'
+        app_label = "bkpaas_auth"

@@ -2,7 +2,7 @@
 import inspect
 import logging
 import pickle
-from typing import Dict, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -53,13 +53,13 @@ class UniversalAuthBackend:
 
     def authenticate(self, request: HttpRequest, auth_credentials: Dict) -> Optional[Union[User, AnonymousUser]]:
         try:
-            username = self.request_backend.request_username(**auth_credentials)
+            user_info: Dict[str, Any] = self.request_backend.request_user_info(**auth_credentials)
             login_token = generate_random_token()
             token = LoginToken(
                 login_token=login_token,
                 expires_in=bkauth_settings.LOGIN_TOKEN_EXPIRE_IN,
             )
-            token.user_info = UserInfo(username=username)
+            token.user_info = UserInfo(**user_info)
             logger.debug("New login token exchanged by credentials")
         except InvalidTokenCredentialsError:
             logger.warning("authenticate error, invalid credentials given")
