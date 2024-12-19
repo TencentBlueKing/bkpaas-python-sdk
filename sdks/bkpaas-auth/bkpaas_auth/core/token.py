@@ -88,6 +88,9 @@ class TokenRequestBackend(AbstractRequestBackend):
 
         resp_json = resp_to_json(resp)
 
+        if not isinstance(resp_json, dict):
+            raise ValueError(f'response type expect dict, got: {resp_json}')
+
         if resp.status_code == 200:
             bk_username = resp_json["data"]["bk_username"]
             return UserAccount(
