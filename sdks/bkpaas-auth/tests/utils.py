@@ -19,10 +19,10 @@ def mock_raw_response(data):
     resp = requests.Response()
     resp.status_code = 200
 
-    def json(**kwargs):
+    def to_json(**kwargs):
         return data
 
-    resp.json = json
+    setattr(resp, 'json', to_json)
     return resp
 
 
