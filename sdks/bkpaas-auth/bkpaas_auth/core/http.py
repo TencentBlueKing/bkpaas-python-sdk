@@ -35,7 +35,7 @@ def _http_request(method: str, url: str, **kwargs) -> Tuple[bool, Union[None, re
     session = get_requests_session()
     params = kwargs.pop("params", None)
     data = kwargs.pop("data", None)
-    return_json = kwargs.pop("return_json", True)
+    response_format = kwargs.pop("response_format", "json")
 
     req_details = build_req_details_str(method, url, params, data, **kwargs)
     logger.debug("Sending HTTP request, req details: %s", req_details)
@@ -46,7 +46,7 @@ def _http_request(method: str, url: str, **kwargs) -> Tuple[bool, Union[None, re
         logger.exception("http request error! req details: %s", req_details)
         return False, None
 
-    if not return_json:
+    if response_format == "raw":
         return True, resp
 
     try:

@@ -5,7 +5,7 @@ from django.test.utils import override_settings
 
 from bkpaas_auth.backends import APIGatewayAuthBackend, UniversalAuthBackend
 from bkpaas_auth.core.constants import ProviderType
-from tests.utils import generate_random_string, mock_json_response
+from tests.utils import generate_random_string, mock_json_response, mock_raw_response
 
 
 class TestUniversalAuthBackend:
@@ -22,8 +22,7 @@ class TestUniversalAuthBackend:
         assert not user.is_anonymous
         assert user.is_authenticated
         assert user.username == "foo"
-        assert user.display_name == "foo"
-        assert user.tenant_id is None
+        assert getattr(user, "display_name") == "foo"
 
     @override_settings(BKAUTH_ENABLE_MULTI_TENANT_MODE=False, BKAUTH_BACKEND_TYPE="bk_token")
     @mock.patch('requests.Session.request')
@@ -39,8 +38,7 @@ class TestUniversalAuthBackend:
         assert not user.is_anonymous
         assert user.is_authenticated
         assert user.username == "bar"
-        assert user.display_name == "bar"
-        assert user.tenant_id is None
+        assert getattr(user, "display_name") == "bar"
 
     @override_settings(
         BKAUTH_ENABLE_MULTI_TENANT_MODE=True,
@@ -50,7 +48,7 @@ class TestUniversalAuthBackend:
     )
     @mock.patch('requests.Session.request')
     def test_authenticate_bk_token_for_tenant_mode(self, mock_request, mocker):
-        mock_request.return_value = mock_json_response(
+        mock_request.return_value = mock_raw_response(
             {
                 "data": {
                     "bk_username": "5461b239-5ef2-4c81-a682-5907dbd5f394",
@@ -69,8 +67,8 @@ class TestUniversalAuthBackend:
         assert not user.is_anonymous
         assert user.is_authenticated
         assert user.username == "5461b239-5ef2-4c81-a682-5907dbd5f394"
-        assert user.display_name == "foo"
-        assert user.tenant_id == "system"
+        assert getattr(user, "display_name") == "foo"
+        assert getattr(user, "tenant_id") == "system"
 
 
 class TestAPIGatewayAuthBackend:

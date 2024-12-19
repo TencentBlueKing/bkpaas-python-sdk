@@ -3,6 +3,7 @@ import random
 import string
 
 import mock
+import requests
 
 DFT_RANDOM_CHARACTER_SET = string.ascii_lowercase + string.digits
 
@@ -11,6 +12,13 @@ def mock_json_response(data):
     resp = mock.Mock()
     resp.status_code = 200
     resp.json.return_value = data
+    return resp
+
+
+def mock_raw_response(data):
+    resp = requests.Response()
+    resp.status_code = 200
+    resp.json = lambda: data
     return resp
 
 

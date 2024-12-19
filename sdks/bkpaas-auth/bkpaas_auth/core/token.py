@@ -7,6 +7,7 @@ import logging
 from abc import abstractmethod
 from typing import NamedTuple
 
+import requests
 from django.utils.timezone import now
 from django.utils.translation import get_language
 
@@ -72,10 +73,14 @@ class TokenRequestBackend(AbstractRequestBackend):
                 "X-Bkapi-Authorization": json.dumps(get_app_credentials()),
             },
             params=credentials,
-            return_json=False,
+            # 返回原始 response
+            response_format="raw",
         )
         if not is_success:
             raise ServiceError("unable to request services")
+
+        if not isinstance(resp, requests.Response):
+            raise ServiceError(f'response type expect requests.Response, got: {resp}')
 
         try:
             resp_json = resp.json()
