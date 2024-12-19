@@ -173,11 +173,11 @@ class SvcInstanceViewSet(viewsets.ViewSet):
     @m_verified_client_required
     def retrieve(self, request, instance_id):
         """Retrieve an instance"""
-        slz = serializers.ServiceInstanceRetrieveSLZ(data=request.data)
+        slz = serializers.ServiceInstanceRetrieveSLZ(data=request.query_params)
         slz.is_valid(raise_exception=True)
         data = slz.validated_data
 
-        instance = get_object_or_404(ServiceInstance, pk=instance_id, to_be_deleted=data.to_be_delete)
+        instance = get_object_or_404(ServiceInstance, pk=instance_id, to_be_deleted=data.get("to_be_deleted", False))
         instance.prerender(request)
         return Response(serializers.ServiceInstanceSLZ(instance).data)
 

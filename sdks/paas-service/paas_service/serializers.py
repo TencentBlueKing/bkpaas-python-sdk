@@ -73,7 +73,7 @@ class ServiceInstanceSLZ(serializers.ModelSerializer):
 
 
 class ServiceInstanceRetrieveSLZ(serializers.Serializer):
-    to_be_delete = serializers.BooleanField(required=False, default=False)
+    to_be_deleted = serializers.BooleanField(required=False, default=False)
 
 
 class ServiceInstanceBinderSLZ(serializers.Serializer):
