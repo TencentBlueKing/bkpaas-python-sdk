@@ -18,7 +18,11 @@ def mock_json_response(data):
 def mock_raw_response(data):
     resp = requests.Response()
     resp.status_code = 200
-    resp.json = lambda: data
+
+    def json(**kwargs):
+        return data
+
+    resp.json = json
     return resp
 
 
