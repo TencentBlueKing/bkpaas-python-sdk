@@ -45,7 +45,6 @@ class TestUniversalAuthBackend:
     @override_settings(
         BKAUTH_ENABLE_MULTI_TENANT_MODE=True,
         BKAUTH_BACKEND_TYPE="bk_token",
-        BKAUTH_USE_APIGW=True,
         BKAUTH_USER_INFO_APIGW_URL="fake_url",
     )
     @mock.patch('requests.Session.request')

@@ -19,6 +19,7 @@ from bkpaas_auth.core.token import (
     LoginToken,
     RequestBackend,
     TokenRequestBackend,
+    UserAccount,
     create_user_from_token,
     mocked_create_user_from_token,
 )
@@ -53,7 +54,14 @@ class UniversalAuthBackend:
 
     def authenticate(self, request: HttpRequest, auth_credentials: Dict) -> Optional[Union[User, AnonymousUser]]:
         try:
-            user_account = self.request_backend.request_user_account(**auth_credentials)
+            user_account: UserAccount = self.request_backend.request_user_account(**auth_credentials)
+
+            if bkauth_settings.ENABLE_MULTI_TENANT_MODE and not user_account.tenant_id:
+                raise ImproperlyConfigured(
+                    "No tenant information found. You may check whether BKAUTH_USER_INFO_APIGW_URL is set to "
+                    "correct gateway url that can retrieve the user's tenant information"
+                )
+
             login_token = generate_random_token()
             token = LoginToken(
                 login_token=login_token,
@@ -72,7 +80,7 @@ class UniversalAuthBackend:
             logger.warning("authenticate error: invalid credentials given")
             return None
         except ServiceError:
-            logger.warning("authenticate error: the backend service is not available")
+            logger.warning("authenticate error: unable to request backend services")
             return None
 
         return self.get_user_by_token(token)
@@ -171,6 +179,9 @@ class DjangoAuthUserCompatibleBackend(UniversalAuthBackend):
             db_user.provider_type = user.provider_type
             db_user.bkpaas_user_id = user.bkpaas_user_id
             db_user.token = user.token
+            db_user.display_name = getattr(user, "display_name", user.username)
+            db_user.tenant_id = getattr(user, "tenant_id", None)
+
         return db_user
 
     def configure_user(self, db_user, bk_user: User):

@@ -33,8 +33,6 @@ class Settings:
 
     # 是否使用多租户模式
     ENABLE_MULTI_TENANT_MODE: bool = field(default_factory=get_settings("ENABLE_MULTI_TENANT_MODE", default=False))
-    # 是否使用网关接口
-    USE_APIGW: bool = field(default_factory=get_settings("USE_APIGW", default=False))
     # 验证用户信息的网关 API
     USER_INFO_APIGW_URL: str = field(default_factory=get_settings("USER_INFO_APIGW_URL"))
 
@@ -63,13 +61,10 @@ class Settings:
                 raise ImproperlyConfigured(
                     "BKAUTH_ENABLE_MULTI_TENANT_MODE cannot be True when BKAUTH_BACKEND_TYPE is 'bk_ticket'"
                 )
-            if not self.USE_APIGW:
+            if not self.USER_INFO_APIGW_URL:
                 raise ImproperlyConfigured(
-                    "BKAUTH_USE_APIGW must be True when BKAUTH_ENABLE_MULTI_TENANT_MODE is True"
+                    "BKAUTH_USER_INFO_APIGW_URL must be set correctly when BKAUTH_ENABLE_MULTI_TENANT_MODE is True"
                 )
-
-        if self.USE_APIGW and not self.USER_INFO_APIGW_URL:
-            raise ImproperlyConfigured("BKAUTH_USER_INFO_APIGW_URL must be set correctly when USE_APIGW is True")
 
     def reload(self):
         for f in fields(self):

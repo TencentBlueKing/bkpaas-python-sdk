@@ -7,6 +7,10 @@ class ServiceError(Exception):
     """Login or Token service is not available"""
 
 
+class HttpRequestError(Exception):
+    """http request error"""
+
+
 class ResponseError(Exception):
     """service response error"""
 

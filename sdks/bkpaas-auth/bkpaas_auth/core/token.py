@@ -7,7 +7,6 @@ import logging
 from abc import abstractmethod
 from typing import NamedTuple
 
-import requests
 from django.utils.timezone import now
 from django.utils.translation import get_language
 
@@ -15,11 +14,12 @@ from bkpaas_auth.conf import bkauth_settings
 from bkpaas_auth.core.constants import ACCESS_PERMISSION_DENIED_CODE, ProviderType
 from bkpaas_auth.core.exceptions import (
     AccessPermissionDenied,
+    HttpRequestError,
     InvalidTokenCredentialsError,
     ResponseError,
     ServiceError,
 )
-from bkpaas_auth.core.http import http_get
+from bkpaas_auth.core.http import http_get, resp_to_json
 from bkpaas_auth.core.services import get_app_credentials
 from bkpaas_auth.core.user_info import BkUserInfo, RtxUserInfo, UserInfo
 from bkpaas_auth.models import User
@@ -29,6 +29,14 @@ logger = logging.getLogger(__name__)
 
 
 class UserAccount(NamedTuple):
+    """
+    用户账号信息
+
+    :param bk_username: 用户唯一标识，全局唯一
+    :param display_name: 用户展示名.
+    :param tenant_id: 用户所属租户 ID. 为 None 时表示用户无租户信息(可能接口不支持)
+    """
+
     bk_username: str
     display_name: str
     tenant_id: str | None = None
@@ -43,7 +51,7 @@ class AbstractRequestBackend:
         :raises AccessPermissionDenied: When the user does not have access permission.
         :raises InvalidTokenCredentialsError: When invalid credentials are provided.
         """
-        if bkauth_settings.USE_APIGW:
+        if bkauth_settings.USER_INFO_APIGW_URL:
             return self._request_apigw(**credentials)
 
         return self._request_esb(**credentials)
@@ -65,33 +73,20 @@ class TokenRequestBackend(AbstractRequestBackend):
 
     @staticmethod
     def _request_apigw(**credentials) -> UserAccount:
-        is_success, resp = http_get(
-            bkauth_settings.USER_INFO_APIGW_URL,
-            timeout=10,
-            headers={
-                'blueking-language': get_language(),
-                "X-Bkapi-Authorization": json.dumps(get_app_credentials()),
-            },
-            params=credentials,
-            # 返回原始 response
-            response_format="raw",
-        )
-        if not is_success:
-            raise ServiceError("unable to request services")
-
-        if not isinstance(resp, requests.Response):
-            raise ServiceError(f'response type expect requests.Response, got: {resp}')
-
         try:
-            resp_json = resp.json()
-        except json.decoder.JSONDecodeError:
-            logger.exception(
-                "response json error! req url: %s, response.status_code: %s, response.text: %s",
+            resp = http_get(
                 bkauth_settings.USER_INFO_APIGW_URL,
-                resp.status_code,
-                resp.text,
+                timeout=10,
+                headers={
+                    'blueking-language': get_language(),
+                    "X-Bkapi-Authorization": json.dumps(get_app_credentials()),
+                },
+                params=credentials,
             )
-            raise ResponseError("parse response error")
+        except HttpRequestError:
+            raise ServiceError('Unable to request services')
+
+        resp_json = resp_to_json(resp)
 
         if resp.status_code == 200:
             bk_username = resp_json["data"]["bk_username"]
@@ -108,17 +103,21 @@ class TokenRequestBackend(AbstractRequestBackend):
 
     @staticmethod
     def _request_esb(**credentials) -> UserAccount:
-        is_success, resp_json = http_get(
-            bkauth_settings.USER_COOKIE_VERIFY_URL,
-            timeout=10,
-            headers={
-                'blueking-language': get_language(),
-                "X-Bkapi-Authorization": json.dumps(dict(credentials, **get_app_credentials())),
-            },
-            params=credentials,
-        )
-        if not is_success:
+        try:
+            resp = http_get(
+                bkauth_settings.USER_COOKIE_VERIFY_URL,
+                timeout=10,
+                headers={
+                    'blueking-language': get_language(),
+                    "X-Bkapi-Authorization": json.dumps(dict(credentials, **get_app_credentials())),
+                },
+                params=credentials,
+            )
+        except HttpRequestError:
             raise ServiceError('unable to fetch token services')
+
+        resp_json = resp_to_json(resp)
+
         if not isinstance(resp_json, dict):
             raise ValueError(f'response type expect dict, got: {resp_json}')
 
@@ -146,9 +145,13 @@ class RequestBackend(AbstractRequestBackend):
 
     @staticmethod
     def _request_esb(**credentials) -> UserAccount:
-        is_success, resp_json = http_get(bkauth_settings.USER_COOKIE_VERIFY_URL, params=credentials, timeout=10)
-        if not is_success:
+        try:
+            resp = http_get(bkauth_settings.USER_COOKIE_VERIFY_URL, params=credentials, timeout=10)
+        except HttpRequestError:
             raise ServiceError('unable to fetch token services')
+
+        resp_json = resp_to_json(resp)
+
         if not isinstance(resp_json, dict):
             raise ValueError(f'response type expect dict, got: {resp_json}')
 

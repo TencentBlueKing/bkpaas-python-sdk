@@ -68,10 +68,10 @@ class BkUserInfo(UserInfo):
         # bk_username 用户英文ID
         super().__init__(kwargs["bk_username"], **kwargs)
         # chname 用户中文名
-        self.nickname = kwargs.get('chname')
-        self.chinese_name = kwargs.get('chname')
-        self.email = kwargs.get('email')
-        self.phone = kwargs.get('phone')
+        self.nickname = kwargs['chname']
+        self.chinese_name = kwargs['chname']
+        self.email = kwargs['email']
+        self.phone = kwargs['phone']
         self.avatar_url = ''
 
     def __eq__(self, other):

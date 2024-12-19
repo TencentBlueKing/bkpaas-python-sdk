@@ -13,9 +13,12 @@ def get_user_by_user_id(user_id: str, username_only: bool = True):
     provider_type, username = user_id_encoder.decode(user_id)
     user = User(token=None, provider_type=ProviderType(provider_type), username=username)
 
-    # 多租户模式下, 暂时没有根据用户名获取用户详细信息的接口
-    if username_only or conf.ENABLE_MULTI_TENANT_MODE:
+    if username_only:
         return user
+
+    # 多租户模式下, 暂时没有根据用户名获取用户详细信息的接口
+    if conf.ENABLE_MULTI_TENANT_MODE:
+        raise ValueError('Multi-tenant mode only return username, please set username_only=True')
 
     # Request third party service to get info other than username
     if provider_type == ProviderType.RTX:
