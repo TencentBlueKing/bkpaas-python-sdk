@@ -19,6 +19,7 @@ class TestUniversalAuthBackend:
             request=mocker.MagicMock(), auth_credentials={"bk_ticket": generate_random_string()}
         )
 
+        assert user
         assert not user.is_anonymous
         assert user.is_authenticated
         assert user.username == "foo"
@@ -35,6 +36,7 @@ class TestUniversalAuthBackend:
             request=mocker.MagicMock(), auth_credentials={"bk_token": generate_random_string()}
         )
 
+        assert user
         assert not user.is_anonymous
         assert user.is_authenticated
         assert user.username == "bar"
@@ -64,6 +66,7 @@ class TestUniversalAuthBackend:
             request=mocker.MagicMock(), auth_credentials={"bk_token": generate_random_string()}
         )
 
+        assert user
         assert not user.is_anonymous
         assert user.is_authenticated
         assert user.username == "5461b239-5ef2-4c81-a682-5907dbd5f394"
