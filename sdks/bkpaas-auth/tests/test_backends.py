@@ -10,7 +10,7 @@ from tests.utils import generate_random_string, mock_json_response
 
 class TestUniversalAuthBackend:
 
-    @override_settings(BKAUTH_USE_TENANT_MODE=False, BKAUTH_BACKEND_TYPE="bk_ticket")
+    @override_settings(BKAUTH_ENABLE_MULTI_TENANT_MODE=False, BKAUTH_BACKEND_TYPE="bk_ticket")
     @mock.patch('requests.Session.request')
     def test_authenticate_bk_ticket(self, mock_request, mocker):
         mock_request.return_value = mock_json_response({"msg": "", "data": {"username": "foo"}, "ret": 0})
@@ -25,7 +25,7 @@ class TestUniversalAuthBackend:
         assert user.display_name == "foo"
         assert user.tenant_id is None
 
-    @override_settings(BKAUTH_USE_TENANT_MODE=False, BKAUTH_BACKEND_TYPE="bk_token")
+    @override_settings(BKAUTH_ENABLE_MULTI_TENANT_MODE=False, BKAUTH_BACKEND_TYPE="bk_token")
     @mock.patch('requests.Session.request')
     def test_authenticate_bk_token(self, mock_request, mocker):
         mock_request.return_value = mock_json_response(
@@ -43,7 +43,7 @@ class TestUniversalAuthBackend:
         assert user.tenant_id is None
 
     @override_settings(
-        BKAUTH_USE_TENANT_MODE=True,
+        BKAUTH_ENABLE_MULTI_TENANT_MODE=True,
         BKAUTH_BACKEND_TYPE="bk_token",
         BKAUTH_USE_APIGW=True,
         BKAUTH_USER_INFO_APIGW_URL="fake_url",

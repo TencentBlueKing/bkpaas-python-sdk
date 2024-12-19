@@ -30,9 +30,9 @@ class Settings:
     BACKEND_TYPE: str = field(default_factory=get_settings('BACKEND_TYPE'))
     # 验证用户登录态的 API，如 蓝鲸统一登录校验登录态的 API
     USER_COOKIE_VERIFY_URL: str = field(default_factory=get_settings('USER_COOKIE_VERIFY_URL'))
-    # 是否使用多租户模式
-    USE_TENANT_MODE: bool = field(default_factory=get_settings("USE_TENANT_MODE", default=False))
 
+    # 是否使用多租户模式
+    ENABLE_MULTI_TENANT_MODE: bool = field(default_factory=get_settings("ENABLE_MULTI_TENANT_MODE", default=False))
     # 是否使用网关接口
     USE_APIGW: bool = field(default_factory=get_settings("USE_APIGW", default=False))
     # 验证用户信息的网关 API
@@ -58,13 +58,15 @@ class Settings:
         self.validate()
 
     def validate(self):
-        if self.USE_TENANT_MODE:
+        if self.ENABLE_MULTI_TENANT_MODE:
             if self.BACKEND_TYPE == "bk_ticket":
                 raise ImproperlyConfigured(
-                    "BKAUTH_USE_TENANT_MODE cannot be True when BKAUTH_BACKEND_TYPE is 'bk_ticket'"
+                    "BKAUTH_ENABLE_MULTI_TENANT_MODE cannot be True when BKAUTH_BACKEND_TYPE is 'bk_ticket'"
                 )
             if not self.USE_APIGW:
-                raise ImproperlyConfigured("BKAUTH_USE_APIGW must be True when BKAUTH_USE_TENANT_MODE is True")
+                raise ImproperlyConfigured(
+                    "BKAUTH_USE_APIGW must be True when BKAUTH_ENABLE_MULTI_TENANT_MODE is True"
+                )
 
         if self.USE_APIGW and not self.USER_INFO_APIGW_URL:
             raise ImproperlyConfigured("BKAUTH_USER_INFO_APIGW_URL must be set correctly when USE_APIGW is True")
