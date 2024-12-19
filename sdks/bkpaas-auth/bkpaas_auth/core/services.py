@@ -12,7 +12,6 @@ from bkpaas_auth.core.http import http_get
 from bkpaas_auth.core.user_info import BkUserInfo, RtxUserInfo
 from bkpaas_auth.utils import scrub_data
 
-
 logger = logging.getLogger(__name__)
 
 

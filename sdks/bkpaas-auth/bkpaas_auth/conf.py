@@ -30,6 +30,13 @@ class Settings:
     BACKEND_TYPE: str = field(default_factory=get_settings('BACKEND_TYPE'))
     # 验证用户登录态的 API，如 蓝鲸统一登录校验登录态的 API
     USER_COOKIE_VERIFY_URL: str = field(default_factory=get_settings('USER_COOKIE_VERIFY_URL'))
+    # 是否使用多租户模式
+    USE_TENANT_MODE: bool = field(default_factory=get_settings("USE_TENANT_MODE", default=False))
+
+    # 是否使用网关接口
+    USE_APIGW: bool = field(default_factory=get_settings("USE_APIGW", default=False))
+    # 验证用户信息的网关 API
+    USER_INFO_APIGW_URL: str = field(default_factory=get_settings("USER_INFO_APIGW_URL"))
 
     # 获取用户详情的 API，如中文名、邮箱等，且必须提供应用鉴权信息
     TOKEN_USER_INFO_ENDPOINT: str = field(default_factory=get_settings('TOKEN_USER_INFO_ENDPOINT'))
@@ -47,6 +54,21 @@ class Settings:
     USE_MOCKED_USER_INFO: bool = field(default_factory=get_settings('USE_MOCKED_USER_INFO', default=False))
     MOCKED_USER_NAME: str = field(default_factory=get_settings('MOCKED_USER_NAME', default=''))
 
+    def __post_init__(self):
+        self.validate()
+
+    def validate(self):
+        if self.USE_TENANT_MODE:
+            if self.BACKEND_TYPE == "bk_ticket":
+                raise ImproperlyConfigured(
+                    "BKAUTH_USE_TENANT_MODE cannot be True when BKAUTH_BACKEND_TYPE is 'bk_ticket'"
+                )
+            if not self.USE_APIGW:
+                raise ImproperlyConfigured("BKAUTH_USE_APIGW must be True when BKAUTH_USE_TENANT_MODE is True")
+
+        if self.USE_APIGW and not self.USER_INFO_APIGW_URL:
+            raise ImproperlyConfigured("BKAUTH_USER_INFO_APIGW_URL must be set correctly when USE_APIGW is True")
+
     def reload(self):
         for f in fields(self):
             setattr(self, f.name, f.default_factory())  # type: ignore
@@ -59,6 +81,7 @@ def reload_settings(*args, **kwargs):
     setting: str = kwargs['setting']
     if setting.startswith("BKAUTH_"):
         bkauth_settings.reload()
+        bkauth_settings.validate()
 
 
 setting_changed.connect(reload_settings)

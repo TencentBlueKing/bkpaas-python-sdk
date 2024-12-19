@@ -7,6 +7,10 @@ class ServiceError(Exception):
     """Login or Token service is not available"""
 
 
+class ResponseError(Exception):
+    """service response error"""
+
+
 class InvalidSkeyError(Exception):
     """Invalid uin/skey given"""
 

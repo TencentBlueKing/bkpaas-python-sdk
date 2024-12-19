@@ -1,5 +1,8 @@
 # 版本历史
 
+## 3.0.1
+- feat: UniversalAuthBackend 支持获取用户租户身份信息
+
 ## 3.0.0
 - BreakChange: 不再支持 Python 3.6，3.7
 - BreakChange: Django 版本要求 >=4.2，<5.0

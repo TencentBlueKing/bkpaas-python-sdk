@@ -13,7 +13,7 @@ from django.utils.encoding import force_bytes
 
 from bkpaas_auth.conf import bkauth_settings
 from bkpaas_auth.core.constants import ProviderType
-from bkpaas_auth.core.exceptions import InvalidTokenCredentialsError, ServiceError
+from bkpaas_auth.core.exceptions import InvalidTokenCredentialsError, ResponseError, ServiceError
 from bkpaas_auth.core.plugins import BkTicketPlugin, BkTokenPlugin
 from bkpaas_auth.core.token import (
     LoginToken,
@@ -53,19 +53,26 @@ class UniversalAuthBackend:
 
     def authenticate(self, request: HttpRequest, auth_credentials: Dict) -> Optional[Union[User, AnonymousUser]]:
         try:
-            username = self.request_backend.request_username(**auth_credentials)
+            user_account = self.request_backend.request_user_account(**auth_credentials)
             login_token = generate_random_token()
             token = LoginToken(
                 login_token=login_token,
                 expires_in=bkauth_settings.LOGIN_TOKEN_EXPIRE_IN,
             )
-            token.user_info = UserInfo(username=username)
+            token.user_info = UserInfo(
+                username=user_account.bk_username,
+                display_name=user_account.display_name,
+                tenant_id=user_account.tenant_id,
+            )
             logger.debug("New login token exchanged by credentials")
+        except ResponseError as e:
+            logger.warning(f"authenticate error: {e}")
+            return None
         except InvalidTokenCredentialsError:
-            logger.warning("authenticate error, invalid credentials given")
+            logger.warning("authenticate error: invalid credentials given")
             return None
         except ServiceError:
-            logger.warning("authenticate error, Error requesting third-party API service")
+            logger.warning("authenticate error: the backend service is not available")
             return None
 
         return self.get_user_by_token(token)

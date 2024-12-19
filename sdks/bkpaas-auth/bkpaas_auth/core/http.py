@@ -31,10 +31,11 @@ def get_requests_session():
     return session
 
 
-def _http_request(method: str, url: str, **kwargs) -> Tuple[bool, Union[None, dict, list]]:
+def _http_request(method: str, url: str, **kwargs) -> Tuple[bool, Union[None, requests.Response, dict, list]]:
     session = get_requests_session()
     params = kwargs.pop("params", None)
     data = kwargs.pop("data", None)
+    return_json = kwargs.pop("return_json", True)
 
     req_details = build_req_details_str(method, url, params, data, **kwargs)
     logger.debug("Sending HTTP request, req details: %s", req_details)
@@ -44,6 +45,9 @@ def _http_request(method: str, url: str, **kwargs) -> Tuple[bool, Union[None, di
     except requests.exceptions.RequestException:
         logger.exception("http request error! req details: %s", req_details)
         return False, None
+
+    if not return_json:
+        return True, resp
 
     try:
         return True, resp.json()
@@ -68,17 +72,5 @@ def build_req_details_str(method, url, params, data, **kwargs) -> str:
     return msg
 
 
-def http_get(url: str, **kwargs) -> Tuple[bool, Union[None, dict, list]]:
+def http_get(url: str, **kwargs) -> Tuple[bool, Union[None, requests.Response, dict, list]]:
     return _http_request(method="GET", url=url, **kwargs)
-
-
-def http_post(url: str, **kwargs) -> Tuple[bool, Union[None, dict, list]]:
-    return _http_request(method="POST", url=url, **kwargs)
-
-
-def http_put(url: str, **kwargs) -> Tuple[bool, Union[None, dict, list]]:
-    return _http_request(method="PUT", url=url, **kwargs)
-
-
-def http_delete(url: str, **kwargs) -> Tuple[bool, Union[None, dict, list]]:
-    return _http_request(method="DELETE", url=url, **kwargs)
