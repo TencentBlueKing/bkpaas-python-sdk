@@ -88,7 +88,7 @@ class TokenRequestBackend(AbstractRequestBackend):
             )
             raise ResponseError("parse response error")
 
-        if 200 <= resp.status_code < 300:
+        if resp.status_code == 200:
             bk_username = resp_json["data"]["bk_username"]
             return UserAccount(
                 bk_username=bk_username,
