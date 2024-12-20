@@ -80,6 +80,7 @@ class TokenRequestBackend(AbstractRequestBackend):
                 headers={
                     'blueking-language': get_language(),
                     "X-Bkapi-Authorization": json.dumps(get_app_credentials()),
+                    # 全租户应用，调用全租户网关时，网关会强制要求传递 X-Bk-Tenant-Id, 但不会实际校验值的有效性, 统一传 default
                     "X-Bk-Tenant-Id": "default",
                 },
                 params=credentials,
