@@ -80,6 +80,7 @@ class TokenRequestBackend(AbstractRequestBackend):
                 headers={
                     'blueking-language': get_language(),
                     "X-Bkapi-Authorization": json.dumps(get_app_credentials()),
+                    "X-Bk-Tenant-Id": "default",
                 },
                 params=credentials,
             )

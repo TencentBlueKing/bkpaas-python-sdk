@@ -14,7 +14,7 @@ from typing import Union
 import requests
 
 from bkpaas_auth.conf import bkauth_settings
-from bkpaas_auth.core.exceptions import HttpRequestError, ResponseError
+from bkpaas_auth.core.exceptions import HttpRequestError, ServiceError
 from bkpaas_auth.utils import scrub_data
 
 logger = logging.getLogger(__name__)
@@ -69,7 +69,7 @@ def resp_to_json(resp: requests.Response) -> Union[dict, list]:
             resp.status_code,
             resp.text,
         )
-        raise ResponseError("parse response error")
+        raise ServiceError("parse json response error")
 
 
 def http_get(url: str, **kwargs) -> requests.Response:

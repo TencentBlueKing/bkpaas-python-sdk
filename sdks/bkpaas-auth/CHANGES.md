@@ -1,6 +1,6 @@
 # 版本历史
 
-## 3.0.1
+## 3.1.0
 - feat: UniversalAuthBackend 支持获取用户租户身份信息
 
 ## 3.0.0
