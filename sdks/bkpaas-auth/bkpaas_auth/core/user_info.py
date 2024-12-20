@@ -13,8 +13,10 @@ class UserInfo:
 
     provider_type: ProviderType
 
-    def __init__(self, username):
+    def __init__(self, username, **kwargs):
         self.username = username
+        self.display_name = kwargs.get("display_name") or username
+        self.tenant_id = kwargs.get("tenant_id")
 
     def provide(self, user: 'User'):
         user.provider_type = self.provider_type
@@ -37,7 +39,7 @@ class RtxUserInfo(UserInfo):
     email_suffix = "@tencent.com"
 
     def __init__(self, **kwargs):
-        super().__init__(kwargs["LoginName"])
+        super().__init__(kwargs["LoginName"], **kwargs)
         self.nickname = kwargs['ChineseName']
         self.chinese_name = kwargs['ChineseName']
         self.email = f'{self.username}{self.email_suffix}'
@@ -64,7 +66,7 @@ class BkUserInfo(UserInfo):
 
     def __init__(self, **kwargs):
         # bk_username 用户英文ID
-        super().__init__(kwargs["bk_username"])
+        super().__init__(kwargs["bk_username"], **kwargs)
         # chname 用户中文名
         self.nickname = kwargs['chname']
         self.chinese_name = kwargs['chname']
