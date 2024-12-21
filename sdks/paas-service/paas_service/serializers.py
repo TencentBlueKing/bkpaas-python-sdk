@@ -72,7 +72,7 @@ class ServiceInstanceSLZ(serializers.ModelSerializer):
         exclude = ['config', 'credentials']
 
 
-class ServiceInstanceRetrieveSLZ(serializers.Serializer):
+class ServiceInstanceQuerySLZ(serializers.Serializer):
     to_be_deleted = serializers.BooleanField(required=False, default=False)
 
 

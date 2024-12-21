@@ -173,7 +173,7 @@ class SvcInstanceViewSet(viewsets.ViewSet):
     @m_verified_client_required
     def retrieve(self, request, instance_id):
         """Retrieve an instance"""
-        slz = serializers.ServiceInstanceRetrieveSLZ(data=request.query_params)
+        slz = serializers.ServiceInstanceQuerySLZ(data=request.query_params)
         slz.is_valid(raise_exception=True)
         data = slz.validated_data
 
