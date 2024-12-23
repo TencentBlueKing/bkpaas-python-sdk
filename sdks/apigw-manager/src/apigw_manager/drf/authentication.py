@@ -11,16 +11,17 @@ import logging
 from collections import namedtuple
 from typing import ClassVar, Type
 
-from apigw_manager.apigw.providers import CachePublicKeyProvider, PublicKeyProvider
-from apigw_manager.apigw.utils import get_configuration
 from django.conf import settings
 from django.contrib import auth
 from django.utils.module_loading import import_string
 from rest_framework.authentication import BaseAuthentication
 
+from apigw_manager.apigw.providers import CachePublicKeyProvider, PublicKeyProvider
+from apigw_manager.apigw.utils import get_configuration
+
 logger = logging.getLogger(__name__)
 
-App = namedtuple("App", ["bk_app_code", "verified"])
+App = namedtuple("App", ["bk_app_code", "verified", "tenant_mode", "tenant_id"])
 
 
 class ApiGatewayJWTAuthentication(BaseAuthentication):
@@ -81,10 +82,12 @@ class ApiGatewayJWTAuthentication(BaseAuthentication):
     def authenticate_header(self, request):
         return self.JWT_KEY_NAME
 
-    def make_app(self, bk_app_code=None, verified=False, **jwt_app) -> App:
+    def make_app(self, bk_app_code=None, verified=False, tenant_mode="", tenant_id="", **jwt_app) -> App:
         return App(
             bk_app_code=bk_app_code,
             verified=verified,
+            tenant_mode=tenant_mode,
+            tenant_id=tenant_id,
         )
 
     def get_user(
