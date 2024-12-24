@@ -82,6 +82,9 @@ class Handler(object):
             "data": kwargs,
             "headers": {
                 "X-Bkapi-Authorization": kwargs.pop("x_bkapi_authorization", self._get_bkapi_authorization()),
+                # the header is required by the API gateway plugin bk-tenant-validate, for global tenant app!
+                # so we set it to system, it would not be used in the gateway
+                "X-Bk-Tenant-Id": "system",
             },
             "files": files,
         }
