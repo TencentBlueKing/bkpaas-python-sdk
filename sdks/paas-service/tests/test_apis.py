@@ -299,3 +299,51 @@ class TestSvcInstanceViewSet:
         response = view(request, service_id=service.pk)
         response.render()
         assert response.status_code == 404
+
+    def test_retrieve(self, rf, service, instance_with_credentials, platform_client):
+        view = SvcInstanceViewSet.as_view({'get': 'retrieve'})
+
+        request = rf.get(f"/instances/{instance_with_credentials.pk}")
+        request.client = platform_client
+
+        response = view(request, instance_id=instance_with_credentials.pk)
+        response.render()
+        assert response.status_code == 200
+        assert response.data["uuid"] == str(instance_with_credentials.uuid)
+
+    def test_retrieve_to_be_deleted(self, rf, service, instance_with_credentials, platform_client):
+        instance_with_credentials.to_be_deleted=True
+        instance_with_credentials.save()
+
+        view = SvcInstanceViewSet.as_view({'get': 'retrieve'})
+
+        request = rf.get(f"/instances/{instance_with_credentials.pk}/?to_be_deleted=true")
+        request.client = platform_client
+
+        response = view(request, instance_id=instance_with_credentials.pk)
+        response.render()
+        assert response.status_code == 200
+        assert response.data["uuid"] == str(instance_with_credentials.uuid)
+
+    def test_retrieve_when_not_found(self, rf, service, instance_with_credentials, platform_client):
+        instance_with_credentials.to_be_deleted=True
+        instance_with_credentials.save()
+
+        view = SvcInstanceViewSet.as_view({'get': 'retrieve'})
+
+        request = rf.get(f"/instances/{instance_with_credentials.pk}")
+        request.client = platform_client
+
+        response = view(request, instance_id=instance_with_credentials.pk)
+        response.render()
+        assert response.status_code == 404
+
+    def test_retrieve_to_be_deleted_when_not_found(self, rf, service, instance_with_credentials, platform_client):
+        view = SvcInstanceViewSet.as_view({'get': 'retrieve'})
+
+        request = rf.get(f"/instances/{instance_with_credentials.pk}/?to_be_deleted=true")
+        request.client = platform_client
+
+        response = view(request, instance_id=instance_with_credentials.pk)
+        response.render()
+        assert response.status_code == 404

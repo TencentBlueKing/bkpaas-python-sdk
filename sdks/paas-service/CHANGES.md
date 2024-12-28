@@ -1,5 +1,8 @@
 # 版本历史
 
+## 2.0.1
+- Support querying service instance with parameter to_be_deleted 
+
 ## 2.0.0
 - 支持 Python 3.11，移除对 Python 3.6, 3.7 的支持
 
