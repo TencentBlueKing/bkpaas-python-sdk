@@ -22,6 +22,10 @@ from paas_service.models import Plan, Service, ServiceInstance, SpecDefinition, 
 from rest_framework import serializers
 
 
+class ServiceInstanceQuerySLZ(serializers.Serializer):
+    to_be_deleted = serializers.BooleanField(required=False, default=False)
+
+
 class SpecDefinitionSLZ(serializers.ModelSerializer):
     class Meta(object):
         model = SpecDefinition

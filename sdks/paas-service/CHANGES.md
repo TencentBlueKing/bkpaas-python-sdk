@@ -1,4 +1,7 @@
 # 版本历史
+## 1.1.7
+- Support querying service instance with parameter to_be_deleted\
+
 # 1.1.6
 - Loosen the version restriction on sub-dep `pyjwt`
 
