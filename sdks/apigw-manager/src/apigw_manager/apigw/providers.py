@@ -19,7 +19,6 @@ from django.conf import settings
 from django.core.cache import caches
 from django.core.cache.backends.dummy import DummyCache
 from django.http.request import HttpRequest
-from future.utils import raise_from
 
 from apigw_manager.apigw.helper import make_default_public_key_manager
 
@@ -148,6 +147,9 @@ class DefaultJWTProvider(JWTProvider):
     def _decode_jwt_header(self, jwt_payload):
         return jwt.get_unverified_header(jwt_payload)
 
+    def _decode_payload(self, jwt_payload):
+        return jwt.decode(jwt_payload, options={"verify_signature": False})
+
     def provide(self, request: HttpRequest) -> Optional[DecodedJWT]:
         jwt_token = request.META.get(self.jwt_key_name, "")
         if not jwt_token:
@@ -156,9 +158,11 @@ class DefaultJWTProvider(JWTProvider):
         try:
             jwt_header = self._decode_jwt_header(jwt_token)
             gateway_name = jwt_header.get("kid") or self.default_gateway_name
-            public_key = self.public_key_provider.provide(gateway_name, jwt_header.get("iss"))
+            # 兼容bk-esb签发jwt时未在header里面添加 iss
+            iss = jwt_header.get("iss") or self._decode_payload(jwt_token).get("iss", "")
+            public_key = self.public_key_provider.provide(gateway_name, iss)
             if not public_key:
-                logger.warning("no public key found, gateway=%s, issuer=%s", gateway_name, jwt_header.get("iss"))
+                logger.warning("no public key found, gateway=%s, issuer=%s", gateway_name, iss)
                 return None
 
             algorithm = jwt_header.get("alg") or self.algorithm
@@ -168,7 +172,7 @@ class DefaultJWTProvider(JWTProvider):
 
         except jwt.PyJWTError as e:
             if not self.allow_invalid_jwt_token:
-                raise_from(JWTTokenInvalid, e)
+                raise JWTTokenInvalid from e
 
         return None
 

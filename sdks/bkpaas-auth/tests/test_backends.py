@@ -1,15 +1,76 @@
 # -*- coding: utf-8 -*-
+import mock
 import pytest
 from django.test.utils import override_settings
 
 from bkpaas_auth.backends import APIGatewayAuthBackend, UniversalAuthBackend
 from bkpaas_auth.core.constants import ProviderType
+from tests.utils import generate_random_string, mock_json_response, mock_raw_response
 
 
-class TestBackends:
-    def test_basic(self):
-        backend = UniversalAuthBackend()
-        backend.get_user('')
+class TestUniversalAuthBackend:
+
+    @override_settings(BKAUTH_ENABLE_MULTI_TENANT_MODE=False, BKAUTH_BACKEND_TYPE="bk_ticket")
+    @mock.patch('requests.Session.request')
+    def test_authenticate_bk_ticket(self, mock_request, mocker):
+        mock_request.return_value = mock_json_response({"msg": "", "data": {"username": "foo"}, "ret": 0})
+
+        user = UniversalAuthBackend().authenticate(
+            request=mocker.MagicMock(), auth_credentials={"bk_ticket": generate_random_string()}
+        )
+
+        assert user
+        assert not user.is_anonymous
+        assert user.is_authenticated
+        assert user.username == "foo"
+        assert getattr(user, "display_name") == "foo"
+
+    @override_settings(BKAUTH_ENABLE_MULTI_TENANT_MODE=False, BKAUTH_BACKEND_TYPE="bk_token")
+    @mock.patch('requests.Session.request')
+    def test_authenticate_bk_token(self, mock_request, mocker):
+        mock_request.return_value = mock_json_response(
+            {"result": True, "code": 0, "message": "", "data": {"bk_username": "bar"}}
+        )
+
+        user = UniversalAuthBackend().authenticate(
+            request=mocker.MagicMock(), auth_credentials={"bk_token": generate_random_string()}
+        )
+
+        assert user
+        assert not user.is_anonymous
+        assert user.is_authenticated
+        assert user.username == "bar"
+        assert getattr(user, "display_name") == "bar"
+
+    @override_settings(
+        BKAUTH_ENABLE_MULTI_TENANT_MODE=True,
+        BKAUTH_BACKEND_TYPE="bk_token",
+        BKAUTH_USER_INFO_APIGW_URL="fake_url",
+    )
+    @mock.patch('requests.Session.request')
+    def test_authenticate_bk_token_for_tenant_mode(self, mock_request, mocker):
+        mock_request.return_value = mock_raw_response(
+            {
+                "data": {
+                    "bk_username": "5461b239-5ef2-4c81-a682-5907dbd5f394",
+                    "tenant_id": "system",
+                    "display_name": "foo",
+                    "language": "zh-cn",
+                    "time_zone": "Asia/Shanghai",
+                }
+            }
+        )
+
+        user = UniversalAuthBackend().authenticate(
+            request=mocker.MagicMock(), auth_credentials={"bk_token": generate_random_string()}
+        )
+
+        assert user
+        assert not user.is_anonymous
+        assert user.is_authenticated
+        assert user.username == "5461b239-5ef2-4c81-a682-5907dbd5f394"
+        assert getattr(user, "display_name") == "foo"
+        assert getattr(user, "tenant_id") == "system"
 
 
 class TestAPIGatewayAuthBackend:

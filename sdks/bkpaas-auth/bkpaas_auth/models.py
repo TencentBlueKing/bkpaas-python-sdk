@@ -13,7 +13,7 @@ class AbstractUserWithProvider(models.AbstractBaseUser, models.AnonymousUser):
 
     bkpaas_user_id = db_models.CharField(primary_key=True, max_length=255)
     USERNAME_FIELD = 'bkpaas_user_id'
-    USERINFO_FIELDS = ('nickname', 'chinese_name', 'avatar_url', 'email', 'phone')
+    USERINFO_FIELDS = ('display_name', 'tenant_id', 'nickname', 'chinese_name', 'avatar_url', 'email', 'phone')
 
     def __init__(self, provider_type, username):
         if not provider_type:
@@ -79,7 +79,7 @@ class User(AbstractUserWithProvider):
 
         self.update_user_info(info_fields, overwrite_all=True)
         # Use chinesename as nickname
-        if not self.nickname and self.chinese_name:
+        if not self.nickname and self.chinese_name:  # type: ignore
             self.nickname = self.chinese_name
         self.token = token
 

@@ -21,28 +21,32 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: 3.11
       - name: Format with isort
+        working-directory: sdks/blue-krill
         run: |
           pip install isort==5.12.0
-          isort sdks/ --settings-path=sdks/blue-krill/pyproject.toml
+          isort . --settings-path=pyproject.toml
       - name: Format with black
+        working-directory: sdks/blue-krill
         run: |
           pip install black==23.7.0 click==8.1.6
-          black sdks/ --config=sdks/blue-krill/pyproject.toml
+          black . --config=pyproject.toml
       - name: Lint with flake8
+        working-directory: sdks/blue-krill
         run: |
           pip install flake8==4.0.1 pyproject-flake8==0.0.1a5
-          pflake8 sdks/ --config=sdks/blue-krill/pyproject.toml
+          pflake8 . --config=pyproject.toml
       - name: Lint with mypy
+        working-directory: sdks/blue-krill
         run: |
           pip install mypy==0.910 types-requests==2.31.0.2 types-setuptools==57.4.18 types-dataclasses==0.1.7 types-redis==3.5.18 types-PyMySQL==1.1.0.1 types-six==0.1.9 types-toml==0.1.5
-          mypy sdks/blue-krill --config-file=sdks/blue-krill/pyproject.toml
+          mypy . --config-file=pyproject.toml
   test:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
@@ -76,7 +80,7 @@ jobs:
         run: tox
   build:
     runs-on: macos-latest
-    if: github.event.release && contains(github.event.release.tag_name, 'blue_krill')
+    if: github.event.release && contains(github.event.release.tag_name, 'blue-krill')
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python

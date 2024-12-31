@@ -20,6 +20,7 @@ paths:
         allowApplyPermission: false
         matchSubpath: false
         backend:
+          # name: default 支持设置 backend, 默认不配置为 default，和 stage 的 backends 配置的后端服务 name 一致
           type: HTTP
           method: get
           path: /anything
@@ -32,3 +33,25 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         descriptionEn:
+        # 资源插件配置
+        # pluginConfigs:
+        #     - type: bk-rate-limit
+        #       yaml: |-
+        #         rates:
+        #           __default:
+        #           - period: 1
+        #             tokens: 100
+        #     - type: bk-header-rewrite
+        #       yaml: |-
+        #         set:
+        #           - key: test
+        #             value: '2'
+        #         remove: []
+        #     - type: bk-cors
+        #       yaml: |-
+        #         allow_origins: '*'
+        #         allow_methods: '*'
+        #         allow_headers: '*'
+        #         expose_headers: '*'
+        #         max_age: 86400
+        #         allow_credential: false

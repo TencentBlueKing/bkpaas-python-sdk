@@ -14,7 +14,6 @@ import typing
 
 from bkapi.bk_apigateway.client import Client as BKAPIGatewayClient
 from bkapi_client_core.exceptions import ResponseError
-from future.utils import raise_from
 
 from apigw_manager.core.exceptions import ApiException, ApiResponseError, ApiResultError
 
@@ -83,6 +82,9 @@ class Handler(object):
             "data": kwargs,
             "headers": {
                 "X-Bkapi-Authorization": kwargs.pop("x_bkapi_authorization", self._get_bkapi_authorization()),
+                # the header is required by the API gateway plugin bk-tenant-validate, for global tenant app!
+                # so we set it to system, it would not be used in the gateway
+                "X-Bk-Tenant-Id": "system",
             },
             "files": files,
         }
@@ -96,7 +98,7 @@ class Handler(object):
             message = "%s\n%s\nResponse: %s" % (err, err.curl_command, err.response_text)
             raise ApiResponseError(message)
         except Exception as err:
-            raise_from(ApiException(operation_id), err)
+            raise ApiException(operation_id) from err
 
     def _parse_result(self, result, convertor, code=0):
         """Check the code and convert the result"""

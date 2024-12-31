@@ -1,5 +1,15 @@
 # 版本历史
 
+## 3.1.0
+- feat: UniversalAuthBackend 支持获取用户租户身份信息
+
+## 3.0.0
+- BreakChange: 不再支持 Python 3.6，3.7
+- BreakChange: Django 版本要求 >=4.2，<5.0
+
+## 2.1.0
+- fix: 修复 APIGatewayAuthBackend 不兼容 ^3.0.0 以上的 apigw_manager
+
 ## 2.0.8
 - 将认证信息标准化到请求头 X-Bkapi-Authorization 中
 

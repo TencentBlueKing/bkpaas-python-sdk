@@ -9,11 +9,12 @@
  * specific language governing permissions and limitations under the License.
 """
 import os
+import re
 import zipfile
 
 import yaml
 from bkapi_client_core.config import SettingKeys, settings
-from packaging.version import Version as _Version
+from packaging.version import Version as _Version, InvalidVersion
 
 from apigw_manager.core import configuration
 
@@ -106,12 +107,54 @@ class ZipArchiveFile:
         for root, _, files in os.walk(path):
             for name in files:
                 file_path = os.path.join(root, name)
-                path_to_name[file_path] = file_path[len(path) :]
+                path_to_name[file_path] = file_path[len(path):]
 
         return path_to_name
 
 
+# 自定义VERSION_PATTERN
+VERSION_PATTERN = r"""
+    v?
+    (?:
+        (?:(?P<epoch>[0-9]+)!)?                           # epoch
+        (?P<release>[0-9]+(?:\.[0-9]+)*)                  # release segment
+        (?P<pre>                                          # pre-release
+            [-_\.]?
+            (?P<pre_l>alpha|a|beta|b|preview|pre|c|rc)
+            [-_\.]?
+            (?P<pre_n>[0-9]+)?
+        )?
+        (?P<post>                                         # post release
+            (?:-(?P<post_n1>[0-9]+))
+            |
+            (?:
+                [-_\.]?
+                (?P<post_l>post|rev|r)
+                [-_\.]?
+                (?P<post_n2>[0-9]+)?
+            )
+        )?
+        (?P<dev>                                          # dev release
+            [-_\.]?
+            (?P<dev_l>dev)
+            [-_\.]?
+            (?P<dev_n>[0-9]+)?
+        )?
+    )
+    (?:\+(?P<local>[a-z0-9]+(?:[-_\.][a-z0-9]+)*))?       # local version
+    (?:-(?P<extra>[a-zA-Z0-9]+(?:[-_\.][a-zA-Z0-9]+)*))?  # extra pre-release tags
+"""
+
+
 class SemVersion(_Version):
+    _regex = re.compile(r"^\s*" + VERSION_PATTERN + r"\s*$", re.VERBOSE | re.IGNORECASE)
+
+    def __init__(self, version):
+        match = self._regex.match(version)
+        if not match:
+            raise InvalidVersion(f"Invalid version: '{version}'")
+        super().__init__(version)
+
     @property
     def pre(self):
         pre = self._version.pre

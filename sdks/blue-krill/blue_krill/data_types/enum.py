@@ -192,7 +192,16 @@ class StructuredEnumMeta(EnumMeta):
 
 
 class StructuredEnum(OrigEnum, metaclass=StructuredEnumMeta):
-    """Structured Enum type, providing extra features such as getting enum members as choices tuple"""
+    """
+    Structured Enum type, providing extra features such as getting enum members as choices tuple
+
+    NOTE: XEnum(str / int, StructuredEnum) not working in string formatting since python 3.11，
+    please use StrStructuredEnum / IntStructuredEnum instead of StructuredEnum
+    refs:
+      - https://github.com/python/cpython/issues/100458
+      - https://github.com/TencentBlueKing/bkpaas-python-sdk/issues/190
+      - https://blog.pecar.me/python-enum
+    """
 
     @classmethod
     def get_django_choices(cls) -> List[Tuple[Any, str]]:
@@ -227,3 +236,26 @@ class StructuredEnum(OrigEnum, metaclass=StructuredEnumMeta):
         """Get Choices for all field members."""
         members = cls.get_field_members()
         return [(field.real_value, field.label) for field in members.values()]
+
+
+try:
+    # python 3.11+ required
+    from enum import StrEnum, IntEnum
+except ImportError:
+    pass
+else:
+    class StrStructuredEnum(StructuredEnum, StrEnum):
+        """
+        StrStructuredEnum ensures the literals in f-string / str.format() is real_value
+
+        Important: Use XEnum(StrStructuredEnum) instead of XEnum(str, StructuredEnum) since python 3.11
+        """
+        pass
+
+    class IntStructuredEnum(StructuredEnum, IntEnum):
+        """
+        IntStructuredEnum ensures the literals in f-string / str.format() is real_value
+
+        Important: Use XEnum(IntStructuredEnum) instead of XEnum(int, StructuredEnum) since python 3.11
+        """
+        pass

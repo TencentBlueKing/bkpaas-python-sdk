@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import inspect
 import logging
 import pickle
 from typing import Dict, Optional, Union
@@ -12,12 +13,13 @@ from django.utils.encoding import force_bytes
 
 from bkpaas_auth.conf import bkauth_settings
 from bkpaas_auth.core.constants import ProviderType
-from bkpaas_auth.core.exceptions import InvalidTokenCredentialsError, ServiceError
+from bkpaas_auth.core.exceptions import InvalidTokenCredentialsError, ResponseError, ServiceError
 from bkpaas_auth.core.plugins import BkTicketPlugin, BkTokenPlugin
 from bkpaas_auth.core.token import (
     LoginToken,
     RequestBackend,
     TokenRequestBackend,
+    UserAccount,
     create_user_from_token,
     mocked_create_user_from_token,
 )
@@ -36,13 +38,15 @@ class UniversalAuthBackend:
     """
 
     request: HttpRequest
+    plugin: Union[BkTicketPlugin, BkTokenPlugin]
+    request_backend: Union[RequestBackend, TokenRequestBackend]
 
     def __init__(self):
         self.backend_type = bkauth_settings.BACKEND_TYPE
-        if self.backend_type == 'bk_ticket':
+        if self.backend_type == "bk_ticket":
             self.plugin = BkTicketPlugin()
             self.request_backend = RequestBackend()
-        elif self.backend_type == 'bk_token':
+        elif self.backend_type == "bk_token":
             self.plugin = BkTokenPlugin()
             self.request_backend = TokenRequestBackend()
         else:
@@ -50,27 +54,41 @@ class UniversalAuthBackend:
 
     def authenticate(self, request: HttpRequest, auth_credentials: Dict) -> Optional[Union[User, AnonymousUser]]:
         try:
-            username = self.request_backend.request_username(**auth_credentials)
+            user_account: UserAccount = self.request_backend.request_user_account(**auth_credentials)
+
+            if bkauth_settings.ENABLE_MULTI_TENANT_MODE and not user_account.tenant_id:
+                raise ImproperlyConfigured(
+                    "No tenant information found. You may check whether BKAUTH_USER_INFO_APIGW_URL is set to "
+                    "correct gateway url that can retrieve the user's tenant information"
+                )
+
             login_token = generate_random_token()
             token = LoginToken(
                 login_token=login_token,
                 expires_in=bkauth_settings.LOGIN_TOKEN_EXPIRE_IN,
             )
-            token.user_info = UserInfo(username=username)
-            logger.debug('New login token exchanged by credentials')
+            token.user_info = UserInfo(
+                username=user_account.bk_username,
+                display_name=user_account.display_name,
+                tenant_id=user_account.tenant_id,
+            )
+            logger.debug("New login token exchanged by credentials")
+        except ResponseError as e:
+            logger.warning(f"authenticate error: {e}")
+            return None
         except InvalidTokenCredentialsError:
-            logger.warning('authenticate error, invalid credentials given')
+            logger.warning("authenticate error: invalid credentials given")
             return None
         except ServiceError:
-            logger.warning('authenticate error, Error requesting third-party API service')
+            logger.warning("authenticate error: unable to request backend services")
             return None
 
         return self.get_user_by_token(token)
 
     def get_user(self, user_id):
         """Get user from current session"""
-        if not hasattr(self, 'request'):
-            return
+        if not hasattr(self, "request"):
+            return None
 
         # Try to get login_token from session
         token = self.get_token_from_session(self.request)
@@ -79,6 +97,7 @@ class UniversalAuthBackend:
             # A: 由于 get_user_by_token 需要访问远程服务, 但事实上在 authenticate 时, 用户信息已经被缓存到 token 对象中.
             #    为了减少网络开销, 所以直接调用 create_user_from_token.
             return create_user_from_token(token)
+        return None
 
     def get_credentials(self, *args, **kwargs):
         return self.plugin.get_credentials(*args, **kwargs)
@@ -89,10 +108,10 @@ class UniversalAuthBackend:
             return None
 
         try:
-            user_token_pickled = force_bytes(request.session['user_token'], 'latin1')
+            user_token_pickled = force_bytes(request.session["user_token"], "latin1")
             user_token: LoginToken = pickle.loads(user_token_pickled)
-        except Exception as error:
-            logger.exception("pickle loads user_token failed, %s", error)
+        except Exception:
+            logger.exception("pickle loads user_token failed")
             return None
 
         # token 已经过期则不返回，否则会出现 403
@@ -142,7 +161,7 @@ class DjangoAuthUserCompatibleBackend(UniversalAuthBackend):
 
     def connect_to_django_user(self, user: User):
         """Connect bkpaas_auth.User to the UserModel in the database."""
-        UserModel = get_user_model()
+        UserModel = get_user_model()  # noqa: N806
         if self.create_unknown_user:
             db_user, created = UserModel._default_manager.get_or_create(**{UserModel.USERNAME_FIELD: user.username})
             if created:
@@ -160,13 +179,16 @@ class DjangoAuthUserCompatibleBackend(UniversalAuthBackend):
             db_user.provider_type = user.provider_type
             db_user.bkpaas_user_id = user.bkpaas_user_id
             db_user.token = user.token
+            db_user.display_name = getattr(user, "display_name", user.username)
+            db_user.tenant_id = getattr(user, "tenant_id", None)
+
         return db_user
 
     def configure_user(self, db_user, bk_user: User):
         """
         Configure a user after creation and return the updated user.
         """
-        default_admin_superusers = getattr(settings, 'DEFAULT_ADMIN_SUPERUSERS', [])
+        default_admin_superusers = getattr(settings, "DEFAULT_ADMIN_SUPERUSERS", [])
         if db_user.username in default_admin_superusers:
             db_user.is_active = True
             db_user.is_staff = True
@@ -180,17 +202,44 @@ class DjangoAuthUserCompatibleBackend(UniversalAuthBackend):
 class APIGatewayAuthBackend:
     """This backend is to be used in conjunction with the ``ApiGatewayJWTUserMiddleware``
     found in the middleware module of ``apigw_manager`` package.
+
     """
 
-    def authenticate(self, request, api_name, bk_username, verified, **credential):
+    def authenticate_with_signature_v3(self, request, gateway_name, bk_username, verified, **credentials):
+        """authenticate function with signature required by ApiGatewayJWTUserMiddleware in apigw_manager == '^3.0.0'"""
         if not verified:
             return self.make_anonymous_user(bk_username)
 
         return User(
-            token=LoginToken('any_token', expires_in=86400),
+            token=LoginToken("any_token", expires_in=86400),
             provider_type=self.get_provider_type(),
             username=bk_username,
         )
+
+    def authenticate_with_signature_v1(self, request, api_name, bk_username, verified, **credentials):
+        """authenticate function with signature required by ApiGatewayJWTUserMiddleware in apigw_manager == '^1.0.0'"""
+        if not verified:
+            return self.make_anonymous_user(bk_username)
+
+        return User(
+            token=LoginToken("any_token", expires_in=86400),
+            provider_type=self.get_provider_type(),
+            username=bk_username,
+        )
+
+    try:
+        from apigw_manager.apigw.authentication import ApiGatewayJWTUserMiddleware
+
+        get_user_parameters = sorted(inspect.signature(ApiGatewayJWTUserMiddleware.get_user).parameters.keys())
+        v3_parameters = sorted(inspect.signature(authenticate_with_signature_v3).parameters.keys())
+        if get_user_parameters == v3_parameters:
+            authenticate = authenticate_with_signature_v3
+        else:
+            authenticate = authenticate_with_signature_v1  # type: ignore
+        del get_user_parameters
+        del v3_parameters
+    except ImportError:
+        authenticate = authenticate_with_signature_v1  # type: ignore
 
     def get_user(self, user_id):
         raise NotImplementedError(
@@ -199,7 +248,7 @@ class APIGatewayAuthBackend:
         )
 
     def get_provider_type(self):
-        name = getattr(settings, 'BKAUTH_DEFAULT_PROVIDER_TYPE', "RTX")
+        name = getattr(settings, "BKAUTH_DEFAULT_PROVIDER_TYPE", "RTX")
         return getattr(ProviderType, name)
 
     def make_anonymous_user(self, bk_username=None):

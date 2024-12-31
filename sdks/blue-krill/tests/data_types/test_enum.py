@@ -220,3 +220,39 @@ class TestStructuredEnum:
 
     def test_get_values(self):
         assert UserType.get_values() == [1, 2, 3, 4]
+
+
+try:
+    from blue_krill.data_types.enum import StrStructuredEnum, IntStructuredEnum
+except ImportError:
+    pass
+else:
+    class StrDemoEnum(StrStructuredEnum):
+        FOO = "foo"
+        BAR = "bar"
+
+    class TestStrStructuredEnum:
+        def test_value_compare(self):
+            assert StrDemoEnum.FOO == "foo"
+            assert StrDemoEnum.BAR.value == "bar"
+
+        def test_string_formatting(self):
+            assert str(StrDemoEnum.BAR) == "bar"
+            assert "%s" % StrDemoEnum.FOO == "foo"
+            assert "{}".format(StrDemoEnum.BAR) == "bar"
+            assert f"{StrDemoEnum.FOO}-{StrDemoEnum.BAR}" == "foo-bar"
+
+    class IntDemoEnum(IntStructuredEnum):
+        FOO = 1
+        BAR = 2
+
+    class TestIntStructuredEnum:
+        def test_value_compare(self):
+            assert IntDemoEnum.FOO == 1
+            assert IntDemoEnum.BAR.value == 2
+
+        def test_string_formatting(self):
+            assert str(IntDemoEnum.BAR) == "2"
+            assert "%s" % IntDemoEnum.FOO == "1"
+            assert "{}".format(IntDemoEnum.BAR) == "2"
+            assert f"{IntDemoEnum.FOO}-{IntDemoEnum.BAR}" == "1-2"

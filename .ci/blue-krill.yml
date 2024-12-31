@@ -2,13 +2,13 @@ version: v2.0
 
 name: "Publish blue-krill to pypi"
 on:
-  tag: [ "blue_krill-*" ]
+  tag: ["blue-krill-*"]
 
 stages:
-- template: poetry-build-and-publish.yaml
-  parameters:
-    username: "${{ settings.PYPI.username }}"
-    password: "${{ settings.PYPI.password }}"
-    project: "sdks/blue-krill"
-    repository-url: "https://upload.pypi.org/legacy/"
-    runner-image: "435495971/bkci:ubuntu-python3.9"
+  - template: poetry-build-and-publish.yaml
+    parameters:
+      username: "${{ settings.PYPI.username }}"
+      password: "${{ settings.PYPI.password }}"
+      project: "sdks/blue-krill"
+      repository-url: "https://upload.pypi.org/legacy/"
+      runner-image: "435495971/bkci:ubuntu-python3.9"

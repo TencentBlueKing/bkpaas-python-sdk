@@ -16,7 +16,6 @@ from django.core.cache.backends.dummy import DummyCache
 from apigw_manager.apigw import authentication, providers
 from apigw_manager.apigw.providers import CachePublicKeyProvider, DefaultJWTProvider, SettingsPublicKeyProvider
 
-
 @pytest.fixture()
 def mock_response(mocker):
     return mocker.MagicMock()
@@ -243,13 +242,17 @@ class TestUserModelBackend:
         self.backend = authentication.UserModelBackend()
 
     def test_authenticate_user(self, mock_request):
-        user = self.backend.authenticate(mock_request, gateway_name="test", bk_username="admin", verified=True)
+        user = self.backend.authenticate(
+            mock_request, gateway_name="test", bk_username="admin", tenant_id="system", verified=True
+        )
         assert not isinstance(user, AnonymousUser)
         assert user.username == "admin"
         assert user.is_authenticated is True
 
     def test_authenticate_anonymous_user(self, mock_request):
-        user = self.backend.authenticate(mock_request, gateway_name="test", bk_username="admin", verified=False)
+        user = self.backend.authenticate(
+            mock_request, gateway_name="test", bk_username="admin", tenant_id="system", verified=False
+        )
         assert isinstance(user, AnonymousUser)
         assert user.username == "admin"
         assert user.is_authenticated is False

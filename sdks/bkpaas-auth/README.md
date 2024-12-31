@@ -60,6 +60,22 @@ BKAUTH_USER_COOKIE_VERIFY_URL = "http://bk-login-web/api/v3/is_login/"
 BKAUTH_DEFAULT_PROVIDER_TYPE = 'RTX'  # 可选值：RTX/UIN/BK，详见 ProviderType
 ```
 
+启用多租户模式时, 需要更新上面的 settings
+```python
+# 启用多租户模式
+BKAUTH_ENABLE_MULTI_TENANT_MODE = True
+
+# 用户登录态认证类型
+BKAUTH_BACKEND_TYPE = "bk_token" # 只能选择：bk_token
+
+# 验证用户信息的网关 API(租户版本)
+# 如 BK_API_URL_TMPL.format(api_name="bk-login") + "/prod/login/api/v3/open/bk-tokens/userinfo/"
+BKAUTH_USER_INFO_APIGW_URL = ""
+
+# [可选]`BKAUTH_DEFAULT_PROVIDER_TYPE` 的值用于 JWT 校验时获取默认的用户认证类型。
+BKAUTH_DEFAULT_PROVIDER_TYPE = 'BK'  # 只能选择：BK
+```
+
 2. 在 app config 中进行 patch：
 
 配置登录模块的 apps.py
@@ -130,6 +146,8 @@ class YourDjangoAuthUserCompatibleBackend(DjangoAuthUserCompatibleBackend):
         ...
         return db_user
 ```
+
+> 说明: 启用多租户模式后, user 会增加 tenant_id 和 display_name 两个字段，可以通过 `request.user.tenant_id` 获取租户 ID, 通过 `request.user.display_name` 获取用户展示名。
 
 #### 和 [apigw-manager](../apigw-manager) 集成
 该 SDK 可以和 apigw-manager 集成，完成网关 JWT 的校验，在 settings 中配置：

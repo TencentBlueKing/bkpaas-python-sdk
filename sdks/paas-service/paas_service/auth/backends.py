@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 class AuthFailedError(Exception):
-    """Raised when one authenticater fails"""
+    """Raised when one authenticator fails"""
 
 
 class InstanceAuthFailed(Exception):
@@ -66,8 +66,8 @@ class AuthResult:
         self.extra_payload = extra_payload
 
 
-class JWTClientAuthenticater:
-    """Authenticater using JWT clients"""
+class JWTClientAuthenticator:
+    """Authenticator using JWT clients"""
 
     def __init__(self):
         try:
@@ -112,7 +112,7 @@ class JWTClientAuthenticater:
 
     @staticmethod
     def _validate_payload(client: Dict, payload: Dict) -> bool:
-        """Validates given JWT payload, a valid payload must contains at least 2 fields:
+        """Validates given JWT payload, a valid payload must contain at least 2 fields:
         'iss' and 'expires_at'.
         """
         expires_at = payload.get('expires_at')
@@ -136,13 +136,13 @@ class InstanceAuthBackend:
     TOKEN_KEY = 'token'
 
     def __init__(self):
-        self.authenticaters = [JWTClientAuthenticater()]
+        self.authenticators = [JWTClientAuthenticator()]
 
     def get_token(self, request: WSGIRequest):
         return request.GET.get(self.TOKEN_KEY, None)
 
     def invoke(self, request: WSGIRequest) -> ServiceInstance:
-        """Invoke currrent bakend
+        """Invoke current backend
 
         :raises: InstanceAuthFailed
         """
@@ -150,7 +150,7 @@ class InstanceAuthBackend:
         if not token:
             raise InstanceAuthFailed('token parameter is missing')
 
-        for auth in self.authenticaters:
+        for auth in self.authenticators:
             try:
                 result = auth.authenticate(token)
                 break
@@ -189,7 +189,7 @@ def sign_role_aware_token(client_name: str, role_name: str) -> str:
 
 
 def _sign_token(client_name: str, additional_payload: Dict) -> str:
-    """Sign a new JWT token using given client's crendentials, this token can be used
+    """Sign a new JWT token using given client's credentials, this token can be used
     for an InstanceAuthBackend's authentication process.
 
     :returns: a JWT token which will expires after 3600 seconds
@@ -199,6 +199,6 @@ def _sign_token(client_name: str, additional_payload: Dict) -> str:
         if client_name == client_data['iss']:
             payload = {'iss': client_name, 'expires_at': int(time.time()) + 3600}
             payload.update(additional_payload)
-            return jwt.encode(payload, key=client_data['key'], algorithm=client_data['algorithm']).decode()
+            return jwt.encode(payload, key=client_data['key'], algorithm=client_data['algorithm'])
     else:
         raise ValueError(f'client name {client_name} is invalid')

@@ -22,5 +22,4 @@ class Context(models.Model):
 
     class Meta:
         unique_together = ("scope", "key")
-        index_together = ("scope", "key")
         db_table = "apigw_manager_context"

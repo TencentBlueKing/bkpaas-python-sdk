@@ -39,8 +39,4 @@ class Migration(migrations.Migration):
             name='context',
             unique_together=set([('scope', 'key')]),
         ),
-        migrations.AlterIndexTogether(
-            name='context',
-            index_together=set([('scope', 'key')]),
-        ),
     ]

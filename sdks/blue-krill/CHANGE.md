@@ -1,5 +1,21 @@
 ## Change logs
 
+### 2.0.7
+
+- Feature: (py 3.11+) add StrStructuredEnum, IntStructuredEnum class
+
+### 2.0.6
+
+- Fix: update urllib3 version
+
+### 2.0.5
+
+- Feature: support python 3.11
+
+### 2.0.4
+
+- Fix：支持不配置加密算法类型，使用默认类型 Fernet
+
 ### 2.0.3
 
 - Loosen the version restriction on sub-dep `cryptography`

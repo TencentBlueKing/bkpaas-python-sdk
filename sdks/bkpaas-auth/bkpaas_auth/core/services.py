@@ -7,11 +7,10 @@ from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
 
 from bkpaas_auth.conf import bkauth_settings as conf
-from bkpaas_auth.core.exceptions import ServiceError
-from bkpaas_auth.core.http import http_get
+from bkpaas_auth.core.exceptions import HttpRequestError, ServiceError
+from bkpaas_auth.core.http import http_get, resp_to_json
 from bkpaas_auth.core.user_info import BkUserInfo, RtxUserInfo
 from bkpaas_auth.utils import scrub_data
-
 
 logger = logging.getLogger(__name__)
 
@@ -40,15 +39,21 @@ def _get_and_cache_user_info(cache_key, user_params, response_ok_checker):
     if cached_result:
         return cached_result
 
-    is_success, result = http_get(
-        conf.TOKEN_USER_INFO_ENDPOINT,
-        headers={
-            "X-Bkapi-Authorization": json.dumps(dict(user_params, **get_app_credentials())),
-        },
-        params=user_params,
-    )
-    if not is_success:
+    try:
+        resp = http_get(
+            conf.TOKEN_USER_INFO_ENDPOINT,
+            headers={
+                "X-Bkapi-Authorization": json.dumps(dict(user_params, **get_app_credentials())),
+            },
+            params=user_params,
+        )
+    except HttpRequestError:
         raise ServiceError('Unable to get user info')
+
+    result = resp_to_json(resp)
+
+    if not isinstance(result, dict):
+        raise ValueError(f'response type expect dict, got: {result}')
 
     if not response_ok_checker(result):
         logger.error(

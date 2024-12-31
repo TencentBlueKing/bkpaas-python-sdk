@@ -5,10 +5,10 @@
 # 1.1.6
 - Loosen the version restriction on sub-dep `pyjwt`
 
-# 1.1.5
+## 1.1.5
 - 支持通过 name 查询 service instance
 
-# 1.1.4
+## 1.1.4
 - 版权申明格式修改
 
 ## 1.1.3

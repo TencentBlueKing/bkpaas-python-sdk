@@ -31,8 +31,8 @@ readme = ''
 setup(
     long_description=readme,
     name='paas_service',
-    version='1.1.5',
-    python_requires='<3.11,>=3.6.2',
+    version='2.0.0',
+    python_requires='<3.12,>=3.8',
     author='blueking',
     author_email='blueking@tencent.com',
     packages=[
@@ -44,12 +44,17 @@ setup(
     ],
     package_dir={"": "."},
     package_data={},
-    install_requires=['blue-krill>=1.0.15', 'django-translated-fields', 'jsonfield', 'pyjwt==1.*,>=1.6.4'],
+    install_requires=[
+        'jsonfield',
+        'pyjwt>=2.4.0'
+        'django-translated-fields',
+        'blue-krill>=2.0.7',
+        "django>=4.2.16",
+        "djangorestframework>=3.15.2",
+    ],
     extras_require={
         "dev": [
-            "django==1.11.20",
-            "django-dynamic-fixture==2.0.0",
-            "djangorestframework>=3.5.0",
+            "django-dynamic-fixture>=4.0.1",
             "pytest",
             "pytest-django",
             "six==1.12.0",

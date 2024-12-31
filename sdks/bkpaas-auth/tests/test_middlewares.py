@@ -5,12 +5,6 @@ from contextlib import contextmanager
 from typing import Dict
 
 import pytest
-from bkpaas_auth.backends import UniversalAuthBackend
-from bkpaas_auth.core.constants import ACCESS_PERMISSION_DENIED_CODE, ProviderType
-from bkpaas_auth.core.exceptions import AccessPermissionDenied
-from bkpaas_auth.core.token import LoginToken
-from bkpaas_auth.middlewares import CookieLoginMiddleware, auth
-from bkpaas_auth.models import User
 from django.contrib.auth import SESSION_KEY, get_user_model
 from django.contrib.auth.middleware import AuthenticationMiddleware
 from django.contrib.auth.models import AnonymousUser
@@ -19,6 +13,12 @@ from django.http import HttpRequest
 from django.test.utils import override_settings
 from mock import MagicMock, patch
 
+from bkpaas_auth.backends import UniversalAuthBackend
+from bkpaas_auth.core.constants import ACCESS_PERMISSION_DENIED_CODE, ProviderType
+from bkpaas_auth.core.exceptions import AccessPermissionDenied
+from bkpaas_auth.core.token import LoginToken
+from bkpaas_auth.middlewares import CookieLoginMiddleware, auth
+from bkpaas_auth.models import User
 from tests.utils import generate_random_string
 
 
@@ -34,11 +34,11 @@ def username():
 
 @pytest.fixture
 def dj_request(rf, bk_token):
-    request = rf.get('/')
-    SessionMiddleware().process_request(request)
-    AuthenticationMiddleware().process_request(request)
-    request.COOKIES['bk_token'] = bk_token
-    return request
+    req = rf.get('/')
+    SessionMiddleware(MagicMock()).process_request(req)
+    AuthenticationMiddleware(MagicMock()).process_request(req)
+    req.COOKIES['bk_token'] = bk_token
+    return req
 
 
 def create_uin_user(uin):
@@ -80,7 +80,7 @@ class TestCookieLoginMiddleware:
             assert isinstance(dj_request.user, AnonymousUser)
 
     def test_authenticated_user_has_no_access_permissions(self, db, dj_request):
-        middleware = FakeCookieLoginMiddleware()
+        middleware = FakeCookieLoginMiddleware(MagicMock())
         with patch("bkpaas_auth.backends.UniversalAuthBackend.get_credentials") as mocked_get_token:
             mocked_get_token.return_value = {'bk_token': dj_request.COOKIES['bk_token']}
             resp = middleware.process_request(dj_request)

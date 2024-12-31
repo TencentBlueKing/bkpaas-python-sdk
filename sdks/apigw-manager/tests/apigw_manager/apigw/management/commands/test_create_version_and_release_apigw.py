@@ -27,6 +27,7 @@ def default_command_flags(definition_file):
         "title": "",
         "comment": "",
         "generate_sdks": False,
+        "no_pub": False,
     }
 
 
@@ -160,11 +161,11 @@ def test_should_create_resource_version(mocker, command, defined_version, latest
     ],
 )
 def test_get_version_to_be_created(
-    command,
-    datetime_now,
-    defined_version,
-    resource_version_exists,
-    expected,
+        command,
+        datetime_now,
+        defined_version,
+        resource_version_exists,
+        expected,
 ):
     result = command._get_version_to_be_created(
         parse_version(defined_version),
@@ -177,15 +178,15 @@ def test_get_version_to_be_created(
 
 class TestHandle:
     def test_handle_version_not_change(
-        self,
-        command,
-        fetcher,
-        releaser,
-        faker,
-        definition_file,
-        resource_sync_manager,
-        fake_resource_version,
-        default_command_flags,
+            self,
+            command,
+            fetcher,
+            releaser,
+            faker,
+            definition_file,
+            resource_sync_manager,
+            fake_resource_version,
+            default_command_flags,
     ):
         definition_file.write(yaml.dump(fake_resource_version))
         stage = faker.pystr()
@@ -210,15 +211,15 @@ class TestHandle:
         )
 
     def test_handle_version_not_change_but_dirty(
-        self,
-        command,
-        fetcher,
-        releaser,
-        faker,
-        definition_file,
-        resource_sync_manager,
-        fake_resource_version,
-        default_command_flags,
+            self,
+            command,
+            fetcher,
+            releaser,
+            faker,
+            definition_file,
+            resource_sync_manager,
+            fake_resource_version,
+            default_command_flags,
     ):
         definition_file.write(yaml.dump(fake_resource_version))
         stage = faker.pystr()
@@ -255,14 +256,14 @@ class TestHandle:
         )
 
     def test_handle_version_changed(
-        self,
-        command,
-        fetcher,
-        releaser,
-        faker,
-        definition_file,
-        fake_resource_version,
-        default_command_flags,
+            self,
+            command,
+            fetcher,
+            releaser,
+            faker,
+            definition_file,
+            fake_resource_version,
+            default_command_flags,
     ):
         defined_version = "1.0.0-alpha2"
         definition_file.write(
@@ -299,15 +300,15 @@ class TestHandle:
         )
 
     def test_handle_version_not_set(
-        self,
-        command,
-        fetcher,
-        releaser,
-        faker,
-        definition_file,
-        resource_sync_manager,
-        fake_resource_version,
-        default_command_flags,
+            self,
+            command,
+            fetcher,
+            releaser,
+            faker,
+            definition_file,
+            resource_sync_manager,
+            fake_resource_version,
+            default_command_flags,
     ):
         definition_file.write(
             yaml.dump(
@@ -351,3 +352,29 @@ class TestHandle:
             comment=fake_resource_version["comment"],
             stage_names=stage,
         )
+
+    def test_handle_without_release(
+            self,
+            command,
+            fetcher,
+            releaser,
+            faker,
+            definition_file,
+            resource_sync_manager,
+            fake_resource_version,
+            default_command_flags,
+    ):
+        definition_file.write(yaml.dump(fake_resource_version))
+        stage = faker.pystr()
+
+        default_command_flags["no_pub"] = True
+
+        fetcher.latest_resource_version.return_value = fake_resource_version
+
+        resource_sync_manager.is_dirty.return_value = False
+
+        command.handle(stage=stage, **default_command_flags)
+
+        releaser.create_resource_version.assert_not_called()
+
+        releaser.releaser.release.assert_not_called()

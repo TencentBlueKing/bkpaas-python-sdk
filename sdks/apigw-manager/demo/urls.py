@@ -9,12 +9,12 @@
  specific language governing permissions and limitations under the License.
 """
 
-from django.conf.urls import url
+from django.urls import re_path
 
 from demo import views
 
 urlpatterns = [
-    url(r"^test/jwt/?", views.jwt_info),
-    url(r"^test/app/?", views.jwt_app),
-    url(r"^test/user/?", views.jwt_user),
+    re_path(r"^test/jwt/?", views.jwt_info),
+    re_path(r"^test/app/?", views.jwt_app),
+    re_path(r"^test/user/?", views.jwt_user),
 ]

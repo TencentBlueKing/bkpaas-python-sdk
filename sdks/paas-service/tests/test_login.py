@@ -46,7 +46,7 @@ class TestAuthenticationViewSet:
     @override_settings(PAAS_SERVICE_JWT_CLIENTS=PAAS_SERVICE_JWT_CLIENTS)
     def test_normal(self, admin_client, instance):
         payload = {'iss': 'c1', 'service_instance_id': str(instance.uuid), 'expires_at': time.time() + 3600}
-        token = jwt.encode(payload, key='foobar', algorithm='HS256').decode()
+        token = jwt.encode(payload, key='foobar', algorithm='HS256')
         # paas-service 默认重定向的视图名称为 instance.index, 需要由业务自行实现
         with pytest.raises(NoReverseMatch) as e:
             admin_client.get("/authenticate/", data={"token": token})
@@ -56,7 +56,7 @@ class TestAuthenticationViewSet:
     @override_settings(PAAS_SERVICE_JWT_CLIENTS=PAAS_SERVICE_JWT_CLIENTS)
     def test_redirect_url(self, admin_client, instance):
         payload = {'iss': 'c1', 'service_instance_id': str(instance.uuid), 'expires_at': time.time() + 3600}
-        token = jwt.encode(payload, key='foobar', algorithm='HS256').decode()
+        token = jwt.encode(payload, key='foobar', algorithm='HS256')
         resp = admin_client.get("/authenticate/", data={"token": token, "redirect_url": "api.services.instance"})
         assert resp.status_code == 302
         assert resp.url == f"/instances/{instance.uuid}/"

@@ -162,7 +162,7 @@ storage.delete('/test/temp_file.txt')
 
 ## 开发指南
 
-首先安装 [poetry](https://github.com/python-poetry/poetry) ，之后在项目目录下执行 `poetry env use python3.6` 初始化开发用虚拟环境。然后用 `poetry shell` 命令激活虚拟环境。
+首先安装 [poetry](https://github.com/python-poetry/poetry) ，之后在项目目录下执行 `poetry env use python3.11` 初始化开发用虚拟环境。然后用 `poetry shell` 命令激活虚拟环境。
 
 - 执行 `poetry install` 安装所有依赖
 - 使用 `pytest -s .` 执行所有单元测试
@@ -174,12 +174,3 @@ storage.delete('/test/temp_file.txt')
 ### 发布包
 
 首先，执行 `poetry build` 命令在 dist 目录下生成当前版本的包。然后执行 `twine upload dist/* --repository-url {pypi_address} --username {your_name} --password {your_token}` 将其上传到 pypi 服务器上。
-
-### 关于 setup.py
-
-虽然在 [PEP 517](https://python-poetry.org/docs/pyproject/#poetry-and-pep-517) 规范里，Python 包不再需要 `setup.py` 文件。但真正少了 `setup.py` 文件后，会发现有些功能就没法正常使用，比如 pip 的可编辑安装模式、tox 等（ [相关文档](https://github.com/python-poetry/poetry/issues/761) ）。所以我们仍然需要它。
-
-为了避免维护重复的 `pyproject.toml` 和 `setup.py` 文件，我们使用了 [dephell](https://github.com/dephell/dephell) 工具来自动生成 `setup.py` 文件。
-
-- 安装 dephell
-- 在根目录执行 `dephell deps convert --from pyproject.toml --to setup.py`

@@ -23,7 +23,7 @@ from django.core.exceptions import ImproperlyConfigured, SuspiciousOperation
 from django.core.files.base import File
 from django.core.files.storage import Storage
 from django.utils.deconstruct import deconstructible
-from django.utils.encoding import filepath_to_uri, force_bytes, force_text, smart_str
+from django.utils.encoding import filepath_to_uri, force_bytes, force_str, smart_str
 from django.utils.timezone import is_naive, localtime
 from six import BytesIO, string_types
 from six.moves.urllib import parse as urlparse
@@ -46,8 +46,8 @@ def percent_encode(input_str, safe=SAFE_CHARS, encoding=None):
     encoding = encoding or setting('RGW_FILE_NAME_CHARSET', 'utf-8')
 
     if not isinstance(input_str, string_types):
-        input_str = force_text(input_str, encoding)
-    return quote(force_text(input_str, encoding).encode('utf-8'), safe=safe)
+        input_str = force_str(input_str, encoding)
+    return quote(force_str(input_str, encoding).encode('utf-8'), safe=safe)
 
 
 # Start patch botocore to fix Non-ascii filename exception
@@ -408,7 +408,7 @@ class RGWBoto3Storage(Storage):
         return smart_str(name, encoding=self.file_name_charset)
 
     def _decode_name(self, name):
-        return force_text(name, encoding=self.file_name_charset)
+        return force_str(name, encoding=self.file_name_charset)
 
     def _compress_content(self, content):
         """Gzip a given string content."""

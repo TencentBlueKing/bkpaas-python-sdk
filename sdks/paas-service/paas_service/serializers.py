@@ -76,6 +76,10 @@ class ServiceInstanceSLZ(serializers.ModelSerializer):
         exclude = ['config', 'credentials']
 
 
+class ServiceInstanceQuerySLZ(serializers.Serializer):
+    to_be_deleted = serializers.BooleanField(required=False, default=False)
+
+
 class ServiceInstanceBinderSLZ(serializers.Serializer):
     config = serializers.DictField(required=False, default=dict)
     credentials = serializers.DictField(required=True)

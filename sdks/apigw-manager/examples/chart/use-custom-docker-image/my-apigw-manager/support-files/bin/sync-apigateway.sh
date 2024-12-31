@@ -26,6 +26,8 @@ title "fetch apigateway public key"
 apigw-manager.sh fetch_apigw_public_key --gateway-name=${gateway_name} --print > "apigateway.pub"
 
 title "releasing"
+# 创建资源版本并发布；指定参数 --generate-sdks 时，会同时生成资源版本对应的网关 SDK, 指定 --stage stage1 stage2 时会发布指定环境,不设置则发布所有环境
+# 指定参数 --no-pub 则只生成版本，不发布
 call_definition_command_or_exit create_version_and_release_apigw "${definition_file}" --gateway-name=${gateway_name}
 
 title "done"

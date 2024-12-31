@@ -1,0 +1,59 @@
+# reference: https://github.com/TencentBlueKing/bkpaas-python-sdk/tree/master/sdks/apigw-manager
+spec_version: 2
+
+release:
+  version: "{{ settings.BK_APIGW_RELEASE_VERSION }}"
+  title: "{{ settings.BK_APIGW_RELEASE_TITLE }}"
+  comment: "{{ settings.BK_APIGW_RELEASE_COMMENT }}"
+
+apigateway:
+  description: "{{ settings.BK_APIGW_DESCRIPTION }}"
+  description_en: "{{ settings.BK_APIGW_DESCRIPTION_EN }}"
+  is_public: {{ settings.BK_APIGW_IS_PUBLIC }}
+  api_type: {{ settings.BK_APIGW_IS_OFFICIAL }}
+  maintainers:
+  {% if settings.BK_APIGW_MAINTAINERS %}
+    {% for maintainer in settings.BK_APIGW_MAINTAINERS %}
+      - "{{ maintainer }}"
+    {% endfor %}
+  {% else %}
+    - "admin"
+  {% endif %}
+
+stages:
+  - name: "{{ settings.BK_APIGW_STAGE_NAME }}"
+    description: "{{ settings.BK_APIGW_STAGE_DESCRIPTION }}"
+    description_en: "{{ settings.BK_APIGW_STAGE_DESCRIPTION_EN }}"
+    {% if settings.BK_APIGW_STAGE_BACKEND_SUBPATH %}
+    vars:
+      api_sub_path: {{ settings.BK_APIGW_STAGE_BACKEND_SUBPATH }}
+    {% else %}
+    vars: {}
+    {% endif %}
+    backends:
+      - name: "default"
+        config:
+          timeout: {{ settings.BK_APIGW_STAG_BACKEND_TIMEOUT }}
+          loadbalance: "roundrobin"
+          hosts:
+            - host: "{{ settings.BK_APIGW_STAGE_BACKEND_HOST }}"
+              weight: 100
+    {% if settings.BK_APIGW_STAGE_PLUGIN_CONFIGS %}
+    plugin_configs:
+      {% for plugin_config in settings.BK_APIGW_STAGE_PLUGIN_CONFIGS %}
+      - type: {{ plugin_config.type }}
+        yaml: |-
+          {{ plugin_config.yaml }}
+      {% endfor %}
+    {% endif %}
+
+{% if settings.BK_APIGW_GRANT_PERMISSION_DIMENSION_GATEWAY_APP_CODES %}
+grant_permissions:
+  {% for app_code in settings.BK_APIGW_GRANT_PERMISSION_DIMENSION_GATEWAY_APP_CODES %}
+  - bk_app_code: "{{ app_code }}"
+    grant_dimension: "gateway"
+  {% endfor %}
+{% endif %}
+
+related_apps:
+  - "{{ settings.BK_APP_CODE }}"

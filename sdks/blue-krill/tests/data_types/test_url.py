@@ -19,7 +19,8 @@ from tests.utils import generate_random_string
 class TestMutableURL:
     @pytest.fixture
     def part_scheme(self):
-        return generate_random_string(10)
+        # Python 3.11 开始，限制 scheme 必须以字母开头
+        return 'x' + generate_random_string(9)
 
     @pytest.fixture
     def part_username(self):
