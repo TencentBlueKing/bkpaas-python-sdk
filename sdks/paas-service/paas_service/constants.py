@@ -28,3 +28,5 @@ class Category(int, Enum):
 
 # Login 服务的重定向链接字段名
 REDIRECT_FIELD_NAME = "c_url"
+
+DEFAULT_TENANT_ID = "default"

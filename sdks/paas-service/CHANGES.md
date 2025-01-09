@@ -1,4 +1,6 @@
 # 版本历史
+## 2.0.2
+- Support multi tenant 
 
 ## 2.0.1
 - Support querying service instance with parameter to_be_deleted 

@@ -28,8 +28,9 @@ from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 from jsonfield import JSONField
 from translated_fields import TranslatedField
-
 from blue_krill.models.fields import EncryptField
+
+from paas_service.constants import DEFAULT_TENANT_ID
 
 # Base Models start
 
@@ -214,6 +215,8 @@ def render_instance_data(request: HttpRequest, instance: ServiceInstance) -> Dic
 
 class Plan(UuidAuditedModel):
     name = models.CharField(verbose_name='方案名称', max_length=64)
+    display_name = models.CharField("方案展示名称", max_length=64, default="")
+    tenant_id = models.CharField(help_text="所属租户", max_length=128, default=DEFAULT_TENANT_ID)
 
     # the "properties" field stores custom properties of a plan object. the property itself is
     # nothing more than a simple annotation. But the service hub which it was registed to may
