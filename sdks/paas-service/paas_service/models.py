@@ -30,7 +30,8 @@ from jsonfield import JSONField
 from translated_fields import TranslatedField
 from blue_krill.models.fields import EncryptField
 
-from paas_service.constants import DEFAULT_TENANT_ID
+from paas_service.fields import tenant_id_field_factory
+
 
 # Base Models start
 
@@ -135,7 +136,8 @@ class ServiceInstance(UuidAuditedModel):
 
     service = models.ForeignKey('Service', verbose_name='服务', null=True, on_delete=models.SET_NULL)
     plan = models.ForeignKey(
-        'Plan', verbose_name='方案', null=True, help_text="当前仅当迁移的增强服务实例, 会没有 plan", on_delete=models.SET_NULL
+        'Plan', verbose_name='方案', null=True, help_text="当前仅当迁移的增强服务实例, 会没有 plan",
+        on_delete=models.SET_NULL
     )
     config = JSONField(default=dict, blank=True)
     credentials = EncryptField(default="")
@@ -215,8 +217,6 @@ def render_instance_data(request: HttpRequest, instance: ServiceInstance) -> Dic
 
 class Plan(UuidAuditedModel):
     name = models.CharField(verbose_name='方案名称', max_length=64)
-    display_name = models.CharField("方案展示名称", max_length=64, default="")
-    tenant_id = models.CharField(help_text="所属租户", max_length=128, default=DEFAULT_TENANT_ID)
 
     # the "properties" field stores custom properties of a plan object. the property itself is
     # nothing more than a simple annotation. But the service hub which it was registed to may
@@ -231,10 +231,11 @@ class Plan(UuidAuditedModel):
     service = models.ForeignKey('Service', related_name='plans', verbose_name='服务', on_delete=models.CASCADE)
 
     specifications = models.ManyToManyField(Specification, verbose_name='规格', blank=True)
+    tenant_id = tenant_id_field_factory()
 
     class Meta:
         verbose_name_plural = verbose_name = '方案'
-        unique_together = ("service", "name")
+        unique_together = ("service", "name", "tenant_id")
 
     def __str__(self):
         return f"{self.name}-{self.service.name}"
@@ -248,8 +249,8 @@ class Plan(UuidAuditedModel):
         specifications = dict.fromkeys(d.name for d in self.service.specifications.all())
 
         # 填充真实值
-        for spec in self.specifications.filter(definition__name__in=specifications.keys(),).prefetch_related(
-            "definition"
+        for spec in self.specifications.filter(definition__name__in=specifications.keys(), ).prefetch_related(
+                "definition"
         ):  # type: Specification
             specifications[spec.definition.name] = spec.value
 
