@@ -246,7 +246,7 @@ class Plan(UuidAuditedModel):
 
     class Meta:
         verbose_name_plural = verbose_name = '方案'
-        unique_together = ("service", "name", "tenant_id")
+        unique_together = ("tenant_id", "service", "name")
 
     def __str__(self):
         return f"{self.name}-{self.service.name}"

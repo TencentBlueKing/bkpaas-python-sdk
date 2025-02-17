@@ -212,6 +212,7 @@ class TestPlanManageViewSet:
         [
             {"name": "Plan", "specifications": {"foo": "Bar"}},
             {"name": "Plan", "specifications": {"foo": "Bar"}, "properties": {}},
+            {"name": "Plan", "specifications": {"foo": "Bar"}, "properties": {}, "tenant_id": "tenant_id_x"},
         ],
     )
     def test_update(self, rf, service, spec_def, plan, platform_client, plan_data):
@@ -240,13 +241,14 @@ class TestPlanManageViewSet:
         spec = plan.specifications.get(definition=spec_def)
         assert spec.value == "Bar"
 
-    def aaatest_create(self, rf, service, spec_def, platform_client):
+    def test_create(self, rf, service, spec_def, platform_client):
         plan_data = {
             "name": "Plan",
             "specifications": {"foo": "Bar"},
             "properties": {},
             "service": str(service.uuid),
             "region": "r1",
+            "tenant_id": "tenant_id_x",
         }
 
         view = PlanManageViewSet.as_view({'post': 'create'})

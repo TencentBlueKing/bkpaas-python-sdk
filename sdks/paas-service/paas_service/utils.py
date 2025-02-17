@@ -33,10 +33,10 @@ except ImportError:
 
 
 def gen_unique_id(
-        name: str,
-        namespace: str = "default",
-        reserve_length: int = 12,
-        divide_char: str = "-",
+    name: str,
+    namespace: str = "default",
+    reserve_length: int = 12,
+    divide_char: str = "-",
 ):
     """Generate an unique id via given name
     :param name 原字符串
