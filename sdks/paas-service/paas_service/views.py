@@ -299,12 +299,15 @@ class SvcInstanceConfigViewSet(viewsets.ViewSet):
     def update(self, request, instance_id):
         """Update an instance's config"""
         instance = get_object_or_404(ServiceInstance, pk=instance_id)
-        slz = serializers.InstanceConfigSLZ(data=request.data)
+        data = request.data
+        data["tenant_id"] = instance.tenant_id
+        slz = serializers.InstanceConfigSLZ(data=data)
         slz.is_valid(raise_exception=True)
 
         # Update config
         config, _ = ServiceInstanceConfig.objects.update_or_create(
-            instance=instance, tenant_id=instance.tenant_id,defaults={'paas_app_info': slz.validated_data['paas_app_info']}
+            instance=instance, tenant_id=instance.tenant_id,
+            defaults={'paas_app_info': slz.validated_data['paas_app_info']}
         )
         resp_slz = serializers.InstanceConfigSLZ(config)
         return Response(resp_slz.data)

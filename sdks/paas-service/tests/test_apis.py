@@ -53,6 +53,7 @@ class TestInstanceConfigUpdate:
         response.render()
         assert response.status_code == 200
         assert response.data['paas_app_info']['app_id'] == 'foo'
+        assert response.data['tenant_id'] == DEFAULT_TENANT_ID
 
 
 class TestInstanceConfigRetrieve:
@@ -83,6 +84,7 @@ class TestInstanceConfigRetrieve:
         response.render()
         assert response.status_code == 200
         assert response.data['paas_app_info']['app_id'] == 'foo'
+        assert response.data['tenant_id'] == DEFAULT_TENANT_ID
 
 
 class TestServiceManageViewSet:
@@ -290,6 +292,7 @@ class TestSvcInstanceViewSet:
         response.render()
         assert response.status_code == 200
         assert response.data['uuid'] == str(instance_with_credentials.uuid)
+        assert response.data['tenant_id'] == DEFAULT_TENANT_ID
 
     def test_retrieve_by_fields_when_not_found(self, rf, service, platform_client):
         name = 'test'
@@ -328,6 +331,7 @@ class TestSvcInstanceViewSet:
         response.render()
         assert response.status_code == 200
         assert response.data["uuid"] == str(instance_with_credentials.uuid)
+        assert response.data['tenant_id'] == DEFAULT_TENANT_ID
 
     def test_retrieve_when_not_found(self, rf, service, instance_with_credentials, platform_client):
         instance_with_credentials.to_be_deleted = True
