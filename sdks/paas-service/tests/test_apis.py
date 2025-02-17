@@ -51,7 +51,6 @@ class TestInstanceConfigUpdate:
 
         response = view(request, instance_id=instance.pk)
         response.render()
-        print(response)
         assert response.status_code == 200
         assert response.data['paas_app_info']['app_id'] == 'foo'
 
