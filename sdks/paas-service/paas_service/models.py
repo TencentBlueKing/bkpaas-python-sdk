@@ -61,7 +61,10 @@ class UuidAuditedModel(AuditedModel):
 
 
 class SpecDefinition(UuidAuditedModel):
-    """Specification definition"""
+    """Specification definition
+
+    [multi-tenancy] This model is not tenant-aware.
+    """
 
     index = models.IntegerField(verbose_name=_('顺序'), default=0)
     name = models.CharField(verbose_name=_('名称'), unique=True, max_length=64, null=True)
@@ -83,7 +86,10 @@ class SpecDefinition(UuidAuditedModel):
 
 
 class Specification(UuidAuditedModel):
-    """Specification value"""
+    """Specification value
+
+    [multi-tenancy] This model is not tenant-aware.
+    """
 
     definition = models.ForeignKey(SpecDefinition, verbose_name=_('定义'), on_delete=models.CASCADE)
     value = models.CharField(verbose_name=_('值'), max_length=64)
@@ -103,7 +109,10 @@ class Specification(UuidAuditedModel):
 
 
 class Service(UuidAuditedModel):
-    """Service model for PaaS"""
+    """Service model for PaaS
+
+    [multi-tenancy] This model is not tenant-aware.
+    """
 
     name = models.CharField(verbose_name='服务名称', unique=True, max_length=64)
     category = models.IntegerField(verbose_name='服务分类')
@@ -142,6 +151,7 @@ class ServiceInstance(UuidAuditedModel):
     config = JSONField(default=dict, blank=True)
     credentials = EncryptField(default="")
     to_be_deleted = models.BooleanField(default=False)
+    tenant_id = tenant_id_field_factory()
 
     class Meta:
         verbose_name_plural = verbose_name = '服务实例'
@@ -177,6 +187,7 @@ class ServiceInstanceConfig(UuidAuditedModel):
 
     instance = models.OneToOneField(ServiceInstance, verbose_name='服务实例', on_delete=models.CASCADE)
     paas_app_info = JSONField(default=dict, blank=True, verbose_name='平台应用信息')
+    tenant_id = tenant_id_field_factory()
 
     def was_initialized(self) -> bool:
         """Return if current config object was initialized"""
@@ -258,7 +269,10 @@ class Plan(UuidAuditedModel):
 
 
 class ResourceId(models.Model):
-    """utility model for avoiding name conflict"""
+    """utility model for avoiding name conflict
+
+    [multi-tenancy] This model is not tenant-aware.
+    """
 
     namespace = models.CharField(max_length=32)
     uid = models.CharField(max_length=64, null=False, unique=True, db_index=True)

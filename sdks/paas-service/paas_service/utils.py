@@ -33,10 +33,10 @@ except ImportError:
 
 
 def gen_unique_id(
-    name: str,
-    namespace: str = "default",
-    reserve_length: int = 12,
-    divide_char: str = "-",
+        name: str,
+        namespace: str = "default",
+        reserve_length: int = 12,
+        divide_char: str = "-",
 ):
     """Generate an unique id via given name
     :param name 原字符串
@@ -60,7 +60,7 @@ def gen_unique_id(
 
 def get_paas_app_info(instance: ServiceInstance) -> Optional[Dict]:
     """Get instance's related PaaS app infomations Dict"""
-    config, _ = ServiceInstanceConfig.objects.get_or_create(instance=instance)
+    config, _ = ServiceInstanceConfig.objects.get_or_create(instance=instance, tenant_id=instance.tenant_id)
     if not config.was_initialized():
         return None
 

@@ -36,7 +36,6 @@ from rest_framework.response import Response
 
 logger = logging.getLogger(__name__)
 
-
 m_verified_client_required = method_decorator(verified_client_required)
 
 
@@ -166,6 +165,7 @@ class SvcInstanceViewSet(viewsets.ViewSet):
             plan=plan,
             config=instance_data.config,
             credentials=json.dumps(instance_data.credentials),
+            tenant_id=plan.tenant_id,
         )
         service_instance.prerender(request)
         return Response(serializers.ServiceInstanceSLZ(service_instance).data, status=201)
@@ -288,7 +288,7 @@ class SvcInstanceConfigViewSet(viewsets.ViewSet):
     def retrieve(self, request, instance_id):
         """Retrieve an instance's config"""
         instance = get_object_or_404(ServiceInstance, pk=instance_id)
-        config, _ = ServiceInstanceConfig.objects.get_or_create(instance=instance)
+        config, _ = ServiceInstanceConfig.objects.get_or_create(instance=instance, tenant_id=instance.tenant_id)
         if not config.was_initialized():
             return Response(data={'detail': 'config was not initialized yet'}, status=400)
 
@@ -304,7 +304,7 @@ class SvcInstanceConfigViewSet(viewsets.ViewSet):
 
         # Update config
         config, _ = ServiceInstanceConfig.objects.update_or_create(
-            instance=instance, defaults={'paas_app_info': slz.validated_data['paas_app_info']}
+            instance=instance, tenant_id=instance.tenant_id,defaults={'paas_app_info': slz.validated_data['paas_app_info']}
         )
         resp_slz = serializers.InstanceConfigSLZ(config)
         return Response(resp_slz.data)

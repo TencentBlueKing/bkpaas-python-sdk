@@ -38,7 +38,7 @@ def plan(service):
 
 @pytest.fixture
 def instance(service, plan):
-    return ServiceInstance.objects.create(service=service, plan=plan)
+    return ServiceInstance.objects.create(service=service, plan=plan,tenant_id=plan.tenant_id)
 
 
 @pytest.fixture
@@ -46,7 +46,7 @@ def instance_with_credentials(service, plan):
     credentials = """
     {"host": "host.test", "port": "0000", "name": "bkapp-test", "user": "bkapp-test", "password": "password"}
     """
-    return ServiceInstance.objects.create(service=service, plan=plan,credentials=credentials)
+    return ServiceInstance.objects.create(service=service, plan=plan,credentials=credentials,tenant_id=plan.tenant_id)
 
 
 @pytest.fixture
