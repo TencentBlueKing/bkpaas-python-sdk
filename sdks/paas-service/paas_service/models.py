@@ -260,8 +260,8 @@ class Plan(UuidAuditedModel):
         specifications = dict.fromkeys(d.name for d in self.service.specifications.all())
 
         # 填充真实值
-        for spec in self.specifications.filter(definition__name__in=specifications.keys(), ).prefetch_related(
-                "definition"
+        for spec in self.specifications.filter(definition__name__in=specifications.keys(),).prefetch_related(
+            "definition"
         ):  # type: Specification
             specifications[spec.definition.name] = spec.value
 
