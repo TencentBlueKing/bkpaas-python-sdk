@@ -28,3 +28,8 @@ class Category(int, Enum):
 
 # Login 服务的重定向链接字段名
 REDIRECT_FIELD_NAME = "c_url"
+
+# The default tenant id exists only if the project does not enable multi-tenant mode,
+# it serves as a reserved value. When multi-tenant mode is enabled, no tenant id can
+# be "default".
+DEFAULT_TENANT_ID = "default"

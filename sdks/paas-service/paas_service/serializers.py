@@ -96,6 +96,7 @@ class PaaSAppInfoSLZ(serializers.Serializer):
 
 class InstanceConfigSLZ(serializers.Serializer):
     paas_app_info = PaaSAppInfoSLZ(required=True)
+    tenant_id = serializers.CharField(max_length=64, read_only=True)
 
 
 ############################

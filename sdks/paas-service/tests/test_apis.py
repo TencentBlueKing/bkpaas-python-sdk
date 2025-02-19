@@ -19,6 +19,7 @@ to the current version of the project delivered to anyone in the future.
 import json
 
 import pytest
+from paas_service.constants import DEFAULT_TENANT_ID
 from paas_service.models import Plan, Service, ServiceInstanceConfig, SpecDefinition, Specification
 from paas_service.views import PlanManageViewSet, ServiceManageViewSet, SvcInstanceConfigViewSet, SvcInstanceViewSet
 
@@ -52,6 +53,7 @@ class TestInstanceConfigUpdate:
         response.render()
         assert response.status_code == 200
         assert response.data['paas_app_info']['app_id'] == 'foo'
+        assert response.data['tenant_id'] == DEFAULT_TENANT_ID
 
 
 class TestInstanceConfigRetrieve:
@@ -76,12 +78,13 @@ class TestInstanceConfigRetrieve:
         request.client = platform_client
 
         config, _ = ServiceInstanceConfig.objects.update_or_create(
-            instance=instance, defaults={'paas_app_info': {'app_id': 'foo'}}
+            instance=instance, tenant_id=instance.tenant_id, defaults={'paas_app_info': {'app_id': 'foo'}}
         )
         response = view(request, instance_id=instance.pk)
         response.render()
         assert response.status_code == 200
         assert response.data['paas_app_info']['app_id'] == 'foo'
+        assert response.data['tenant_id'] == DEFAULT_TENANT_ID
 
 
 class TestServiceManageViewSet:
@@ -101,6 +104,7 @@ class TestServiceManageViewSet:
         assert len(service_data["plans"]) == 1
         plan_data = service_data["plans"][0]
         assert plan_data["uuid"] == str(plan.uuid)
+        assert plan_data["tenant_id"] == DEFAULT_TENANT_ID
 
     @pytest.mark.parametrize(
         "service_data",
@@ -206,6 +210,7 @@ class TestPlanManageViewSet:
         [
             {"name": "Plan", "specifications": {"foo": "Bar"}},
             {"name": "Plan", "specifications": {"foo": "Bar"}, "properties": {}},
+            {"name": "Plan", "specifications": {"foo": "Bar"}, "properties": {}, "tenant_id": "tenant_id_x"},
         ],
     )
     def test_update(self, rf, service, spec_def, plan, platform_client, plan_data):
@@ -234,13 +239,14 @@ class TestPlanManageViewSet:
         spec = plan.specifications.get(definition=spec_def)
         assert spec.value == "Bar"
 
-    def aaatest_create(self, rf, service, spec_def, platform_client):
+    def test_create(self, rf, service, spec_def, platform_client):
         plan_data = {
             "name": "Plan",
             "specifications": {"foo": "Bar"},
             "properties": {},
             "service": str(service.uuid),
             "region": "r1",
+            "tenant_id": "tenant_id_x",
         }
 
         view = PlanManageViewSet.as_view({'post': 'create'})
@@ -286,6 +292,7 @@ class TestSvcInstanceViewSet:
         response.render()
         assert response.status_code == 200
         assert response.data['uuid'] == str(instance_with_credentials.uuid)
+        assert response.data['tenant_id'] == DEFAULT_TENANT_ID
 
     def test_retrieve_by_fields_when_not_found(self, rf, service, platform_client):
         name = 'test'
@@ -312,7 +319,7 @@ class TestSvcInstanceViewSet:
         assert response.data["uuid"] == str(instance_with_credentials.uuid)
 
     def test_retrieve_to_be_deleted(self, rf, service, instance_with_credentials, platform_client):
-        instance_with_credentials.to_be_deleted=True
+        instance_with_credentials.to_be_deleted = True
         instance_with_credentials.save()
 
         view = SvcInstanceViewSet.as_view({'get': 'retrieve'})
@@ -324,9 +331,10 @@ class TestSvcInstanceViewSet:
         response.render()
         assert response.status_code == 200
         assert response.data["uuid"] == str(instance_with_credentials.uuid)
+        assert response.data['tenant_id'] == DEFAULT_TENANT_ID
 
     def test_retrieve_when_not_found(self, rf, service, instance_with_credentials, platform_client):
-        instance_with_credentials.to_be_deleted=True
+        instance_with_credentials.to_be_deleted = True
         instance_with_credentials.save()
 
         view = SvcInstanceViewSet.as_view({'get': 'retrieve'})

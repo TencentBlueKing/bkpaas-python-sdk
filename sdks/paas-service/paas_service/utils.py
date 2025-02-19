@@ -60,7 +60,7 @@ def gen_unique_id(
 
 def get_paas_app_info(instance: ServiceInstance) -> Optional[Dict]:
     """Get instance's related PaaS app infomations Dict"""
-    config, _ = ServiceInstanceConfig.objects.get_or_create(instance=instance)
+    config, _ = ServiceInstanceConfig.objects.get_or_create(instance=instance, tenant_id=instance.tenant_id)
     if not config.was_initialized():
         return None
 
