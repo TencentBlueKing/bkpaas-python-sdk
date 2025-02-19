@@ -200,46 +200,54 @@ class DjangoAuthUserCompatibleBackend(UniversalAuthBackend):
 
 
 class APIGatewayAuthBackend:
-    """This backend is to be used in conjunction with the ``ApiGatewayJWTUserMiddleware``
-    found in the middleware module of ``apigw_manager`` package.
+    """Authentication backend for API Gateway JWT validation.
 
+    This backend works with ``ApiGatewayJWTUserMiddleware`` from the ``apigw_manager`` package to handle JWT-based authentication.
     """
 
-    def authenticate_with_signature_v3(self, request, gateway_name, bk_username, verified, **credentials):
+    _TOKEN_EXPIRE_TIME = 86400  # 24 hours in seconds
+
+    def _create_authenticated_user(self, username: str, provider_type: ProviderType) -> User:
+        """Create a user object for authenticated requests."""
+        return User(
+            token=LoginToken("any_token", expires_in=self._TOKEN_EXPIRE_TIME),
+            provider_type=provider_type,
+            username=username,
+        )
+
+    def _authenticate_common(self, verified: bool, username: Optional[str]) -> Union[User, AnonymousUser]:
+        """Common authentication logic for all versions."""
+        if not verified or not username:
+            return self.make_anonymous_user(username)
+
+        return self._create_authenticated_user(username=username, provider_type=self.get_provider_type())
+
+    def authenticate_with_signature_v3(
+        self, request: HttpRequest, gateway_name: str, bk_username: str, verified: bool, **credentials: Dict
+    ) -> Union[User, AnonymousUser]:
         """authenticate function with signature required by ApiGatewayJWTUserMiddleware in apigw_manager == '^3.0.0'"""
-        if not verified:
-            return self.make_anonymous_user(bk_username)
+        return self._authenticate_common(verified, bk_username)
 
-        return User(
-            token=LoginToken("any_token", expires_in=86400),
-            provider_type=self.get_provider_type(),
-            username=bk_username,
-        )
-
-    def authenticate_with_signature_v1(self, request, api_name, bk_username, verified, **credentials):
+    def authenticate_with_signature_v1(
+        self, request: HttpRequest, api_name: str, bk_username: str, verified: bool, **credentials: Dict
+    ) -> Union[User, AnonymousUser]:
         """authenticate function with signature required by ApiGatewayJWTUserMiddleware in apigw_manager == '^1.0.0'"""
-        if not verified:
-            return self.make_anonymous_user(bk_username)
-
-        return User(
-            token=LoginToken("any_token", expires_in=86400),
-            provider_type=self.get_provider_type(),
-            username=bk_username,
-        )
+        return self._authenticate_common(verified, bk_username)
 
     try:
         from apigw_manager.apigw.authentication import ApiGatewayJWTUserMiddleware
 
-        get_user_parameters = sorted(inspect.signature(ApiGatewayJWTUserMiddleware.get_user).parameters.keys())
-        v3_parameters = sorted(inspect.signature(authenticate_with_signature_v3).parameters.keys())
-        if get_user_parameters == v3_parameters:
-            authenticate = authenticate_with_signature_v3
-        else:
+        get_user_parameters = inspect.signature(ApiGatewayJWTUserMiddleware.get_user).parameters.keys()
+        # django 的 authenticate 方法会保证向后兼容参数，调用方新增参数不会影响用户认证（认证只用到了 verified 这个参数）
+        # apigw_manager 的 3.0.0 版本开始 将 api_name 修改为了 gateway_name，导致无法保证向后兼容，所以需要单独处理
+        # https://github.com/django/django/blob/stable/4.2.x/django/contrib/auth/__init__.py#L69
+        if "api_name" in get_user_parameters and "gateway_name" not in get_user_parameters:
             authenticate = authenticate_with_signature_v1  # type: ignore
+        else:
+            authenticate = authenticate_with_signature_v3  # type: ignore
         del get_user_parameters
-        del v3_parameters
     except ImportError:
-        authenticate = authenticate_with_signature_v1  # type: ignore
+        authenticate = authenticate_with_signature_v3  # type: ignore
 
     def get_user(self, user_id):
         raise NotImplementedError(
