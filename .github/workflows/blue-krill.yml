@@ -22,21 +22,11 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.11
-      - name: Format with isort
+      - name: Check with ruff
         working-directory: sdks/blue-krill
         run: |
-          pip install isort==5.12.0
-          isort . --settings-path=pyproject.toml
-      - name: Format with black
-        working-directory: sdks/blue-krill
-        run: |
-          pip install black==23.7.0 click==8.1.6
-          black . --config=pyproject.toml
-      - name: Lint with flake8
-        working-directory: sdks/blue-krill
-        run: |
-          pip install flake8==4.0.1 pyproject-flake8==0.0.1a5
-          pflake8 . --config=pyproject.toml
+          pip install ruff==0.9.6
+          ruff check --conf=../../pyproject.toml
       - name: Lint with mypy
         working-directory: sdks/blue-krill
         run: |
@@ -73,7 +63,7 @@ jobs:
         run: |
           # "poetry export" is no longer included in poetry 2, must install manually
           python -m pip install poetry-plugin-export
-          poetry export --without-hashes --dev -o requirements-dev.txt
+          poetry export --without-hashes --with=dev -o requirements-dev.txt
           python -m pip install --upgrade pip
           python -m pip install -r requirements-dev.txt
           python -m pip install tox-gh-actions==2.8.1
