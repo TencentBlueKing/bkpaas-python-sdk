@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
-"""
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
+
 from typing import Any, Dict, List, Optional, Union
 
 from django.utils.functional import cached_property
@@ -18,7 +25,7 @@ try:
     import redis
     from redis import sentinel  # noqa
 except ImportError as _e:
-    raise ImportError('Error loading redis module: %s.\n' 'Did you install a suitable version for redis?' % _e) from _e
+    raise ImportError("Error loading redis module: %s.\n" "Did you install a suitable version for redis?" % _e) from _e
 
 SentinelHost = Dict[str, Optional[Union[str, int]]]
 
@@ -53,12 +60,12 @@ class SentinelBackend:
 
     @cached_property
     def client(self) -> redis.Redis:
-        self.connection_kwargs['db'] = self.db
+        self.connection_kwargs["db"] = self.db
         if self.password:
-            self.connection_kwargs['password'] = self.password
+            self.connection_kwargs["password"] = self.password
 
         sentinel_instance = sentinel.Sentinel(
-            [(cp['host'], cp['port']) for cp in self.hosts],
+            [(cp["host"], cp["port"]) for cp in self.hosts],
             sentinel_kwargs=self.sentinel_kwargs,
             **self.connection_kwargs,
         )
@@ -66,11 +73,11 @@ class SentinelBackend:
 
     def _parse_from_url(self, url: str):
         """从 url 解析出主机端口等信息"""
-        chunks = url.split(';')
+        chunks = url.split(";")
 
         parts = MutableURL(url=chunks[0])
         self._validate_scheme(parts.scheme)
-        hosts = [{'host': parts.hostname, 'port': parts.port}]
+        hosts = [{"host": parts.hostname, "port": parts.port}]
 
         self._db = self._extract_db(parts.path)
         self._password = parts.password
@@ -78,7 +85,7 @@ class SentinelBackend:
         for chunk in chunks[1:]:
             parts = MutableURL(url=chunk)
             self._validate_scheme(parts.scheme)
-            hosts.append({'host': parts.hostname, 'port': parts.port})
+            hosts.append({"host": parts.hostname, "port": parts.port})
 
         self._hosts = hosts
 
@@ -91,7 +98,7 @@ class SentinelBackend:
         if not path:
             return 0
 
-        if path.startswith('/'):
+        if path.startswith("/"):
             path = path[1:]
 
         try:
@@ -100,5 +107,5 @@ class SentinelBackend:
             return 0
 
     def _validate_scheme(self, scheme: str):
-        if scheme != 'sentinel':
-            raise ValueError('url must be sentinel scheme')
+        if scheme != "sentinel":
+            raise ValueError("url must be sentinel scheme")

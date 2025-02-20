@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
-"""
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
+
 import logging
 import os
 import secrets
@@ -27,16 +34,16 @@ logger = logging.getLogger(__name__)
 try:
     METRIC_CLIENT_TOKEN_DICT = settings.METRIC_CLIENT_TOKEN_DICT
     if not isinstance(METRIC_CLIENT_TOKEN_DICT, dict):
-        raise ValueError('client token dict must be dict')
+        raise ValueError("client token dict must be dict")  # noqa: TRY004, TRY301
 except (AttributeError, ValueError) as e:
     raise ImproperlyConfigured("METRIC_CLIENT_TOKEN_DICT is not properly configured") from e
 
 
-class WSGIResponse(namedtuple('WSGIResponse', 'status data')):
+class WSGIResponse(namedtuple("WSGIResponse", "status data")):
     """A simple wsgi response wrapper class"""
 
     def write_to(self, start_response: Callable) -> Iterable:
-        response_headers = [('Content-type', CONTENT_TYPE_LATEST), ('Content-Length', str(len(self.data)))]
+        response_headers = [("Content-type", CONTENT_TYPE_LATEST), ("Content-Length", str(len(self.data)))]
         start_response(self.status, response_headers)
         return iter([self.data])
 
@@ -68,9 +75,9 @@ class PrometheusExposeHandler(WSGIHandler):
                 #   2. all given extra registry objects, usually registed with custom collectors
                 for r in [registry, *extra_registries]:
                     data_chunks.append(generate_latest(r))
-                data = b''.join(data_chunks)
+                data = b"".join(data_chunks)
 
-                return WSGIResponse('200 OK', data).write_to(start_response)
+                return WSGIResponse("200 OK", data).write_to(start_response)
 
         else:
             logger.info("enable prometheus using single process mode")
@@ -99,20 +106,20 @@ class PrometheusExposeHandler(WSGIHandler):
 class HandlerAuthenticater:
     """Authenticater for prometheus handler"""
 
-    key_username, key_password = 'client_id', 'user_token'
+    key_username, key_password = "client_id", "user_token"
 
     def __init__(self, credentials: Dict[str, str]):
         self.credentials = credentials
 
     def validate_request(self, request) -> bool:
         """Validate a given request"""
-        username = request.GET.get(self.key_username, '')
-        password = request.GET.get(self.key_password, '')
+        username = request.GET.get(self.key_username, "")
+        password = request.GET.get(self.key_password, "")
         if not (username and password):
             return False
-        return secrets.compare_digest(password, self.credentials.get(username, ''))
+        return secrets.compare_digest(password, self.credentials.get(username, ""))
 
     def generate_failed_response(self) -> WSGIResponse:
         """Generate a failed response"""
-        data = b'permission denied, no valid client_id/token provided'
-        return WSGIResponse('403 FORBIDDEN', data)
+        data = b"permission denied, no valid client_id/token provided"
+        return WSGIResponse("403 FORBIDDEN", data)

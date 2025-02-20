@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
-"""
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
+
 from decimal import Decimal
 
 import six
@@ -20,7 +27,7 @@ _PROTECTED_TYPES = (
 )
 
 
-def force_text(s, encoding='utf-8', strings_only=False, errors='strict'):
+def force_text(s, encoding="utf-8", strings_only=False, errors="strict"):
     """
     Similar to django's force_text function
     """
@@ -34,7 +41,7 @@ def force_text(s, encoding='utf-8', strings_only=False, errors='strict'):
                     s = six.text_type(s, encoding, errors)
                 else:
                     s = six.text_type(s)
-            elif hasattr(s, '__unicode__'):
+            elif hasattr(s, "__unicode__"):
                 s = six.text_type(s)
             else:
                 s = six.text_type(bytes(s), encoding, errors)
@@ -43,7 +50,7 @@ def force_text(s, encoding='utf-8', strings_only=False, errors='strict'):
             # errors), so that if s is a SafeBytes, it ends up being a
             # SafeText at the end.
             s = s.decode(encoding, errors)
-    except UnicodeDecodeError:
+    except UnicodeDecodeError:  # noqa: TRY203
         raise
     return s
 
@@ -57,7 +64,7 @@ def is_protected_type(obj):
     return isinstance(obj, _PROTECTED_TYPES)
 
 
-def force_bytes(s, encoding='utf-8', strings_only=False, errors='strict'):
+def force_bytes(s, encoding="utf-8", strings_only=False, errors="strict"):
     """
     Similar to smart_bytes, except that lazy instances are resolved to
     strings, rather than kept as lazy objects.
@@ -66,10 +73,10 @@ def force_bytes(s, encoding='utf-8', strings_only=False, errors='strict'):
     """
     # Handle the common case first for performance reasons.
     if isinstance(s, bytes):
-        if encoding == 'utf-8':
+        if encoding == "utf-8":
             return s
         else:
-            return s.decode('utf-8', errors).encode(encoding, errors)
+            return s.decode("utf-8", errors).encode(encoding, errors)
     if strings_only and is_protected_type(s):
         return s
     if isinstance(s, memoryview):

@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
-"""
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
+
 import json
 import logging
 import time
@@ -34,8 +41,8 @@ class StreamChannel(object):
             return
 
         # Always update state first
-        self.redis_db.set(self.keys.state, 'open')
-        self.publish('init')
+        self.redis_db.set(self.keys.state, "open")
+        self.publish("init")
 
         # Set expires
         pipe = self.redis_db.pipeline()
@@ -44,17 +51,17 @@ class StreamChannel(object):
         pipe.execute()
 
     def publish_msg(self, message):
-        self.publish('msg', data=message)
+        self.publish("msg", data=message)
 
-    def publish(self, event, data=''):
+    def publish(self, event, data=""):
         index = self.redis_db.incr(self.keys.counter)
-        payload = {'id': index, 'event': event, 'data': data}
+        payload = {"id": index, "event": event, "data": data}
         self.redis_db.rpush(self.keys.history, json.dumps(payload))
         self.redis_db.publish(self.keys.channel, json.dumps(payload))
 
     def close(self):
-        self.redis_db.set(self.keys.state, 'closed', self.expires_seconds)
-        self.publish('close')
+        self.redis_db.set(self.keys.state, "closed", self.expires_seconds)
+        self.publish("close")
 
     def destroy(self):
         """Destory this channel, every history events will be deleted!"""
@@ -64,7 +71,7 @@ class StreamChannel(object):
         pipe.execute()
 
     def __str__(self):
-        return 'StreamChannel: {}'.format(self.channel_id)
+        return "StreamChannel: {}".format(self.channel_id)
 
 
 class StreamChannelSubscriber(object):
@@ -90,15 +97,15 @@ class StreamChannelSubscriber(object):
         state = self.redis_db.get(self.keys.state)
         state = force_text(state)
         if state is None:
-            return 'none'
-        elif state == 'open':
-            return 'open'
-        elif state == 'closed':
-            return 'closed'
-        return 'unknown'
+            return "none"
+        elif state == "open":
+            return "open"
+        elif state == "closed":
+            return "closed"
+        return "unknown"
 
     def is_closed(self):
-        return self.get_channel_state() == 'closed'
+        return self.get_channel_state() == "closed"
 
     def get_history_events(self, last_event_id=0, ignore_special=True):
         """Get history events
@@ -127,7 +134,7 @@ class StreamChannelSubscriber(object):
         for event in events:
             yield event
 
-        max_event_id = events[-1]['id'] if events else last_event_id
+        max_event_id = events[-1]["id"] if events else last_event_id
         while True:
             if self.is_closed():
                 break
@@ -137,7 +144,7 @@ class StreamChannelSubscriber(object):
                 time.sleep(wait)
                 continue
             # Ignore event that already fetched from history events
-            if event['id'] <= max_event_id:
+            if event["id"] <= max_event_id:
                 continue
             if ignore_special and self.is_special_event(event):
                 continue
@@ -153,9 +160,9 @@ class StreamChannelSubscriber(object):
         else:
             _data = self.sub_pipe.get_message()
         if not _data:
-            return
+            return None
 
-        data = json.loads(_data['data'])
+        data = json.loads(_data["data"])
 
         # Update Channel status if event is special
         if self.is_special_event(data):
@@ -163,26 +170,26 @@ class StreamChannelSubscriber(object):
         return data
 
     def is_special_event(self, event):
-        return event['event'] in ('init', 'close')
+        return event["event"] in ("init", "close")
 
     def close(self):
         self.sub_pipe.close()
 
     def __str__(self):
-        return 'StreamChannelSubscriber: {}'.format(self.channel_id)
+        return "StreamChannelSubscriber: {}".format(self.channel_id)
 
 
 class KeyManager(object):
     """Redis key manager for channel"""
 
-    default_key_prefix = 'p3::'
+    default_key_prefix = "p3::"
 
     def __init__(self, channel_id, prefix=None):
         prefix = prefix or self.default_key_prefix
-        self.state = '{}evtch::{}::sta'.format(prefix, channel_id)
-        self.counter = '{}evtch::{}::cnt'.format(prefix, channel_id)
-        self.history = '{}evtch::{}::his'.format(prefix, channel_id)
-        self.channel = '{}evtch::{}::cha'.format(prefix, channel_id)
+        self.state = "{}evtch::{}::sta".format(prefix, channel_id)
+        self.counter = "{}evtch::{}::cnt".format(prefix, channel_id)
+        self.history = "{}evtch::{}::his".format(prefix, channel_id)
+        self.channel = "{}evtch::{}::cha".format(prefix, channel_id)
 
     def entities(self):
         return [self.state, self.counter, self.history]

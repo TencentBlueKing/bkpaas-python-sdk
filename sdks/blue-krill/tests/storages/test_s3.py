@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
-"""
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
+
 from tempfile import SpooledTemporaryFile
 
 import pytest
@@ -28,7 +35,7 @@ def store():
             aws_secret_access_key="dummy",
             signature_version="s3v4",
             endpoint_url=None,  # type: ignore
-            region_name='us-east-1',
+            region_name="us-east-1",
         )
         store.get_client().create_bucket(Bucket=store.bucket)
         yield store
@@ -47,7 +54,7 @@ class TestS3Store:
             assert fh.read() == expected
 
     @pytest.mark.parametrize(
-        "first, second, allow_overwrite, ctx, expected",
+        ("first", "second", "allow_overwrite", "ctx", "expected"),
         [
             ("first", "second", True, does_not_raise(), "second"),
             ("first", "second", False, pytest.raises(ObjectAlreadyExists), "first"),
@@ -79,19 +86,19 @@ class TestS3Store:
     def test_download_fileobj(self, mktemp, key, store):
         content = generate_random_string()
         store.upload_file(filepath=mktemp(content), key=key)
-        fh = SpooledTemporaryFile()
-        store.download_fileobj(key=key, fh=fh)
+        with SpooledTemporaryFile() as fh:
+            store.download_fileobj(key=key, fh=fh)
 
-        fh.seek(0)
-        assert fh.read().decode() == content
+            fh.seek(0)
+            assert fh.read().decode() == content
 
     def test_delete_file(self, mktemp, key, store):
         content = generate_random_string()
         store.upload_file(filepath=mktemp(content), key=key)
 
         assert store.delete_file(key)
-        with pytest.raises(DownloadFailedError):
-            store.download_fileobj(key=key, fh=SpooledTemporaryFile())
+        with pytest.raises(DownloadFailedError), SpooledTemporaryFile() as fh:
+            store.download_fileobj(key=key, fh=fh)
 
     def test_delete_file_not_exist(self, key, store):
         assert store.delete_file(key)

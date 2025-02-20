@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
-"""
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
+
 
 import logging
 import time
@@ -41,7 +48,7 @@ class PollingResult:
         self.data = data
 
     def __str__(self):
-        return f'stauts={self.status} data={self.data}'
+        return f"stauts={self.status} data={self.data}"
 
     @classmethod
     def doing(cls, *args, **kwargs):
@@ -73,7 +80,7 @@ class TaskPoller(ABC):
     :param metadata: metadata object of current poller
     """
 
-    _registered_pollers: Dict[str, Type['TaskPoller']] = {}
+    _registered_pollers: Dict[str, Type["TaskPoller"]] = {}
 
     max_retries_on_error = 10
     overall_timeout_seconds = 3600 * 24 * 7
@@ -87,7 +94,7 @@ class TaskPoller(ABC):
         cls._registered_pollers[cls.__name__] = cls
 
     @classmethod
-    def get_poller_cls(cls, name: str) -> Type['TaskPoller']:
+    def get_poller_cls(cls, name: str) -> Type["TaskPoller"]:
         return cls._registered_pollers[name]
 
     @classmethod
@@ -145,10 +152,10 @@ class TaskPoller(ABC):
         return (self.metadata.retries + 1) > self.max_retries_on_error
 
     def __str__(self):
-        return '<%s: params=%s>' % (self.__class__.__name__, self.params)
+        return "<%s: params=%s>" % (self.__class__.__name__, self.params)
 
     @classmethod
-    def get_async_task(self) -> Any:
+    def get_async_task(cls) -> Any:
         """Return the async celery task object for polling in backend"""
         return check_status_until_finished
 
@@ -182,10 +189,10 @@ class CallbackResult:
         return self.status.is_exception()
 
     def to_dict(self):
-        return {'status': self.status.value, 'message': self.message, 'data': self.data}
+        return {"status": self.status.value, "message": self.message, "data": self.data}
 
     def __str__(self):
-        return '<%s: %s is_exception=%s>' % (self.__class__.__name__, self.to_dict(), self.is_exception)
+        return "<%s: %s is_exception=%s>" % (self.__class__.__name__, self.to_dict(), self.is_exception)
 
 
 class CallbackHandler(ABC):
@@ -194,13 +201,13 @@ class CallbackHandler(ABC):
     :params: params of current polling result
     """
 
-    _registered_handlers: Dict[str, Type['CallbackHandler']] = {}
+    _registered_handlers: Dict[str, Type["CallbackHandler"]] = {}
 
     def __init_subclass__(cls, *args, **kwargs):
         cls._registered_handlers[cls.__name__] = cls
 
     @classmethod
-    def get_handler_cls(cls, name: str) -> Type['CallbackHandler']:
+    def get_handler_cls(cls, name: str) -> Type["CallbackHandler"]:
         return cls._registered_handlers[name]
 
     @abstractmethod
@@ -220,7 +227,7 @@ class NullResultHandler(CallbackHandler):
         pass
 
 
-@shared_task(acks_late=True, name='poll_task.check_status_until_finished')
+@shared_task(acks_late=True, name="poll_task.check_status_until_finished")
 def check_status_until_finished(poller_name: str, handler_name: str, params: Dict, queue: Optional[str] = None):
     """Main async task for polling
 
@@ -232,9 +239,9 @@ def check_status_until_finished(poller_name: str, handler_name: str, params: Dic
     req = check_status_until_finished.request
     metadata = PollingMetadata(
         retries=req.retries,
-        query_started_at=req.get('query_started_at', time.time()),
-        queried_count=req.get('queried_count', 0),
-        last_polling_data=req.get('last_polling_data'),
+        query_started_at=req.get("query_started_at", time.time()),
+        queried_count=req.get("queried_count", 0),
+        last_polling_data=req.get("last_polling_data"),
     )
 
     # Make handler and poller by name
@@ -250,18 +257,18 @@ def check_status_until_finished(poller_name: str, handler_name: str, params: Dic
     if next_metadata:
         # Start next polling
         countdown = poller.get_retry_delay()
-        logger.debug('Will retry query status for %s after %s seconds. metadata=%s', poller, countdown, metadata)
+        logger.debug("Will retry query status for %s after %s seconds. metadata=%s", poller, countdown, metadata)
         poller.get_async_task().subtask(
             args=(poller_name, handler_name, params),
-            kwargs={'queue': queue},
+            kwargs={"queue": queue},
             countdown=countdown,
             retries=next_metadata.retries,
             queue=queue,
         ).apply_async(
             headers={
-                'queried_count': next_metadata.queried_count,
-                'query_started_at': next_metadata.query_started_at,
-                'last_polling_data': next_metadata.last_polling_data,
+                "queried_count": next_metadata.queried_count,
+                "query_started_at": next_metadata.query_started_at,
+                "last_polling_data": next_metadata.last_polling_data,
             }
         )
 
@@ -280,7 +287,7 @@ class PollTaskScheduler:
     def run(self) -> Optional[PollingMetadata]:
         """Start schedule process"""
         if self.poller.exceeded_timeout():
-            logger.info('exceeded total timeout, ts_query_started=%s' % self.poller.metadata.query_started_at)
+            logger.info("exceeded total timeout, ts_query_started=%s", self.poller.metadata.query_started_at)
             self._callback_timeout()
             return None
 
@@ -314,10 +321,10 @@ class PollTaskScheduler:
         try:
             polling_result = poller.query()
         except Exception as e:
-            logger.exception('Exception when query status, poll_class=%s' % poller)
+            logger.exception("Exception when query status, poll_class=%s", poller)
             raise PollingQueryError(str(e))
 
-        logger.debug('Query status result, poll_class=%s, polling result: %s' % (poller, polling_result))
+        logger.debug("Query status result, poll_class=%s, polling result: %s", poller, polling_result)
         return polling_result
 
     def _callback(self, result: CallbackResult):
@@ -326,10 +333,10 @@ class PollTaskScheduler:
 
     def _callback_timeout(self):
         """Callback handler with timeout result"""
-        ret = CallbackResult(status=CallbackStatus.TIMEOUT, message='exceeded total timeout')
+        ret = CallbackResult(status=CallbackStatus.TIMEOUT, message="exceeded total timeout")
         self.handler_cls().handle(ret, self.poller)
 
     def _callback_exception(self, e: Exception):
         """Callback handler when exceeds max retries"""
-        ret = CallbackResult(status=CallbackStatus.EXCEPTION, message=f'exception: {e}')
+        ret = CallbackResult(status=CallbackStatus.EXCEPTION, message=f"exception: {e}")
         self.handler_cls().handle(ret, self.poller)

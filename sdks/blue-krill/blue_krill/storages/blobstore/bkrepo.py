@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
-"""
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
+
 import logging
 from os import PathLike, getenv
 from typing import Any, BinaryIO, List
@@ -30,7 +37,7 @@ from blue_krill.storages.blobstore.exceptions import (
 MAX_RETRIES = 2
 logger = logging.getLogger(__name__)
 
-TIMEOUT_THRESHOLD = float(getenv("BKREPO_TIMEOUT_THRESHOLD", 30))
+TIMEOUT_THRESHOLD = float(getenv("BKREPO_TIMEOUT_THRESHOLD", "30"))
 
 
 def _validate_resp(response: requests.Response) -> Any:
@@ -95,7 +102,7 @@ class BKRepoManager:
         :params repo str: 关联的仓库名称
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, '/auth/api/user/create/repo')
+        url = urljoin(self.endpoint_url, "/auth/api/user/create/repo")
         data = {
             "admin": False,
             "name": username,
@@ -111,14 +118,14 @@ class BKRepoManager:
     def update_user(self, username: str, password: str, association_users: List[str]):
         """更新用户信息"""
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f'/auth/api/user/{username}')
+        url = urljoin(self.endpoint_url, f"/auth/api/user/{username}")
         data = {"admin": False, "name": username, "pwd": password, "asstUsers": association_users}
         return _validate_resp(client.put(url, json=data, timeout=TIMEOUT_THRESHOLD))
 
     def delete_user(self, username: str):
         """删除用户"""
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f'/auth/api/user/{username}')
+        url = urljoin(self.endpoint_url, f"/auth/api/user/{username}")
         return _validate_resp(client.delete(url, timeout=TIMEOUT_THRESHOLD))
 
     def create_repo(self, project: str, repo: str, repo_type: str = RepositoryType.GENERIC, public: bool = False):
@@ -127,7 +134,7 @@ class BKRepoManager:
         :param public bool: 是否公开读, 当 public 为 True 时, 代表公开读私有写; 当 public 为 False 时, 代表私有读写
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, '/repository/api/repo/create')
+        url = urljoin(self.endpoint_url, "/repository/api/repo/create")
         data = {
             "projectId": project,
             "name": repo,
@@ -147,7 +154,7 @@ class BKRepoManager:
         :params forced bool: 是否强制删除, 如果为false，当仓库中存在文件时，将无法删除仓库
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f'/repository/api/repo/delete/{project}/{repo}?forced={forced}')
+        url = urljoin(self.endpoint_url, f"/repository/api/repo/delete/{project}/{repo}?forced={forced}")
         return _validate_resp(client.delete(url, timeout=TIMEOUT_THRESHOLD))
 
     # 以下是项目无关的管理接口
@@ -171,7 +178,7 @@ class BKRepoManager:
         :params project str: 关联的项目名称
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, '/auth/api/user/create/project')
+        url = urljoin(self.endpoint_url, "/auth/api/user/create/project")
         data = {
             "admin": False,
             "name": username,
@@ -231,7 +238,7 @@ class BKGenericRepo(BlobStore):
         :param bool allow_overwrite: 是否覆盖已存在文件
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f'/generic/{self.project}/{self.bucket}/{key}')
+        url = urljoin(self.endpoint_url, f"/generic/{self.project}/{self.bucket}/{key}")
         src = getattr(fh, "name", "<memory>")
         headers = {"X-BKREPO-OVERWRITE": str(allow_overwrite)}
 
@@ -246,7 +253,7 @@ class BKGenericRepo(BlobStore):
             logger.exception("Request success, but the server rejects the upload request.")
             raise UploadFailedError(key=key, src=src) from e
         except Exception as e:
-            logger.exception("An unexpected exception occurred, detail: %s", e)
+            logger.exception("An unexpected exception occurred, detail: %s", e)  # noqa: TRY401
             raise UploadFailedError(key=key, src=src) from e
 
     def download_file(self, key: str, filepath: PathLike, *args, **kwargs) -> PathLike:
@@ -266,7 +273,7 @@ class BKGenericRepo(BlobStore):
         :param IO fh: 文件句柄
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f'/generic/{self.project}/{self.bucket}/{key}')
+        url = urljoin(self.endpoint_url, f"/generic/{self.project}/{self.bucket}/{key}")
         dest = getattr(fh, "name", "<memory>")
         try:
             resp = client.get(url, stream=True, timeout=TIMEOUT_THRESHOLD)
@@ -289,7 +296,7 @@ class BKGenericRepo(BlobStore):
                 if chunk:
                     fh.write(chunk)
         except Exception as e:
-            logger.exception("File save failed, detail %s", e)
+            logger.exception("File save failed, detail %s", e)  # noqa: TRY401
             raise DownloadFailedError(key=key, dest=dest) from e
 
     def delete_file(self, key: str, *args, **kwargs):
@@ -298,7 +305,7 @@ class BKGenericRepo(BlobStore):
         :param str key: 文件完整路径
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f'/generic/{self.project}/{self.bucket}/{key}')
+        url = urljoin(self.endpoint_url, f"/generic/{self.project}/{self.bucket}/{key}")
         resp = client.delete(url, timeout=TIMEOUT_THRESHOLD)
         return _validate_resp(resp)
 
@@ -308,7 +315,7 @@ class BKGenericRepo(BlobStore):
         :param str key: 文件完整路径
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f'/generic/{self.project}/{self.bucket}/{key}')
+        url = urljoin(self.endpoint_url, f"/generic/{self.project}/{self.bucket}/{key}")
         resp = client.head(url, timeout=TIMEOUT_THRESHOLD)
         if resp.status_code == 200:
             return resp.headers
@@ -325,7 +332,7 @@ class BKGenericRepo(BlobStore):
         :param str token_type: [deprecated] token类型。UPLOAD:允许上传, DOWNLOAD: 允许下载, ALL: 同时允许上传和下载。
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, '/generic/temporary/url/create')
+        url = urljoin(self.endpoint_url, "/generic/temporary/url/create")
 
         token_type = signature_type.value
         if "token_type" in kwargs:
@@ -335,11 +342,11 @@ class BKGenericRepo(BlobStore):
         resp = client.post(
             url,
             json={
-                'projectId': self.project,
-                'repoName': self.bucket,
-                'fullPathSet': [key],
-                'expireSeconds': expires_in,
-                'type': token_type,
+                "projectId": self.project,
+                "repoName": self.bucket,
+                "fullPathSet": [key],
+                "expireSeconds": expires_in,
+                "type": token_type,
             },
             timeout=TIMEOUT_THRESHOLD,
         )

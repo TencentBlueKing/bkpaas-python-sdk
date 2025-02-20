@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
-"""
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
+
 import socket
 import threading
 import time
@@ -22,9 +29,9 @@ from blue_krill.monitoring.probe.http import BKHttpProbe, HttpProbe
 
 class FakeApp:
     def __init__(self):
-        self._init_status = '200 OK'
-        self._init_headers = [('Content-type', 'text/plain; charset=utf-8')]
-        self._init_handler = lambda: [b'ok']
+        self._init_status = "200 OK"
+        self._init_headers = [("Content-type", "text/plain; charset=utf-8")]
+        self._init_handler = lambda: [b"ok"]
 
         self.status = self._init_status
         self.headers = self._init_headers
@@ -46,13 +53,13 @@ class FakeApp:
     @staticmethod
     def timeout():
         time.sleep(2)
-        return [b'timeout']
+        return [b"timeout"]
 
 
 @pytest.fixture
 def usable_port():
     sock = socket.socket()
-    sock.bind(('', 0))
+    sock.bind(("", 0))
     return sock.getsockname()[1]
 
 
@@ -78,7 +85,7 @@ def http_server(httpd):
 
 
 class TestHttpProbe:
-    @pytest.fixture()
+    @pytest.fixture
     def prober(self, http_server):
         class MockHttpProbe(HttpProbe):
             name = "mock"
@@ -99,7 +106,7 @@ class TestHttpProbe:
         assert "Read timed out" in issue.description
 
     @pytest.mark.parametrize(
-        "status, expected",
+        ("status", "expected"),
         [
             ("200 OK", codes.ok),
             ("400 BAD", codes.bad),
@@ -132,7 +139,7 @@ class TestBKHttpProbe:
         return MockHttpProbe()
 
     @pytest.mark.parametrize(
-        "resp_text, expected",
+        ("resp_text", "expected"),
         [
             (b"--", "invalid data: b'--'"),
             (b"{}", "missing message."),

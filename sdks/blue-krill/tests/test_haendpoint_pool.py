@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
-"""
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
+
 import datetime
 
 import pytest
@@ -63,7 +70,7 @@ class TestEndpointPoolSucceedAndFail:
 
     def test_fail_and_recover(self, ep_pool: HAEndpointPool):
         class AlwaysHealthy(BasicHAAlgorithm):
-            def should_recover(self, endpoint: 'Endpoint') -> bool:
+            def should_recover(self, endpoint: "Endpoint") -> bool:
                 return True
 
         ep_pool = HAEndpointPool([f"fake_ep_{n}" for n in range(5)], algorithm=AlwaysHealthy())
@@ -104,38 +111,37 @@ class TestEndpointPoolOnce:
         assert ep.success_count == 1
 
     def test_not_captured(self, ep_pool):
-        with pytest.raises(IndexError):
-            with ep_pool.once(failure_excs=(ValueError)):
-                raise IndexError("index error")
+        with pytest.raises(IndexError), ep_pool.once(failure_excs=(ValueError)):
+            raise IndexError("index error")
 
 
 class TestEndpoint:
     def test_success(self):
-        ep = Endpoint('foo')
+        ep = Endpoint("foo")
         ep.succeed()
         assert ep.success_count == 1
 
     def test_success_exceeds_maximum(self):
-        ep = Endpoint('foo')
+        ep = Endpoint("foo")
         ep.succeed(ep.max_score * 5)
 
         assert ep.success_count == 1
         assert ep.score == ep.max_score
 
     def test_fail(self):
-        ep = Endpoint('foo')
+        ep = Endpoint("foo")
         ep.fail()
         assert ep.failure_count == 1
 
     def test_fail_exceeds_minimal(self):
-        ep = Endpoint('foo')
+        ep = Endpoint("foo")
         ep.fail((ep.max_score - ep.min_score) * 5)
 
         assert ep.failure_count == 1
         assert ep.score == ep.min_score
 
     def test_health_and_unhealthy(self):
-        ep = Endpoint('foo')
+        ep = Endpoint("foo")
         assert ep.is_unhealthy() is False
 
         ep.fail()
@@ -150,7 +156,7 @@ class TestEndpoint:
 class TestBasicHAAlgorithm:
     def test_is_unhealthy(self):
         algo = BasicHAAlgorithm()
-        ep = Endpoint('foo')
+        ep = Endpoint("foo")
         assert algo.is_unhealthy(ep) is False
 
         for _ in range(algo.unhealthy_max_failed + 1):
@@ -159,7 +165,7 @@ class TestBasicHAAlgorithm:
 
     def test_should_recover(self):
         algo = BasicHAAlgorithm()
-        ep = Endpoint('foo')
+        ep = Endpoint("foo")
         assert algo.should_recover(ep) is False
 
         ep.unhealthy_at = datetime.datetime.now() - datetime.timedelta(days=1)

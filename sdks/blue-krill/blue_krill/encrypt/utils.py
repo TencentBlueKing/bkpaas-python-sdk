@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
-"""
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
+
 import logging
 from typing import Optional
 
@@ -21,10 +28,10 @@ logger = logging.getLogger(__name__)
 def get_default_secret_key():
     try:
         from django.conf import settings
-
-        return settings.BKKRILL_ENCRYPT_SECRET_KEY
     except ImportError:
         return None
+    else:
+        return settings.BKKRILL_ENCRYPT_SECRET_KEY
 
 
 def get_default_encrypt_cipher_type():
@@ -32,9 +39,9 @@ def get_default_encrypt_cipher_type():
     try:
         from django.conf import settings
 
-        return getattr(settings, 'ENCRYPT_CIPHER_TYPE', 'FernetCipher')
+        return getattr(settings, "ENCRYPT_CIPHER_TYPE", "FernetCipher")
     except ImportError:
-        return 'FernetCipher'
+        return "FernetCipher"
 
 
 def encrypt_string(s: str, key: Optional[bytes] = None) -> str:

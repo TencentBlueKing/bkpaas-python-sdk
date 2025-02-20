@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
-"""
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
+
 import logging
 import time
 from typing import Dict, Optional, Tuple
@@ -40,10 +47,10 @@ class Client:
 
     @classmethod
     def from_jwt_settings(cls, data):
-        for key in ('iss', 'key'):
+        for key in ("iss", "key"):
             if not data.get(key):
-                raise ValueError(f'error: {key} is required')
-        return cls(name=data['iss'], auth_backend_type='jwt')
+                raise ValueError(f"error: {key} is required")
+        return cls(name=data["iss"], auth_backend_type="jwt")
 
 
 class AuthResult:
@@ -68,10 +75,10 @@ class JWTClientAuthenticator:
         try:
             payload, client = self.parse(token)
         except ValueError as e:
-            logger.warning(f'authentication failed, token is invalid: {e}')
-            raise AuthFailedError('token is invalid')
+            logger.warning(f"authentication failed, token is invalid: {e}")
+            raise AuthFailedError("token is invalid")
         else:
-            logger.info(f'successfully authenticated token issued by {client}')
+            logger.info(f"successfully authenticated token issued by {client}")
             return AuthResult(client=client, extra_payload=payload)
 
     def parse(self, token: str) -> Tuple[Dict, Client]:
@@ -81,27 +88,27 @@ class JWTClientAuthenticator:
         """
         for client in self.jwt_clients:
             try:
-                algorithm = client.get('algorithm', DEFAULT_ALGORITHM)
-                payload = jwt.decode(token, client['key'], algorithms=[algorithm])
+                algorithm = client.get("algorithm", DEFAULT_ALGORITHM)
+                payload = jwt.decode(token, client["key"], algorithms=[algorithm])
             except DecodeError:
                 logger.debug(f'Unable to decode token using {client["iss"]}\'s secret')
                 continue
 
             if not self._validate_payload(client, payload):
-                logger.debug('payload validation failed')
+                logger.debug("payload validation failed")
                 continue
 
             client_ins = Client.from_jwt_settings(client)
-            client_ins.role = payload.get('role')
+            client_ins.role = payload.get("role")
             return payload, client_ins
-        raise ValueError('invalid JWT token')
+        raise ValueError("invalid JWT token")
 
     @staticmethod
     def _validate_payload(client: Dict, payload: Dict) -> bool:
         """Validates given JWT payload, a valid payload must contains at least 2 fields:
         'iss' and 'expires_at'.
         """
-        expires_at = payload.get('expires_at')
+        expires_at = payload.get("expires_at")
         try:
             expires_at = int(expires_at)  # type: ignore
         except (TypeError, ValueError):
@@ -111,8 +118,8 @@ class JWTClientAuthenticator:
             logger.warning("token has already expired")
             return False
 
-        iss = payload.get('iss')
-        if not (iss and iss == client['iss']):
+        iss = payload.get("iss")
+        if not (iss and iss == client["iss"]):
             logger.warning("issuer name in payload does not match client's config")
             return False
         return True
@@ -132,14 +139,14 @@ class VerifiedClientMiddleware:
     @staticmethod
     def get_token(request) -> Optional[str]:
         """Get token from request, return None if no token can be found"""
-        auth_header_val = request.headers.get('Authorization') or request.META.get('HTTP_AUTHORIZATION')
+        auth_header_val = request.headers.get("Authorization") or request.META.get("HTTP_AUTHORIZATION")
         if not auth_header_val:
             return None
 
         try:
             _, token = auth_header_val.split(None, 1)
         except ValueError:
-            logger.warning('Invalid authorization header value')
+            logger.warning("Invalid authorization header value")
             return None
         return token
 
@@ -154,7 +161,7 @@ class VerifiedClientMiddleware:
                 request.client = ret.client
                 request.extra_payload = ret.extra_payload
             except AuthFailedError as e:
-                logger.info('Unable to create an authenticated client using token: %s, reason: %s', token, e)
+                logger.info("Unable to create an authenticated client using token: %s, reason: %s", token, e)
 
         response = self.get_response(request)
         return response
@@ -162,7 +169,7 @@ class VerifiedClientMiddleware:
 
 def check_client_role(request: HttpRequest, role: str) -> bool:
     """Check if request contains a verified client and it's role matches given value"""
-    client = getattr(request, 'client', None)
+    client = getattr(request, "client", None)
     if not (client and client.is_verified()):
         return False
     return request.client.role == role
