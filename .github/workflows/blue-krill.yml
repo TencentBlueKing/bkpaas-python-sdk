@@ -58,16 +58,13 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           echo "REDIS_URL=redis://localhost:6379/0" >> $GITHUB_ENV
-      - name: Install dependencies
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+      - name: Install Nox
+        run:  uv pip install --system nox
+      - name: Run tests on ${{ matrix.os }}
         working-directory: sdks/blue-krill
-        run: |
-          poetry export --without-hashes --with=dev -o requirements-dev.txt
-          python -m pip install --upgrade pip
-          python -m pip install -r requirements-dev.txt
-          python -m pip install tox-gh-actions==2.8.1
-      - name: Run test with tox targets for ${{ matrix.python-version }}
-        working-directory: sdks/blue-krill
-        run: tox
+        run: nox --non-interactive --error-on-missing-interpreter --session "tests(python='${{ matrix.python-version }}')" -- --full-trace
   build:
     runs-on: macos-latest
     if: github.event.release && contains(github.event.release.tag_name, 'blue-krill')

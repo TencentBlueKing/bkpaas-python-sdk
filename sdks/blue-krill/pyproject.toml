@@ -31,9 +31,6 @@ dependencies = [
   'urllib3 (>=1.26.16,<2.0.0)',
 ]
 
-[tool.poetry.requires-plugins]
-poetry-plugin-export = ">=1.8"
-
 [project.urls]
 Homepage = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
 Repository = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
