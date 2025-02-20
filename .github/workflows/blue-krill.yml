@@ -45,10 +45,6 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Set up Poetry
-        uses: abatilo/actions-poetry@v3.0.2
-        with:
-          poetry-version: 2.1.1
       - name: Start Redis Container
         uses: supercharge/redis-github-action@1.4.0
         if: runner.os == 'Linux'
@@ -65,7 +61,7 @@ jobs:
       - name: Run tests on ${{ matrix.os }}
         working-directory: sdks/blue-krill
         # Use grep to filter out the sessions that match the python version
-        run: nox --list | grep "python='${{ matrix.python-version }}''" | sed -e "s/^* //" -e "s/'/\\\\'/g" | xargs -I{} sh -c 'nox --non-interactive --error-on-missing-interpreter --session "{}" -- --full-trace'
+        run: nox --list | grep "python='${{ matrix.python-version }}'" | sed -e "s/^* //" -e "s/'/\\\\'/g" | xargs -I{} sh -c 'nox --non-interactive --error-on-missing-interpreter --session "{}" -- --full-trace'
   build:
     runs-on: macos-latest
     if: github.event.release && contains(github.event.release.tag_name, 'blue-krill')
