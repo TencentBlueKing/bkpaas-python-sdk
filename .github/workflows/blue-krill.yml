@@ -64,7 +64,8 @@ jobs:
         run:  uv pip install --system nox
       - name: Run tests on ${{ matrix.os }}
         working-directory: sdks/blue-krill
-        run: nox --non-interactive --error-on-missing-interpreter --session "tests(python='${{ matrix.python-version }}')" -- --full-trace
+        # Use grep to filter out the sessions that match the python version
+        run: nox --list | grep "python='${{ matrix.python-version }}''" | sed -e "s/^* //" -e "s/'/\\\\'/g" | xargs -I{} sh -c 'nox --non-interactive --error-on-missing-interpreter --session "{}" -- --full-trace'
   build:
     runs-on: macos-latest
     if: github.event.release && contains(github.event.release.tag_name, 'blue-krill')

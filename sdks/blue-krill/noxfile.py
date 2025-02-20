@@ -47,9 +47,9 @@ def install_with_constraints(session, *args: str, **kwargs) -> None:
 
 
 @nox.session(reuse_venv=True)
-@nox.parametrize("python", ALL_PYTHON)
-@nox.parametrize("django", ALL_DJANGO)
 @nox.parametrize("pyjwt", ALL_PYJWT)
+@nox.parametrize("django", ALL_DJANGO)
+@nox.parametrize("python", ALL_PYTHON)
 def tests(session, django, pyjwt):
     # Prepare pip and poetry
     session.run("python", "-m", "ensurepip", "--upgrade")
