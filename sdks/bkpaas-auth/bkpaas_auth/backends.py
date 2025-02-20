@@ -238,7 +238,7 @@ class APIGatewayAuthBackend:
         from apigw_manager.apigw.authentication import ApiGatewayJWTUserMiddleware
 
         get_user_parameters = inspect.signature(ApiGatewayJWTUserMiddleware.get_user).parameters.keys()
-        # django 的 authenticate 方法会保证向后兼容参数，调用方新增参数不会影响用户认证（认证只用到了 verified 这个参数）
+        # django 的 authenticate 方法会保证向后兼容参数，调用方新增参数不会影响用户认证（认证只用到了 verified、bk_username 这 2 个参数）
         # apigw_manager 的 3.0.0 版本开始 将 api_name 修改为了 gateway_name，导致无法保证向后兼容，所以需要单独处理
         # https://github.com/django/django/blob/stable/4.2.x/django/contrib/auth/__init__.py#L69
         if "api_name" in get_user_parameters and "gateway_name" not in get_user_parameters:
