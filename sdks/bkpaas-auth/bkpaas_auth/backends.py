@@ -202,7 +202,8 @@ class DjangoAuthUserCompatibleBackend(UniversalAuthBackend):
 class APIGatewayAuthBackend:
     """Authentication backend for API Gateway JWT validation.
 
-    This backend works with ``ApiGatewayJWTUserMiddleware`` from the ``apigw_manager`` package to handle JWT-based authentication.
+    This backend works with `ApiGatewayJWTUserMiddleware` from the
+    `apigw_manager` package to handle JWT-based authentication.
     """
 
     _TOKEN_EXPIRE_TIME = 86400  # 24 hours in seconds
