@@ -1,13 +1,19 @@
 # -*- coding: utf-8 -*-
-"""
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
-"""
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
 import abc
 import fnmatch
 import json
@@ -16,6 +22,7 @@ import os
 import shutil
 import stat
 import sys
+import threading
 import time
 from dataclasses import dataclass, field
 from os import PathLike
@@ -56,7 +63,8 @@ class CopyLinker(FileLinker):
     """Directly copy"""
 
     def link(self, src_file, dst_file):
-        shutil.copyfile(src_file, dst_file, follow_symlinks=False)
+        # Use copy2 to copy file stats stats such as mtime
+        shutil.copy2(src_file, dst_file, follow_symlinks=False)
 
     def unlink(self, dst_file):
         Path(dst_file).unlink()
@@ -76,7 +84,8 @@ class ReadOnlyCopyLinker(FileLinker):
     def link(self, src_file, dst_file):
         # make sure file is writable before copy
         self.set_file_permission(dst_file, self.writable_mode)
-        shutil.copyfile(src_file, dst_file, follow_symlinks=False)
+        # Use copy2 to copy file stats stats such as mtime
+        shutil.copy2(src_file, dst_file, follow_symlinks=False)
         # make sure file is read-only to avoid unexpected modifies
         self.set_file_permission(dst_file, self.read_only_mode)
 
@@ -221,7 +230,7 @@ def activate(ctx, edition_name_in_pos, edition_name, linker_type):
     we found that solution is too difficult and fragile to implement because we need our namespace
     packages to be nested.
 
-    So currently we are using a simpler(and stupidier) approach: sync all source files under the
+    So currently we are using a simpler(and stupider) approach: sync all source files under the
     specified edition directory to the main package.
     """
     settings = {}
@@ -233,11 +242,11 @@ def activate(ctx, edition_name_in_pos, edition_name, linker_type):
 
     edition_name = edition_name_in_pos or edition_name
     if not edition_name:
-        logger.critical('Must provide edtion name via position argument or "--edition-name"')
+        logger.critical('Must provide edition name via position argument or "--edition-name"')
         sys.exit(1)
 
     try:
-        migrator = EditionFileMigrater(config, edition_name)
+        migrator = EditionFileMigrator(config, edition_name)
         migrator.migrate()
     except RuntimeError:
         logger.exception("unable to finish the migration")
@@ -348,8 +357,8 @@ class EditionMetaData:
         yield self.metadata_path
 
 
-class EditionFileMigrater:
-    """The file migrater"""
+class EditionFileMigrator:
+    """The file migrator"""
 
     def __init__(self, config: Configuration, edition_name: str):
         self.config = config
@@ -395,9 +404,7 @@ class EditionFileMigrater:
         """If the migrator should reset all migrated states"""
         if last_metadata.edition_name != self.edition_name:
             return True
-        if last_metadata.linker_type != self.config.get_linker_type():
-            return True
-        return False
+        return last_metadata.linker_type != self.config.get_linker_type()
 
 
 @main.command()
@@ -412,7 +419,7 @@ def reset_project(config: Configuration):
     """Reset all migration states.
 
     - Remove metadata and related files
-    - Unlink all migarated files(from metadata file)
+    - Unlink all migrated files(from metadata file)
     """
     metadata = load_current_metadata(config)
     if metadata is None:
@@ -421,7 +428,7 @@ def reset_project(config: Configuration):
 
     logger.info("Resetting project.")
     for filepath in metadata.list_managed_files():
-        logger.debug(f"Unlinking file {filepath}.")
+        logger.info(f"Unlinking file {filepath}.")
         try:
             filepath.unlink()
         except FileNotFoundError:
@@ -448,7 +455,7 @@ class SyncResult:
 class DirectorySyncer:
     """A simple directory syncer"""
 
-    ignore_patterns = ("*.pyc", "*.pyo", "CVS", "tmp", ".git", ".svn", "__pycache__")
+    ignore_patterns = ("*.pyc", "*.pyo", "CVS", "tmp", ".git", ".svn", "__pycache__", ".mypy_cache")
 
     def __init__(self, file_linker: FileLinker):
         self.file_linker = file_linker
@@ -491,8 +498,11 @@ class DirectorySyncer:
                 dst_file = dst_path / filename
 
                 rel_file = Path(rel_path) / filename
-                logger.debug(f"Linking file {rel_file}...")
-                self.file_linker.link(src_file, dst_file)
+
+                if not self.are_files_identical(src_file, dst_file):
+                    logger.info(f"Linking file {rel_file}...")
+                    self.file_linker.link(src_file, dst_file)
+
                 result.added_files.add(dst_file)
                 result.added_files_relative.add(rel_file)
 
@@ -509,6 +519,15 @@ class DirectorySyncer:
                         pass
                     result.deleted_files.add(file_path)
         return result
+
+    @staticmethod
+    def are_files_identical(src_file, dst_file):
+        """Check if two files are identical by comparing size and mtime."""
+        if not (src_file.exists() and dst_file.exists()):
+            return False
+        src_stat = src_file.stat()
+        dst_stat = dst_file.stat()
+        return src_stat.st_size == dst_stat.st_size and src_stat.st_mtime == dst_stat.st_mtime
 
 
 @main.command()
@@ -562,7 +581,7 @@ def help(ctx):
 @click.pass_context
 def develop(ctx):
     """Enter develop mode, auto trigger edition activate procedure after files under current
-    edtion directory have been modified.
+    edition directory have been modified.
     """
     config = get_configuration_or_quit(ctx.obj["settings_path"])
     project_root = config.get_project_root()
@@ -587,25 +606,38 @@ def develop(ctx):
 
 
 class EditionDevelopEventHandler(FileSystemEventHandler):
-    """Handler will auto re-activate edition when it's content changes"""
+    """Handler will auto re-activate edition when its content changes"""
+
+    debounce_delay = 0.5
 
     def __init__(self, config: Configuration, edition_name: str):
         self.config = config
         self.edition_name = edition_name
         super().__init__()
 
-    def on_any_event(self, event):
-        logger.debug(f"Event {event} detected, will re-activate project edtion")
+        # A debounce time to avoid unnecessary reactivation
+        self._debounce_timer: Optional[threading.Timer] = None
 
-        logger.info("Going to re-activate edtion...")
-        migrator = EditionFileMigrater(self.config, self.edition_name)
+    def _reactivate(self):
+        logger.debug("Begin reactivate edition...")
+        migrator = EditionFileMigrator(self.config, self.edition_name)
         try:
             migrator.migrate()
         except RuntimeError:
             logger.critical("unable to finish the migration")
-        logger.info(f"Edition {self.edition_name} re-activated, linker is {self.config.get_linker_type()}")
+        logger.info(f"Edition {self.edition_name} reactivated, linker: {self.config.get_linker_type()}")
 
-        logger.info("Inform project dev server to reload.")
+    def on_any_event(self, event):
+        # Ignore events that are not relevant
+        if event.event_type not in {"modified", "created", "deleted"}:
+            return
+
+        logger.debug(f"Event {event} detected, scheduling debounce reactivation")
+        if self._debounce_timer:
+            self._debounce_timer.cancel()
+
+        self._debounce_timer = threading.Timer(self.debounce_delay, self._reactivate)
+        self._debounce_timer.start()
 
 
 if __name__ == "__main__":

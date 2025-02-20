@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
-"""
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
+
 import json
 from pathlib import Path
 from textwrap import dedent
@@ -19,7 +26,7 @@ from blue_krill.editions.editionctl import (
     Configuration,
     DirectorySyncer,
     EditionConf,
-    EditionFileMigrater,
+    EditionFileMigrator,
     EditionMetaData,
     ReadOnlyCopyLinker,
     load_configuration,
@@ -29,24 +36,24 @@ from blue_krill.editions.editionctl import (
 
 class TestLoadConfiguration:
     def test_nonexistent_file(self, tmp_path):
-        settings_path = tmp_path / 'nonexistent_file.toml'
+        settings_path = tmp_path / "nonexistent_file.toml"
         with pytest.raises(FileNotFoundError):
             load_configuration(settings_path)
 
     def test_invalid_format(self, tmp_path):
-        settings_path = tmp_path / 'editionctl.toml'
-        with open(settings_path, 'w') as fp:
-            fp.write('{abc}')
+        settings_path = tmp_path / "editionctl.toml"
+        with open(settings_path, "w") as fp:
+            fp.write("{abc}")
 
         with pytest.raises(TomlDecodeError):
             load_configuration(settings_path)
 
     def test_normal(self, tmp_path):
-        settings_path = tmp_path / 'editionctl.toml'
-        with open(settings_path, 'w') as fp:
+        settings_path = tmp_path / "editionctl.toml"
+        with open(settings_path, "w") as fp:
             fp.write(
                 dedent(
-                    '''
+                    """
                     project_root = ''
 
                     [[editions]]
@@ -54,7 +61,7 @@ class TestLoadConfiguration:
 
                     [[editions]]
                     name = "ee"
-                    '''
+                    """
                 )
             )
 
@@ -64,12 +71,12 @@ class TestLoadConfiguration:
 
 class TestEditionMetaData:
     def test_normal(self, tmp_path):
-        meta_data = EditionMetaData('my_edition', tmp_path, 'default')
+        meta_data = EditionMetaData("my_edition", tmp_path, "default")
         assert not meta_data.metadata_path.exists()
         assert not meta_data.gitignore_path.exists()
 
-        (tmp_path / 'foo').write_text('')
-        meta_data.add_files([Path('foo')])
+        (tmp_path / "foo").write_text("")
+        meta_data.add_files([Path("foo")])
         meta_data.save()
 
         assert meta_data.metadata_path.exists()
@@ -82,86 +89,86 @@ class TestEditionMetaData:
         assert meta_data is not None
 
 
-class TestEditionFileMigrater:
+class TestEditionFileMigrator:
     @pytest.fixture(autouse=True)
     def setup_dirs(self, tmp_path):
-        (tmp_path / 'project').mkdir(parents=True)
-        (tmp_path / 'project' / 'project.txt').write_text('')
-        (tmp_path / 'project' / 'project_2.txt').write_text('')
+        (tmp_path / "project").mkdir(parents=True)
+        (tmp_path / "project" / "project.txt").write_text("")
+        (tmp_path / "project" / "project_2.txt").write_text("")
 
-        (tmp_path / 'editions' / 'e1').mkdir(parents=True)
-        (tmp_path / 'editions' / 'e1' / 'e1.txt').write_text('')
-        (tmp_path / 'editions' / 'e2').mkdir(parents=True)
+        (tmp_path / "editions" / "e1").mkdir(parents=True)
+        (tmp_path / "editions" / "e1" / "e1.txt").write_text("")
+        (tmp_path / "editions" / "e2").mkdir(parents=True)
 
     @pytest.fixture
     def config(self, tmp_path):
-        editions_root = tmp_path / 'editions'
+        editions_root = tmp_path / "editions"
         return Configuration(
-            project_root=tmp_path / 'project',
+            project_root=tmp_path / "project",
             editions_root=editions_root,
             editions=[
-                EditionConf(name='e1', directory='e1'),
-                EditionConf(name='e2', directory='e2'),
+                EditionConf(name="e1", directory="e1"),
+                EditionConf(name="e2", directory="e2"),
             ],
         )
 
     @pytest.mark.parametrize(
-        'edition_name,expected_files',
+        ("edition_name", "expected_files"),
         [
-            ('e1', {'project.txt', 'project_2.txt', 'e1.txt', '.gitignore', 'edition-metadata.json'}),
-            ('e2', {'project.txt', 'project_2.txt', '.gitignore', 'edition-metadata.json'}),
+            ("e1", {"project.txt", "project_2.txt", "e1.txt", ".gitignore", "edition-metadata.json"}),
+            ("e2", {"project.txt", "project_2.txt", ".gitignore", "edition-metadata.json"}),
         ],
     )
     def test_migrate(self, config, edition_name, expected_files):
-        EditionFileMigrater(config, edition_name).migrate()
+        EditionFileMigrator(config, edition_name).migrate()
 
         names = [f.name for f in config.get_project_root().iterdir()]
         assert set(names) == expected_files
 
     def test_change_edition(self, config):
-        EditionFileMigrater(config, 'e1').migrate()
+        EditionFileMigrator(config, "e1").migrate()
 
         # check files was synced
         names = [f.name for f in config.get_project_root().iterdir()]
-        assert set(names) == {'project.txt', 'project_2.txt', 'e1.txt', '.gitignore', 'edition-metadata.json'}
+        assert set(names) == {"project.txt", "project_2.txt", "e1.txt", ".gitignore", "edition-metadata.json"}
 
-        EditionFileMigrater(config, 'e2').migrate()
+        EditionFileMigrator(config, "e2").migrate()
         names = [f.name for f in config.get_project_root().iterdir()]
-        assert set(names) == {'project.txt', 'project_2.txt', '.gitignore', 'edition-metadata.json'}
+        assert set(names) == {"project.txt", "project_2.txt", ".gitignore", "edition-metadata.json"}
 
     def test_reset_project(self, config):
-        EditionFileMigrater(config, 'e1').migrate()
+        EditionFileMigrator(config, "e1").migrate()
 
         # check files was synced
         names = [f.name for f in config.get_project_root().iterdir()]
-        assert set(names) == {'project.txt', 'project_2.txt', 'e1.txt', '.gitignore', 'edition-metadata.json'}
+        assert set(names) == {"project.txt", "project_2.txt", "e1.txt", ".gitignore", "edition-metadata.json"}
 
         reset_project(config)
         names = [f.name for f in config.get_project_root().iterdir()]
-        assert set(names) == {'project.txt', 'project_2.txt'}
+        assert set(names) == {"project.txt", "project_2.txt"}
 
 
 class TestDirectorySyncer:
     @pytest.fixture(autouse=True)
     def setup_dirs(self, tmp_path):
-        (tmp_path / 'project').mkdir(parents=True)
-        (tmp_path / 'project' / 'project.txt').write_text('')
-        (tmp_path / 'project' / 'project_2.txt').write_text('')
+        (tmp_path / "project").mkdir(parents=True)
+        (tmp_path / "project" / "project.txt").write_text("")
+        (tmp_path / "project" / "project_2.txt").write_text("")
 
-        (tmp_path / 'editions' / 'e1').mkdir(parents=True)
-        (tmp_path / 'editions' / 'e1' / 'e1.txt').write_text('')
+        (tmp_path / "editions" / "e1").mkdir(parents=True)
+        (tmp_path / "editions" / "e1" / "e1.txt").write_text("")
 
     def test_sync(self, tmp_path):
         result = DirectorySyncer(ReadOnlyCopyLinker()).sync_files(
-            source_dir=tmp_path / 'editions' / 'e1',
-            target_dir=tmp_path / 'project',
+            source_dir=tmp_path / "editions" / "e1",
+            target_dir=tmp_path / "project",
             delete_if_not_in_source_files=[],
         )
 
         # check files was synced
-        files = list((tmp_path / 'project').iterdir())
+        files = list((tmp_path / "project").iterdir())
         names = [f.name for f in files]
-        assert set(names) == {'project.txt', 'project_2.txt', 'e1.txt'}
+        assert set(names) == {"project.txt", "project_2.txt", "e1.txt"}
 
         assert len(result.added_files) == 1
         assert len(result.added_files_relative) == 1
@@ -169,15 +176,15 @@ class TestDirectorySyncer:
 
     def test_sync_with_delete_files(self, tmp_path):
         result = DirectorySyncer(ReadOnlyCopyLinker()).sync_files(
-            source_dir=tmp_path / 'editions' / 'e1',
-            target_dir=tmp_path / 'project',
-            delete_if_not_in_source_files=[Path('project.txt')],
+            source_dir=tmp_path / "editions" / "e1",
+            target_dir=tmp_path / "project",
+            delete_if_not_in_source_files=[Path("project.txt")],
         )
 
         # check files was synced
-        files = list((tmp_path / 'project').iterdir())
+        files = list((tmp_path / "project").iterdir())
         names = [f.name for f in files]
-        assert set(names) == {'project_2.txt', 'e1.txt'}
+        assert set(names) == {"project_2.txt", "e1.txt"}
 
         assert len(result.added_files) == 1
         assert len(result.added_files_relative) == 1

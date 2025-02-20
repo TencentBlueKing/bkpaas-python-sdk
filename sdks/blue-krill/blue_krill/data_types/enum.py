@@ -1,13 +1,19 @@
 # -*- coding: utf-8 -*-
-"""
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
-"""
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
 import dataclasses
 from collections import OrderedDict
 from enum import Enum as OrigEnum
@@ -54,7 +60,7 @@ class FeatureFlagField:
 class FeatureFlagMeta(type):
     _feature_flag_fields_: Dict[str, FeatureFlagField]
 
-    def __new__(mcs, cls_name: str, bases, dct: Dict):
+    def __new__(mcs, cls_name: str, bases, dct: Dict):  # noqa: N804
         _feature_flag_fields_ = {}
         for base in bases:
             _feature_flag_fields_.update(getattr(base, "_feature_flag_fields_", {}))
@@ -156,7 +162,7 @@ class StructuredEnumMeta(EnumMeta):
 
     __field_members__: Dict[Type, Dict]
 
-    def __new__(metacls, cls, bases, classdict):
+    def __new__(metacls, cls, bases, classdict):  # noqa: N804
         field_members = metacls.process_enum_fields(classdict)
         classdict["__field_members__"] = field_members
         return super().__new__(metacls, cls, bases, classdict)
@@ -170,14 +176,16 @@ class StructuredEnumMeta(EnumMeta):
         """
         fields = OrderedDict()
         # Find out all `EnumField` instance, store them into class so we can use them later
-        for key, member in classdict.items():
+        for key, orig_member in classdict.items():
             # Ignore all private members
             if key.startswith("_"):
                 continue
 
             # Turn regular enum member into EnumField instance
-            if not isinstance(member, EnumField) and isinstance(member, (int, str, auto)):
-                member = EnumField(member)
+            if not isinstance(orig_member, EnumField) and isinstance(orig_member, (int, str, auto)):
+                member = EnumField(orig_member)
+            else:
+                member = orig_member
             if not isinstance(member, EnumField) or member.is_reserved:
                 continue
 
@@ -240,17 +248,17 @@ class StructuredEnum(OrigEnum, metaclass=StructuredEnumMeta):
 
 try:
     # python 3.11+ required
-    from enum import StrEnum, IntEnum
+    from enum import IntEnum, StrEnum  # type: ignore
 except ImportError:
     pass
 else:
+
     class StrStructuredEnum(StructuredEnum, StrEnum):
         """
         StrStructuredEnum ensures the literals in f-string / str.format() is real_value
 
         Important: Use XEnum(StrStructuredEnum) instead of XEnum(str, StructuredEnum) since python 3.11
         """
-        pass
 
     class IntStructuredEnum(StructuredEnum, IntEnum):
         """
@@ -258,4 +266,3 @@ else:
 
         Important: Use XEnum(IntStructuredEnum) instead of XEnum(int, StructuredEnum) since python 3.11
         """
-        pass
