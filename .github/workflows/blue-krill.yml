@@ -61,8 +61,6 @@ jobs:
       - name: Install dependencies
         working-directory: sdks/blue-krill
         run: |
-          # "poetry export" is no longer included in poetry 2, must install manually
-          python -m pip install poetry-plugin-export
           poetry export --without-hashes --with=dev -o requirements-dev.txt
           python -m pip install --upgrade pip
           python -m pip install -r requirements-dev.txt
