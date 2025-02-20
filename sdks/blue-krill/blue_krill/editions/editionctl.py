@@ -63,7 +63,7 @@ class CopyLinker(FileLinker):
     """Directly copy"""
 
     def link(self, src_file, dst_file):
-        # Use copy2 to copy file stats stats such as mtime
+        # Use copy2 to copy file stats such as mtime
         shutil.copy2(src_file, dst_file, follow_symlinks=False)
 
     def unlink(self, dst_file):
@@ -84,7 +84,7 @@ class ReadOnlyCopyLinker(FileLinker):
     def link(self, src_file, dst_file):
         # make sure file is writable before copy
         self.set_file_permission(dst_file, self.writable_mode)
-        # Use copy2 to copy file stats stats such as mtime
+        # Use copy2 to copy file stats such as mtime
         shutil.copy2(src_file, dst_file, follow_symlinks=False)
         # make sure file is read-only to avoid unexpected modifies
         self.set_file_permission(dst_file, self.read_only_mode)
