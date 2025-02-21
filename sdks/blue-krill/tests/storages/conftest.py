@@ -36,5 +36,5 @@ def mktemp() -> Generator[Callable[..., Path], None, None]:
 
     yield core
     for item in files:
-        if item.exists:
+        if item.exists():
             item.unlink()

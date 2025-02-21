@@ -61,7 +61,7 @@ class FeatureFlagMeta(type):
     _feature_flag_fields_: Dict[str, FeatureFlagField]
 
     def __new__(mcs, cls_name: str, bases, dct: Dict):  # noqa: N804
-        _feature_flag_fields_ = {}
+        _feature_flag_fields_: Dict[str, Any] = {}
         for base in bases:
             _feature_flag_fields_.update(getattr(base, "_feature_flag_fields_", {}))
 
@@ -87,7 +87,7 @@ class FeatureFlagMeta(type):
             yield feature
 
 
-class FeatureFlag(str, metaclass=FeatureFlagMeta):
+class FeatureFlag(str, metaclass=FeatureFlagMeta):  # type: ignore
     def __new__(cls, value):
         """Cast a string into a predefined feature flag."""
         for field in cls._get_feature_fields_().values():

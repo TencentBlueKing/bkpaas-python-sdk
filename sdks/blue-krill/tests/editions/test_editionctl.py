@@ -107,8 +107,8 @@ class TestEditionFileMigrator:
             project_root=tmp_path / "project",
             editions_root=editions_root,
             editions=[
-                EditionConf(name="e1", directory="e1"),
-                EditionConf(name="e2", directory="e2"),
+                EditionConf(name="e1", rel_directory="e1"),
+                EditionConf(name="e2", rel_directory="e2"),
             ],
         )
 

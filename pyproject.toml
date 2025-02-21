@@ -3,12 +3,13 @@ name = "蓝鲸 PaaS 平台 Python 工具集"
 version = "0.0.1"
 description = "BlueKing PaaS Python SDK"
 authors = ["blueking <blueking@tencent.com>"]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.8.1,<3.12"
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.1.7"
+ruff = "^0.9.7"
 
 [tool.ruff]
 line-length = 119
@@ -80,8 +81,8 @@ ignore = [
   "PERF203",
   # tryceratops: 忽略后，允许抛出异常时，使用较长的字符串作为异常信息，可能会降低异常的可使用性
   "TRY003",
-  # tryceratops: 忽略后，允许在 except 语句块中使用裸的 raise 语句，不要求必须使用 raise ... from
-  "TRY200",
+  # flake80-bugbear: 忽略后，允许在 except 语句块中使用裸的 raise 语句，不要求必须使用 raise ... from
+  "B904",
   # flake8-simplify: 忽略后，允许使用 exception: pass 语句，不要求必须用 contextlib.suppress 替换
   "SIM105",
   # flake8-simplify: 忽略后，不强制要求用三元表达式替换普通的短 if-else 语句
