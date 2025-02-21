@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
-"""
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
+
 import copy
 import functools
 from collections import namedtuple
@@ -50,11 +57,10 @@ def stringify_validation_error(error: ValidationError) -> List[str]:
                 if key != api_settings.NON_FIELD_ERRORS_KEY:
                     _keys.append(str(key))
                 traverse(err, _keys)
+        elif not keys:
+            results.append(str(err_detail))
         else:
-            if not keys:
-                results.append(str(err_detail))
-            else:
-                results.append("{}: {}".format(".".join(keys), str(err_detail)))
+            results.append("{}: {}".format(".".join(keys), str(err_detail)))
 
     traverse(error.detail, [])
     return sorted(results)
@@ -154,7 +160,7 @@ class ViewCrown:
         elif issubclass(_in, BaseSerializer):
             slz_obj = _in(data=_data)
         else:
-            raise ValueError("unknown serializer input")
+            raise ValueError("unknown serializer input")  # noqa: TRY004
 
         return slz_obj
 
@@ -200,7 +206,7 @@ class ViewCrown:
         elif issubclass(self.out, BaseSerializer):
             _data = self.out(data, **out_params).data
         else:
-            raise ValueError("unknown serializer output")
+            raise ValueError("unknown serializer output")  # noqa: TRY004
 
         return self.resp_cls(data=_data, status=self.config.default_return_status)
 
@@ -227,7 +233,7 @@ def inject_serializer(
     query_in: Optional[Union[Type[BaseSerializer], BaseSerializer]] = None,
     out: Optional[Union[Type[BaseSerializer], BaseSerializer]] = None,
     config: Optional[dict] = None,
-    **swagger_kwargs
+    **swagger_kwargs,
 ):
     """
     Sugar for simpling drf serializer specification

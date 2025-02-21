@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
-"""
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
+
 import logging
 from os import PathLike
 from shutil import copyfileobj
@@ -38,7 +45,7 @@ class S3Store(BlobStore):
         aws_access_key_id: str,
         aws_secret_access_key: str,
         endpoint_url: str,
-        region_name: str = 'us-east-1',
+        region_name: str = "us-east-1",
         signature_version: str = "s3v4",
         **kwargs,
     ):
@@ -89,7 +96,7 @@ class S3Store(BlobStore):
             logger.info("Upload to '%s' success.", key)
         except Exception as e:
             logger.exception("upload to '%s' failed.", key)
-            raise UploadFailedError(key=key, src='<memory>') from e
+            raise UploadFailedError(key=key, src="<memory>") from e
 
     def download_file(self, key: str, filepath: PathLike, *args, **kwargs) -> PathLike:
         client = self.get_client()
@@ -107,7 +114,7 @@ class S3Store(BlobStore):
             obj = bucket.Object(key).get()
             copyfileobj(obj["Body"], fh)
         except Exception as e:
-            raise DownloadFailedError(key=key, dest='<memory>') from e
+            raise DownloadFailedError(key=key, dest="<memory>") from e
 
     def delete_file(self, key: str, *args, **kwargs):
         client = self.get_client()

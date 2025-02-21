@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
-"""
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
+
 from typing import List, Type
 
 import pytest
@@ -27,22 +34,22 @@ def flag_builder(fields: List[FeatureFlagField]) -> Type[FeatureFlag]:
 
 class TestFeatureFlags:
     def test_make_empty_flag(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="can not be empty"):
             flag_builder([FeatureFlagField(name="")])
 
     def test_register_empty_flag(self):
         flag = flag_builder([])
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="can not be empty"):
             flag.register_feature_flag(FeatureFlagField())
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="can not be empty"):
             flag.register_feature_flag(FeatureFlagField(name=""))
 
     @pytest.mark.parametrize(
-        "init_fields, str_var, expected",
+        ("init_fields", "str_var", "expected"),
         [
-            ([], "foo", pytest.raises(ValueError)),
+            ([], "foo", pytest.raises(ValueError, match="is not a valid")),
             ([FeatureFlagField(name="foo")], "foo", does_not_raise()),
-            ([FeatureFlagField(name="foo")], "bar", pytest.raises(ValueError)),
+            ([FeatureFlagField(name="foo")], "bar", pytest.raises(ValueError, match="is not a valid")),
         ],
     )
     def test_cast(self, init_fields, str_var, expected):
@@ -52,7 +59,7 @@ class TestFeatureFlags:
             assert getattr(flags, str_var) == flag
 
     @pytest.mark.parametrize(
-        "init_fields, expected",
+        ("init_fields", "expected"),
         [
             ([], {}),
             ([FeatureFlagField(name="foo")], {"foo": False}),
@@ -84,7 +91,7 @@ class TestFeatureFlags:
         assert flag_builder(init_fields).get_default_flags() == expected
 
     @pytest.mark.parametrize(
-        "init_fields, expected",
+        ("init_fields", "expected"),
         [
             ([], []),
             ([FeatureFlagField(name="foo")], [("foo", "foo")]),
@@ -101,7 +108,7 @@ class TestFeatureFlags:
         assert flag_builder(init_fields).get_django_choices() == expected
 
     @pytest.mark.parametrize(
-        "init_fields, to_register, expected",
+        ("init_fields", "to_register", "expected"),
         [
             ([], FeatureFlagField(name="foo"), does_not_raise()),
             (
@@ -112,7 +119,7 @@ class TestFeatureFlags:
             (
                 [FeatureFlagField(name="foo")],
                 FeatureFlagField(name="foo", label="bar"),
-                pytest.raises(ValueError),
+                pytest.raises(ValueError, match="cannot be set to the same"),
             ),
         ],
     )
@@ -125,7 +132,7 @@ class TestFeatureFlags:
         assert to_register.name in list(flags)
 
     @pytest.mark.parametrize(
-        "init_fields, expected",
+        ("init_fields", "expected"),
         [
             ([], []),
             ([FeatureFlagField(name="foo")], ["foo"]),
@@ -193,7 +200,7 @@ class TestStructuredEnum:
         ]
 
     @pytest.mark.parametrize(
-        "value,label",
+        ("value", "label"),
         [
             (UserType.NORMAL, "normal user"),
             (3, "Core developer"),
@@ -205,7 +212,7 @@ class TestStructuredEnum:
         assert UserType.get_choice_label(value) == label
 
     @pytest.mark.parametrize(
-        "value,label",
+        ("value", "label"),
         [
             (ProgrammingLanguage.HIGH_LEVEL, "high-level language"),
             (["C", "C++"], "low-level language"),
@@ -223,10 +230,11 @@ class TestStructuredEnum:
 
 
 try:
-    from blue_krill.data_types.enum import StrStructuredEnum, IntStructuredEnum
+    from blue_krill.data_types.enum import IntStructuredEnum, StrStructuredEnum
 except ImportError:
     pass
 else:
+
     class StrDemoEnum(StrStructuredEnum):
         FOO = "foo"
         BAR = "bar"

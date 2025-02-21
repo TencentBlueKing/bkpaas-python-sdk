@@ -13,6 +13,11 @@ ruff = "^0.1.7"
 [tool.ruff]
 line-length = 119
 
+# 添加需要额外忽略的目录，比如 Django 自动生成的 migrations 目录
+extend-exclude = ["*/migrations"]
+
+[tool.ruff.lint]
+
 # 每个规则集的具体内容请参考：https://docs.astral.sh/ruff/rules/
 select = [
   "E",
@@ -31,6 +36,7 @@ select = [
   "SIM",
   "PT",
 ]
+
 
 # 理论上来说，ignore 规则列表中的条目越少越好。但在实际项目中，选择性地忽略某些规则常常是必须的。
 # 下面收集了常见的待忽略规则集，并将其分为两类：“推荐忽略”和“谨慎忽略”。“推荐忽略”类中所包含的规
@@ -94,13 +100,10 @@ ignore = [
   "PLW0603",
 ]
 
-# 添加需要额外忽略的目录，比如 Django 自动生成的 migrations 目录
-extend-exclude = ["*/migrations"]
-
 [tool.ruff.format]
 quote-style = "double"
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 # 总是显式制定 import section 的顺序
 section-order = [
   "future",

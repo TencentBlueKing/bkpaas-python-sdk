@@ -1,21 +1,28 @@
 # -*- coding: utf-8 -*-
-"""
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
-"""
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
+
 from typing import Any, Callable, Dict, Optional, Type, TypeVar, Union, overload
 
 _DEFAULT_ERROR_CODE_NUM = -1
 _DEFAULT_STATUS_CODE = 400
 
-ExtraFormatterFunc = Callable[[str, 'APIError'], str]
+ExtraFormatterFunc = Callable[[str, "APIError"], str]
 
-T = TypeVar('T', bound='APIError')
+T = TypeVar("T", bound="APIError")
 
 
 class APIError(Exception):
@@ -29,7 +36,7 @@ class APIError(Exception):
     :param data: stores extra data in current Exception object
     """
 
-    delimiter = ': '
+    delimiter = ": "
 
     def __init__(
         self,
@@ -63,7 +70,7 @@ class APIError(Exception):
             obj_message = message
         else:
             # Note: use `f` to join str for compatibility with lazy loaded messages，such as django i18n gettext
-            obj_message = f'{self._message}{self.delimiter}{message}'
+            obj_message = f"{self._message}{self.delimiter}{message}"
         obj_message = self._render(obj_message, kwargs)
         return self._clone(message=obj_message)
 
@@ -105,7 +112,7 @@ class APIError(Exception):
         return message
 
     def __str__(self) -> str:
-        return f'<{self.__class__.__name__}: {self.code}({self.code_num})-{self.message}>'
+        return f"<{self.__class__.__name__}: {self.code}({self.code_num})-{self.message}>"
 
 
 class ErrorCode:
@@ -116,32 +123,30 @@ class ErrorCode:
 
     def __init__(self, *args, **kwargs):
         self._code = None
-        self._error_cls = kwargs.pop('error_cls', APIError)
+        self._error_cls = kwargs.pop("error_cls", APIError)
         # Save arguments for making error object later
         self._error_args = args
         self._error_kwargs = kwargs
 
     @overload
-    def __get__(self, obj: None, obj_type: None) -> 'ErrorCode':
-        ...
+    def __get__(self, obj: None, obj_type: None) -> "ErrorCode": ...
 
     @overload
-    def __get__(self, obj: object, obj_type: Type) -> APIError:
-        ...
+    def __get__(self, obj: object, obj_type: Type) -> APIError: ...
 
-    def __get__(self, obj: Union[None, object], obj_type: Union[None, Type]) -> Union['ErrorCode', APIError]:
+    def __get__(self, obj: Union[None, object], obj_type: Union[None, Type]) -> Union["ErrorCode", APIError]:
         """When retriving `ErrorCode` via object attribute, always making a brand new `APIError`
         exception object
         """
         if obj is None:
             return self
         if not self._code:
-            raise RuntimeError('must be initialized as a descriptor')
+            raise RuntimeError("must be initialized as a descriptor")
 
         try:
             return self._error_cls(self._code, *self._error_args, **self._error_kwargs)
         except TypeError as e:
-            raise TypeError(f'Unable to make {self._error_cls.__name__} object: {e}')
+            raise TypeError(f"Unable to make {self._error_cls.__name__} object: {e}")
 
     def __set_name__(self, obj_type, name):
         """Set field name as error code object's code"""

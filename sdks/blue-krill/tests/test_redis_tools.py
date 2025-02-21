@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
-"""
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
+
 import os
 import random
 import time
@@ -39,23 +46,23 @@ def redis_db():
 
 @pytest.fixture
 def rand_key():
-    return f'foo{generate_random_string(length=6)}'
+    return f"foo{generate_random_string(length=6)}"
 
 
 @pytest.fixture
 def redis_sentinel_db(rand_key):
-    REDIS_URL = os.environ.get('REDIS_SENTINEL_URL')
-    SENTINEL_MASTER_NAME = os.environ.get('SENTINEL_MASTER_NAME')
-    SENTINEL_PASSWORD = os.environ.get('SENTINEL_PASSWORD')
+    redis_url = os.environ.get("REDIS_SENTINEL_URL")
+    sentinel_master_name = os.environ.get("SENTINEL_MASTER_NAME")
+    sentinel_password = os.environ.get("SENTINEL_PASSWORD")
 
-    if REDIS_URL and SENTINEL_MASTER_NAME:
-        sentinel_kwargs = {'password': SENTINEL_PASSWORD} if SENTINEL_PASSWORD else {}
-        client = SentinelBackend(REDIS_URL, SENTINEL_MASTER_NAME, sentinel_kwargs).client
-        client.set(rand_key, 'bar')
+    if redis_url and sentinel_master_name:
+        sentinel_kwargs = {"password": sentinel_password} if sentinel_password else {}
+        client = SentinelBackend(redis_url, sentinel_master_name, sentinel_kwargs).client
+        client.set(rand_key, "bar")
         yield client
         client.delete(rand_key)
 
-    raise pytest.skip('MISSING REDIS SENTINEL CONFIG IN ENVIRONMENT VARIABLES')
+    raise pytest.skip("MISSING REDIS SENTINEL CONFIG IN ENVIRONMENT VARIABLES")
 
 
 @pytest.fixture
@@ -73,7 +80,7 @@ class TestMessageChannel:
         channel = StreamChannel(self.channel_id, self.redis_db)
         channel.initialize()
         for i in range(batch):
-            channel.publish_msg(message='Hello, I am %s.' % (i + 1))
+            channel.publish_msg(message="Hello, I am %s." % (i + 1))
             time.sleep(wait)
         channel.close()
 
@@ -82,7 +89,7 @@ class TestMessageChannel:
         subscriber = StreamChannelSubscriber(self.channel_id, self.redis_db)
         channel.initialize()
         for i in range(10):
-            channel.publish_msg(message='Hello, I am %s.' % (i + 1))
+            channel.publish_msg(message="Hello, I am %s." % (i + 1))
 
         assert len(subscriber.get_history_events()) == 10
         assert len(subscriber.get_history_events(last_event_id=7)) == 4
@@ -211,27 +218,27 @@ class TestSentinel:
 
     @pytest.fixture
     def sentinel_url(self, sentinel_hosts, sentinel_port, redis_password, redis_db):
-        sentinel_hosts = [f'sentinel://:{redis_password}@{host}:{sentinel_port}/{redis_db}' for host in sentinel_hosts]
-        return ';'.join(sentinel_hosts)
+        sentinel_hosts = [f"sentinel://:{redis_password}@{host}:{sentinel_port}/{redis_db}" for host in sentinel_hosts]
+        return ";".join(sentinel_hosts)
 
     def test_create_sentinel_backend(
         self, sentinel_url, master_name, sentinel_hosts, sentinel_password, sentinel_port, redis_password, redis_db
     ):
-        sentinel_kwargs = {'password': sentinel_password}
+        sentinel_kwargs = {"password": sentinel_password}
         backend = SentinelBackend(sentinel_url, master_name, sentinel_kwargs)
 
-        assert backend.hosts == [{'host': h, 'port': sentinel_port} for h in sentinel_hosts]
+        assert backend.hosts == [{"host": h, "port": sentinel_port} for h in sentinel_hosts]
         assert backend.sentinel_kwargs == sentinel_kwargs
         assert backend.master_name == master_name
         assert backend.password == redis_password
         assert backend.db == redis_db
 
-    @pytest.mark.parametrize('invalid_url', ['http://', 'sentinel://;http:', 'sentinel://;', 'sentine1://'])
+    @pytest.mark.parametrize("invalid_url", ["http://", "sentinel://;http:", "sentinel://;", "sentine1://"])
     def test_invalid_url_backend(self, invalid_url, master_name, sentinel_password):
         """测试不合法的 sentinel url 输入"""
-        sentinel_kwargs = {'password': sentinel_password}
-        with pytest.raises(ValueError):
+        sentinel_kwargs = {"password": sentinel_password}
+        with pytest.raises(ValueError, match="must be sentinel scheme"):
             SentinelBackend(invalid_url, master_name, sentinel_kwargs)
 
     def test_backend_client(self, redis_sentinel_db, rand_key):
-        assert redis_sentinel_db.get(rand_key) == b'bar'
+        assert redis_sentinel_db.get(rand_key) == b"bar"

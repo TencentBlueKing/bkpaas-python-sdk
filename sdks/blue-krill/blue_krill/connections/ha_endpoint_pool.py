@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
-"""
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
+
 import datetime
 import logging
 import random
@@ -22,10 +29,12 @@ from .ha_algorithm import BasicHAAlgorithm
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 SUCCESS_SCORE_DELTA = 1
 FAILURE_SCORE_DELTA = 50
+
+_default_algorithm = BasicHAAlgorithm()
 
 
 class HAEndpointPool(Generic[T]):
@@ -36,12 +45,12 @@ class HAEndpointPool(Generic[T]):
     :param algorithm: HA Algorithm object, default value: `BasicHAAlgorithm`
     """
 
-    active_endpoint: 'Endpoint'
+    active_endpoint: "Endpoint"
 
-    def __init__(self, items: Iterable[T], algorithm: 'BasicHAAlgorithm' = BasicHAAlgorithm()):
+    def __init__(self, items: Iterable[T], algorithm: "BasicHAAlgorithm" = _default_algorithm):
         self._rlock = RLock()
         self.algorithm = algorithm
-        self.endpoints: 'List[Endpoint]' = []
+        self.endpoints: "List[Endpoint]" = []
 
         # Initialize endpoints and start first election
         for item in items:
@@ -52,7 +61,7 @@ class HAEndpointPool(Generic[T]):
         """Add an endpoint object"""
         self.endpoints.append(Endpoint(raw=item))
 
-    def elect(self, endpoint: 'Optional[Endpoint]' = None):
+    def elect(self, endpoint: "Optional[Endpoint]" = None):
         """Set `self.active_endpoint` to the best endpoint, it should be the healthy one with
         highest score.
 
@@ -69,9 +78,9 @@ class HAEndpointPool(Generic[T]):
                 return
 
             # Get endpoints with maximum score
-            eps = sorted(self.list_healthy(), key=attrgetter('score'), reverse=True)
+            eps = sorted(self.list_healthy(), key=attrgetter("score"), reverse=True)
             if not eps:
-                raise NoEndpointAvailable('No healthy endpoint')
+                raise NoEndpointAvailable("No healthy endpoint")
 
             best = random.choice([x for x in eps if x.score == eps[0].score])
             self.active_endpoint = best
@@ -81,11 +90,11 @@ class HAEndpointPool(Generic[T]):
         """Get current active item"""
         return self.active_endpoint.raw
 
-    def get_endpoint(self) -> 'Endpoint':
+    def get_endpoint(self) -> "Endpoint":
         """Get current active endpoint object"""
         return self.active_endpoint
 
-    def list_healthy(self) -> 'List[Endpoint]':
+    def list_healthy(self) -> "List[Endpoint]":
         """List all healthy Endpoints"""
         return [ep for ep in self.endpoints if not ep.is_unhealthy()]
 
@@ -124,7 +133,7 @@ class HAEndpointPool(Generic[T]):
             self.succeed()
 
     def __repr__(self) -> str:
-        return f'HAEndpointPool(active_endpoint={self.active_endpoint!r}, endpoints={self.endpoints!r})'
+        return f"HAEndpointPool(active_endpoint={self.active_endpoint!r}, endpoints={self.endpoints!r})"
 
 
 @dataclass(order=True)
