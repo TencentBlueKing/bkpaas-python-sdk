@@ -1,5 +1,8 @@
 # 版本历史
 
+## 3.1.1
+- fix: 修复 apigw-manager 4.0.1 版本 JWT 中间件新增 tenant_id 参数导致的 JWT 认证失效问题
+
 ## 3.1.0
 - feat: UniversalAuthBackend 支持获取用户租户身份信息
 

@@ -12,27 +12,27 @@ except ImportError:
 
 import os.path
 
-readme = ''
+readme = ""
 here = os.path.abspath(os.path.dirname(__file__))
-readme_path = os.path.join(here, 'README.rst')
+readme_path = os.path.join(here, "README.rst")
 if os.path.exists(readme_path):
-    with open(readme_path, 'rb') as stream:
-        readme = stream.read().decode('utf8')
+    with open(readme_path, "rb") as stream:
+        readme = stream.read().decode("utf8")
 
 
 setup(
     long_description=readme,
-    name='bkpaas-auth',
-    version='3.1.0',
-    description='User authentication django app for blueking internal projects',
-    python_requires='<4.0,>=3.8',
-    author='blueking',
-    author_email='blueking@tencent.com',
-    license='Apach License 2.0',
-    packages=['bkpaas_auth', 'bkpaas_auth.core'],
+    name="bkpaas-auth",
+    version="3.1.1",
+    description="User authentication django app for blueking internal projects",
+    python_requires="<4.0,>=3.8",
+    author="blueking",
+    author_email="blueking@tencent.com",
+    license="Apach License 2.0",
+    packages=["bkpaas_auth", "bkpaas_auth.core"],
     package_dir={"": "."},
     package_data={},
-    install_requires=['django<5.0,>=4.2', 'requests', 'six'],
+    install_requires=["django<5.0,>=4.2", "requests", "six"],
     extras_require={
         "dev": [
             "flake8==3.*,>=3.8.4",
