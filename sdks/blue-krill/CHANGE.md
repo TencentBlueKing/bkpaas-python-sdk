@@ -1,5 +1,11 @@
 ## Change logs
 
+### 2.1.0
+
+- Feature: improve editionctl tool in various places: debounce, conditional linking and event filtering
+- Refactor: fix ruff linter issues
+- Drop support for Python3.8 and Django 1.x
+
 ### 2.0.7
 
 - Feature: (py 3.11+) add StrStructuredEnum, IntStructuredEnum class

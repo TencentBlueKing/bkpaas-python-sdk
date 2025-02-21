@@ -54,7 +54,7 @@ class ClientJWTAuth(AuthBase):
 
     _default_expires_in = 3600
 
-    def __init__(self, auth_conf: JWTAuthConf, prefix: str = "Bearer", expires_in: int = None):
+    def __init__(self, auth_conf: JWTAuthConf, prefix: str = "Bearer", expires_in: Optional[int] = None):
         self.auth_conf = auth_conf
         self.prefix = prefix
         self.expires_in = expires_in or self._default_expires_in
