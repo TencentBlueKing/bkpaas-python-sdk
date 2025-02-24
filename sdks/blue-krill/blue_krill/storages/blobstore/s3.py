@@ -18,7 +18,7 @@
 import logging
 from os import PathLike
 from shutil import copyfileobj
-from typing import BinaryIO
+from typing import BinaryIO, Optional
 
 from blue_krill.storages.blobstore.base import BlobStore, SignatureType
 from blue_krill.storages.blobstore.exceptions import DownloadFailedError, ObjectAlreadyExists, UploadFailedError
@@ -56,7 +56,7 @@ class S3Store(BlobStore):
         self.endpoint_url = endpoint_url
         self.region_name = region_name
 
-    def get_client(self, signature_version: str = None):
+    def get_client(self, signature_version: Optional[str] = None):
         return boto3.resource(
             "s3",
             aws_access_key_id=self.aws_access_key_id,

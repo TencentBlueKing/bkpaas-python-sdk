@@ -54,7 +54,9 @@ _fake_check_task = FakeCheckTask()
 class BasePoller(TaskPoller):
     """Base poller using fake task"""
 
-    def query(self) -> PollingResult: ...
+    def query(self) -> PollingResult:
+        # The subclass should implement this method
+        raise NotImplementedError
 
     @classmethod
     def get_async_task(cls):
