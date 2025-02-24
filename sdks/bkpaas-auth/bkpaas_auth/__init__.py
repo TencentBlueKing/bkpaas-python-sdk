@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = "3.1.0"
+__version__ = "3.1.1"
 
 
 def get_user_by_user_id(user_id: str, username_only: bool = True):
@@ -18,7 +18,7 @@ def get_user_by_user_id(user_id: str, username_only: bool = True):
 
     # 多租户模式下, 暂时没有根据用户名获取用户详细信息的接口
     if conf.ENABLE_MULTI_TENANT_MODE:
-        raise ValueError('Multi-tenant mode only return username, please set username_only=True')
+        raise ValueError("Multi-tenant mode only return username, please set username_only=True")
 
     # Request third party service to get info other than username
     if provider_type == ProviderType.RTX:
@@ -30,4 +30,4 @@ def get_user_by_user_id(user_id: str, username_only: bool = True):
         user_info.provide(user)
         return user
     else:
-        raise ValueError('ProviderType is not supported yet!')
+        raise ValueError("ProviderType is not supported yet!")

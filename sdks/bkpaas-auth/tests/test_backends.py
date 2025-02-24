@@ -9,9 +9,8 @@ from tests.utils import generate_random_string, mock_json_response, mock_raw_res
 
 
 class TestUniversalAuthBackend:
-
     @override_settings(BKAUTH_ENABLE_MULTI_TENANT_MODE=False, BKAUTH_BACKEND_TYPE="bk_ticket")
-    @mock.patch('requests.Session.request')
+    @mock.patch("requests.Session.request")
     def test_authenticate_bk_ticket(self, mock_request, mocker):
         mock_request.return_value = mock_json_response({"msg": "", "data": {"username": "foo"}, "ret": 0})
 
@@ -26,7 +25,7 @@ class TestUniversalAuthBackend:
         assert getattr(user, "display_name") == "foo"
 
     @override_settings(BKAUTH_ENABLE_MULTI_TENANT_MODE=False, BKAUTH_BACKEND_TYPE="bk_token")
-    @mock.patch('requests.Session.request')
+    @mock.patch("requests.Session.request")
     def test_authenticate_bk_token(self, mock_request, mocker):
         mock_request.return_value = mock_json_response(
             {"result": True, "code": 0, "message": "", "data": {"bk_username": "bar"}}
@@ -47,7 +46,7 @@ class TestUniversalAuthBackend:
         BKAUTH_BACKEND_TYPE="bk_token",
         BKAUTH_USER_INFO_APIGW_URL="fake_url",
     )
-    @mock.patch('requests.Session.request')
+    @mock.patch("requests.Session.request")
     def test_authenticate_bk_token_for_tenant_mode(self, mock_request, mocker):
         mock_request.return_value = mock_raw_response(
             {
@@ -74,7 +73,7 @@ class TestUniversalAuthBackend:
 
 
 class TestAPIGatewayAuthBackend:
-    @pytest.fixture
+    @pytest.fixture()
     def backend(self):
         return APIGatewayAuthBackend()
 
@@ -89,7 +88,7 @@ class TestAPIGatewayAuthBackend:
     def test_authenticate_not_verified(self, mocker, backend):
         user = backend.authenticate(
             request=mocker.MagicMock(),
-            api_name="test",
+            gateway_name="test",
             bk_username="admin",
             verified=False,
         )
@@ -101,7 +100,7 @@ class TestAPIGatewayAuthBackend:
     def test_authenticate_verified(self, mocker, backend):
         user = backend.authenticate(
             request=mocker.MagicMock(),
-            api_name="test",
+            gateway_name="test",
             bk_username="admin",
             verified=True,
         )
@@ -109,3 +108,19 @@ class TestAPIGatewayAuthBackend:
         assert not user.is_anonymous
         assert user.is_authenticated
         assert user.username == "admin"
+
+    def test_authenticate_with_additional_params(self, mocker, backend):
+        """测试带多个额外参数的情况"""
+        user = backend.authenticate(
+            request=mocker.MagicMock(),
+            gateway_name="test",
+            bk_username="multi_param_user",
+            verified=True,
+            param1="value1",
+            param2=2,
+            param3={"key": "value"},
+        )
+
+        assert not user.is_anonymous
+        assert user.is_authenticated
+        assert user.username == "multi_param_user"
