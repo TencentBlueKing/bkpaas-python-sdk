@@ -1,8 +1,7 @@
 ## Change logs
 
 ### 2.1.1
-- Feature: bkrepo management API now supports adding multi-tenant request headers
-- Feature: add the tenant ID prefix to the project_id of bkrepo in multi-tenant mode
+- Feature: In multi-tenant mode: add X-Bk-Tenant-Id to the bkrepo management API request header, and add the tenant_id prefix to the project ID
 
 ### 2.1.0
 

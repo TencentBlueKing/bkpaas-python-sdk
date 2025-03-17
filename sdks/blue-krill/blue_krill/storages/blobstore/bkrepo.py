@@ -77,6 +77,7 @@ class BKRepoManager:
         username: str,
         password: str,
         tenant_id: Optional[str] = None,
+        enable_multi_tenant_mode: bool = False,
         **kwargs,
     ):
         # endpoint can not endswith '/'
@@ -84,21 +85,24 @@ class BKRepoManager:
         self.username = username
         self.password = password
         self.tenant_id = tenant_id
+        self.enable_multi_tenant_mode = enable_multi_tenant_mode
         self._max_retries = kwargs.get("max_retries", MAX_RETRIES)
 
     def get_client(self) -> requests.Session:
         session = requests.session()
         session.auth = HTTPBasicAuth(username=self.username, password=self.password)
-        # 添加租户 ID 请求头
-        if self.tenant_id:
+        # 多租户模式下，请求头需要添加租户 ID
+        if self.enable_multi_tenant_mode and self.tenant_id:
             session.headers.update({"X-Bk-Tenant-Id": self.tenant_id})
         session.mount("http://", HTTPAdapter(max_retries=self._max_retries))
         session.mount("https://", HTTPAdapter(max_retries=self._max_retries))
         return session
 
     def get_project_id(self, project: str) -> str:
-        project_id = f"{self.tenant_id}_{project}" if self.tenant_id else project
-        return project_id
+        # 多租户模式下，项目 ID 需要添加租户 ID 前缀
+        if self.enable_multi_tenant_mode and self.tenant_id:
+            return f"{self.tenant_id}_{project}" if self.tenant_id else project
+        return project
 
     def create_user_to_repo(
         self, username: str, password: str, association_users: List[str], project: str, repo: str
@@ -217,11 +221,11 @@ class BKGenericRepo(BlobStore):
         username: str,
         password: str,
         tenant_id: Optional[str] = None,
+        enable_multi_tenant_mode: bool = False,
         **kwargs,
     ):
         super().__init__(bucket)
-        if tenant_id:
-            self.project = f"{tenant_id}_{project}"
+        self.project_id = f"{tenant_id}_{project}" if enable_multi_tenant_mode else project
         # endpoint can not endswith '/'
         self.endpoint_url = endpoint_url.rstrip("/")
         self.username = username
@@ -253,7 +257,7 @@ class BKGenericRepo(BlobStore):
         :param bool allow_overwrite: 是否覆盖已存在文件
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f"/generic/{self.project}/{self.bucket}/{key}")
+        url = urljoin(self.endpoint_url, f"/generic/{self.project_id}/{self.bucket}/{key}")
         src = getattr(fh, "name", "<memory>")
         headers = {"X-BKREPO-OVERWRITE": str(allow_overwrite)}
 
@@ -288,7 +292,7 @@ class BKGenericRepo(BlobStore):
         :param IO fh: 文件句柄
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f"/generic/{self.project}/{self.bucket}/{key}")
+        url = urljoin(self.endpoint_url, f"/generic/{self.project_id}/{self.bucket}/{key}")
         dest = getattr(fh, "name", "<memory>")
         try:
             resp = client.get(url, stream=True, timeout=TIMEOUT_THRESHOLD)
@@ -320,7 +324,7 @@ class BKGenericRepo(BlobStore):
         :param str key: 文件完整路径
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f"/generic/{self.project}/{self.bucket}/{key}")
+        url = urljoin(self.endpoint_url, f"/generic/{self.project_id}/{self.bucket}/{key}")
         resp = client.delete(url, timeout=TIMEOUT_THRESHOLD)
         return _validate_resp(resp)
 
@@ -330,7 +334,7 @@ class BKGenericRepo(BlobStore):
         :param str key: 文件完整路径
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f"/generic/{self.project}/{self.bucket}/{key}")
+        url = urljoin(self.endpoint_url, f"/generic/{self.project_id}/{self.bucket}/{key}")
         resp = client.head(url, timeout=TIMEOUT_THRESHOLD)
         if resp.status_code == 200:
             return resp.headers
@@ -357,7 +361,7 @@ class BKGenericRepo(BlobStore):
         resp = client.post(
             url,
             json={
-                "projectId": self.project,
+                "projectId": self.project_id,
                 "repoName": self.bucket,
                 "fullPathSet": [key],
                 "expireSeconds": expires_in,

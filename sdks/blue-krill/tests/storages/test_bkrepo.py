@@ -78,6 +78,7 @@ def store(session, username, password, endpoint, project, tenant_id):
         project=project,
         endpoint_url=endpoint,
         tenant_id=tenant_id,
+        enable_multi_tenant_mode=True,
     )
     with mock.patch.object(store, "get_client", return_value=session):
         session.auth = HTTPBasicAuth(username=username, password=password)
@@ -183,6 +184,7 @@ class TestBKRepoManager:
             username=username,
             password=password,
             tenant_id="test-tenant-123",
+            enable_multi_tenant_mode=True,
         )
 
     @pytest.fixture()
@@ -191,6 +193,8 @@ class TestBKRepoManager:
             endpoint_url=endpoint,
             username=username,
             password=password,
+            tenant_id="default",
+            enable_multi_tenant_mode=False,
         )
 
     @pytest.mark.parametrize(
