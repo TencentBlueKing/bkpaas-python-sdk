@@ -1,5 +1,8 @@
 ## Change logs
 
+### 2.1.1
+- Feature: bkrepo management API now supports adding multi-tenant request headers
+
 ### 2.1.0
 
 - Feature: improve editionctl tool in various places: debounce, conditional linking and event filtering
