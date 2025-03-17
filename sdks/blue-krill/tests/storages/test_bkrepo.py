@@ -32,44 +32,44 @@ from blue_krill.storages.blobstore.exceptions import ObjectAlreadyExists, Upload
 from tests.utils import generate_random_string
 
 
-@pytest.fixture()
+@pytest.fixture
 def username():
     return generate_random_string()
 
 
-@pytest.fixture()
+@pytest.fixture
 def password():
     return generate_random_string()
 
 
-@pytest.fixture()
+@pytest.fixture
 def endpoint():
     return "http://dummy.com"
 
 
-@pytest.fixture()
+@pytest.fixture
 def session():
     return requests.session()
 
 
-@pytest.fixture()
+@pytest.fixture
 def adapter(session):
     adapter = requests_mock.Adapter()
     session.mount("http://", adapter)
     return adapter
 
 
-@pytest.fixture()
+@pytest.fixture
 def project():
     return "dummy-project"
 
 
-@pytest.fixture()
+@pytest.fixture
 def tenant_id():
     return "test-tenant-123"
 
 
-@pytest.fixture()
+@pytest.fixture
 def store(session, username, password, endpoint, project, tenant_id):
     store = BKGenericRepo(
         bucket="dummy-bucket",
@@ -177,7 +177,7 @@ class TestBKGenericRepo:
 class TestBKRepoManager:
     """BKRepoManager 测试类"""
 
-    @pytest.fixture()
+    @pytest.fixture
     def manager(self, session, username, password, endpoint):
         return BKRepoManager(
             endpoint_url=endpoint,
@@ -187,7 +187,7 @@ class TestBKRepoManager:
             enable_multi_tenant_mode=True,
         )
 
-    @pytest.fixture()
+    @pytest.fixture
     def manager_without_tenant(self, session, username, password, endpoint):
         return BKRepoManager(
             endpoint_url=endpoint,
