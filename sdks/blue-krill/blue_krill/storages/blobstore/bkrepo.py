@@ -17,7 +17,7 @@
 
 import logging
 from os import PathLike, getenv
-from typing import Any, BinaryIO, List
+from typing import Any, BinaryIO, List, Optional
 from urllib.parse import urljoin
 
 import curlify
@@ -76,17 +76,22 @@ class BKRepoManager:
         endpoint_url: str,
         username: str,
         password: str,
+        tenant_id: Optional[str] = None,
         **kwargs,
     ):
         # endpoint can not endswith '/'
         self.endpoint_url = endpoint_url.rstrip("/")
         self.username = username
         self.password = password
+        self.tenant_id = tenant_id
         self._max_retries = kwargs.get("max_retries", MAX_RETRIES)
 
     def get_client(self) -> requests.Session:
         session = requests.session()
         session.auth = HTTPBasicAuth(username=self.username, password=self.password)
+        # 添加租户 ID 请求头
+        if self.tenant_id:
+            session.headers.update({"X-Bk-Tenant-Id": self.tenant_id})
         session.mount("http://", HTTPAdapter(max_retries=self._max_retries))
         session.mount("https://", HTTPAdapter(max_retries=self._max_retries))
         return session

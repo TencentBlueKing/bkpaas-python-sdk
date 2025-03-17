@@ -27,39 +27,39 @@ import requests_mock
 from requests.auth import HTTPBasicAuth
 
 from blue_krill.contextlib import nullcontext as does_not_raise
-from blue_krill.storages.blobstore.bkrepo import BKGenericRepo
+from blue_krill.storages.blobstore.bkrepo import BKGenericRepo, BKRepoManager
 from blue_krill.storages.blobstore.exceptions import ObjectAlreadyExists, UploadFailedError
 from tests.utils import generate_random_string
 
 
-@pytest.fixture
+@pytest.fixture()
 def username():
     return generate_random_string()
 
 
-@pytest.fixture
+@pytest.fixture()
 def password():
     return generate_random_string()
 
 
-@pytest.fixture
+@pytest.fixture()
 def endpoint():
     return "http://dummy.com"
 
 
-@pytest.fixture
+@pytest.fixture()
 def session():
     return requests.session()
 
 
-@pytest.fixture
+@pytest.fixture()
 def adapter(session):
     adapter = requests_mock.Adapter()
     session.mount("http://", adapter)
     return adapter
 
 
-@pytest.fixture
+@pytest.fixture()
 def store(session, username, password, endpoint):
     store = BKGenericRepo(
         bucket="dummy-bucket", username=username, password=password, project="dummy-project", endpoint_url=endpoint
@@ -156,3 +156,55 @@ class TestBKGenericRepo:
             json={"code": 0, "message": "", "data": [{"url": urljoin(endpoint, expected)}]},
         )
         assert store.generate_presigned_url(key, expires_in=3600) == urljoin(endpoint, expected)
+
+
+class TestBKRepoManager:
+    """BKRepoManager 测试类"""
+
+    @pytest.fixture()
+    def manager(self, session, username, password, endpoint):
+        return BKRepoManager(
+            endpoint_url=endpoint,
+            username=username,
+            password=password,
+            tenant_id="test-tenant-123",
+        )
+
+    @pytest.fixture()
+    def manager_without_tenant(self, session, username, password, endpoint):
+        return BKRepoManager(
+            endpoint_url=endpoint,
+            username=username,
+            password=password,
+        )
+
+    @pytest.mark.parametrize(
+        ("method", "url_suffix", "data"),
+        [
+            ("post", "/auth/api/user/create/repo", {"projectId": "test", "repoName": "repo"}),
+            ("put", "/auth/api/user/test-user", {}),
+            ("delete", "/auth/api/user/test-user", None),
+            ("post", "/repository/api/repo/create", {"projectId": "test", "name": "repo"}),
+            ("delete", "/repository/api/repo/delete/test/repo", None),
+            ("post", "/repository/api/project/create", {"name": "test"}),
+        ],
+    )
+    def test_requests_have_tenant_header(self, manager, adapter, endpoint, method, url_suffix, data):
+        """测试所有管理接口请求都携带租户ID头"""
+        url = urljoin(endpoint, url_suffix)
+        adapter.register_uri(method, url, json={"code": 0, "message": "ok"})
+
+        client_method = getattr(manager.get_client(), method)
+        resp = client_method(url, json=data)
+
+        # 验证请求头中是否包含租户ID
+        assert resp.request.headers["X-Bk-Tenant-Id"] == "test-tenant-123"
+
+    def test_request_without_tenant_header(self, manager_without_tenant, adapter, endpoint):
+        """测试未设置租户ID时不携带头信息"""
+        url = urljoin(endpoint, "/repository/api/project/create")
+        adapter.register_uri("POST", url, json={"code": 0, "message": "ok"})
+
+        resp = manager_without_tenant.get_client().post(url, json={"name": "test"})
+
+        assert "X-Bk-Tenant-Id" not in resp.request.headers
