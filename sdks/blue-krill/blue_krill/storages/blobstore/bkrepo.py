@@ -69,7 +69,19 @@ class RepositoryType(str, StructuredEnum):
 
 
 class BKRepoManager:
-    """蓝鲸 bkrepo 管理端，多租户模式下所有请求都需要添加 X-Bk-Tenant-Id 请求头"""
+    """蓝鲸 bkrepo 管理端，提供创建项目、仓库、用户等功能。
+
+    使用说明：多租户模式下需要传入租户 ID。
+    示例：
+        >>> manager = BKRepoManager(
+        ...     endpoint_url="http://bkrepo.example.com",
+        ...     username="admin",
+        ...     password="blueking",
+        ...     tenant_id="tenant-123"  # 多租户模式必填
+        ... )
+        >>> manager.create_project("myproject")  # 创建后的项目ID为 "tenant-123-myproject"
+
+    """
 
     def __init__(
         self,
@@ -77,7 +89,6 @@ class BKRepoManager:
         username: str,
         password: str,
         tenant_id: Optional[str] = None,
-        enable_multi_tenant_mode: bool = False,
         **kwargs,
     ):
         # endpoint can not endswith '/'
@@ -85,27 +96,20 @@ class BKRepoManager:
         self.username = username
         self.password = password
         self.tenant_id = tenant_id
-        self.enable_multi_tenant_mode = enable_multi_tenant_mode
         self._max_retries = kwargs.get("max_retries", MAX_RETRIES)
 
     def get_client(self) -> requests.Session:
         session = requests.session()
         session.auth = HTTPBasicAuth(username=self.username, password=self.password)
-        # 多租户模式下，请求头需要添加租户 ID
-        if self.enable_multi_tenant_mode and self.tenant_id:
+        # NOTE：非多租户模式添加请求无影响，故不判断是否为多租户模式，传了 tenant_id 就添加到请求头
+        if self.tenant_id:
             session.headers.update({"X-Bk-Tenant-Id": self.tenant_id})
         session.mount("http://", HTTPAdapter(max_retries=self._max_retries))
         session.mount("https://", HTTPAdapter(max_retries=self._max_retries))
         return session
 
-    def get_project_id(self, project: str) -> str:
-        # 多租户模式下，项目 ID 需要添加租户 ID 前缀
-        if self.enable_multi_tenant_mode and self.tenant_id:
-            return f"{self.tenant_id}_{project}" if self.tenant_id else project
-        return project
-
     def create_user_to_repo(
-        self, username: str, password: str, association_users: List[str], project: str, repo: str
+        self, username: str, password: str, association_users: List[str], project_id: str, repo: str
     ) -> bool:
         """创建用户到仓库管理员
 
@@ -113,6 +117,7 @@ class BKRepoManager:
         :params password str: 密码
         :params association_users List[str]: 关联的真实用户
         :params repo str: 关联的仓库名称
+        :params project_id str: 项目 ID (注意: 多租户模式下需要添加租户前缀)
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, "/auth/api/user/create/repo")
@@ -123,7 +128,7 @@ class BKRepoManager:
             "userId": username,
             "asstUsers": association_users,
             "group": False,
-            "projectId": self.get_project_id(project),
+            "projectId": project_id,
             "repoName": repo,
         }
         return _validate_resp(client.post(url, json=data, timeout=TIMEOUT_THRESHOLD))
@@ -141,15 +146,16 @@ class BKRepoManager:
         url = urljoin(self.endpoint_url, f"/auth/api/user/{username}")
         return _validate_resp(client.delete(url, timeout=TIMEOUT_THRESHOLD))
 
-    def create_repo(self, project: str, repo: str, repo_type: str = RepositoryType.GENERIC, public: bool = False):
+    def create_repo(self, project_id: str, repo: str, repo_type: str = RepositoryType.GENERIC, public: bool = False):
         """创建仓库
 
         :param public bool: 是否公开读, 当 public 为 True 时, 代表公开读私有写; 当 public 为 False 时, 代表私有读写
+        :params project_id str: 项目 ID (注意: 多租户模式下需要添加租户前缀)
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, "/repository/api/repo/create")
         data = {
-            "projectId": self.get_project_id(project),
+            "projectId": project_id,
             "name": repo,
             "type": RepositoryType(repo_type).value,
             "category": "LOCAL",
@@ -160,20 +166,20 @@ class BKRepoManager:
         }
         return _validate_resp(client.post(url, json=data, timeout=TIMEOUT_THRESHOLD))
 
-    def delete_repo(self, project: str, repo: str, forced: bool = False):
+    def delete_repo(self, project_id: str, repo: str, forced: bool = False):
         """删除仓库
 
+        :params project_id str: 项目 ID (注意: 多租户模式下需要添加租户前缀)
         :params repo str: 仓库名
         :params forced bool: 是否强制删除, 如果为false，当仓库中存在文件时，将无法删除仓库
         """
         client = self.get_client()
-        project_id = self.get_project_id(project)
         url = urljoin(self.endpoint_url, f"/repository/api/repo/delete/{project_id}/{repo}?forced={forced}")
         return _validate_resp(client.delete(url, timeout=TIMEOUT_THRESHOLD))
 
     # 以下是项目无关的管理接口
 
-    def create_project(self, project: str):
+    def create_project(self, project_name: str):
         """创建项目
 
         :params project str: 项目名
@@ -183,16 +189,18 @@ class BKRepoManager:
         # Note: 创建项目时传的是项目名称，创建成功后 API 未返回项目 ID 信息，统一在 get_project_id 中处理项目 ID
         # 非多租户情况下：项目 ID == 项目名称
         # 多租户情况下：项目 ID == 租户 ID + 项目名称
-        data = {"name": project, "displayName": project, "description": ""}
+        data = {"name": project_name, "displayName": project_name, "description": ""}
         return _validate_resp(client.post(url, json=data, timeout=TIMEOUT_THRESHOLD))
 
-    def create_user_to_project(self, username: str, password: str, association_users: List[str], project: str) -> bool:
+    def create_user_to_project(
+        self, username: str, password: str, association_users: List[str], project_id: str
+    ) -> bool:
         """创建用户到项目管理员
 
         :params username str: 用户名
         :params password str: 密码
         :params association_users List[str]: 关联的真实用户
-        :params project str: 关联的项目名称
+        :params project_id str: 项目 ID (注意: 多租户模式下需要添加租户前缀)
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, "/auth/api/user/create/project")
@@ -203,29 +211,27 @@ class BKRepoManager:
             "userId": username,
             "asstUsers": association_users,
             "group": False,
-            "projectId": self.get_project_id(project),
+            "projectId": project_id,
         }
         return _validate_resp(client.post(url, json=data, timeout=TIMEOUT_THRESHOLD))
 
 
 class BKGenericRepo(BlobStore):
-    """蓝鲸通用二进制仓库，多租户模式下所有 project 参数都需要添加租户 ID 前缀"""
+    """蓝鲸通用二进制仓库，提供通用制品上传、下载、删除等功能。"""
 
     STORE_TYPE = "bkrepo"
 
     def __init__(
         self,
         bucket: str,
-        project: str,
+        project_id: str,
         endpoint_url: str,
         username: str,
         password: str,
-        tenant_id: Optional[str] = None,
-        enable_multi_tenant_mode: bool = False,
         **kwargs,
     ):
         super().__init__(bucket)
-        self.project_id = f"{tenant_id}_{project}" if enable_multi_tenant_mode else project
+        self.project_id = project_id
         # endpoint can not endswith '/'
         self.endpoint_url = endpoint_url.rstrip("/")
         self.username = username

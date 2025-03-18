@@ -60,8 +60,8 @@ def adapter(session):
 
 
 @pytest.fixture
-def project():
-    return "dummy-project"
+def project_id():
+    return "dummy-project-id"
 
 
 @pytest.fixture
@@ -70,15 +70,13 @@ def tenant_id():
 
 
 @pytest.fixture
-def store(session, username, password, endpoint, project, tenant_id):
+def store(session, username, password, endpoint, project_id):
     store = BKGenericRepo(
         bucket="dummy-bucket",
         username=username,
         password=password,
-        project=project,
+        project_id=project_id,
         endpoint_url=endpoint,
-        tenant_id=tenant_id,
-        enable_multi_tenant_mode=True,
     )
     with mock.patch.object(store, "get_client", return_value=session):
         session.auth = HTTPBasicAuth(username=username, password=password)
@@ -105,44 +103,42 @@ class TestBKGenericRepo:
             (False, {"code": 251012, "message": ""}, pytest.raises(ObjectAlreadyExists)),
         ],
     )
-    def test_upload(self, store, adapter, endpoint, project, tenant_id, allow_overwrite, fake_response, expected):
+    def test_upload(self, store, adapter, endpoint, project_id, allow_overwrite, fake_response, expected):
         key = "dummy-key"
-        adapter.register_uri(
-            "PUT", urljoin(endpoint, f"/generic/{tenant_id}_{project}/dummy-bucket/{key}"), json=fake_response
-        )
+        adapter.register_uri("PUT", urljoin(endpoint, f"/generic/{project_id}/dummy-bucket/{key}"), json=fake_response)
         with expected:
             store.upload_fileobj(io.BytesIO(), key=key, allow_overwrite=allow_overwrite)
 
-    def test_download(self, store, adapter, endpoint, mktemp, project, tenant_id):
+    def test_download(self, store, adapter, endpoint, mktemp, project_id):
         key = "dummy-key"
         expected = generate_random_string().encode()
         adapter.register_uri(
-            "GET", urljoin(endpoint, f"/generic/{tenant_id}_{project}/dummy-bucket/{key}"), body=io.BytesIO(expected)
+            "GET", urljoin(endpoint, f"/generic/{project_id}/dummy-bucket/{key}"), body=io.BytesIO(expected)
         )
         with open(store.download_file(key, filepath=mktemp()), "rb") as fh:
             assert fh.read() == expected
 
-    def test_download_fileobj(self, store, adapter, endpoint, mktemp, project, tenant_id):
+    def test_download_fileobj(self, store, adapter, endpoint, mktemp, project_id):
         key = "dummy-key"
         expected = generate_random_string().encode()
         adapter.register_uri(
-            "GET", urljoin(endpoint, f"/generic/{tenant_id}_{project}/dummy-bucket/{key}"), body=io.BytesIO(expected)
+            "GET", urljoin(endpoint, f"/generic/{project_id}/dummy-bucket/{key}"), body=io.BytesIO(expected)
         )
         with SpooledTemporaryFile() as fh:
             store.download_fileobj(key, fh=fh)
             fh.seek(0)
             assert fh.read() == expected
 
-    def test_delete_file(self, store, adapter, endpoint, project, tenant_id):
+    def test_delete_file(self, store, adapter, endpoint, project_id):
         key = "dummy-key"
         adapter.register_uri(
             "DELETE",
-            urljoin(endpoint, f"/generic/{tenant_id}_{project}/dummy-bucket/{key}"),
+            urljoin(endpoint, f"/generic/{project_id}/dummy-bucket/{key}"),
             json={"code": 0, "message": None, "data": None, "traceId": ""},
         )
         assert store.delete_file(key) is None
 
-    def test_get_file_metadata(self, store, adapter, endpoint, mktemp, project, tenant_id):
+    def test_get_file_metadata(self, store, adapter, endpoint, mktemp, project_id):
         key = "dummy-key"
         mock_headers = {
             "Accept-Ranges": "bytes",
@@ -159,7 +155,7 @@ class TestBKGenericRepo:
             "X-Rio-Seq": "kjskbhxa-173749784",
         }
         adapter.register_uri(
-            "HEAD", urljoin(endpoint, f"/generic/{tenant_id}_{project}/dummy-bucket/{key}"), headers=mock_headers
+            "HEAD", urljoin(endpoint, f"/generic/{project_id}/dummy-bucket/{key}"), headers=mock_headers
         )
         assert store.get_file_metadata(key) == mock_headers
 
@@ -184,7 +180,6 @@ class TestBKRepoManager:
             username=username,
             password=password,
             tenant_id="test-tenant-123",
-            enable_multi_tenant_mode=True,
         )
 
     @pytest.fixture
@@ -193,8 +188,6 @@ class TestBKRepoManager:
             endpoint_url=endpoint,
             username=username,
             password=password,
-            tenant_id="default",
-            enable_multi_tenant_mode=False,
         )
 
     @pytest.mark.parametrize(

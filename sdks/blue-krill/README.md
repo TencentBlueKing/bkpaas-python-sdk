@@ -220,7 +220,7 @@ from blue_krill.storages.blobstore.bkrepo import BKGenericRepo
 
 store = BKGenericRepo(
     bucket='your-bucket',
-    project='your-project-id',
+    project_id='your-project-id',
     endpoint_url='',
 )
 ```

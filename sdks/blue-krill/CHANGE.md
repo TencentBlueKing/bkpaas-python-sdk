@@ -1,7 +1,8 @@
 ## Change logs
 
-### 2.1.1
-- Feature: In multi-tenant mode: add X-Bk-Tenant-Id to the bkrepo management API request header, and add the tenant_id prefix to the project ID
+### 2.2.0
+- Feature: BKGenericRepo 中的 project 参数修改为 project_id
+- Feature: BKRepoManager 新增参数 tenant_id，传了该参数则添加请求头：X-Bk-Tenant-Id
 
 ### 2.1.0
 
