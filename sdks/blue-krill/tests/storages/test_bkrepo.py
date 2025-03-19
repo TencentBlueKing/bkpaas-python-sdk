@@ -60,7 +60,7 @@ def adapter(session):
 
 
 @pytest.fixture
-def project_id():
+def project():
     return "dummy-project-id"
 
 
@@ -70,12 +70,12 @@ def tenant_id():
 
 
 @pytest.fixture
-def store(session, username, password, endpoint, project_id):
+def store(session, username, password, endpoint, project):
     store = BKGenericRepo(
         bucket="dummy-bucket",
         username=username,
         password=password,
-        project_id=project_id,
+        project=project,
         endpoint_url=endpoint,
     )
     with mock.patch.object(store, "get_client", return_value=session):
@@ -103,42 +103,42 @@ class TestBKGenericRepo:
             (False, {"code": 251012, "message": ""}, pytest.raises(ObjectAlreadyExists)),
         ],
     )
-    def test_upload(self, store, adapter, endpoint, project_id, allow_overwrite, fake_response, expected):
+    def test_upload(self, store, adapter, endpoint, project, allow_overwrite, fake_response, expected):
         key = "dummy-key"
-        adapter.register_uri("PUT", urljoin(endpoint, f"/generic/{project_id}/dummy-bucket/{key}"), json=fake_response)
+        adapter.register_uri("PUT", urljoin(endpoint, f"/generic/{project}/dummy-bucket/{key}"), json=fake_response)
         with expected:
             store.upload_fileobj(io.BytesIO(), key=key, allow_overwrite=allow_overwrite)
 
-    def test_download(self, store, adapter, endpoint, mktemp, project_id):
+    def test_download(self, store, adapter, endpoint, mktemp, project):
         key = "dummy-key"
         expected = generate_random_string().encode()
         adapter.register_uri(
-            "GET", urljoin(endpoint, f"/generic/{project_id}/dummy-bucket/{key}"), body=io.BytesIO(expected)
+            "GET", urljoin(endpoint, f"/generic/{project}/dummy-bucket/{key}"), body=io.BytesIO(expected)
         )
         with open(store.download_file(key, filepath=mktemp()), "rb") as fh:
             assert fh.read() == expected
 
-    def test_download_fileobj(self, store, adapter, endpoint, mktemp, project_id):
+    def test_download_fileobj(self, store, adapter, endpoint, mktemp, project):
         key = "dummy-key"
         expected = generate_random_string().encode()
         adapter.register_uri(
-            "GET", urljoin(endpoint, f"/generic/{project_id}/dummy-bucket/{key}"), body=io.BytesIO(expected)
+            "GET", urljoin(endpoint, f"/generic/{project}/dummy-bucket/{key}"), body=io.BytesIO(expected)
         )
         with SpooledTemporaryFile() as fh:
             store.download_fileobj(key, fh=fh)
             fh.seek(0)
             assert fh.read() == expected
 
-    def test_delete_file(self, store, adapter, endpoint, project_id):
+    def test_delete_file(self, store, adapter, endpoint, project):
         key = "dummy-key"
         adapter.register_uri(
             "DELETE",
-            urljoin(endpoint, f"/generic/{project_id}/dummy-bucket/{key}"),
+            urljoin(endpoint, f"/generic/{project}/dummy-bucket/{key}"),
             json={"code": 0, "message": None, "data": None, "traceId": ""},
         )
         assert store.delete_file(key) is None
 
-    def test_get_file_metadata(self, store, adapter, endpoint, mktemp, project_id):
+    def test_get_file_metadata(self, store, adapter, endpoint, mktemp, project):
         key = "dummy-key"
         mock_headers = {
             "Accept-Ranges": "bytes",
@@ -154,9 +154,7 @@ class TestBKGenericRepo:
             "X-Proxy-By": "SmartGate-IDC",
             "X-Rio-Seq": "kjskbhxa-173749784",
         }
-        adapter.register_uri(
-            "HEAD", urljoin(endpoint, f"/generic/{project_id}/dummy-bucket/{key}"), headers=mock_headers
-        )
+        adapter.register_uri("HEAD", urljoin(endpoint, f"/generic/{project}/dummy-bucket/{key}"), headers=mock_headers)
         assert store.get_file_metadata(key) == mock_headers
 
     def test_generate_random_string(self, store, adapter, endpoint):

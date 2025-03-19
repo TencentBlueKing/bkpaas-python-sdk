@@ -79,7 +79,7 @@ class BKRepoManager:
         ...     password="blueking",
         ...     tenant_id="tenant-123"  # 多租户模式必填
         ... )
-        >>> manager.create_project("myproject")  # 创建后的项目ID为 "tenant-123-myproject"
+        >>> manager.create_project("myproject")  # 非多租户模式下，创建后的项目 ID 为 "myproject"; 多租户模式下, 创建后的项目ID为 "tenant-123-myproject"
 
     """
 
@@ -109,7 +109,7 @@ class BKRepoManager:
         return session
 
     def create_user_to_repo(
-        self, username: str, password: str, association_users: List[str], project_id: str, repo: str
+        self, username: str, password: str, association_users: List[str], project: str, repo: str
     ) -> bool:
         """创建用户到仓库管理员
 
@@ -117,7 +117,7 @@ class BKRepoManager:
         :params password str: 密码
         :params association_users List[str]: 关联的真实用户
         :params repo str: 关联的仓库名称
-        :params project_id str: 项目 ID (注意: 多租户模式下需要添加租户前缀)
+        :params project str: 项目 ID (注意: 多租户模式下需要添加租户前缀)
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, "/auth/api/user/create/repo")
@@ -128,7 +128,7 @@ class BKRepoManager:
             "userId": username,
             "asstUsers": association_users,
             "group": False,
-            "projectId": project_id,
+            "projectId": project,
             "repoName": repo,
         }
         return _validate_resp(client.post(url, json=data, timeout=TIMEOUT_THRESHOLD))
@@ -146,16 +146,16 @@ class BKRepoManager:
         url = urljoin(self.endpoint_url, f"/auth/api/user/{username}")
         return _validate_resp(client.delete(url, timeout=TIMEOUT_THRESHOLD))
 
-    def create_repo(self, project_id: str, repo: str, repo_type: str = RepositoryType.GENERIC, public: bool = False):
+    def create_repo(self, project: str, repo: str, repo_type: str = RepositoryType.GENERIC, public: bool = False):
         """创建仓库
 
         :param public bool: 是否公开读, 当 public 为 True 时, 代表公开读私有写; 当 public 为 False 时, 代表私有读写
-        :params project_id str: 项目 ID (注意: 多租户模式下需要添加租户前缀)
+        :params project str: 项目 ID (注意: 多租户模式下需要添加租户前缀)
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, "/repository/api/repo/create")
         data = {
-            "projectId": project_id,
+            "projectId": project,
             "name": repo,
             "type": RepositoryType(repo_type).value,
             "category": "LOCAL",
@@ -166,15 +166,15 @@ class BKRepoManager:
         }
         return _validate_resp(client.post(url, json=data, timeout=TIMEOUT_THRESHOLD))
 
-    def delete_repo(self, project_id: str, repo: str, forced: bool = False):
+    def delete_repo(self, project: str, repo: str, forced: bool = False):
         """删除仓库
 
-        :params project_id str: 项目 ID (注意: 多租户模式下需要添加租户前缀)
+        :params project str: 项目 ID (注意: 多租户模式下需要添加租户前缀)
         :params repo str: 仓库名
         :params forced bool: 是否强制删除, 如果为false，当仓库中存在文件时，将无法删除仓库
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f"/repository/api/repo/delete/{project_id}/{repo}?forced={forced}")
+        url = urljoin(self.endpoint_url, f"/repository/api/repo/delete/{project}/{repo}?forced={forced}")
         return _validate_resp(client.delete(url, timeout=TIMEOUT_THRESHOLD))
 
     # 以下是项目无关的管理接口
@@ -186,21 +186,19 @@ class BKRepoManager:
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, "/repository/api/project/create")
-        # Note: 创建项目时传的是项目名称，创建成功后 API 未返回项目 ID 信息，统一在 get_project_id 中处理项目 ID
+        # Note: 创建项目时传的是项目名称，创建成功后 API 未返回项目 ID 信息
         # 非多租户情况下：项目 ID == 项目名称
         # 多租户情况下：项目 ID == 租户 ID + 项目名称
         data = {"name": project_name, "displayName": project_name, "description": ""}
         return _validate_resp(client.post(url, json=data, timeout=TIMEOUT_THRESHOLD))
 
-    def create_user_to_project(
-        self, username: str, password: str, association_users: List[str], project_id: str
-    ) -> bool:
+    def create_user_to_project(self, username: str, password: str, association_users: List[str], project: str) -> bool:
         """创建用户到项目管理员
 
         :params username str: 用户名
         :params password str: 密码
         :params association_users List[str]: 关联的真实用户
-        :params project_id str: 项目 ID (注意: 多租户模式下需要添加租户前缀)
+        :params project str: 项目 ID (注意: 多租户模式下需要添加租户前缀)
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, "/auth/api/user/create/project")
@@ -211,7 +209,7 @@ class BKRepoManager:
             "userId": username,
             "asstUsers": association_users,
             "group": False,
-            "projectId": project_id,
+            "projectId": project,
         }
         return _validate_resp(client.post(url, json=data, timeout=TIMEOUT_THRESHOLD))
 
@@ -224,14 +222,14 @@ class BKGenericRepo(BlobStore):
     def __init__(
         self,
         bucket: str,
-        project_id: str,
+        project: str,
         endpoint_url: str,
         username: str,
         password: str,
         **kwargs,
     ):
         super().__init__(bucket)
-        self.project_id = project_id
+        self.project = project
         # endpoint can not endswith '/'
         self.endpoint_url = endpoint_url.rstrip("/")
         self.username = username
@@ -263,7 +261,7 @@ class BKGenericRepo(BlobStore):
         :param bool allow_overwrite: 是否覆盖已存在文件
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f"/generic/{self.project_id}/{self.bucket}/{key}")
+        url = urljoin(self.endpoint_url, f"/generic/{self.project}/{self.bucket}/{key}")
         src = getattr(fh, "name", "<memory>")
         headers = {"X-BKREPO-OVERWRITE": str(allow_overwrite)}
 
@@ -298,7 +296,7 @@ class BKGenericRepo(BlobStore):
         :param IO fh: 文件句柄
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f"/generic/{self.project_id}/{self.bucket}/{key}")
+        url = urljoin(self.endpoint_url, f"/generic/{self.project}/{self.bucket}/{key}")
         dest = getattr(fh, "name", "<memory>")
         try:
             resp = client.get(url, stream=True, timeout=TIMEOUT_THRESHOLD)
@@ -330,7 +328,7 @@ class BKGenericRepo(BlobStore):
         :param str key: 文件完整路径
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f"/generic/{self.project_id}/{self.bucket}/{key}")
+        url = urljoin(self.endpoint_url, f"/generic/{self.project}/{self.bucket}/{key}")
         resp = client.delete(url, timeout=TIMEOUT_THRESHOLD)
         return _validate_resp(resp)
 
@@ -340,7 +338,7 @@ class BKGenericRepo(BlobStore):
         :param str key: 文件完整路径
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f"/generic/{self.project_id}/{self.bucket}/{key}")
+        url = urljoin(self.endpoint_url, f"/generic/{self.project}/{self.bucket}/{key}")
         resp = client.head(url, timeout=TIMEOUT_THRESHOLD)
         if resp.status_code == 200:
             return resp.headers
@@ -367,7 +365,7 @@ class BKGenericRepo(BlobStore):
         resp = client.post(
             url,
             json={
-                "projectId": self.project_id,
+                "projectId": self.project,
                 "repoName": self.bucket,
                 "fullPathSet": [key],
                 "expireSeconds": expires_in,
