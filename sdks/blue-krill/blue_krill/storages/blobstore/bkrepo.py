@@ -101,7 +101,7 @@ class BKRepoManager:
     def get_client(self) -> requests.Session:
         session = requests.session()
         session.auth = HTTPBasicAuth(username=self.username, password=self.password)
-        # NOTE：非多租户模式添加请求无影响，故不判断是否为多租户模式，传了 tenant_id 就添加到请求头
+        # NOTE：非多租户模式添加请求头无影响，故不判断是否为多租户模式，传了 tenant_id 就添加到请求头
         if self.tenant_id:
             session.headers.update({"X-Bk-Tenant-Id": self.tenant_id})
         session.mount("http://", HTTPAdapter(max_retries=self._max_retries))
@@ -188,7 +188,7 @@ class BKRepoManager:
         url = urljoin(self.endpoint_url, "/repository/api/project/create")
         # Note: 创建项目时传的是项目名称，创建成功后 API 未返回项目 ID 信息
         # 非多租户情况下：项目 ID == 项目名称
-        # 多租户情况下：项目 ID == 租户 ID + 项目名称
+        # 多租户情况下：项目 ID == f"{租户 ID}_{项目名称}"
         data = {"name": project_name, "displayName": project_name, "description": ""}
         return _validate_resp(client.post(url, json=data, timeout=TIMEOUT_THRESHOLD))
 
