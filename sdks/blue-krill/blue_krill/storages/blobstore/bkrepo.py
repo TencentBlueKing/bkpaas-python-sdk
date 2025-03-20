@@ -73,14 +73,13 @@ class BKRepoManager:
 
     使用说明：多租户模式下需要传入租户 ID。
     示例：
-        >>> manager = BKRepoManager(
-        ...     endpoint_url="http://bkrepo.example.com",
-        ...     username="admin",
-        ...     password="blueking",
-        ...     tenant_id="tenant-123"  # 多租户模式必填
-        ... )
-        >>> manager.create_project("myproject")  # 非多租户模式下，创建后的项目 ID 为 "myproject"; 多租户模式下, 创建后的项目ID为 "tenant-123-myproject"
-
+    >>> manager = BKRepoManager(
+    ...     endpoint_url="http://bkrepo.example.com",
+    ...     username="admin",
+    ...     password="blueking",
+    ...     tenant_id="tenant-123"  # 多租户模式必填
+    ... )
+    >>> manager.create_project("myproject")  # 按目前 bk-repo 的规则，非多租户模式下，创建后的项目 ID 为 "myproject"; 多租户模式下, 创建后的项目ID为 "tenant-123-myproject"
     """
 
     def __init__(
@@ -101,7 +100,6 @@ class BKRepoManager:
     def get_client(self) -> requests.Session:
         session = requests.session()
         session.auth = HTTPBasicAuth(username=self.username, password=self.password)
-        # NOTE：非多租户模式添加请求头无影响，故不判断是否为多租户模式，传了 tenant_id 就添加到请求头
         if self.tenant_id:
             session.headers.update({"X-Bk-Tenant-Id": self.tenant_id})
         session.mount("http://", HTTPAdapter(max_retries=self._max_retries))
@@ -113,11 +111,11 @@ class BKRepoManager:
     ) -> bool:
         """创建用户到仓库管理员
 
-        :params username str: 用户名
-        :params password str: 密码
-        :params association_users List[str]: 关联的真实用户
-        :params repo str: 关联的仓库名称
-        :params project str: 项目 ID (注意: 多租户模式下需要添加租户前缀)
+        :param username: 用户名
+        :param password: 密码
+        :param association_users: 关联的真实用户
+        :param repo: 关联的仓库名称
+        :param project: 项目 ID
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, "/auth/api/user/create/repo")
@@ -149,8 +147,8 @@ class BKRepoManager:
     def create_repo(self, project: str, repo: str, repo_type: str = RepositoryType.GENERIC, public: bool = False):
         """创建仓库
 
-        :param public bool: 是否公开读, 当 public 为 True 时, 代表公开读私有写; 当 public 为 False 时, 代表私有读写
-        :params project str: 项目 ID (注意: 多租户模式下需要添加租户前缀)
+        :param public: 是否公开读, 当 public 为 True 时, 代表公开读私有写; 当 public 为 False 时, 代表私有读写
+        :param project: 项目 ID
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, "/repository/api/repo/create")
@@ -169,9 +167,9 @@ class BKRepoManager:
     def delete_repo(self, project: str, repo: str, forced: bool = False):
         """删除仓库
 
-        :params project str: 项目 ID (注意: 多租户模式下需要添加租户前缀)
-        :params repo str: 仓库名
-        :params forced bool: 是否强制删除, 如果为false，当仓库中存在文件时，将无法删除仓库
+        :param project: 项目 ID
+        :param repo: 仓库名
+        :param forced: 是否强制删除, 如果为false，当仓库中存在文件时，将无法删除仓库
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, f"/repository/api/repo/delete/{project}/{repo}?forced={forced}")
@@ -182,23 +180,24 @@ class BKRepoManager:
     def create_project(self, project_name: str):
         """创建项目
 
-        :params project str: 项目名
+        :param project_name: 项目名称
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, "/repository/api/project/create")
         # Note: 创建项目时传的是项目名称，创建成功后 API 未返回项目 ID 信息
-        # 非多租户情况下：项目 ID == 项目名称
-        # 多租户情况下：项目 ID == f"{租户 ID}_{项目名称}"
+        # 按目前 bk-repo 的规则，启用/关闭多租户模式的情况下:
+        # 关闭多租户: 项目 ID == 项目名称
+        # 启用多租户: 项目 ID == f"{租户 ID}_{项目名称}"
         data = {"name": project_name, "displayName": project_name, "description": ""}
         return _validate_resp(client.post(url, json=data, timeout=TIMEOUT_THRESHOLD))
 
     def create_user_to_project(self, username: str, password: str, association_users: List[str], project: str) -> bool:
         """创建用户到项目管理员
 
-        :params username str: 用户名
-        :params password str: 密码
-        :params association_users List[str]: 关联的真实用户
-        :params project str: 项目 ID (注意: 多租户模式下需要添加租户前缀)
+        :param username: 用户名
+        :param password: 密码
+        :param association_users: 关联的真实用户
+        :param project: 项目 ID
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, "/auth/api/user/create/project")
@@ -246,9 +245,9 @@ class BKGenericRepo(BlobStore):
     def upload_file(self, filepath: PathLike, key: str, allow_overwrite: bool = True, **kwargs):
         """上传通用制品文件
 
-        :param PathLike filepath: 需要上传文件的路径
-        :param str key: 文件完整路径
-        :param bool allow_overwrite: 是否覆盖已存在文件
+        :param PathLike: 需要上传文件的路径
+        :param key: 文件完整路径
+        :param allow_overwrite: 是否覆盖已存在文件
         """
         with open(filepath, "rb") as fh:
             self.upload_fileobj(fh, key=key, allow_overwrite=allow_overwrite, timeout=TIMEOUT_THRESHOLD, **kwargs)
@@ -256,9 +255,9 @@ class BKGenericRepo(BlobStore):
     def upload_fileobj(self, fh: BinaryIO, key: str, allow_overwrite: bool = True, **kwargs):
         """上传通用制品文件
 
-        :param BinaryIO fh: 文件句柄
-        :param str key: 文件完整路径
-        :param bool allow_overwrite: 是否覆盖已存在文件
+        :param fh: 文件句柄
+        :param key: 文件完整路径
+        :param allow_overwrite: 是否覆盖已存在文件
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, f"/generic/{self.project}/{self.bucket}/{key}")
@@ -282,8 +281,8 @@ class BKGenericRepo(BlobStore):
     def download_file(self, key: str, filepath: PathLike, *args, **kwargs) -> PathLike:
         """下载通用制品文件
 
-        :param str key: 文件完整路径
-        :param PathLike filepath: 文件下载的路径
+        :param key: 文件完整路径
+        :param filepath: 文件下载的路径
         """
         with open(filepath, mode="wb") as fh:
             self.download_fileobj(key, fh)
@@ -292,8 +291,8 @@ class BKGenericRepo(BlobStore):
     def download_fileobj(self, key: str, fh, *args, **kwargs):
         """下载通用制品文件
 
-        :param str key: 文件完整路径
-        :param IO fh: 文件句柄
+        :param key: 文件完整路径
+        :param fh: 文件句柄
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, f"/generic/{self.project}/{self.bucket}/{key}")
@@ -325,7 +324,7 @@ class BKGenericRepo(BlobStore):
     def delete_file(self, key: str, *args, **kwargs):
         """删除通用制品文件
 
-        :param str key: 文件完整路径
+        :param key: 文件完整路径
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, f"/generic/{self.project}/{self.bucket}/{key}")
@@ -335,7 +334,7 @@ class BKGenericRepo(BlobStore):
     def get_file_metadata(self, key, *args, **kwargs):
         """获取通用制品文件头部信息
 
-        :param str key: 文件完整路径
+        :param key: 文件完整路径
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, f"/generic/{self.project}/{self.bucket}/{key}")
@@ -349,10 +348,10 @@ class BKGenericRepo(BlobStore):
     ) -> str:
         """创建临时访问url
 
-        :param str key: 授权路径
-        :param int expires_in: token 有效时间，单位秒，小于等于 0 则永久有效
-        :param str signature_type: 签名类型。UPLOAD:允许上传, DOWNLOAD: 允许下载。
-        :param str token_type: [deprecated] token类型。UPLOAD:允许上传, DOWNLOAD: 允许下载, ALL: 同时允许上传和下载。
+        :param key: 授权路径
+        :param expires_in: token 有效时间，单位秒，小于等于 0 则永久有效
+        :param signature_type: 签名类型。UPLOAD:允许上传, DOWNLOAD: 允许下载。
+        :param token_type: [deprecated] token类型。UPLOAD:允许上传, DOWNLOAD: 允许下载, ALL: 同时允许上传和下载。
         """
         client = self.get_client()
         url = urljoin(self.endpoint_url, "/generic/temporary/url/create")
