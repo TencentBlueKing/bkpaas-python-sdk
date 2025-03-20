@@ -9,7 +9,7 @@ name = "blue-krill"
 description = "Tools and common packages for blueking PaaS platform."
 requires-python = ">=3.9,<3.12"
 license = "MIT"
-version = "2.1.1"
+version = "2.1.2"
 # classifieres is dynamic because we want to create Python classifiers automatically
 dynamic = ["classifiers"]
 readme = "README.md"

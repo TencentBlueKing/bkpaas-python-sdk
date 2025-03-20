@@ -1,6 +1,6 @@
 ## Change logs
 
-### 2.1.1
+### 2.1.2
 - Feature: BKRepoManager 新增参数 tenant_id，传了该参数则添加请求头：X-Bk-Tenant-Id
 - Feature: BKRepoManager.create_project 的参数 project 修改为：project_name
 
