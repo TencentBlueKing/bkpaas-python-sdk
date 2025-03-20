@@ -1,5 +1,9 @@
 ## Change logs
 
+### 2.1.1
+- Feature: BKRepoManager 新增参数 tenant_id，传了该参数则添加请求头：X-Bk-Tenant-Id
+- Feature: BKRepoManager.create_project 的参数 project 修改为：project_name
+
 ### 2.1.0
 
 - Feature: improve editionctl tool in various places: debounce, conditional linking and event filtering

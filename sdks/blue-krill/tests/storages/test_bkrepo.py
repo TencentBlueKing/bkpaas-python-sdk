@@ -27,7 +27,7 @@ import requests_mock
 from requests.auth import HTTPBasicAuth
 
 from blue_krill.contextlib import nullcontext as does_not_raise
-from blue_krill.storages.blobstore.bkrepo import BKGenericRepo
+from blue_krill.storages.blobstore.bkrepo import BKGenericRepo, BKRepoManager
 from blue_krill.storages.blobstore.exceptions import ObjectAlreadyExists, UploadFailedError
 from tests.utils import generate_random_string
 
@@ -60,9 +60,23 @@ def adapter(session):
 
 
 @pytest.fixture
-def store(session, username, password, endpoint):
+def project():
+    return "dummy-project-id"
+
+
+@pytest.fixture
+def tenant_id():
+    return "test-tenant-123"
+
+
+@pytest.fixture
+def store(session, username, password, endpoint, project):
     store = BKGenericRepo(
-        bucket="dummy-bucket", username=username, password=password, project="dummy-project", endpoint_url=endpoint
+        bucket="dummy-bucket",
+        username=username,
+        password=password,
+        project=project,
+        endpoint_url=endpoint,
     )
     with mock.patch.object(store, "get_client", return_value=session):
         session.auth = HTTPBasicAuth(username=username, password=password)
@@ -89,44 +103,42 @@ class TestBKGenericRepo:
             (False, {"code": 251012, "message": ""}, pytest.raises(ObjectAlreadyExists)),
         ],
     )
-    def test_upload(self, store, adapter, endpoint, allow_overwrite, fake_response, expected):
+    def test_upload(self, store, adapter, endpoint, project, allow_overwrite, fake_response, expected):
         key = "dummy-key"
-        adapter.register_uri(
-            "PUT", urljoin(endpoint, f"/generic/dummy-project/dummy-bucket/{key}"), json=fake_response
-        )
+        adapter.register_uri("PUT", urljoin(endpoint, f"/generic/{project}/dummy-bucket/{key}"), json=fake_response)
         with expected:
             store.upload_fileobj(io.BytesIO(), key=key, allow_overwrite=allow_overwrite)
 
-    def test_download(self, store, adapter, endpoint, mktemp):
+    def test_download(self, store, adapter, endpoint, mktemp, project):
         key = "dummy-key"
         expected = generate_random_string().encode()
         adapter.register_uri(
-            "GET", urljoin(endpoint, f"/generic/dummy-project/dummy-bucket/{key}"), body=io.BytesIO(expected)
+            "GET", urljoin(endpoint, f"/generic/{project}/dummy-bucket/{key}"), body=io.BytesIO(expected)
         )
         with open(store.download_file(key, filepath=mktemp()), "rb") as fh:
             assert fh.read() == expected
 
-    def test_download_fileobj(self, store, adapter, endpoint, mktemp):
+    def test_download_fileobj(self, store, adapter, endpoint, mktemp, project):
         key = "dummy-key"
         expected = generate_random_string().encode()
         adapter.register_uri(
-            "GET", urljoin(endpoint, f"/generic/dummy-project/dummy-bucket/{key}"), body=io.BytesIO(expected)
+            "GET", urljoin(endpoint, f"/generic/{project}/dummy-bucket/{key}"), body=io.BytesIO(expected)
         )
         with SpooledTemporaryFile() as fh:
             store.download_fileobj(key, fh=fh)
             fh.seek(0)
             assert fh.read() == expected
 
-    def test_delete_file(self, store, adapter, endpoint):
+    def test_delete_file(self, store, adapter, endpoint, project):
         key = "dummy-key"
         adapter.register_uri(
             "DELETE",
-            urljoin(endpoint, f"/generic/dummy-project/dummy-bucket/{key}"),
+            urljoin(endpoint, f"/generic/{project}/dummy-bucket/{key}"),
             json={"code": 0, "message": None, "data": None, "traceId": ""},
         )
         assert store.delete_file(key) is None
 
-    def test_get_file_metadata(self, store, adapter, endpoint, mktemp):
+    def test_get_file_metadata(self, store, adapter, endpoint, mktemp, project):
         key = "dummy-key"
         mock_headers = {
             "Accept-Ranges": "bytes",
@@ -142,9 +154,7 @@ class TestBKGenericRepo:
             "X-Proxy-By": "SmartGate-IDC",
             "X-Rio-Seq": "kjskbhxa-173749784",
         }
-        adapter.register_uri(
-            "HEAD", urljoin(endpoint, f"/generic/dummy-project/dummy-bucket/{key}"), headers=mock_headers
-        )
+        adapter.register_uri("HEAD", urljoin(endpoint, f"/generic/{project}/dummy-bucket/{key}"), headers=mock_headers)
         assert store.get_file_metadata(key) == mock_headers
 
     def test_generate_random_string(self, store, adapter, endpoint):
@@ -156,3 +166,55 @@ class TestBKGenericRepo:
             json={"code": 0, "message": "", "data": [{"url": urljoin(endpoint, expected)}]},
         )
         assert store.generate_presigned_url(key, expires_in=3600) == urljoin(endpoint, expected)
+
+
+class TestBKRepoManager:
+    """BKRepoManager 测试类"""
+
+    @pytest.fixture
+    def manager(self, session, username, password, endpoint):
+        return BKRepoManager(
+            endpoint_url=endpoint,
+            username=username,
+            password=password,
+            tenant_id="test-tenant-123",
+        )
+
+    @pytest.fixture
+    def manager_without_tenant(self, session, username, password, endpoint):
+        return BKRepoManager(
+            endpoint_url=endpoint,
+            username=username,
+            password=password,
+        )
+
+    @pytest.mark.parametrize(
+        ("method", "url_suffix", "data"),
+        [
+            ("post", "/auth/api/user/create/repo", {"projectId": "test", "repoName": "repo"}),
+            ("put", "/auth/api/user/test-user", {}),
+            ("delete", "/auth/api/user/test-user", None),
+            ("post", "/repository/api/repo/create", {"projectId": "test", "name": "repo"}),
+            ("delete", "/repository/api/repo/delete/test/repo", None),
+            ("post", "/repository/api/project/create", {"name": "test"}),
+        ],
+    )
+    def test_requests_have_tenant_header(self, manager, adapter, endpoint, method, url_suffix, data):
+        """测试所有管理接口请求都携带租户ID头"""
+        url = urljoin(endpoint, url_suffix)
+        adapter.register_uri(method, url, json={"code": 0, "message": "ok"})
+
+        client_method = getattr(manager.get_client(), method)
+        resp = client_method(url, json=data)
+
+        # 验证请求头中是否包含租户ID
+        assert resp.request.headers["X-Bk-Tenant-Id"] == "test-tenant-123"
+
+    def test_request_without_tenant_header(self, manager_without_tenant, adapter, endpoint):
+        """测试未设置租户ID时不携带头信息"""
+        url = urljoin(endpoint, "/repository/api/project/create")
+        adapter.register_uri("POST", url, json={"code": 0, "message": "ok"})
+
+        resp = manager_without_tenant.get_client().post(url, json={"name": "test"})
+
+        assert "X-Bk-Tenant-Id" not in resp.request.headers
