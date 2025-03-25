@@ -60,6 +60,23 @@ class Command(BaseCommand):
             f"--doc_language={settings.BK_APIGW_RELEASE_DOC_LANGUAGE}",
         )
 
+        # if BK_APIGW_RESOURCE_DOCS_BASE_DIR is not empty, then sync the resource docs
+        if hasattr(settings, "BK_APIGW_RESOURCE_DOCS_BASE_DIR") and settings.BK_APIGW_RESOURCE_DOCS_BASE_DIR:
+            self.stdout.write(f"call sync_resource_docs_by_archive with definition: {definition_file_path}")
+            call_command(
+                "sync_resource_docs_by_archive",
+                f"--gateway-name={gateway_name}",
+                f"--file={definition_file_path}",
+                "--safe-mode",
+            )
+
+        self.stdout.write(f"call grant_apigw_permissions with definition: {definition_file_path}")
+        call_command(
+            "grant_apigw_permissions",
+            f"--gateway-name={gateway_name}",
+            f"--file={definition_file_path}",
+        )
+
         self.stdout.write(
             f"call create_version_and_release_apigw with definition: {definition_file_path}, stage: {settings.BK_APIGW_STAGE_NAME}"
         )
@@ -68,13 +85,6 @@ class Command(BaseCommand):
             f"--gateway-name={gateway_name}",
             f"--file={definition_file_path}",
             f"--stage={settings.BK_APIGW_STAGE_NAME}",
-        )
-
-        self.stdout.write(f"call grant_apigw_permissions with definition: {definition_file_path}")
-        call_command(
-            "grant_apigw_permissions",
-            f"--gateway-name={gateway_name}",
-            f"--file={definition_file_path}",
         )
 
         self.stdout.write(f"call fetch_apigw_public_key {gateway_name}")
