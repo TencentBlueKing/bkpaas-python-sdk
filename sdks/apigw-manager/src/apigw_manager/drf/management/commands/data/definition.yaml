@@ -47,13 +47,24 @@ stages:
       {% endfor %}
     {% endif %}
 
-{% if settings.BK_APIGW_GRANT_PERMISSION_DIMENSION_GATEWAY_APP_CODES %}
+{% if settings.BK_APIGW_GRANT_PERMISSION_DIMENSION_GATEWAY_APP_CODES or settings.BK_APIGW_GRANT_PERMISSION_DIMENSION_RESOURCE_APP_CODES %}
 grant_permissions:
   {% for app_code in settings.BK_APIGW_GRANT_PERMISSION_DIMENSION_GATEWAY_APP_CODES %}
   - bk_app_code: "{{ app_code }}"
     grant_dimension: "gateway"
   {% endfor %}
+  {% for app_code, resource_names in settings.BK_APIGW_GRANT_PERMISSION_DIMENSION_RESOURCE_APP_CODES.items %}
+  - bk_app_code: "{{ app_code }}"
+    grant_dimension: "resource"
+    resource_names:
+      {% for resource_name in resource_names %}
+      - "{{ resource_name }}"
+      {% endfor %}
+  {% endfor %}
 {% endif %}
 
 related_apps:
   - "{{ settings.BK_APP_CODE }}"
+
+resource_docs:
+  basedir: "{{ settings.BK_APIGW_RESOURCE_DOCS_BASE_DIR }}"
