@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "apigw-manager"
-version = "4.0.1"
+version = "4.0.2"
 description = "The SDK for managing blueking gateway resource."
 readme = "README.md"
 authors = ["blueking <blueking@tencent.com>"]
@@ -10,11 +10,26 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
 ]
 
+[project]
+name = "apigw-manager"
+description = "The SDK for managing blueking gateway resource."
+license = "MIT"
+dynamic = ["version", "classifiers", "dependencies"]
+readme = "README.md"
+authors = [{name = "blueking", email = "blueking@tencent.com"}]
+requires-python = '>=3.8,<3.13'
+
 
 [project.urls]
 Homepage = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
 Repository = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
 
+[project.optional-dependencies]
+cryptography = ['cryptography (>=3.1.1)', 'pyjwt (>=2.0.0)']
+drf = ["django", 'cryptography', 'pyjwt', 'djangorestframework (>=3.10.3)', 'drf-spectacular (<=0.27.2)']
+django = ["django", 'pyjwt']
+demo = ['django-environ (>=0.8.1)', "django", 'PyMySQL (>=1.0.2,<2.0.0)', 'pyjwt']
+kubernetes = ['kubernetes']
 [tool.poetry.dependencies]
 python = ">=3.8,<3.13"
 setuptools = ">=21.0.0"
