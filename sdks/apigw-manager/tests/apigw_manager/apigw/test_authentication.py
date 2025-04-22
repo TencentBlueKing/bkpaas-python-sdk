@@ -256,6 +256,18 @@ class TestUserModelBackend:
         assert user.is_authenticated is True
         assert user.tenant_id == "system"
 
+    def test_authenticate_user_no_tenant_id(self, mock_request):
+        user = self.backend.authenticate(
+            mock_request,
+            gateway_name="test",
+            bk_username="admin",
+            verified=True,
+        )
+        assert not isinstance(user, AnonymousUser)
+        assert user.username == "admin"
+        assert user.is_authenticated is True
+        assert user.tenant_id == ""
+
     def test_authenticate_anonymous_user(self, mock_request):
         user = self.backend.authenticate(
             mock_request,
