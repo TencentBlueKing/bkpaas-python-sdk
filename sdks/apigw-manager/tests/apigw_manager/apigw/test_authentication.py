@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 """
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+* TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
+* Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
+* Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at http://opensource.org/licenses/MIT
+* Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+* an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+* specific language governing permissions and limitations under the License.
 """
+
 import pytest
 from django.contrib.auth.models import AnonymousUser
 from django.core.cache import caches
@@ -15,6 +16,7 @@ from django.core.cache.backends.dummy import DummyCache
 
 from apigw_manager.apigw import authentication, providers
 from apigw_manager.apigw.providers import CachePublicKeyProvider, DefaultJWTProvider, SettingsPublicKeyProvider
+
 
 @pytest.fixture()
 def mock_response(mocker):
@@ -70,9 +72,9 @@ def jwt_request(fake_gateway_name, jwt_decoded, mock_request):
 
 @pytest.fixture()
 def invalid_apigw_request(mock_request):
-    mock_request.META[
-        "HTTP_X_BKAPI_JWT"
-    ] = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoibHljIn0.iHy-g0R-q3sVnO16gTHV0FAIViEuKMGCtNLNVYSJX5c"
+    mock_request.META["HTTP_X_BKAPI_JWT"] = (
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoibHljIn0.iHy-g0R-q3sVnO16gTHV0FAIViEuKMGCtNLNVYSJX5c"
+    )
 
     return mock_request
 
@@ -243,16 +245,26 @@ class TestUserModelBackend:
 
     def test_authenticate_user(self, mock_request):
         user = self.backend.authenticate(
-            mock_request, gateway_name="test", bk_username="admin", tenant_id="system", verified=True
+            mock_request,
+            gateway_name="test",
+            bk_username="admin",
+            verified=True,
+            tenant_id="system",
         )
         assert not isinstance(user, AnonymousUser)
         assert user.username == "admin"
         assert user.is_authenticated is True
+        assert user.tenant_id == "system"
 
     def test_authenticate_anonymous_user(self, mock_request):
         user = self.backend.authenticate(
-            mock_request, gateway_name="test", bk_username="admin", tenant_id="system", verified=False
+            mock_request,
+            gateway_name="test",
+            bk_username="admin",
+            verified=False,
+            tenant_id="system",
         )
         assert isinstance(user, AnonymousUser)
         assert user.username == "admin"
         assert user.is_authenticated is False
+        assert user.tenant_id == ""
