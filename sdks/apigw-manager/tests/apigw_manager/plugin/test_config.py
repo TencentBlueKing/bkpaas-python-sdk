@@ -13,6 +13,10 @@ from apigw_manager.plugin.config import (
     build_bk_header_rewrite,
     build_bk_ip_restriction,
     build_bk_rate_limit,
+    build_bk_mock,
+    build_api_breaker,
+    build_fault_injection,
+    build_request_validation,
     build_stage_plugin_config_for_definition_yaml,
 )
 
@@ -176,6 +180,252 @@ class TestBuildPluginConfig:
             return
 
         assert build_bk_rate_limit(default_period, default_tokens, specific_app_limits) == expected
+
+    @pytest.mark.parametrize(
+        "response_example, response_headers, response_status, will_error, expected",
+        [
+            (
+                "",
+                {"key1": "value1", "key2": "value2"},
+                200,
+                False,
+                {
+                    "type": "bk-mock",
+                    "yaml": "response_example: ''\n"
+                    "response_headers:\n"
+                    "- key: key1\n"
+                    "  value: value1\n"
+                    "- key: key2\n"
+                    "  value: value2\n"
+                    "response_status: 200\n",
+                },
+            ),
+            (
+                "",
+                {"key1": "value1", "key2": "value2"},
+                99,
+                True,
+                None,
+            ),
+            (
+                "",
+                {"key:1": "value1", "key2": "value2"},
+                200,
+                True,
+                None,
+            ),
+        ],
+    )
+    def test_build_bk_mock(self, response_example, response_headers, response_status, will_error, expected):
+        if will_error:
+            with pytest.raises(ValueError):
+                build_bk_mock(response_example, response_headers, response_status)
+            return
+
+        assert build_bk_mock(response_example, response_headers, response_status) == expected
+
+    @pytest.mark.parametrize(
+        "break_response_body, break_response_headers, unhealthy, healthy,"
+        "break_response_code, max_breaker_sec, will_error, expected",
+        [
+            (
+                "",
+                {"key1": "value1"},
+                {"http_statuses": [503], "failures": 3},
+                {"http_statuses": [200], "successes": 3},
+                503,
+                30,
+                False,
+                {
+                    "type": "api-breaker",
+                    "yaml": "break_response_body: ''\n"
+                    "break_response_code: 503\n"
+                    "break_response_headers:\n"
+                    "- key: key1\n"
+                    "  value: value1\n"
+                    "healthy:\n"
+                    "  http_statuses:\n"
+                    "  - 200\n"
+                    "  successes: 3\n"
+                    "max_breaker_sec: 30\n"
+                    "unhealthy:\n"
+                    "  failures: 3\n"
+                    "  http_statuses:\n"
+                    "  - 503\n",
+                },
+            ),
+            (
+                "",
+                {},
+                {"http_statuses": [503], "failures": 1},
+                {"http_statuses": [200], "successes": 1},
+                502,
+                2,
+                True,
+                None,
+            ),
+            (
+                "",
+                {},
+                {},
+                {"http_statuses": [200], "successes": 1},
+                502,
+                300,
+                True,
+                None,
+            ),
+            (
+                "",
+                {},
+                {"http_statuses": [503], "failures": 1},
+                {},
+                502,
+                300,
+                True,
+                None,
+            ),
+            (
+                "",
+                {"key:1": "value1"},
+                {"http_statuses": [503], "failures": 1},
+                {"http_statuses": [200], "successes": 1},
+                502,
+                300,
+                True,
+                None,
+            ),
+        ],
+    )
+    def test_build_api_breaker(
+        self,
+        break_response_body,
+        break_response_headers,
+        unhealthy,
+        healthy,
+        break_response_code,
+        max_breaker_sec,
+        will_error,
+        expected,
+    ):
+        if will_error:
+            with pytest.raises(ValueError):
+                build_api_breaker(
+                    break_response_body,
+                    break_response_headers,
+                    unhealthy,
+                    healthy,
+                    break_response_code,
+                    max_breaker_sec,
+                )
+            return
+
+        assert (
+            build_api_breaker(
+                break_response_body, break_response_headers, unhealthy, healthy, break_response_code, max_breaker_sec
+            )
+            == expected
+        )
+
+    @pytest.mark.parametrize(
+        "abort, delay, will_error, expected",
+        [
+            (
+                {"http_status": 503, "body": "test", "percentage": 50},
+                None,
+                False,
+                {
+                    "type": "fault-injection",
+                    "yaml": "abort:\n  body: test\n  http_status: 503\n  percentage: 50\n  vars: ''\n"
+                },
+            ),
+            (
+                None,
+                {"duration": 3, "percentage": 30, "vars": "arg_name == 'test'"},
+                False,
+                {
+                    "type": "fault-injection",
+                    "yaml": "delay:\n  duration: 3\n  percentage: 30\n  vars: arg_name == 'test'\n"
+                },
+            ),
+            (
+                {"http_status": 500, "percentage": 20},
+                {"duration": 2.5, "vars": "arg_name == 'test'"},
+                False,
+                {
+                    "type": "fault-injection",
+                    "yaml": "abort:\n  body: ''\n  http_status: 500\n  percentage: 20\n  vars: ''\ndelay:\n  duration: 2.5\n  percentage: 100\n  vars: arg_name == 'test'\n"
+                },
+            ),
+            (
+                {"percentage": 101},
+                None,
+                True,
+                None,
+            ),
+            (
+                None,
+                {"percentage": -1},
+                True,
+                None,
+            ),
+            (
+                None,
+                {"duration": -1},
+                True,
+                None,
+            ),
+            (
+                None,
+                None,
+                False,
+                {
+                    "type": "fault-injection",
+                    "yaml": "{}\n"
+                },
+            ),
+        ],
+    )
+    def test_build_fault_injection_config(self, abort, delay, will_error, expected):
+        if will_error:
+            with pytest.raises(ValueError):
+                build_fault_injection(abort, delay)
+            return
+
+        assert build_fault_injection(abort, delay) == expected
+
+    @pytest.mark.parametrize(
+        "body_schema, header_schema, rejected_msg, rejected_code, will_error, expected",
+        [
+            (
+                'test1',
+                'test2',
+                "test3",
+                403,
+                False,
+                {
+                    "type": "request-validation",
+                    "yaml": "body_schema: test1\nheader_schema: test2\nrejected_code: 403\nrejected_msg: test3\n"
+                },
+            ),
+            (
+                "",
+                "",
+                "",
+                199,
+                True,
+                None,
+            ),
+        ]
+    )
+    def test_build_request_validation(
+        self, body_schema, header_schema, rejected_msg, rejected_code, will_error, expected
+    ):
+        if will_error:
+            with pytest.raises(ValueError):
+                build_request_validation(body_schema, header_schema, rejected_msg, rejected_code)
+            return
+
+        assert build_request_validation(body_schema, header_schema, rejected_msg, rejected_code) == expected
 
 
 class TestBuildStagePluginConfigForDefinitionYaml:

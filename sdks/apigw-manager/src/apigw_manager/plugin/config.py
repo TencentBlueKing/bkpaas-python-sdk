@@ -265,3 +265,208 @@ def build_stage_plugin_config_for_definition_yaml(
             }
         )
     return indented_plugin_configs
+
+
+def build_bk_mock(
+    response_example: str,
+    response_headers: Dict[str, str],
+    response_status: int = 200,
+) -> Dict[str, str]:
+    """generate bk-mock plugin config
+
+    Args:
+        response_example (str): 响应体。
+        response_headers (Dict[str, str]): 响应头。
+        response_status (int, optional): 响应状态码。Defaults to 200.
+
+    Raises:
+        ValueError: response_status cannot be less than 100
+        ValueError: key {} can not contain ':'
+
+    Returns:
+        {
+            "type": "bk-mock",
+            "yaml": "response_headers:\n- key: key1\nvalue: value1\n- key: key2\nvalue: value2\nresponse_status: 200\nresponse_example: ''"
+        }
+    """
+    if response_status < 100:
+        raise ValueError("response_status cannot be less than 100")
+
+    response_header_data = []
+    for k, v in response_headers.items():
+        if ":" in k:
+            raise ValueError(f"key {k} can not contain ':'")
+        response_header_data.append({"key": k, "value": v})
+
+    return {
+        "type": "bk-mock",
+        "yaml": yaml_dump(
+            {
+                "response_example": response_example,
+                "response_headers": response_header_data,
+                "response_status": response_status,
+            }
+        ),
+    }
+
+
+def build_api_breaker(
+    break_response_body: str,
+    break_response_headers: Dict[str, str],
+    unhealthy: Dict[str, List[int]],
+    healthy: Dict[str, List[int]],
+    break_response_code: int = 502,
+    max_breaker_sec: int = 300,
+) -> Dict[str, str]:
+    """generate api-breaker plugin config
+
+    Args:
+        break_response_body (str): 当上游服务处于不健康状态时返回的 HTTP 响应体信息。
+        break_response_headers (Dict[str, str]): 当上游服务处于不健康状态时返回的 HTTP 响应头信息。
+        unhealthy (Dict[str, List[int]]): 当上游服务处于不健康状态时的 HTTP 的状态码和异常请求次数。
+            - 应包含键 "http_statuses"(不健康状态码列表)和"failures"(触发不健康状态的异常请求次数)
+        healthy (Dict[str, List[int]]): 上游服务处于健康状态时的 HTTP 状态码和连续正常请求次数。
+            - 应包含键 "http_statuses"(健康状态码列表)和"successes"(触发健康状态的连续正常请求次数)
+        break_response_code (int, optional): 当上游服务处于不健康状态时返回的 HTTP 错误码。Defaults to 502.
+        max_breaker_sec (int, optional): 上游服务熔断的最大持续时间，以秒为单位，最小 3 秒。Defaults to 300.
+
+    Raises:
+        ValueError: max_breaker_sec duration cannot be less than 3 seconds
+        ValueError: unhealthy config cannot be empty
+        ValueError: healthy config cannot be empty
+        ValueError: key {} can not contain ':'
+
+    Returns:
+        {
+            "type": "api-breaker",
+            "yaml": "break_response_code: 502\nbreak_response_body: ''\nbreak_response_headers:\n  - key: key1\n    value: value1\nmax_breaker_sec: 300\nunhealthy:\n  http_statuses:\n    - 503\n  failures: 3\nhealthy:\n  http_statuses:\n    - 200\n  successes: 3"
+        }
+    """
+    if max_breaker_sec < 3:
+        raise ValueError("max_breaker_sec duration cannot be less than 3 seconds")
+
+    if not unhealthy:
+        raise ValueError("unhealthy config cannot be empty")
+
+    if not healthy:
+        raise ValueError("healthy config cannot be empty")
+
+    break_response_header_data = []
+    for k, v in break_response_headers.items():
+        if ":" in k:
+            raise ValueError(f"key {k} can not contain ':'")
+        break_response_header_data.append({"key": k, "value": v})
+
+    return {
+        "type": "api-breaker",
+        "yaml": yaml_dump(
+            {
+                "break_response_code": break_response_code,
+                "break_response_body": break_response_body,
+                "break_response_headers": break_response_header_data,
+                "max_breaker_sec": max_breaker_sec,
+                "unhealthy": unhealthy,
+                "healthy": healthy,
+            }
+        ),
+    }
+
+
+def build_fault_injection(
+    abort: dict = None,
+    delay: dict = None,
+) -> Dict[str, str]:
+    """generate fault-injection plugin config
+
+    Args:
+        abort (dict, optional): 中断状态。
+            - http_status (int): 返回给客户端的 HTTP 状态码。
+            - body (str): 返回给客户端的响应数据。支持使用 NGINX 变量，如 client addr: $remote_addr\n。
+            - percentage (int): 将被中断的请求占比(0-100)。
+            - vars (str): 执行故障注入的规则，当规则匹配通过后才会执行故障注。vars 是一个表达式的列表，来自 lua-resty-expr。
+        delay (dict, optional): 延迟状态。
+            - duration (number): 延迟时间，单位秒，只能填入整数。
+            - percentage (int): 将被延迟的请求占比(0-100)
+            - vars (str): 执行请求延迟的规则，当规则匹配通过后才会延迟请求。vars 是一个表达式列表，来自 lua-resty-expr。
+
+    Raises:
+        ValueError: abort percentage must be between 0 and 100
+        ValueError: delay percentage must be between 0 and 100
+        ValueError: delay duration cannot be negative
+
+    Returns:
+        {
+            "type": "fault-injection",
+            "yaml": "abort:\n  body: ''\n  http_status: 500\n  percentage: 20\n  vars: ''\ndelay:\n  duration: 2.5\n  percentage: 100\nvars: arg_name == 'test'\n"
+        }
+    """
+    config = {}
+
+    if abort:
+        percentage = abort.get("percentage")
+        if percentage and not (0 <= abort["percentage"] <= 100):
+            raise ValueError("abort percentage must be between 0 and 100")
+
+        config["abort"] = {
+            "http_status": abort.get("http_status"),
+            "body": abort.get("body", ""),
+            "percentage": percentage,
+            "vars": abort.get("vars", "")
+        }
+
+    if delay:
+        percentage = delay.get("percentage")
+        if percentage and not (0 <= percentage <= 100):
+            raise ValueError("delay percentage must be between 0 and 100")
+
+        duration = delay.get("duration")
+        if duration and duration < 0:
+            raise ValueError("delay duration cannot be negative")
+
+        config["delay"] = {
+            "duration": duration,
+            "percentage": percentage if percentage else 100,
+            "vars": delay.get("vars", "")
+        }
+
+    return {
+        "type": "fault-injection",
+        "yaml": yaml_dump(config)
+    }
+
+
+def build_request_validation(
+        body_schema: str,
+        header_schema: str,
+        rejected_msg: str,
+        rejected_code: int = 400,
+) -> Dict[str, str]:
+    """generate request-validation plugin config
+
+    Args:
+        body_schema (str): request body 数据的 JSON Schema。
+        header_schema (str): request header 数据的 JSON Schema。
+        rejected_msg (str): 拒绝信息。
+        rejected_code (int, optional): 拒绝状态码。Defaults to 400.
+
+    Raises:
+        ValueError: rejected_code cannot be less than 200
+
+    Returns:
+        {
+            "type": "request-validation",
+            "yaml": "body_schema: test1\nheader_schema: test2\nrejected_code: 403\nrejected_msg: test3\n"
+        }
+    """
+    if rejected_code < 200:
+        raise ValueError("rejected_code cannot be less than 200")
+
+    return {
+        "type": "request-validation",
+        "yaml": yaml_dump({
+            "body_schema": body_schema,
+            "header_schema": header_schema,
+            "rejected_msg": rejected_msg,
+            "rejected_code": rejected_code,
+        })
+    }
