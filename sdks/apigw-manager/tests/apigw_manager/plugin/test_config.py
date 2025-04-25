@@ -6,6 +6,7 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
+import json
 
 import pytest
 from apigw_manager.plugin.config import (
@@ -19,6 +20,9 @@ from apigw_manager.plugin.config import (
     build_request_validation,
     build_stage_plugin_config_for_definition_yaml,
 )
+
+from src.apigw_manager.plugin.config import UnhealthyConfig, HealthyConfig, AbortConfig, DelayConfig, \
+    validate_json_schema
 
 
 class TestBuildPluginConfig:
@@ -231,8 +235,8 @@ class TestBuildPluginConfig:
             (
                 "",
                 {"key1": "value1"},
-                {"http_statuses": [503], "failures": 3},
-                {"http_statuses": [200], "successes": 3},
+                UnhealthyConfig(http_statuses=[503], failures=3),
+                HealthyConfig(http_statuses=[200], successes=3),
                 503,
                 30,
                 False,
@@ -257,8 +261,8 @@ class TestBuildPluginConfig:
             (
                 "",
                 {},
-                {"http_statuses": [503], "failures": 1},
-                {"http_statuses": [200], "successes": 1},
+                UnhealthyConfig(http_statuses=[503], failures=1),
+                HealthyConfig(http_statuses=[200], successes=1),
                 502,
                 2,
                 True,
@@ -267,8 +271,8 @@ class TestBuildPluginConfig:
             (
                 "",
                 {},
-                {},
-                {"http_statuses": [200], "successes": 1},
+                UnhealthyConfig(http_statuses=[400], failures=1),
+                HealthyConfig(),
                 502,
                 300,
                 True,
@@ -277,8 +281,28 @@ class TestBuildPluginConfig:
             (
                 "",
                 {},
-                {"http_statuses": [503], "failures": 1},
+                UnhealthyConfig(http_statuses=[503], failures=0),
+                HealthyConfig(),
+                502,
+                300,
+                True,
+                None,
+            ),
+            (
+                "",
                 {},
+                UnhealthyConfig(),
+                HealthyConfig(http_statuses=[100], successes=1),
+                502,
+                300,
+                True,
+                None,
+            ),
+            (
+                "",
+                {},
+                UnhealthyConfig(),
+                HealthyConfig(http_statuses=[200], successes=0),
                 502,
                 300,
                 True,
@@ -287,8 +311,8 @@ class TestBuildPluginConfig:
             (
                 "",
                 {"key:1": "value1"},
-                {"http_statuses": [503], "failures": 1},
-                {"http_statuses": [200], "successes": 1},
+                UnhealthyConfig(http_statuses=[503], failures=1),
+                HealthyConfig(http_statuses=[200], successes=1),
                 502,
                 300,
                 True,
@@ -330,7 +354,7 @@ class TestBuildPluginConfig:
         "abort, delay, will_error, expected",
         [
             (
-                {"http_status": 503, "body": "test", "percentage": 50},
+                AbortConfig(http_status=503, body="test", percentage=50, vars=""),
                 None,
                 False,
                 {
@@ -340,48 +364,45 @@ class TestBuildPluginConfig:
             ),
             (
                 None,
-                {"duration": 3, "percentage": 30, "vars": "arg_name == 'test'"},
+                DelayConfig(duration=3, percentage=30, vars=""),
                 False,
                 {
                     "type": "fault-injection",
-                    "yaml": "delay:\n  duration: 3\n  percentage: 30\n  vars: arg_name == 'test'\n"
+                    "yaml": "delay:\n  duration: 3\n  percentage: 30\n  vars: ''\n"
                 },
             ),
             (
-                {"http_status": 500, "percentage": 20},
-                {"duration": 2.5, "vars": "arg_name == 'test'"},
+                AbortConfig(http_status=500, body="", percentage=20, vars=""),
+                DelayConfig(duration=2.5, percentage=100, vars=""),
                 False,
                 {
                     "type": "fault-injection",
-                    "yaml": "abort:\n  body: ''\n  http_status: 500\n  percentage: 20\n  vars: ''\ndelay:\n  duration: 2.5\n  percentage: 100\n  vars: arg_name == 'test'\n"
+                    "yaml": "abort:\n  body: ''\n  http_status: 500\n  percentage: 20\n  vars: ''\ndelay:\n  duration: 2.5\n  percentage: 100\n  vars: ''\n"
                 },
             ),
             (
-                {"percentage": 101},
+                AbortConfig(http_status=500, body="", percentage=20, vars=""),
+                DelayConfig(duration=1, percentage=101, vars=""),
+                True,
                 None,
+            ),
+            (
+                AbortConfig(http_status=500, body="", percentage=20, vars=""),
+                DelayConfig(duration=1, percentage=101, vars=""),
                 True,
                 None,
             ),
             (
                 None,
-                {"percentage": -1},
-                True,
-                None,
-            ),
-            (
-                None,
-                {"duration": -1},
+                DelayConfig(duration=1, percentage=-1, vars=""),
                 True,
                 None,
             ),
             (
                 None,
                 None,
-                False,
-                {
-                    "type": "fault-injection",
-                    "yaml": "{}\n"
-                },
+                True,
+                None
             ),
         ],
     )
@@ -397,21 +418,51 @@ class TestBuildPluginConfig:
         "body_schema, header_schema, rejected_msg, rejected_code, will_error, expected",
         [
             (
-                'test1',
-                'test2',
-                "test3",
+                json.dumps({"type": "object"}),
+                "",
+                "test",
                 403,
                 False,
                 {
                     "type": "request-validation",
-                    "yaml": "body_schema: test1\nheader_schema: test2\nrejected_code: 403\nrejected_msg: test3\n"
+                    "yaml": 'body_schema: \'{"type": "object"}\'\nrejected_code: 403\nrejected_msg: test\n'
                 },
             ),
             (
                 "",
+                json.dumps({"type": "object"}),
+                "test",
+                403,
+                False,
+                {
+                    "type": "request-validation",
+                    "yaml": 'header_schema: \'{"type": "object"}\'\nrejected_code: 403\nrejected_msg: test\n'
+                },
+            ),
+            (
+                json.dumps({"type": "object"}),
+                json.dumps({"type": "object"}),
+                "test",
+                403,
+                False,
+                {
+                    "type": "request-validation",
+                    "yaml": 'body_schema: \'{"type": "object"}\'\nheader_schema: \'{"type": "object"}\'\nrejected_code: 403\nrejected_msg: test\n'
+                },
+            ),
+            (
+                json.dumps({"type": "object"}),
                 "",
-                "",
+                "test",
                 199,
+                True,
+                None,
+            ),
+            (
+                "",
+                "",
+                "test",
+                403,
                 True,
                 None,
             ),
