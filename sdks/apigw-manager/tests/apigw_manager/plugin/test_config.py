@@ -23,7 +23,6 @@ from apigw_manager.plugin.config import (
     HealthyConfig,
     AbortConfig,
     DelayConfig,
-    validate_json_schema,
 )
 
 
