@@ -19,10 +19,12 @@ from apigw_manager.plugin.config import (
     build_fault_injection,
     build_request_validation,
     build_stage_plugin_config_for_definition_yaml,
+    UnhealthyConfig,
+    HealthyConfig,
+    AbortConfig,
+    DelayConfig,
+    validate_json_schema,
 )
-
-from src.apigw_manager.plugin.config import UnhealthyConfig, HealthyConfig, AbortConfig, DelayConfig, \
-    validate_json_schema
 
 
 class TestBuildPluginConfig:
