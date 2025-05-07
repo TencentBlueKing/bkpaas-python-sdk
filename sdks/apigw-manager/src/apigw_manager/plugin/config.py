@@ -366,7 +366,7 @@ def build_api_breaker(
         }
     """
 
-    if not break_response_code:
+    if break_response_code is None:
         raise ValueError("break_response_code is required")
 
     if not (200 <= break_response_code <= 599):
