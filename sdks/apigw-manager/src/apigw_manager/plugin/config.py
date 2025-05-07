@@ -478,12 +478,11 @@ def build_fault_injection(
             raise ValueError("http_status must be greater than 200")
 
         percentage = abort.percentage
-        if percentage and not (0 < int(percentage) <= 100):
-            raise ValueError("The percentage of abort must be greater than 0 and less than or equal to 100")
+        _check_percentage(percentage, "abort")
 
         abort_vars = abort.vars
         if abort_vars:
-            check_vars(abort_vars, "abort")
+            _check_vars(abort_vars, "abort")
 
         config["abort"] = {
             "http_status": http_status,
@@ -497,12 +496,11 @@ def build_fault_injection(
             raise ValueError("duration is required in delay")
 
         percentage = delay.percentage
-        if percentage and not (0 < percentage <= 100):
-            raise ValueError("The percentage of delay must be greater than 0 and less than or equal to 100")
+        _check_percentage(percentage, "delay")
 
         delay_vars = delay.vars
         if delay_vars:
-            check_vars(delay_vars, "delay")
+            _check_vars(delay_vars, "delay")
 
         config["delay"] = {
             "duration": delay.duration,
@@ -554,11 +552,11 @@ def build_request_validation(
         raise ValueError("header_schema or body_schema should be configured at least one")
 
     if body_schema:
-        validate_json_schema("body_schema", body_schema)
+        _validate_json_schema("body_schema", body_schema)
         config["body_schema"] = body_schema
 
     if header_schema:
-        validate_json_schema("header_schema", header_schema)
+        _validate_json_schema("header_schema", header_schema)
         config["header_schema"] = header_schema
 
     return {
@@ -567,7 +565,12 @@ def build_request_validation(
     }
 
 
-def check_vars(vars, location):
+def _check_percentage(percentage: int, location: str):
+    if percentage and not (0 < percentage <= 100):
+        raise ValueError(f"The percentage of {location} must be greater than 0 and less than or equal to 100")
+
+
+def _check_vars(vars: str, location: str):
     """check vars of lua-resty-expr
     vars = `[
         [
@@ -580,7 +583,6 @@ def check_vars(vars, location):
     ]`
 
     """
-    parsed_vars = []
     try:
         parsed_vars = ast.literal_eval(vars)
     except Exception as e:
@@ -608,7 +610,7 @@ def check_vars(vars, location):
                 raise TypeError(f"The vars of {location} at index [{index}][{i}] should be list")
 
 
-def validate_json_schema(schema_name: str, json_schema: str):
+def _validate_json_schema(schema_name: str, json_schema: str):
     try:
         data = json.loads(json_schema)
     except json.JSONDecodeError:
