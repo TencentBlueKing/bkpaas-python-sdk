@@ -7,10 +7,19 @@
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
+import ast
+import json
+import jsonschema
 import ipaddress
+from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
+
+from .constants import Draft7Schema
 from .utils import literal_unicode, yaml_dump, yaml_text_indent
+
+
+VARS_ALLOWED_COMPARISON_SYMBOLS = {"==", "~=", ">", ">=", "<", "<=", "~~", "~*", "in", "has", "!", "ipmatch"}
 
 
 def build_bk_header_rewrite(set: Dict[str, str], remove: List[str]) -> Dict[str, str]:
@@ -265,3 +274,349 @@ def build_stage_plugin_config_for_definition_yaml(
             }
         )
     return indented_plugin_configs
+
+
+def build_bk_mock(
+    response_example: str,
+    response_headers: Dict[str, str],
+    response_status: int = 200,
+) -> Dict[str, str]:
+    """generate bk-mock plugin config
+
+    Args:
+        response_example (str): 响应体。
+        response_headers (Dict[str, str]): 响应头。
+        response_status (int, optional): 响应状态码。Defaults to 200.
+
+    Raises:
+        ValueError: response_status cannot be less than 100
+        ValueError: key {} can not contain ':'
+
+    Returns:
+        {
+            "type": "bk-mock",
+            "yaml": "response_headers:\n- key: key1\nvalue: value1\n- key: key2\nvalue: value2\nresponse_status: 200\nresponse_example: ''"
+        }
+    """
+    if response_status < 100:
+        raise ValueError("response_status cannot be less than 100")
+
+    response_header_data = []
+    for k, v in response_headers.items():
+        if ":" in k:
+            raise ValueError(f"key {k} can not contain ':'")
+        response_header_data.append({"key": k, "value": v})
+
+    return {
+        "type": "bk-mock",
+        "yaml": yaml_dump(
+            {
+                "response_example": response_example,
+                "response_headers": response_header_data,
+                "response_status": response_status,
+            }
+        ),
+    }
+
+
+@dataclass
+class UnhealthyConfig:
+    http_statuses: List[int] = None
+    failures: int = 3
+
+
+@dataclass
+class HealthyConfig:
+    http_statuses: List[int] = None
+    successes: int = 3
+
+
+def build_api_breaker(
+    break_response_body: str,
+    break_response_headers: Dict[str, str],
+    unhealthy: UnhealthyConfig,
+    healthy: HealthyConfig,
+    break_response_code: int = 502,
+    max_breaker_sec: int = 300,
+) -> Dict[str, str]:
+    """generate api-breaker plugin config
+
+    Args:
+        break_response_body (str): 当上游服务处于不健康状态时返回的 HTTP 响应体信息。
+        break_response_headers (Dict[str, str]): 当上游服务处于不健康状态时返回的 HTTP 响应头信息。
+        unhealthy (UnhealthyConfig): 当上游服务处于不健康状态时的 HTTP 的状态码和异常请求次数。
+            - 应包含键 "http_statuses"(不健康状态码列表)和"failures"(触发不健康状态的异常请求次数)
+        healthy (HealthyConfig): 上游服务处于健康状态时的 HTTP 状态码和连续正常请求次数。
+            - 应包含键 "http_statuses"(健康状态码列表)和"successes"(触发健康状态的连续正常请求次数)
+        break_response_code (int, optional): 当上游服务处于不健康状态时返回的 HTTP 错误码。Defaults to 502.
+        max_breaker_sec (int, optional): 上游服务熔断的最大持续时间，以秒为单位，最小 3 秒。Defaults to 300.
+
+    Raises:
+        ValueError: max_breaker_sec duration cannot be less than 3 seconds
+        ValueError: unhealthy status must be between 500 and 599
+        ValueError: unhealthy failures must be greater than or equal to 1
+        ValueError: healthy status must be between 200 and 499
+        ValueError: healthy successes must be greater than or equal to 1
+        ValueError: key {} can not contain ':'
+
+    Returns:
+        {
+            "type": "api-breaker",
+            "yaml": "break_response_code: 502\nbreak_response_body: ''\nbreak_response_headers:\n  - key: key1\n    value: value1\nmax_breaker_sec: 300\nunhealthy:\n  http_statuses:\n    - 503\n  failures: 3\nhealthy:\n  http_statuses:\n    - 200\n  successes: 3"
+        }
+    """
+
+    if break_response_code is None:
+        raise ValueError("break_response_code is required")
+
+    if not (200 <= break_response_code <= 599):
+        raise ValueError("break_response_code must be between 200 and 599")
+
+    if max_breaker_sec and max_breaker_sec < 3:
+        raise ValueError("max_breaker_sec duration cannot be less than 3 seconds")
+
+    unhealthy_http_statuses = unhealthy.http_statuses or [500]
+    for status in unhealthy_http_statuses:
+        if not (500 <= status <= 599):
+            raise ValueError("unhealthy status must be between 500 and 599")
+
+    unhealthy_failures = unhealthy.failures
+    if unhealthy_failures is not None and unhealthy_failures < 1:
+        raise ValueError("unhealthy failures must be greater than or equal to 1")
+
+    healthy_http_statuses = healthy.http_statuses or [200]
+    for status in healthy_http_statuses:
+        if not (200 <= status <= 499):
+            raise ValueError("healthy status must be between 200 and 499")
+
+    healthy_successes = healthy.successes
+    if healthy_successes is not None and healthy_successes < 1:
+        raise ValueError("healthy successes must be greater than or equal to 1")
+
+    break_response_header_data = []
+    for k, v in break_response_headers.items():
+        if ":" in k:
+            raise ValueError(f"key {k} can not contain ':'")
+        break_response_header_data.append({"key": k, "value": v})
+
+    return {
+        "type": "api-breaker",
+        "yaml": yaml_dump(
+            {
+                "break_response_code": break_response_code,
+                "break_response_body": break_response_body,
+                "break_response_headers": break_response_header_data,
+                "max_breaker_sec": max_breaker_sec,
+                "unhealthy": {
+                    "http_statuses": unhealthy_http_statuses,
+                    "failures": unhealthy_failures
+                },
+                "healthy": {
+                    "http_statuses": healthy_http_statuses,
+                    "successes": healthy_successes
+                },
+            }
+        ),
+    }
+
+
+@dataclass
+class AbortConfig:
+    http_status: int
+    body: str
+    percentage: int
+    vars: str
+
+
+@dataclass
+class DelayConfig:
+    duration: float
+    percentage: int
+    vars: str
+
+
+def build_fault_injection(
+    abort: Optional[AbortConfig] = None,
+    delay: Optional[DelayConfig] = None,
+) -> Dict[str, str]:
+    """generate fault-injection plugin config
+
+    Args:
+        abort (AbortConfig, optional): 中断状态。
+            - http_status (int): 返回给客户端的 HTTP 状态码。
+            - body (str): 返回给客户端的响应数据。支持使用 NGINX 变量，如 client addr: $remote_addr\n。
+            - percentage (int): 将被中断的请求占比(0-100)。
+            - vars (str): 执行故障注入的规则，当规则匹配通过后才会执行故障注。vars 是一个表达式的列表，来自 lua-resty-expr。
+        delay (DelayConfig, optional): 延迟状态。
+            - duration (number): 延迟时间，单位秒，只能填入整数。
+            - percentage (int): 将被延迟的请求占比(0-100)
+            - vars (str): 执行请求延迟的规则，当规则匹配通过后才会延迟请求。vars 是一个表达式列表，来自 lua-resty-expr。
+
+    Raises:
+        ValueError: At least one of the conditions 'abort' or 'delay' must be configured
+        ValueError: http_status is required in abort
+        ValueError: http_status must be greater than 200
+        ValueError: The percentage of abort must be greater than 0 and less than or equal to 100
+        ValueError: duration is required in delay
+
+    Returns:
+        {
+            "type": "fault-injection",
+            "yaml": "abort:\n  body: ''\n  http_status: 500\n  percentage: 20\n  vars: ''\ndelay:\n  duration: 2.5\n  percentage: 100\n  vars: ''\n"
+        }
+    """
+    config = {}
+
+    if not abort and not delay:
+        raise ValueError("At least one of the conditions 'abort' or 'delay' must be configured")
+
+    if abort:
+        http_status = abort.http_status
+        if not http_status:
+            raise ValueError("http_status is required in abort")
+        if http_status < 200:
+            raise ValueError("http_status must be greater than 200")
+
+        percentage = abort.percentage
+        _check_percentage(percentage, "abort")
+
+        abort_vars = abort.vars
+        if abort_vars:
+            _check_vars(abort_vars, "abort")
+
+        config["abort"] = {
+            "http_status": http_status,
+            "body": abort.body,
+            "percentage": percentage,
+            "vars": abort_vars
+        }
+
+    if delay:
+        if not delay.duration:
+            raise ValueError("duration is required in delay")
+
+        percentage = delay.percentage
+        _check_percentage(percentage, "delay")
+
+        delay_vars = delay.vars
+        if delay_vars:
+            _check_vars(delay_vars, "delay")
+
+        config["delay"] = {
+            "duration": delay.duration,
+            "percentage": percentage,
+            "vars": delay_vars
+        }
+
+    return {
+        "type": "fault-injection",
+        "yaml": yaml_dump(config)
+    }
+
+
+def build_request_validation(
+        body_schema: str,
+        header_schema: str,
+        rejected_msg: str,
+        rejected_code: int = 400,
+) -> Dict[str, str]:
+    """generate request-validation plugin config
+
+    Args:
+        body_schema (str): request body 数据的 JSON Schema。
+        header_schema (str): request header 数据的 JSON Schema。
+        rejected_msg (str): 拒绝信息。
+        rejected_code (int, optional): 拒绝状态码。Defaults to 400.
+
+    Raises:
+        ValueError: rejected_code must be between 200 and 599
+        ValueError: header_schema or body_schema should be configured at least one
+        ValueError: Your {schema_name} Schema is not a valid JSON
+        ValueError: Your {schema_name} Schema is not valid: {err}
+
+    Returns:
+        {
+            "type": "request-validation",
+            "yaml": 'body_schema: \'{"type": "object"}\'\nheader_schema: \'{"type": "object"}\'\nrejected_code: 403\nrejected_msg: test\n'
+        }
+    """
+    config = {
+        "rejected_code": rejected_code,
+        "rejected_msg": rejected_msg
+    }
+
+    if not (200 <= rejected_code <= 599):
+        raise ValueError("rejected_code must be between 200 and 599")
+
+    if not body_schema and not header_schema:
+        raise ValueError("header_schema or body_schema should be configured at least one")
+
+    if body_schema:
+        _validate_json_schema("body_schema", body_schema)
+        config["body_schema"] = body_schema
+
+    if header_schema:
+        _validate_json_schema("header_schema", header_schema)
+        config["header_schema"] = header_schema
+
+    return {
+        "type": "request-validation",
+        "yaml": yaml_dump(config)
+    }
+
+
+def _check_percentage(percentage: int, location: str):
+    if percentage and not (0 < percentage <= 100):
+        raise ValueError(f"The percentage of {location} must be greater than 0 and less than or equal to 100")
+
+
+def _check_vars(vars: str, location: str):
+    """check vars of lua-resty-expr
+    vars = `[
+        [
+            [ "arg_name","==","jack" ],
+            [ "arg_age","==",18 ]
+        ],
+        [
+            [ "arg_name2","==111","allen" ]
+        ]
+    ]`
+
+    """
+    try:
+        parsed_vars = ast.literal_eval(vars)
+    except Exception as e:
+        raise ValueError(f"The vars of {location} is not valid, error: {e}")
+
+    # 第一层 parsed_vars = [ [a], [] ]
+    if not isinstance(parsed_vars, list):
+        raise TypeError(f"The vars of {location} should be list")
+
+    for index, v in enumerate(parsed_vars):
+        # 中间层  v = [a]
+        if not isinstance(v, list):
+            raise TypeError(f"The vars of {location} at index {index} should be list")
+
+        for i, item in enumerate(v):
+            # 最内侧 a  = [ "arg_name","==","jack" ]
+            if isinstance(item, list):
+                if len(item) != 3:
+                    raise ValueError(f"The vars of {location} at index [{index}][{i}] should have 3 elements")
+                if item[1] not in VARS_ALLOWED_COMPARISON_SYMBOLS:
+                    raise ValueError(
+                        f"The vars of {location} at index [{index}][{i}] should have a valid comparison symbol"
+                    )
+            else:
+                raise TypeError(f"The vars of {location} at index [{index}][{i}] should be list")
+
+
+def _validate_json_schema(schema_name: str, json_schema: str):
+    try:
+        data = json.loads(json_schema)
+    except json.JSONDecodeError:
+        raise ValueError(f"Your {schema_name} Schema is not a valid JSON")
+
+    try:
+        jsonschema.validate(instance=data, schema=Draft7Schema)
+    except jsonschema.exceptions.ValidationError as err:
+        raise ValueError(f"Your {schema_name} Schema is not valid: {err}")
