@@ -18,11 +18,14 @@ from apigw_manager.plugin.config import (
     build_api_breaker,
     build_fault_injection,
     build_request_validation,
+    build_response_rewrite_validation,
+    build_redirect_validation,
     build_stage_plugin_config_for_definition_yaml,
     UnhealthyConfig,
     HealthyConfig,
     AbortConfig,
     DelayConfig,
+    HeadersConfig,
 )
 
 
@@ -478,6 +481,129 @@ class TestBuildPluginConfig:
             return
 
         assert build_request_validation(body_schema, header_schema, rejected_msg, rejected_code) == expected
+
+    @pytest.mark.parametrize(
+        "status_code, body, vars, body_base64, headers, will_error, expected",
+        [
+            (
+                200,
+                "",
+                "",
+                False,
+                HeadersConfig(
+                    add=["key1:value1"],
+                    set={"key1": "value1"},
+                    remove=["key1"],
+                ),
+                False,
+                {
+                    "type": "response-rewrite",
+                    "yaml": "body: ''\n"
+                            "body_base64: false\n"
+                            "headers:\n"
+                            "  add:\n"
+                            "  - key: key1:value1\n"
+                            "  remove:\n"
+                            "  - key: key1\n"
+                            "  set:\n"
+                            "  - key: key1\n    value: value1\n"
+                            "status_code: 200\n"
+                            "vars: ''\n"
+                },
+            ),
+            (
+                100,
+                "",
+                "",
+                False,
+                HeadersConfig(
+                    add=["key1:value1"],
+                    set={"key1": "value1"},
+                    remove=["key1"],
+                ),
+                True,
+                None,
+            ),
+            (
+                200,
+                "",
+                "",
+                False,
+                HeadersConfig(
+                    add=["key1"],
+                    set={},
+                    remove=[],
+                ),
+                True,
+                None,
+            ),
+            (
+                200,
+                "",
+                "",
+                False,
+                HeadersConfig(
+                    add=[],
+                    set={"key1::": "value1"},
+                    remove=[],
+                ),
+                True,
+                None,
+            ),
+            (
+                200,
+                "",
+                "",
+                False,
+                HeadersConfig(
+                    add=[],
+                    set={},
+                    remove=["key1::"],
+                ),
+                True,
+                None,
+            ),
+        ]
+    )
+    def test_build_response_rewrite_validation(
+        self, status_code, body, vars, body_base64, headers, will_error, expected
+    ):
+        if will_error:
+            with pytest.raises(ValueError):
+                build_response_rewrite_validation(status_code, body, vars, body_base64, headers)
+            return
+
+        assert build_response_rewrite_validation(status_code, body, vars, body_base64, headers) == expected
+
+    @pytest.mark.parametrize(
+        "uri, ret_code, will_error, expected",
+        [
+            (
+                "",
+                200,
+                False,
+                {
+                    "type": "redirect",
+                    "yaml": "ret_code: 200\nuri: ''\n"
+                },
+            ),
+            (
+                "",
+                100,
+                True,
+                None,
+            ),
+        ]
+    )
+    def test_build_redirect_validation(
+        self, uri, ret_code, will_error, expected
+    ):
+        if will_error:
+            with pytest.raises(ValueError):
+                build_redirect_validation(uri, ret_code)
+            return
+
+        assert build_redirect_validation(uri, ret_code) == expected
 
 
 class TestBuildStagePluginConfigForDefinitionYaml:

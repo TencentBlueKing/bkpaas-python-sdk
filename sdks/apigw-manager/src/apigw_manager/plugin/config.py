@@ -565,6 +565,124 @@ def build_request_validation(
     }
 
 
+@dataclass
+class HeadersConfig:
+    add: List[str]
+    set: Dict[str, str]
+    remove: List[str]
+
+
+def build_response_rewrite_validation(
+        status_code: int,
+        body: str,
+        vars: str,
+        body_base64: bool = False,
+        headers: Optional[HeadersConfig] = None,
+) -> Dict[str, str]:
+    """generate response-rewrite plugin config
+
+    Args:
+        status_code (int): 修改上游返回状态码，默认保留原始响应代码。
+        body (str):
+            - 修改上游返回的 body 内容，如果设置了新内容，header 里面的 content-length 字段也会被去掉。
+            - 注意，这个字段只允许对插件配置中传递的主体进行解码，并不对上游响应进行解码。
+        vars (str):
+            - vars 是一个表达式列表，只有满足条件的请求和响应才会修改 body 和 header 信息，来自 lua-resty-expr。
+            - 如果 vars 字段为空，那么所有的重写动作都会被无条件的执行。
+        body_base64 (bool): 当设置时，在写给客户端之前，在body中传递的主体将被解码，这在一些图像和 Protobuffer 场景中使用。
+        headers (HeadersConfig, optional):
+            - add (List[str]): 添加新的响应头。格式为 ["name: value", ...]。这个值能够以 $var 的格式包含 NGINX 变量。
+            - set (Dict[str, str]): 改写响应头。格式为 {"name": "value", ...}。这个值能够以 $var 的格式包含 NGINX 变量。
+            - remove (List[str]): 移除响应头。格式为 ["name", ...]。
+
+    Raises:
+        ValueError: status_code must be between 200 and 598
+        ValueError: key {} must contain ':'
+        ValueError: key {} can not contain ':'
+
+    Returns:
+        {
+            "type": "response-rewrite",
+            "yaml": "body: ''\nbody_base64: false\nheaders:\n  add:\n  - key: key1:value1\n  remove:\n  - key: key1\n  set:\n  - key: key1\n    value: value1\nstatus_code: 200\nvars: ''\n"
+        }
+    """
+
+    if not (200 <= status_code <= 598):
+        raise ValueError("status_code must be between 200 and 598")
+
+    if vars:
+        _check_vars(vars, "response_rewrite")
+
+    add_data = []
+    for k in headers.add:
+        if ":" not in k:
+            raise ValueError(f"key {k} must contain ':'")
+        add_data.append({"key": k})
+
+    set_data = []
+    for k, v in headers.set.items():
+        if ":" in k:
+            raise ValueError(f"key {k} can not contain ':'")
+        set_data.append({"key": k, "value": v})
+
+    remove_data = []
+    for k in headers.remove:
+        if ":" in k:
+            raise ValueError(f"key {k} can not contain ':'")
+        remove_data.append({"key": k})
+
+    return {
+        "type": "response-rewrite",
+        "yaml": yaml_dump(
+            {
+                "status_code": status_code,
+                "body_base64": body_base64,
+                "body": body,
+                "vars": vars,
+                "headers": {
+                    "add": add_data,
+                    "set": set_data,
+                    "remove": remove_data,
+                }
+            }
+        ),
+    }
+
+
+def build_redirect_validation(
+    uri: str,
+    ret_code: int = 302,
+) -> Dict[str, str]:
+    """generate redirect plugin config
+
+    Args:
+        uri (str): 要重定向到的 URI，可以包含 NGINX 变量。
+        ret_code (int): HTTP 响应码。
+
+    Raises:
+        ValueError: ret_code cannot be less than 200
+
+    Returns:
+        {
+            "type": "redirect",
+            "yaml": "ret_code: 200\nuri: ''\n"
+        }
+    """
+
+    if ret_code is not None and ret_code < 200:
+        raise ValueError("ret_code cannot be less than 200")
+
+    return {
+        "type": "redirect",
+        "yaml": yaml_dump(
+            {
+                "uri": uri,
+                "ret_code": ret_code,
+            }
+        ),
+    }
+
+
 def _check_percentage(percentage: int, location: str):
     if percentage and not (0 < percentage <= 100):
         raise ValueError(f"The percentage of {location} must be greater than 0 and less than or equal to 100")
