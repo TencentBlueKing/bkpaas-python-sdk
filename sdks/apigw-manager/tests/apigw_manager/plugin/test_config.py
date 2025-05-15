@@ -491,7 +491,7 @@ class TestBuildPluginConfig:
                 "",
                 False,
                 HeadersConfig(
-                    add=["key1:value1"],
+                    add={"key1": "value1"},
                     set={"key1": "value1"},
                     remove=["key1"],
                 ),
@@ -517,7 +517,7 @@ class TestBuildPluginConfig:
                 "",
                 False,
                 HeadersConfig(
-                    add=["key1:value1"],
+                    add={"key1": "value1"},
                     set={"key1": "value1"},
                     remove=["key1"],
                 ),
@@ -530,7 +530,7 @@ class TestBuildPluginConfig:
                 "",
                 False,
                 HeadersConfig(
-                    add=["key1"],
+                    add={"key1::": "value1"},
                     set={},
                     remove=[],
                 ),
@@ -543,7 +543,7 @@ class TestBuildPluginConfig:
                 "",
                 False,
                 HeadersConfig(
-                    add=[],
+                    add={},
                     set={"key1::": "value1"},
                     remove=[],
                 ),
@@ -556,7 +556,7 @@ class TestBuildPluginConfig:
                 "",
                 False,
                 HeadersConfig(
-                    add=[],
+                    add={},
                     set={},
                     remove=["key1::"],
                 ),
