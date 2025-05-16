@@ -27,8 +27,20 @@ stages:
     {% if settings.BK_APIGW_STAGE_BACKEND_SUBPATH %}
     vars:
       api_sub_path: {{ settings.BK_APIGW_STAGE_BACKEND_SUBPATH }}
+      {% if settings.BK_APIGW_STAGE_ENV_VARS %}
+      {% for key, value in settings.BK_APIGW_STAGE_ENV_VARS.items %}
+      {{ key }}: "{{ value }}"
+      {% endfor %}
+      {% endif %}
+    {% else %}
+    {% if settings.BK_APIGW_STAGE_ENV_VARS %}
+    vars:
+      {% for key, value in settings.BK_APIGW_STAGE_ENV_VARS.items %}
+      {{ key }}: "{{ value }}"
+      {% endfor %}
     {% else %}
     vars: {}
+    {% endif %}
     {% endif %}
     backends:
       - name: "default"
