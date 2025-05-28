@@ -45,7 +45,7 @@ support-files
 definition.yaml 中可以使用 Django 模版语法引用和渲染变量，内置以下变量：
 
 - `settings`：Django 提供的配置对象，适合用于使用 Django Command 同步
-- `environ`：环境变量，适合用于通过镜像方式同步方式使用
+- `environ`：环境变量，适合用于通过镜像方式同步使用
 
 推荐在一个文件中统一进行定义，用命名空间区分不同配置间的定义，definition.yaml 样例：
 
