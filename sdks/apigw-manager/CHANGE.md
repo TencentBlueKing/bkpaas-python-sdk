@@ -1,5 +1,13 @@
 ## Change logs
 
+### 4.1.0
+
+- [breaking change] 做了多租户改造的全租户应用必须显式设置 `BK_APP_TENANT_ID=system` (环境变量或django settings)
+
+### 4.0.1
+
+- 支持多租户
+
 ### 4.0.0
 
 - [breaking change] drop support for python 3.6/3.7, request >=3.8 and < 3.13

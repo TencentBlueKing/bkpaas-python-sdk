@@ -1,22 +1,24 @@
 # -*- coding: utf-8 -*-
 """
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+* TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
+* Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
+* Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at http://opensource.org/licenses/MIT
+* Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+* an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+* specific language governing permissions and limitations under the License.
 """
+
 import os
 import re
 import zipfile
 
 import yaml
-from bkapi_client_core.config import SettingKeys, settings
-from packaging.version import Version as _Version, InvalidVersion
+from packaging.version import InvalidVersion
+from packaging.version import Version as _Version
 
 from apigw_manager.core import configuration
+from bkapi_client_core.config import SettingKeys, settings
 
 
 def get_configuration(**kwargs):
@@ -27,6 +29,7 @@ def get_configuration(**kwargs):
         ("BK_APP_CODE", "bk_app_code"),
         ("BK_APP_SECRET", "bk_app_secret"),
         ("BK_APIGW_JWT_PROVIDER_CLS", "jwt_provider_cls"),
+        ("BK_APP_TENANT_ID", "bk_app_tenant_id"),
     ]
 
     for attr, key in settings_mappings:
@@ -107,7 +110,7 @@ class ZipArchiveFile:
         for root, _, files in os.walk(path):
             for name in files:
                 file_path = os.path.join(root, name)
-                path_to_name[file_path] = file_path[len(path):]
+                path_to_name[file_path] = file_path[len(path) :]
 
         return path_to_name
 
