@@ -9,8 +9,6 @@
 * specific language governing permissions and limitations under the License.
 """
 
-import os
-
 import pytest
 from faker import Faker
 
@@ -127,12 +125,10 @@ class TestHandler:
         handler.config.bk_app_tenant_id = "123"
         assert handler._get_tenant_id() == "123"
 
-    def test_get_tenant_id_from_env(self, handler: Handler, mocker):
-        mocker.patch.object(
-            os.environ, "get", side_effect=lambda key: "123" if key == "BKPAAS_APP_TENANT_ID" else None
-        )
+    def test_get_tenant_id_from_env(self, handler: Handler, monkeypatch):
+        monkeypatch.setenv("BKPAAS_APP_TENANT_ID", "123")
         assert handler._get_tenant_id() == "123"
 
-    def test_get_tenant_id_from_env_default_system(self, handler: Handler, mocker):
-        mocker.patch.object(os.environ, "get", side_effect=lambda key: "" if key == "BKPAAS_APP_TENANT_ID" else None)
+    def test_get_tenant_id_from_env_default_system(self, handler: Handler, monkeypatch):
+        monkeypatch.setenv("BKPAAS_APP_TENANT_ID", "")
         assert handler._get_tenant_id() == "system"

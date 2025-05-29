@@ -54,10 +54,11 @@ class TestGetConfiguration:
         configuration = get_configuration()
         assert configuration.bk_app_tenant_id == settings.BK_APP_TENANT_ID
 
-    def test_bk_app_tenant_id_by_env(self, settings, faker):
-        os.environ["BK_APP_TENANT_ID"] = faker.color()
+    def test_bk_app_tenant_id_by_env(self, settings, faker, monkeypatch):
+        tenant_id = faker.color()
+        monkeypatch.setenv("BK_APP_TENANT_ID", tenant_id)
         configuration = get_configuration()
-        assert configuration.bk_app_tenant_id == os.environ["BK_APP_TENANT_ID"]
+        assert configuration.bk_app_tenant_id == tenant_id
 
     @pytest.mark.parametrize(
         ("kwargs", "expected"),
