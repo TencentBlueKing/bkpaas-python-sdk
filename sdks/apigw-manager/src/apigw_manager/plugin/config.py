@@ -616,7 +616,7 @@ def build_response_rewrite_validation(
     for k, v in headers.add.items():
         if ":" in k:
             raise ValueError(f"key {k} can not contain ':'")
-        add_data.append({"key": "{}:{}".format(k, v)})
+        add_data.append({"key": "{}: {}".format(k, v)})
 
     set_data = []
     for k, v in headers.set.items():

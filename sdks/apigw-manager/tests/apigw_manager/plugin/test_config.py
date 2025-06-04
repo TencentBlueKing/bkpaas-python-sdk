@@ -502,7 +502,7 @@ class TestBuildPluginConfig:
                             "body_base64: false\n"
                             "headers:\n"
                             "  add:\n"
-                            "  - key: key1:value1\n"
+                            "  - key: 'key1: value1'\n"
                             "  remove:\n"
                             "  - key: key1\n"
                             "  set:\n"
