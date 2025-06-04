@@ -197,7 +197,7 @@ grant_permissions:
     # 授权维度，可选值：
     # gateway: 按网关授权，包括网关下所有资源，以及未来新创建的资源
     # resource: 按资源维度授权
-    grant_dimension: "gateway"
+    grant_dimension: "api"
     # 如果是按照 resource 维度授权，需要提供如下的具体 resource_name
     # resource_names:
     #   - resource_name_1
@@ -208,7 +208,7 @@ grant_permissions:
 # apply_permissions:
 #   - gateway_name: "{{ settings.BK_APIGW_NAME }}" # 环境变量方式："{{ environ.BK_APIGW_NAME }}"
 #     # 权限维度，可选值：gateway，按网关授权，包括网关下所有资源，以及未来新创建的资源
-#     grant_dimension: "gateway"
+#     grant_dimension: "api"
 
 # 为网关添加关联应用，关联应用可以通过网关 bk-apigateway 的接口操作网关数据；每个网关最多可有 10 个关联应用；
 # 用于命令 `add_related_apps`
