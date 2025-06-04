@@ -92,3 +92,158 @@
       - period: 1
           tokens: 100
 ```
+
+## 5. mocking 插件
+
+### 5.1 参数说明
+
+| 参数                    | 类型  | 默认值 | 描述     |
+|-----------------------|-----|-----|--------|
+| response_example      | 字符串 | ""  | 响应体。   |
+| response_headers      | 对象  | {}  | 响应头。   |
+| response_status       | 整数  | 200 | 响应状态码。 |
+
+### 5.2 配置例子
+
+```yaml
+- type: bk-mock
+  yaml: |-
+    response_example: ''
+    response_headers:
+      - key: key1
+        value: value1
+    response_status: 200
+```
+
+## 6. API 熔断插件
+
+### 6.1 参数说明
+
+| 参数                      | 类型  | 默认值  | 描述                               |
+|-------------------------|-----|------|----------------------------------|
+| break_response_body     | 字符串 | ""   | 当上游服务处于不健康状态时返回的 HTTP 响应体信息。     |
+| break_response_headers  | 对象  | {}   | 当上游服务处于不健康状态时返回的 HTTP 响应头信息。     |
+| unhealthy               | 对象  | {}   | 当上游服务处于不健康状态时的 HTTP 的状态码和异常请求次数。 |
+| healthy                 | 对象  | {}   | 上游服务处于健康状态时的 HTTP 状态码和连续正常请求次数。  |
+| break_response_code     | 整数  | 502  | 当上游服务处于不健康状态时返回的 HTTP 错误码。       |
+| max_breaker_sec         | 整数  | 300  | 上游服务熔断的最大持续时间，以秒为单位，最小 3 秒。      |
+
+### 6.2 配置例子
+
+```yaml
+- type: bk-mock
+  yaml: |-
+    break_response_body: ''
+    break_response_headers:
+      - key: key1
+        value: value1
+    unhealthy:
+      http_statuses: 
+      - 500
+      successes: 3
+    healthy:
+      http_statuses: 
+      - 200
+      failures: 3
+    break_response_code: 502
+    max_breaker_sec: 300
+```
+
+
+## 7. 故障注入插件
+
+### 7.1 参数说明
+
+| 参数       | 类型  | 默认值  | 描述                    |
+|----------|-----|------|-----------------------|
+| abort    | 对象  | {}   | 中断状态。                 |
+| delay    | 对象  | {}   | 延迟状态。                 |
+
+### 7.2 配置例子
+
+```yaml
+- type: fault-injection
+  yaml: |-
+    abort:
+      http_status: 503
+      body: ''
+      percentage: 50
+      vars: ''
+    unhealthy:
+      duration: 3 
+      percentage: 30
+      vars: ''
+```
+
+## 8. 请求校验插件
+
+### 8.1 参数说明
+
+| 参数             | 类型  | 默认值  | 描述                                |
+|----------------|-----|------|-----------------------------------|
+| body_schema    | 字符串 | ""   | request body 数据的 JSON Schema。     |
+| header_schema  | 字符串 | ""   | request header 数据的 JSON Schema。   |
+| rejected_msg   | 字符串 | ""   | 拒绝信息。                             |
+| rejected_code  | 整数  | 400  | 拒绝状态码。                            |
+
+### 8.2 配置例子
+
+```yaml
+- type: request-validation
+  yaml: |-
+    body_schema: \'{"type": "object"}\'
+    body_schema: \'{"type": "object"}\'
+    rejected_msg: ''
+    rejected_code: 400
+```
+
+## 9. Response 转换插件
+
+### 9.1 参数说明
+
+| 参数            | 类型  | 默认值   | 描述                                                                 |
+|---------------|-----|-------|--------------------------------------------------------------------|
+| status_code   | 整数  |       | 修改上游返回状态码，默认保留原始响应代码。                                              |
+| body          | 字符串 | ""    | 修改上游返回的 body 内容，如果设置了新内容，header 里面的 content-length 字段也会被去掉。        |
+| vars          | 字符串 | ""    | vars 是一个表达式列表，只有满足条件的请求和响应才会修改 body 和 header 信息，来自 lua-resty-expr。 |
+| body_base64   | 布尔值 | false | 当设置时，在写给客户端之前，在body中传递的主体将被解码，这在一些图像和 Protobuffer 场景中使用。           |
+| headers       | 对象  | {}    | 处理响应头。                                                             |
+
+### 9.2 配置例子
+
+```yaml
+- type: response-rewrite
+  yaml: |-
+    status_code: 200
+    body: ''
+    vars: ''
+    body_base64: false
+    headers:
+      add:
+      - key: 'key1: value1'
+      remove:
+      - key: key1
+      set:
+      - key: key1
+        value: value1
+```
+
+
+## 10. 重定向插件
+
+### 10.1 参数说明
+
+| 参数          | 类型   | 默认值     | 描述                        |
+|-------------|------|---------|---------------------------|
+| uri         | 字符串  | ""      | 要重定向到的 URI，可以包含 NGINX 变量。 |
+| ret_code    | 整数   | 302     | HTTP 响应码。                 |
+
+### 10.2 配置例子
+
+```yaml
+- type: redirect
+  yaml: |-
+    uri: ''
+    ret_code: 302
+```
+
