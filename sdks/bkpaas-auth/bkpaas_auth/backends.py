@@ -208,26 +208,39 @@ class APIGatewayAuthBackend:
 
     _TOKEN_EXPIRE_TIME = 86400  # 24 hours in seconds
 
-    def _create_authenticated_user(self, username: str, provider_type: ProviderType) -> User:
+    def _create_authenticated_user(
+        self, username: str, provider_type: ProviderType, tenant_id: str | None = None
+    ) -> User:
         """Create a user object for authenticated requests."""
         return User(
             token=LoginToken("any_token", expires_in=self._TOKEN_EXPIRE_TIME),
             provider_type=provider_type,
             username=username,
+            tenant_id=tenant_id,
         )
 
-    def _authenticate_common(self, verified: bool, username: Optional[str]) -> Union[User, AnonymousUser]:
+    def _authenticate_common(
+        self, verified: bool, username: str | None = None, tenant_id: str | None = None
+    ) -> Union[User, AnonymousUser]:
         """Common authentication logic for all versions."""
         if not verified or not username:
             return self.make_anonymous_user(username)
 
-        return self._create_authenticated_user(username=username, provider_type=self.get_provider_type())
+        return self._create_authenticated_user(
+            username=username, provider_type=self.get_provider_type(), tenant_id=tenant_id
+        )
 
     def authenticate_with_signature_v3(
-        self, request: HttpRequest, gateway_name: str, bk_username: str, verified: bool, **credentials: Dict
+        self,
+        request: HttpRequest,
+        gateway_name: str,
+        bk_username: str,
+        tenant_id: str,
+        verified: bool,
+        **credentials: Dict,
     ) -> Union[User, AnonymousUser]:
         """authenticate function with signature required by ApiGatewayJWTUserMiddleware in apigw_manager == '^3.0.0'"""
-        return self._authenticate_common(verified, bk_username)
+        return self._authenticate_common(verified, bk_username, tenant_id)
 
     def authenticate_with_signature_v1(
         self, request: HttpRequest, api_name: str, bk_username: str, verified: bool, **credentials: Dict
