@@ -45,7 +45,7 @@ class ServiceSLZ(serializers.ModelSerializer):
             return None
 
     def get_plan_schema(self, obj) -> dict:
-        return get_plan_schema_cls().schema()
+        return get_plan_schema_cls().model_json_schema()
 
     class Meta(object):
         model = Service
