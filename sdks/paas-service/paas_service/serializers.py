@@ -18,7 +18,7 @@ to the current version of the project delivered to anyone in the future.
 """
 from typing import Optional
 
-from paas_service.base_vendor import get_plan_schema_cls
+from paas_service.base_vendor import get_plan_schema as get_svc_plan_schema
 from paas_service.models import Plan, Service, ServiceInstance, SpecDefinition, Specification
 from rest_framework import serializers
 
@@ -45,7 +45,7 @@ class ServiceSLZ(serializers.ModelSerializer):
             return None
 
     def get_plan_schema(self, obj) -> dict:
-        return get_plan_schema_cls().model_json_schema()
+        return get_svc_plan_schema()
 
     class Meta(object):
         model = Service

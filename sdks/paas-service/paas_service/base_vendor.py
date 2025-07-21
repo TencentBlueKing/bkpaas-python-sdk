@@ -44,6 +44,10 @@ def get_plan_schema_cls():
     return import_string(PLAN_SCHEMA_CLS)
 
 
+def get_plan_schema() -> dict:
+    return get_plan_schema_cls().model_json_schema()
+
+
 class BaseVendorException(Exception):
     """Base class for vendor exception"""
 
