@@ -45,7 +45,7 @@ def get_plan_schema_cls():
 
 
 def get_plan_schema() -> dict:
-    return get_plan_schema_cls().model_json_schema()
+    return get_plan_schema_cls().schema()
 
 
 class BaseVendorException(Exception):
