@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bkstorages"
-version = "2.0.0"
+version = "2.0.1"
 description = "File storage backends for blueking PaaS platform"
 readme = "README.md"
 authors = ["blueking <blueking@tencent.com>"]
