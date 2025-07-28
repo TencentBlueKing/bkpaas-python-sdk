@@ -19,6 +19,8 @@ to the current version of the project delivered to anyone in the future.
 from abc import ABCMeta, abstractmethod
 from typing import ClassVar, Dict, Optional
 
+from pydantic import BaseModel, Field
+
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.module_loading import import_string
@@ -31,6 +33,15 @@ def get_provider_cls():
         raise ImproperlyConfigured("PAAS_SERVICE_PROVIDER_CLS is not configured")
 
     return import_string(SVC_PROVIDER_CLS)
+
+
+def get_plan_schema_cls():
+    try:
+        PLAN_SCHEMA_CLS = settings.PAAS_SERVICE_PLAN_SCHEMA_CLS
+    except AttributeError:
+        raise ImproperlyConfigured("PAAS_SERVICE_PLAN_SCHEMA_CLS is not configured")
+
+    return import_string(PLAN_SCHEMA_CLS)
 
 
 class BaseVendorException(Exception):
@@ -80,3 +91,12 @@ class DummyProvider(BaseProvider):
 
     def patch(self, instanceData: InstanceData, params: Dict) -> InstanceData:
         raise NotImplementedError
+
+
+# Plan Schema
+class BasePlanSchema(BaseModel):
+    ...
+
+
+class DummySchema(BasePlanSchema):
+    foo: str = Field(..., description="这是一个示例字段")

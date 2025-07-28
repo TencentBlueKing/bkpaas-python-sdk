@@ -31,6 +31,7 @@ USE_TZ = True
 BKKRILL_ENCRYPT_SECRET_KEY = base64.b64encode(b'\x01' * 32)
 
 PAAS_SERVICE_PROVIDER_CLS = 'paas_service.base_vendor.DummyProvider'
+PAAS_SERVICE_PLAN_SCHEMA_CLS = 'paas_service.base_vendor.DummySchema'
 PAAS_SERVICE_JWT_CLIENTS = [
     {
         "iss": "paas-v3",
