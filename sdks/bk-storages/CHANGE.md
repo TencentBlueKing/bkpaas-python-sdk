@@ -2,7 +2,7 @@
 
 ### 2.0.1
 
-- 修复 `BKRepoStorage` list_dir 函数在分页查询参数错误的问题
+- 修复 `BKGenericRepoClient.list_dir` 方法在请求 bkrepo 分页查询时，参数名错误的问题
 
 ### 2.0.0
 
