@@ -134,7 +134,7 @@ class TestBKRepoStorage:
                 urljoin(
                     endpoint,
                     f"/repository/api/node/page/dummy-project/dummy-bucket/"
-                    f"{path}?pageSize=1000&PageNumber={idx + 1}&includeFolder=True",
+                    f"{path}?pageSize=1000&pageNumber={idx + 1}&includeFolder=True",
                 ),
                 json={"code": 0, "message": 0, "data": {"totalPages": len(mock_responses), "records": records}},
             )
