@@ -236,7 +236,7 @@ class BKGenericRepoClient:
         client = self.get_client()
         url = urljoin(self.endpoint_url, f"/repository/api/node/page/{self.project}/{self.bucket}/{key_prefix}")
         # NOTE: 按分页查询 bkrepo 的文件数, 1000 是一个经验值, 设置仅可能大的数值是避免发送太多次请求到 bk-repo
-        params = {"pageSize": 1000, "PageNumber": cur_page, "includeFolder": True}
+        params = {"pageSize": 1000, "pageNumber": cur_page, "includeFolder": True}
         resp = client.get(url, params=params, timeout=TIMEOUT_THRESHOLD)
         data = self._validate_resp(resp)
         total_pages = data["totalPages"]
