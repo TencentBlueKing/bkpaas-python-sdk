@@ -1,4 +1,7 @@
 # 版本历史
+## 2.0.3
+- service list 接口返回增加 `plan_schema` 字段，以指导服务方案配置 
+
 ## 2.0.2
 - Support multi tenant 
 
