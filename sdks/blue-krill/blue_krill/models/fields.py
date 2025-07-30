@@ -39,7 +39,7 @@ class EncryptField(models.TextField):
     def get_prep_value(self, value):
         if value is None:
             return value
-        # 如果值已经是 EncryptedString 实例，则直接返回，避免重复触发加密逻辑
+        # 如果值已经是 _EncryptedString 实例，则直接返回，避免重复触发加密逻辑
         if isinstance(value, _EncryptedString):
             return value
         return _EncryptedString(self.handler.encrypt(value))
