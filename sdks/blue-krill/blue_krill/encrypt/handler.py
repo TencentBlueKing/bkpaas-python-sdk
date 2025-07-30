@@ -56,11 +56,6 @@ class EncryptHandler:
 
     def encrypt(self, text: str) -> str:
         """根据指定加密算法，加密字段"""
-        # 已加密则不处理
-        for cls in self.cipher_classes.values():
-            if cls.header.contain_header(text):
-                return text
-
         # 根据加密类型配置选择不同的加密算法
         try:
             cipher_class = self.cipher_classes[self.encrypt_cipher_type]

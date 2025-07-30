@@ -22,6 +22,11 @@ from django.db import models
 from blue_krill.encrypt.handler import EncryptHandler
 
 
+class _EncryptedString(str):
+    """A string that is encrypted, this type is used to distinguish between normal
+    strings and encrypted ones."""
+
+
 class EncryptField(models.TextField):
     """a field which will be encrypted via cryptography/fernet"""
 
@@ -34,7 +39,10 @@ class EncryptField(models.TextField):
     def get_prep_value(self, value):
         if value is None:
             return value
-        return self.handler.encrypt(value)
+        # 如果值已经是 EncryptedString 实例，则直接返回，避免重复触发加密逻辑
+        if isinstance(value, _EncryptedString):
+            return value
+        return _EncryptedString(self.handler.encrypt(value))
 
     def get_db_prep_value(self, value, connection, prepared=False):
         return self.get_prep_value(value)
