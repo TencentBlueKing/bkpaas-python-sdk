@@ -72,3 +72,4 @@ build-backend = "poetry.core.masonry.api"
 ignore_missing_imports = true
 show_error_codes = true
 check_untyped_defs = true
+exclude = ['^tests/models/apps/.*/migrations/.*$']
