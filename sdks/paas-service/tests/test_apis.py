@@ -19,6 +19,8 @@ to the current version of the project delivered to anyone in the future.
 import json
 
 import pytest
+from django.test.utils import override_settings
+
 from paas_service.constants import DEFAULT_TENANT_ID
 from paas_service.models import Plan, Service, ServiceInstanceConfig, SpecDefinition, Specification
 from paas_service.views import PlanManageViewSet, ServiceManageViewSet, SvcInstanceConfigViewSet, SvcInstanceViewSet
@@ -117,6 +119,14 @@ class TestServiceManageViewSet:
         plan_data = service_data["plans"][0]
         assert plan_data["uuid"] == str(plan.uuid)
         assert plan_data["tenant_id"] == DEFAULT_TENANT_ID
+
+        # 没有配置 PLAN_SCHEMA_CLS 时，应该返回空
+        with override_settings(PAAS_SERVICE_PLAN_SCHEMA_CLS=None):
+            response = view(request)
+            response.render()
+
+            service_data = response.data[0]
+            service_data["plan_schema"] = {'properties': {}, 'title': 'EmptyPlanSchema', 'type': 'object'}
 
     @pytest.mark.parametrize(
         "service_data",

@@ -36,16 +36,19 @@ def get_provider_cls():
 
 
 def get_plan_schema_cls():
-    try:
-        PLAN_SCHEMA_CLS = settings.PAAS_SERVICE_PLAN_SCHEMA_CLS
-    except AttributeError:
-        raise ImproperlyConfigured("PAAS_SERVICE_PLAN_SCHEMA_CLS is not configured")
+    # 尝试从设置中获取类路径
+    plan_schema_cls = getattr(settings, 'PAAS_SERVICE_PLAN_SCHEMA_CLS', None)
 
-    return import_string(PLAN_SCHEMA_CLS)
+    # 若存在有效类路径则导入，否则返回默认类
+    return import_string(plan_schema_cls) if plan_schema_cls else EmptyPlanSchema
 
 
 def get_plan_schema() -> dict:
     return get_plan_schema_cls().schema()
+
+
+class EmptyPlanSchema(BaseModel):
+    ...
 
 
 class BaseVendorException(Exception):
