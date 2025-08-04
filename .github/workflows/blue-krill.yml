@@ -32,58 +32,58 @@ jobs:
       - name: Lint with mypy
         working-directory: sdks/blue-krill
         run: poetry install && poetry run mypy . --config-file=./pyproject.toml
-  # test:
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       python-version: ["3.9", "3.10", "3.11"]
-  #       os: [ubuntu-latest, macos-latest]
-  #   runs-on: ${{ matrix.os }}
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v2
-  #       with:
-  #         python-version: ${{ matrix.python-version }}
-  #     - name: Start Redis Container
-  #       uses: supercharge/redis-github-action@1.4.0
-  #       if: runner.os == 'Linux'
-  #       with:
-  #         redis-version: 3.2.0
-  #     - name: Set Redis URL
-  #       if: runner.os == 'Linux'
-  #       run: |
-  #         echo "REDIS_URL=redis://localhost:6379/0" >> $GITHUB_ENV
-  #     - name: Setup uv
-  #       uses: astral-sh/setup-uv@v5
-  #     - name: Install Nox
-  #       run:  uv pip install --system nox
-  #     - name: Run tests on ${{ matrix.os }}
-  #       working-directory: sdks/blue-krill
-  #       run: nox --non-interactive --error-on-missing-interpreter --session "tests(python='${{ matrix.python-version }}')" -- --full-trace
-  # build:
-  #   runs-on: macos-latest
-  #   if: github.event.release && contains(github.event.release.tag_name, 'blue-krill')
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v5
-  #       with:
-  #         python-version: 3.11
-  #     - name: Set up Poetry
-  #       uses: abatilo/actions-poetry@v2.3.0
-  #       with:
-  #         poetry-version: 2.1.1
-  #     - name: Build blue-krill
-  #       run: |
-  #         cd sdks/blue-krill
-  #         poetry install
-  #         poetry build
-  #         echo "${{ github.event.release.tag_name }} ${{ github.sha }}" > Release.txt
-  #         cat Release.txt
-  #     - name: Release
-  #       uses: softprops/action-gh-release@v1
-  #       with:
-  #         files: |
-  #           Release.txt
-  #           sdks/blue-krill/dist/*
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11"]
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Start Redis Container
+        uses: supercharge/redis-github-action@1.4.0
+        if: runner.os == 'Linux'
+        with:
+          redis-version: 3.2.0
+      - name: Set Redis URL
+        if: runner.os == 'Linux'
+        run: |
+          echo "REDIS_URL=redis://localhost:6379/0" >> $GITHUB_ENV
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+      - name: Install Nox
+        run:  uv pip install --system nox
+      - name: Run tests on ${{ matrix.os }}
+        working-directory: sdks/blue-krill
+        run: nox --non-interactive --error-on-missing-interpreter --session "tests(python='${{ matrix.python-version }}')" -- --full-trace
+  build:
+    runs-on: macos-latest
+    if: github.event.release && contains(github.event.release.tag_name, 'blue-krill')
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+      - name: Set up Poetry
+        uses: abatilo/actions-poetry@v2.3.0
+        with:
+          poetry-version: 2.1.1
+      - name: Build blue-krill
+        run: |
+          cd sdks/blue-krill
+          poetry install
+          poetry build
+          echo "${{ github.event.release.tag_name }} ${{ github.sha }}" > Release.txt
+          cat Release.txt
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            Release.txt
+            sdks/blue-krill/dist/*
