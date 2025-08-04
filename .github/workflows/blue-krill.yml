@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: 3.11
       # - name: Check with ruff
@@ -35,7 +35,7 @@ jobs:
           poetry-version: 2.1.3
       - name: Lint with mypy
         working-directory: sdks/blue-krill
-        run: poetry install && poetry run mypy . --config-file=./pyproject.toml
+        run: poetry run mypy . --config-file=./pyproject.toml
   # test:
   #   strategy:
   #     fail-fast: false
