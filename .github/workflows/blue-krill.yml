@@ -27,12 +27,15 @@ jobs:
       #   run: |
       #     pip install ruff==0.9.6
       #     ruff check --config ../../pyproject.toml
-      # - name: Setup uv
-      #   uses: astral-sh/setup-uv@v5
-      - name: Set up Poetry
-        uses: abatilo/actions-poetry@v4
-        with:
-          poetry-version: 2.1.3
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+      - name: Install Poetry
+        # Use uv install to install poetry directly instead github action for simplicity
+        run: uv pip install --system poetry==2.1.3
+      # - name: Set up Poetry
+      #   uses: abatilo/actions-poetry@v4
+      #   with:
+      #     poetry-version: 2.1.3
       - name: Lint with mypy
         working-directory: sdks/blue-krill
         run: poetry install && poetry run mypy . --config-file=./pyproject.toml
