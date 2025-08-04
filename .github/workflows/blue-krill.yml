@@ -31,7 +31,7 @@ jobs:
         uses: astral-sh/setup-uv@v5
       - name: Lint with mypy
         working-directory: sdks/blue-krill
-        run: uv run mypy . --config-file=./pyproject.toml
+        run: uv pip install --system poetry && poetry run mypy . --config-file=./pyproject.toml
   # test:
   #   strategy:
   #     fail-fast: false
