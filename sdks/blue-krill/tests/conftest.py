@@ -17,6 +17,7 @@
 
 
 def pytest_configure():
+    from cryptography.fernet import Fernet
     from django.conf import settings
 
     settings.configure(
@@ -28,12 +29,21 @@ def pytest_configure():
         TIME_ZONE="Asia/Shanghai",
         MIDDLEWARE=[],
         MIDDLEWARE_CLASSES=[],
-        INSTALLED_APPS=(),
+        # If the models of these apps have been updated, remember to remove all migration files so
+        # that the migrations could stay minimal because the test suite will create them from scratch.
+        INSTALLED_APPS=("tests.models.apps.test_encrypt",),
+        # For testing encrypt module
+        BKKRILL_ENCRYPT_SECRET_KEY=Fernet.generate_key(),
     )
 
     try:
         import django
+        from django.core.management import execute_from_command_line
 
         django.setup()
+
+        # Create migrations for test apps
+        execute_from_command_line(["manage.py", "makemigrations"])
+
     except AttributeError:
         pass
