@@ -682,6 +682,37 @@ def build_redirect_validation(
     }
 
 
+def build_bk_access_token_source_validation(
+    source: str,
+) -> Dict[str, str]:
+    """generate bk-access-token-source plugin config
+
+    Args:
+        source (str): access_token 来源。Defaults to bearer.
+
+    Raises:
+        ValueError: source must be bearer or api_key
+
+    Returns:
+        {
+            "type": "bk-access-token-source",
+            "yaml": "source: bearer\n"
+        }
+    """
+
+    if source not in ["bearer", "api_key"]:
+        raise ValueError("source must be bearer or api_key.")
+
+    return {
+        "type": "bk-access-token-source",
+        "yaml": yaml_dump(
+            {
+                "source": source,
+            }
+        ),
+    }
+
+
 def _check_percentage(percentage: int, location: str):
     if percentage and not (0 < percentage <= 100):
         raise ValueError(f"The percentage of {location} must be greater than 0 and less than or equal to 100")

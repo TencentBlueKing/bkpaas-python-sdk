@@ -20,6 +20,7 @@ from apigw_manager.plugin.config import (
     build_request_validation,
     build_response_rewrite_validation,
     build_redirect_validation,
+    build_bk_access_token_source_validation,
     build_stage_plugin_config_for_definition_yaml,
     UnhealthyConfig,
     HealthyConfig,
@@ -604,6 +605,42 @@ class TestBuildPluginConfig:
             return
 
         assert build_redirect_validation(uri, ret_code) == expected
+
+    @pytest.mark.parametrize(
+        "source, will_error, expected",
+        [
+            (
+                "bearer",
+                False,
+                {
+                    "type": "bk-access-token-source",
+                    "yaml": "source: bearer\n"
+                },
+            ),
+            (
+                "api_key",
+                False,
+                {
+                    "type": "bk-access-token-source",
+                    "yaml": "source: api_key\n"
+                },
+            ),
+            (
+                "test",
+                True,
+                None,
+            ),
+        ]
+    )
+    def test_build_redirect_validation(
+        self, source, will_error, expected
+    ):
+        if will_error:
+            with pytest.raises(ValueError):
+                build_bk_access_token_source_validation(source)
+            return
+
+        assert build_bk_access_token_source_validation(source) == expected
 
 
 class TestBuildStagePluginConfigForDefinitionYaml:
