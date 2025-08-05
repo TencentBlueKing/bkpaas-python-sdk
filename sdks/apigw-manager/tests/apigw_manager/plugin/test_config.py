@@ -18,9 +18,9 @@ from apigw_manager.plugin.config import (
     build_api_breaker,
     build_fault_injection,
     build_request_validation,
-    build_response_rewrite_validation,
-    build_redirect_validation,
-    build_bk_access_token_source_validation,
+    build_response_rewrite,
+    build_redirect,
+    build_bk_access_token_source,
     build_stage_plugin_config_for_definition_yaml,
     UnhealthyConfig,
     HealthyConfig,
@@ -566,15 +566,15 @@ class TestBuildPluginConfig:
             ),
         ]
     )
-    def test_build_response_rewrite_validation(
+    def test_build_response_rewrite(
         self, status_code, body, vars, body_base64, headers, will_error, expected
     ):
         if will_error:
             with pytest.raises(ValueError):
-                build_response_rewrite_validation(status_code, body, vars, body_base64, headers)
+                build_response_rewrite(status_code, body, vars, body_base64, headers)
             return
 
-        assert build_response_rewrite_validation(status_code, body, vars, body_base64, headers) == expected
+        assert build_response_rewrite(status_code, body, vars, body_base64, headers) == expected
 
     @pytest.mark.parametrize(
         "uri, ret_code, will_error, expected",
@@ -596,15 +596,15 @@ class TestBuildPluginConfig:
             ),
         ]
     )
-    def test_build_redirect_validation(
+    def test_build_redirect(
         self, uri, ret_code, will_error, expected
     ):
         if will_error:
             with pytest.raises(ValueError):
-                build_redirect_validation(uri, ret_code)
+                build_redirect(uri, ret_code)
             return
 
-        assert build_redirect_validation(uri, ret_code) == expected
+        assert build_redirect(uri, ret_code) == expected
 
     @pytest.mark.parametrize(
         "source, will_error, expected",
@@ -632,15 +632,15 @@ class TestBuildPluginConfig:
             ),
         ]
     )
-    def test_build_redirect_validation(
+    def test_build_redirect(
         self, source, will_error, expected
     ):
         if will_error:
             with pytest.raises(ValueError):
-                build_bk_access_token_source_validation(source)
+                build_bk_access_token_source(source)
             return
 
-        assert build_bk_access_token_source_validation(source) == expected
+        assert build_bk_access_token_source(source) == expected
 
 
 class TestBuildStagePluginConfigForDefinitionYaml:

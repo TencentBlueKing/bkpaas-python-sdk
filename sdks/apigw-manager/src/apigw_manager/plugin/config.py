@@ -572,7 +572,7 @@ class HeadersConfig:
     remove: List[str]
 
 
-def build_response_rewrite_validation(
+def build_response_rewrite(
         status_code: int,
         body: str,
         vars: Optional[str],
@@ -648,7 +648,7 @@ def build_response_rewrite_validation(
     }
 
 
-def build_redirect_validation(
+def build_redirect(
     uri: str,
     ret_code: int = 302,
 ) -> Dict[str, str]:
@@ -682,7 +682,7 @@ def build_redirect_validation(
     }
 
 
-def build_bk_access_token_source_validation(
+def build_bk_access_token_source(
     source: str,
 ) -> Dict[str, str]:
     """generate bk-access-token-source plugin config
