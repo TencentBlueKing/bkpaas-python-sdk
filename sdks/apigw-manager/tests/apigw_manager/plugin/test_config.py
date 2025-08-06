@@ -21,6 +21,7 @@ from apigw_manager.plugin.config import (
     build_response_rewrite,
     build_redirect,
     build_bk_access_token_source,
+    build_bk_username_required,
     build_stage_plugin_config_for_definition_yaml,
     UnhealthyConfig,
     HealthyConfig,
@@ -632,7 +633,7 @@ class TestBuildPluginConfig:
             ),
         ]
     )
-    def test_build_redirect(
+    def test_build_bk_access_token_source(
         self, source, will_error, expected
     ):
         if will_error:
@@ -641,6 +642,20 @@ class TestBuildPluginConfig:
             return
 
         assert build_bk_access_token_source(source) == expected
+
+    @pytest.mark.parametrize(
+        "expected",
+        [
+            {
+                "type": "bk-username-required",
+                "yaml": ""
+            },
+        ]
+    )
+    def test_build_bk_username_required(
+        self, expected
+    ):
+        assert build_bk_username_required() == expected
 
 
 class TestBuildStagePluginConfigForDefinitionYaml:
