@@ -713,6 +713,22 @@ def build_bk_access_token_source(
     }
 
 
+def build_bk_username_required() -> Dict[str, str]:
+    """generate bk-username-required plugin config
+
+    Returns:
+    {
+        "type": "bk-username-required",
+        "yaml": ""
+    }
+    """
+
+    return {
+        "type": "bk-username-required",
+        "yaml": "",
+    }
+
+
 def _check_percentage(percentage: int, location: str):
     if percentage and not (0 < percentage <= 100):
         raise ValueError(f"The percentage of {location} must be greater than 0 and less than or equal to 100")
