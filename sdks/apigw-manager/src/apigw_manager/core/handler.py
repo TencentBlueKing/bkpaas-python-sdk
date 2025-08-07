@@ -124,6 +124,35 @@ class Handler(object):
         except Exception as err:
             raise ApiException(operation_id) from err
 
+    def _call_v2(self, operation, files=None, **kwargs):
+        """Call the API instance"""
+        path_params = {"gateway_name": kwargs.pop("gateway_name", self.config.gateway_name)}
+        if "{stage_name}" in operation.path:
+            path_params["stage_name"] = kwargs.get("name")
+
+        data = {
+            "path_params": path_params,
+            "data": kwargs,
+            "headers": {
+                "X-Bkapi-Authorization": kwargs.pop("x_bkapi_authorization", self._get_bkapi_authorization()),
+                # the header is required by the API gateway plugin bk-tenant-validate, for global tenant app!
+                # so we set it to system, it would not be used in the gateway
+                "X-Bk-Tenant-Id": self._get_tenant_id(),
+            },
+            "files": files,
+        }
+
+        operation_id = operation.name
+        logger.debug("call api %s, data: %s", operation_id, data)
+
+        try:
+            return operation(**data)
+        except ResponseError as err:
+            message = "%s\n%s\nResponse: %s" % (err, err.curl_command, err.response_text)
+            raise ApiResponseError(message)
+        except Exception as err:
+            raise ApiException(operation_id) from err
+
     def _parse_result(self, result, convertor, code=0):
         """Check the code and convert the result"""
         logger.debug("code %s, message: %s", result.get("code"), result.get("message"))

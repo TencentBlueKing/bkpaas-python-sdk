@@ -100,6 +100,22 @@ stages:
           hosts:
             - host: "http://httpbin.org"
               weight: 100
+#  同步 MCP Server 相关配置
+#    mcp_servers:
+#      - name: "mcp_server1",
+#        description: "mcp-server demo"
+#        labels: 
+#          - "test"
+#        # 添加的tool对应的资源名称
+#        resource_names:
+#          - resource1
+#        # 是否公开
+#        is_public: true
+#        # 1: 开启,0: 停止
+#        status: 1
+#        # 授权的应用
+#        target_app_codes:
+#          - "bk_app_code1"
 ```
 
 > 📢 注意：如果之前接入过的，建议将 spec_version 改成 2，并将原先 `stage:{}`改成 `stages: []`
@@ -164,6 +180,22 @@ stages:
         hosts:
           - host: ""
             weight: 100
+    #  同步 MCP Server 相关配置
+    # mcp_servers:
+    #  - name: "mcp_server1",
+    #     description: "mcp-server demo"
+    #     labels: 
+    #       - "test"
+    #    # 添加的tool对应的资源名称
+    #     resource_names:
+    #      - resource1
+    #        # 是否公开
+    #        is_public: true
+    #        # 1: 开启,0: 停止
+    #        status: 1
+    #        # 授权的应用
+    #        target_app_codes:
+    #          - "bk_app_code1"
 
     # 环境插件配置
     # plugin_configs:
@@ -251,6 +283,7 @@ x-bk-apigateway-resource:
   isPublic: true   # 是否公开，公开，则用户可查看资源文档、申请资源权限；不公开，则资源对用户隐藏
   allowApplyPermission: false # 是否允许用户申请资源权限，允许，则任何蓝鲸应用可在蓝鲸开发者中心申请资源的访问权限；否则，只能通过网关管理员主动授权为某应用添加权限
   matchSubpath: false # 匹配所有子路径
+  noneSchema: true # 是否有请求参数：对于需要添加的 MCP Server 的资源如果没有请求参数(body,path,header,query)一定要显示配置才行
   backend:
     type: HTTP
     method: get
