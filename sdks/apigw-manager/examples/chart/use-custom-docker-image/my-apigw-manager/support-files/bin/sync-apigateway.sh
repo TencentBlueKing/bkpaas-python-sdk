@@ -31,3 +31,8 @@ title "releasing"
 call_definition_command_or_exit create_version_and_release_apigw "${definition_file}" --gateway-name=${gateway_name}
 
 title "done"
+
+title "syncing stage MCP Servers"
+call_definition_command_or_exit sync_apigw_stage_mcp_servers "${definition_file}" ${SYNC_APIGW_STAGE_MCP_SERVERS_ARGS}
+
+log_info "done"
