@@ -24,9 +24,8 @@ call_command_or_warning fetch_esb_public_key ${FETCH_ESB_PUBLIC_KEY_ARGS}
 title "releasing"
 call_definition_command_or_exit create_version_and_release_apigw "${definition_file}" ${CREATE_VERSION_AND_RELEASE_APIGW_ARGS:-"--generate-sdks"}
 
-log_info "done"
-
-title "syncing stage MCP Servers"
-call_definition_command_or_exit sync_apigw_stage_mcp_servers "${definition_file}" ${SYNC_APIGW_STAGE_MCP_SERVERS_ARGS}
+if [[ "${ENABLE_MCP:-}" =~ ^(true|1|yes)$ ]]; then
+    title "syncing stage MCP Servers"
+    call_definition_command_or_exit sync_apigw_stage_mcp_servers "${definition_file}"
 
 log_info "done"
