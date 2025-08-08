@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "apigw-manager"
-version = "4.1.0"
+version = "4.1.1"
 description = "The SDK for managing blueking gateway resource."
 readme = "README.md"
 authors = ["blueking <blueking@tencent.com>"]
@@ -36,7 +36,7 @@ setuptools = ">=21.0.0"
 urllib3 = ">=1.25.3"
 pyyaml = ">=5.4.2"
 bkapi-client-core = ">=1.2.0"
-bkapi-bk-apigateway = "^1.0.11"
+bkapi-bk-apigateway = "^1.0.12"
 pyjwt = { version = ">=2.0.0", optional = true }
 django-environ = { version = ">=0.8.1", optional = true }
 Django = { version = ">=3.0.14", optional = true }
@@ -46,6 +46,7 @@ PyMySQL = { version = "^1.0.2", optional = true }
 kubernetes = { version = "*", optional = true }
 djangorestframework = { version = ">=3.10.3", optional = true }
 drf-spectacular = { version = "<=0.27.2", optional = true }
+docutils = "0.20.1"
 
 [tool.poetry.extras]
 cryptography = ["cryptography", "pyjwt"]
