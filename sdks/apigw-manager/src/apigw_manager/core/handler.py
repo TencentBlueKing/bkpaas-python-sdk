@@ -93,9 +93,9 @@ class Handler(object):
         # 对于单租户应用，BK_APP_TENANT_ID 可以不设置; 对于全租户应用，BK_APP_TENANT_ID 必须设置，建议设置为 system
         bk_app_tenant_id = self.config.bk_app_tenant_id or ""
         logger.warning(
-            "the [X-Bk-Tenant-Id=%s], if the syncing to apigateway failed, and your app(%s) is a global tenant app, please set the environment variable BK_APP_TENANT_ID to `system` (or set django settings.BK_APP_TENANT_ID to `system`) and try again",
-            bk_app_tenant_id,
+            "[warn] if the syncing to apigateway failed, and your app(%s) is a global tenant app, please set the environment variable BK_APP_TENANT_ID to `system` (or set django settings.BK_APP_TENANT_ID to `system`) and try again. the current value [X-Bk-Tenant-Id=%s].",
             self.config.bk_app_code,
+            bk_app_tenant_id
         )
         return bk_app_tenant_id
 

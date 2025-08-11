@@ -32,7 +32,7 @@
 - `SYNC_APIGW_RESOURCES_ARGS`: 默认值："--delete"，用于命令 `sync_apigw_resources`，同步网关资源
 - `SYNC_RESOURCE_DOCS_BY_ARCHIVE_ARGS`: 默认值： "--safe-mode"，用于命令 `sync_resource_docs_by_archive`，同步网关文档
 - `CREATE_VERSION_AND_RELEASE_APIGW_ARGS`: 默认值："--generate-sdks"，用于命令 `create_version_and_release_apigw`,创建资源版本并发布
-- `ENABLE_MCP`: 用于命令 `sync_apigw_stage_mcp_servers`, 是否开启同步环境 MCP Server
+- `ENABLE_SYNC_MCP_SERVER`: 用于命令 `sync_apigw_stage_mcp_servers`, 是否开启同步环境 MCP Server
 
 基础镜像提供了一些自定义同步脚本常用的 bash 函数，以及执行 Django Command 指令的辅助脚本：
 

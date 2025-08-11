@@ -26,8 +26,7 @@ class Synchronizer(Handler):
         return self._parse_result(result, itemgetter("data"))
 
     def sync_stage_mcp_servers(self, *args, **kwargs):
-        result = self._call_v2(self.client.api.v2_sync_stage_mcp_servers, *args, **kwargs)
-        return self._parse_result(result, itemgetter("data"))
+        return self._call_v2(self.client.api.v2_sync_stage_mcp_servers, *args, **kwargs)
 
     def sync_resources_config(self, content, *args, **kwargs):
         kwargs["content"] = yaml.dump(dict(content))

@@ -8,6 +8,8 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
 """
+import json
+
 from apigw_manager.apigw.command import SyncCommand
 
 
@@ -29,11 +31,12 @@ class Command(SyncCommand):
         if self.default_namespace == "stages":
             for stage_definition in definition:
                 result = manager.sync_stage_mcp_servers(**stage_definition)
-                for mcp_sync_result in result:
-                    print("API gateway stage mcp servers synchronization completed, id %s, name %s,action %s" % (
+                print("result", result)
+                for mcp_sync_result in result.get("data", []):
+                    print("API gateway stage mcp servers synchronization completed [ id:%s,name:%s,action:%s ]" % (
                         mcp_sync_result["id"], mcp_sync_result["name"], mcp_sync_result["action"]))
         else:
-            result = manager.sync_stage_config(**definition)
-            for mcp_sync_result in result:
-                print("API gateway stage mcp servers synchronization completed, id %s, name %s,action %s" % (
+            result = manager.sync_stage_mcp_servers(**definition)
+            for mcp_sync_result in result.get("data", []):
+                print("API gateway stage mcp servers synchronization completed [ id:%s,name:%s,action:%s ]" % (
                     mcp_sync_result["id"], mcp_sync_result["name"], mcp_sync_result["action"]))
