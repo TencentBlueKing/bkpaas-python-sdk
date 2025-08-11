@@ -95,7 +95,7 @@ class Handler(object):
         logger.warning(
             "[warn] if the syncing to apigateway failed, and your app(%s) is a global tenant app, please set the environment variable BK_APP_TENANT_ID to `system` (or set django settings.BK_APP_TENANT_ID to `system`) and try again. the current value [X-Bk-Tenant-Id=%s].",
             self.config.bk_app_code,
-            bk_app_tenant_id
+            bk_app_tenant_id,
         )
         return bk_app_tenant_id
 
@@ -125,7 +125,10 @@ class Handler(object):
             raise ApiException(operation_id) from err
 
     def _call_v2(self, operation, files=None, **kwargs):
-        """Call the API instance"""
+        """Call the API instance：
+          - Uses "gateway_name" as the key in `path_params` instead of "api_name".
+        """
+
         path_params = {"gateway_name": kwargs.pop("gateway_name", self.config.gateway_name)}
         if "{stage_name}" in operation.path:
             path_params["stage_name"] = kwargs.get("name")

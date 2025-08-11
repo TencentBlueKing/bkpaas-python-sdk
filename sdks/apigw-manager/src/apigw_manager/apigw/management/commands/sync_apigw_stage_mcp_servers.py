@@ -25,18 +25,16 @@ class Command(SyncCommand):
         if definition.spec_version == 2:
             namespace = "stages"
             self.default_namespace = "stages"
+        else:
+            raise ValueError("sync apigw_stage_mcp_servers only support spec_version: 2")
         return super().get_definition(define, file, namespace, **kwargs)
 
     def do(self, manager, definition, *args, **kwargs):
         if self.default_namespace == "stages":
             for stage_definition in definition:
                 result = manager.sync_stage_mcp_servers(**stage_definition)
-                print("result", result)
                 for mcp_sync_result in result.get("data", []):
                     print("API gateway stage mcp servers synchronization completed [ id:%s,name:%s,action:%s ]" % (
                         mcp_sync_result["id"], mcp_sync_result["name"], mcp_sync_result["action"]))
         else:
-            result = manager.sync_stage_mcp_servers(**definition)
-            for mcp_sync_result in result.get("data", []):
-                print("API gateway stage mcp servers synchronization completed [ id:%s,name:%s,action:%s ]" % (
-                    mcp_sync_result["id"], mcp_sync_result["name"], mcp_sync_result["action"]))
+            print("sync apigw_stage_mcp_servers only support spec_version 2")

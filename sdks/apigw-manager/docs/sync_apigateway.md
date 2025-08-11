@@ -182,20 +182,20 @@ stages:
             weight: 100
     #  同步 MCP Server 相关配置
     # mcp_servers:
-    #  - name: "mcp_server1",
-    #     description: "mcp-server demo"
-    #     labels: 
-    #       - "test"
+    #  - name: "mcp_server1"
+    #    description: "mcp-server demo"
+    #    labels: 
+    #      - "test"
     #    # 添加的tool对应的资源名称
-    #     resource_names:
+    #    resource_names:
     #      - resource1
-    #        # 是否公开
-    #        is_public: true
-    #        # 1: 开启,0: 停止
-    #        status: 1
-    #        # 授权的应用
-    #        target_app_codes:
-    #          - "bk_app_code1"
+    #    # 是否公开
+    #    is_public: true
+    #    # 1: 开启,0: 停止；默认是: 1
+    #    status: 1
+    #    # 授权的应用
+    #     target_app_codes:
+    #       - "bk_app_code1"
 
     # 环境插件配置
     # plugin_configs:
