@@ -111,7 +111,7 @@ stages:
 #          - resource1
 #        # 是否公开
 #        is_public: true
-#        # 1: 开启,0: 停止
+#        # 1: 开启,0: 停止; 默认是开启
 #        status: 1
 #        # 授权的应用
 #        target_app_codes:
@@ -191,7 +191,7 @@ stages:
     #      - resource1
     #    # 是否公开
     #    is_public: true
-    #    # 1: 开启,0: 停止；默认是: 1
+    #    # 1: 开启,0: 停止；默认是开启
     #    status: 1
     #    # 授权的应用
     #     target_app_codes:
