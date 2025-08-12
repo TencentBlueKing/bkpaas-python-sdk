@@ -70,11 +70,11 @@ stages:
       - name: "{{ settings.BK_APIGW_STAGE_MCP_SERVER_NAME }}"
         description: "{{ settings.BK_APIGW_STAGE_MCP_SERVER_DESCRIPTION }}"
         {% spaceless %}
-        {% if settings.BK_APIGW_STAGE_ENABLE_MCP_SERVER_LABELS %}
+        {% if settings.BK_APIGW_STAGE_MCP_SERVER_LABELS %}
         {% spaceless %}
         labels:
           {% spaceless %}
-          {% for label in settings.BK_APIGW_STAGE_ENABLE_MCP_SERVER_LABELS %}
+          {% for label in settings.BK_APIGW_STAGE_MCP_SERVER_LABELS %}
           - "{{ label }}"
           {% endfor %}
           {% endspaceless %}
@@ -87,8 +87,8 @@ stages:
           - "{{ resource }}"
           {% endfor %}
           {% endspaceless %}
-        is_public: {{ settings.BK_APIGW_STAGE_ENABLE_MCP_SERVER_IS_PUBLIC }}
-        status: {{ settings.BK_APIGW_STAGE_ENABLE_MCP_SERVER_STATUS }}
+        is_public: {{ settings.BK_APIGW_STAGE_MCP_SERVER_IS_PUBLIC }}
+        status: {{ settings.BK_APIGW_STAGE_MCP_SERVER_STATUS }}
         {% spaceless %}
         {% if settings.BK_APIGW_STAGE_MCP_SERVER_TARGET_APP_CODES %}
         target_app_codes:
