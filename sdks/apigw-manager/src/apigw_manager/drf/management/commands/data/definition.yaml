@@ -12,6 +12,7 @@ apigateway:
   is_public: {{ settings.BK_APIGW_IS_PUBLIC }}
   api_type: {{ settings.BK_APIGW_IS_OFFICIAL }}
   maintainers:
+  {% spaceless %}
   {% if settings.BK_APIGW_MAINTAINERS %}
     {% for maintainer in settings.BK_APIGW_MAINTAINERS %}
       - "{{ maintainer }}"
@@ -19,11 +20,13 @@ apigateway:
   {% else %}
     - "admin"
   {% endif %}
+  {% endspaceless %}
 
 stages:
   - name: "{{ settings.BK_APIGW_STAGE_NAME }}"
     description: "{{ settings.BK_APIGW_STAGE_DESCRIPTION }}"
     description_en: "{{ settings.BK_APIGW_STAGE_DESCRIPTION_EN }}"
+    {% spaceless %}
     {% if settings.BK_APIGW_STAGE_BACKEND_SUBPATH %}
     vars:
       api_sub_path: {{ settings.BK_APIGW_STAGE_BACKEND_SUBPATH }}
@@ -42,6 +45,7 @@ stages:
     vars: {}
     {% endif %}
     {% endif %}
+    {% endspaceless %}
     backends:
       - name: "default"
         config:
@@ -50,6 +54,7 @@ stages:
           hosts:
             - host: "{{ settings.BK_APIGW_STAGE_BACKEND_HOST }}"
               weight: 100
+    {% spaceless %}
     {% if settings.BK_APIGW_STAGE_PLUGIN_CONFIGS %}
     plugin_configs:
       {% for plugin_config in settings.BK_APIGW_STAGE_PLUGIN_CONFIGS %}
@@ -58,21 +63,65 @@ stages:
           {{ plugin_config.yaml }}
       {% endfor %}
     {% endif %}
+    {% endspaceless %}
+    {% spaceless %}
+    {% if settings.BK_APIGW_STAGE_ENABLE_MCP_SERVERS %}
+    mcp_servers:
+      - name: "{{ settings.BK_APIGW_STAGE_MCP_SERVER_NAME }}"
+        description: "{{ settings.BK_APIGW_STAGE_MCP_SERVER_DESCRIPTION }}"
+        {% spaceless %}
+        {% if settings.BK_APIGW_STAGE_ENABLE_MCP_SERVER_LABELS %}
+        {% spaceless %}
+        labels:
+          {% spaceless %}
+          {% for label in settings.BK_APIGW_STAGE_ENABLE_MCP_SERVER_LABELS %}
+          - "{{ label }}"
+          {% endfor %}
+          {% endspaceless %}
+        {% endspaceless %}
+        {% endif %}
+        {% endspaceless %}
+        resource_names:
+          {% spaceless %}
+          {% for resource in mcp_server_tools %}
+          - "{{ resource }}"
+          {% endfor %}
+          {% endspaceless %}
+        is_public: {{ settings.BK_APIGW_STAGE_ENABLE_MCP_SERVER_IS_PUBLIC }}
+        status: {{ settings.BK_APIGW_STAGE_ENABLE_MCP_SERVER_STATUS }}
+        {% spaceless %}
+        {% if settings.BK_APIGW_STAGE_MCP_SERVER_TARGET_APP_CODES %}
+        target_app_codes:
+          {% spaceless %}
+          {% for app_code in settings.BK_APIGW_STAGE_MCP_SERVER_TARGET_APP_CODES %}
+          - "{{ app_code }}"
+          {% endfor %}
+          {% endspaceless %}
+        {% endif %}
+        {% endspaceless %}
+    {% endif %}
+    {% endspaceless %}
 
 {% if settings.BK_APIGW_GRANT_PERMISSION_DIMENSION_GATEWAY_APP_CODES or settings.BK_APIGW_GRANT_PERMISSION_DIMENSION_RESOURCE_APP_CODES %}
 grant_permissions:
+  {% spaceless %}
   {% for app_code in settings.BK_APIGW_GRANT_PERMISSION_DIMENSION_GATEWAY_APP_CODES %}
   - bk_app_code: "{{ app_code }}"
     grant_dimension: "gateway"
   {% endfor %}
+  {% endspaceless %}
+  {% spaceless %}
   {% for app_code, resource_names in settings.BK_APIGW_GRANT_PERMISSION_DIMENSION_RESOURCE_APP_CODES.items %}
   - bk_app_code: "{{ app_code }}"
     grant_dimension: "resource"
     resource_names:
+      {% spaceless %}
       {% for resource_name in resource_names %}
       - "{{ resource_name }}"
       {% endfor %}
+      {% endspaceless %}
   {% endfor %}
+  {% endspaceless %}
 {% endif %}
 
 related_apps:

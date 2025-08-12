@@ -38,6 +38,7 @@ class Command(BaseCommand):
         definition_file_path = file_dir / "definition.yaml"
         resources_file_path = file_dir / "resources.yaml"
 
+
         self.stdout.write(f"call sync_apigw_config with definition: {definition_file_path}")
         call_command(
             "sync_apigw_config",
@@ -89,3 +90,13 @@ class Command(BaseCommand):
 
         self.stdout.write(f"call fetch_apigw_public_key {gateway_name}")
         call_command("fetch_apigw_public_key", f"--gateway-name={gateway_name}")
+
+        # if BK_APIGW_STAGE_ENABLE_MCP_SERVERS is True, then sync the mcp servers
+        if hasattr(settings, "BK_APIGW_STAGE_ENABLE_MCP_SERVERS") and settings.BK_APIGW_STAGE_ENABLE_MCP_SERVERS:
+            self.stdout.write(f"call sync_apigw_stage_mcp_servers for {gateway_name}")
+            self.stdout.write(f"call sync_apigw_stage_mcp_servers with definition: {definition_file_path}")
+            call_command(
+                "sync_apigw_stage_mcp_servers",
+                f"--gateway-name={gateway_name}",
+                f"--file={definition_file_path}",
+            )

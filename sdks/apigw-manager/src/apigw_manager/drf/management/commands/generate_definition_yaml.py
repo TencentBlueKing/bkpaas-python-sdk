@@ -18,18 +18,49 @@ import shutil
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from django.template import Template, Context
+from drf_spectacular.renderers import OpenApiYamlRenderer
+from drf_spectacular.settings import spectacular_settings
 from pathlib import Path
+
+from apigw_manager.drf.management.commands.generate_resources_yaml import post_process_mcp_server_config
 
 
 class Command(BaseCommand):
+
     def handle(self, *args, **kwargs):
+        # 构建动态配置上下文
         current_dir = Path(__file__).resolve().parent
         source_file = current_dir / "data" / "definition.yaml"
 
         define_dir = Path(settings.BASE_DIR)
         definition_path = define_dir / "definition.yaml"
 
+        # 如果启用了MCP服务器，则需要生成 mcp_servers 配置
+        if hasattr(settings, "BK_APIGW_STAGE_ENABLE_MCP_SERVERS") and settings.BK_APIGW_STAGE_ENABLE_MCP_SERVERS:
+            mcp_server_configs = []
+            spectacular_settings.POSTPROCESSING_HOOKS.append(post_process_mcp_server_config(mcp_server_configs))
+            generator = spectacular_settings.DEFAULT_GENERATOR_CLASS()
+            renderer = OpenApiYamlRenderer()
+            schema = generator.get_schema(request=None, public=True)
+            renderer.render(schema, renderer_context={})
+            # 合并原有配置
+            context = {
+                'settings': settings,
+                'mcp_server_tools': mcp_server_configs
+                if getattr(settings, "BK_APIGW_STAGE_ENABLE_MCP_SERVERS", False) else []
+            }
+            with open(source_file) as f:
+                template = Template(f.read())
+
+            with open(definition_path, 'w') as f:
+                f.write(template.render(Context(context)))
+
+
+        else:
+            shutil.copyfile(source_file, definition_path)
+
         self.stdout.write(f"will generate {definition_path} from {source_file}")
-        shutil.copyfile(source_file, definition_path)
+        # shutil.copyfile(source_file, definition_path)
 
         self.stdout.write(f"generated {definition_path} from {source_file} success")

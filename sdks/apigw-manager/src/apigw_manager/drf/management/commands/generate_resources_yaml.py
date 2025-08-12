@@ -64,6 +64,31 @@ def post_process_inject_method_and_path(result, generator, request, public):
     return result
 
 
+def post_process_mcp_server_config(mcp_server_tools: list) -> callable:
+    def only_keep_the_apis_with_specified_tags(result, generator, request, public):
+        paths = result.get("paths", None)
+        if not paths:
+            return result
+
+        for uri, methods in paths.items():
+            for method, info in methods.items():
+                if info.get("x-bk-apigateway-resource", None) and info["x-bk-apigateway-resource"].get("enableMcp",
+                                                                                                       None):
+                    name = info.get("operationId")
+                    if info.get("parameters") or info.get("requestBody"):
+                        mcp_server_tools.append(name)
+                        # remove enableMcp 防止导入校验失败
+                        del info["x-bk-apigateway-resource"]["enableMcp"]
+                        continue
+                    elif not info.get("noneSchema"):
+                        raise Exception(f"mcp server tool:{name} need confirm api schema or if no schema and set "
+                                        f"noneSchema=True")
+
+        return result
+
+    return only_keep_the_apis_with_specified_tags
+
+
 class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
@@ -78,6 +103,8 @@ class Command(BaseCommand):
         self.stdout.write(f"will generate {resources_path}")
 
         tags = kwargs.get("tag")
+        if hasattr(settings, "BK_APIGW_STAGE_ENABLE_MCP_SERVERS") and settings.BK_APIGW_STAGE_ENABLE_MCP_SERVERS:
+           spectacular_settings.POSTPROCESSING_HOOKS.append(post_process_mcp_server_config([]))
         if tags:
             self.stdout.write(f"get tags, will only use the apis with tags: {tags}")
             spectacular_settings.POSTPROCESSING_HOOKS.append(post_process_only_keep_the_apis_with_specified_tags(tags))
