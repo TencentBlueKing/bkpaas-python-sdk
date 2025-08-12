@@ -36,6 +36,7 @@ class Command(BaseCommand):
         define_dir = Path(settings.BASE_DIR)
         definition_path = define_dir / "definition.yaml"
 
+        self.stdout.write(f"will generate {definition_path} from {source_file}")
         # 如果启用了MCP服务器，则需要生成 mcp_servers 配置
         if hasattr(settings, "BK_APIGW_STAGE_ENABLE_MCP_SERVERS") and settings.BK_APIGW_STAGE_ENABLE_MCP_SERVERS:
             mcp_server_configs = []
@@ -55,12 +56,6 @@ class Command(BaseCommand):
 
             with open(definition_path, 'w') as f:
                 f.write(template.render(Context(context)))
-
-
         else:
             shutil.copyfile(source_file, definition_path)
-
-        self.stdout.write(f"will generate {definition_path} from {source_file}")
-        # shutil.copyfile(source_file, definition_path)
-
         self.stdout.write(f"generated {definition_path} from {source_file} success")
