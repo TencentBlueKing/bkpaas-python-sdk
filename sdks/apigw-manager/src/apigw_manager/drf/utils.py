@@ -84,10 +84,10 @@ def gen_apigateway_resource_config(
 
 
 def get_logging_config_dict(
-        log_level: str,
-        is_local: bool,
-        log_dir: str,
-        app_code: str,
+    log_level: str,
+    is_local: bool,
+    log_dir: str,
+    app_code: str,
 ):
     """用户生成蓝鲸 PaaS 运行时的 Django Logging 配置
     来源于蓝鲸开发框架，以获取最大的兼容性 reference: https://github.com/TencentBlueKing/blueapps/blob/master/blueapps/conf/log.py
