@@ -1,5 +1,10 @@
 ## Change logs
 
+### 2.1.3
+
+- Fix: EncryptField 无法正常处理以特殊 header 文本开头的内容
+- Refactor: 删除不再使用的 better_loaddata 命令
+
 ### 2.1.2
 - Feature: BKRepoManager 新增参数 tenant_id，传了该参数则添加请求头：X-Bk-Tenant-Id
 - Feature: BKRepoManager.create_project 的参数 project 修改为：project_name
