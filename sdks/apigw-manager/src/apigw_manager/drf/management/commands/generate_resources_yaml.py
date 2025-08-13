@@ -85,7 +85,7 @@ def post_process_mcp_server_config(mcp_server_tools: list, delete_mcp_flag: bool
                 all_resources.add(name)
                 if info.get("x-bk-apigateway-resource", None) and info["x-bk-apigateway-resource"].get("enableMcp",
                                                                                                        None):
-                    # 生成 rresource.yaml 的时候需要删除 enableMcp ，以防导入校验失败
+                    # 生成 resource.yaml 的时候需要删除 enableMcp ，以防导入校验失败
                     if delete_mcp_flag:
                         del info["x-bk-apigateway-resource"]["enableMcp"]
 
