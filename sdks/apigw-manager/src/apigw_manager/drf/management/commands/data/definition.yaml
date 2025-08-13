@@ -67,38 +67,40 @@ stages:
     {% spaceless %}
     {% if settings.BK_APIGW_STAGE_ENABLE_MCP_SERVERS %}
     mcp_servers:
-      - name: "{{ settings.BK_APIGW_STAGE_MCP_SERVER_NAME }}"
-        description: "{{ settings.BK_APIGW_STAGE_MCP_SERVER_DESCRIPTION }}"
+      {% spaceless %}
+      {% for mcp_server in settings.STAGE_MCP_SERVERS %}
+      - name: "{{ mcp_server.name }}"
+        description: "{{ mcp_server.description }}"
         {% spaceless %}
-        {% if settings.BK_APIGW_STAGE_MCP_SERVER_LABELS %}
-        {% spaceless %}
+        {% if mcp_server.labels %}
         labels:
           {% spaceless %}
-          {% for label in settings.BK_APIGW_STAGE_MCP_SERVER_LABELS %}
+          {% for label in mcp_server.labels %}
           - "{{ label }}"
           {% endfor %}
           {% endspaceless %}
-        {% endspaceless %}
         {% endif %}
         {% endspaceless %}
         resource_names:
           {% spaceless %}
-          {% for resource in mcp_server_tools %}
+          {% for resource in mcp_server.tools %}
           - "{{ resource }}"
           {% endfor %}
           {% endspaceless %}
-        is_public: {{ settings.BK_APIGW_STAGE_MCP_SERVER_IS_PUBLIC }}
-        status: {{ settings.BK_APIGW_STAGE_MCP_SERVER_STATUS }}
+        is_public: {{ mcp_server.is_public }}
+        status: {{ mcp_server.status }}
         {% spaceless %}
-        {% if settings.BK_APIGW_STAGE_MCP_SERVER_TARGET_APP_CODES %}
+        {% if mcp_server.target_app_codes %}
         target_app_codes:
           {% spaceless %}
-          {% for app_code in settings.BK_APIGW_STAGE_MCP_SERVER_TARGET_APP_CODES %}
+          {% for app_code in mcp_server.target_app_codes %}
           - "{{ app_code }}"
           {% endfor %}
           {% endspaceless %}
         {% endif %}
-        {% endspaceless %}
+       {% endspaceless %}
+      {% endfor %}
+      {% endspaceless %}
     {% endif %}
     {% endspaceless %}
 

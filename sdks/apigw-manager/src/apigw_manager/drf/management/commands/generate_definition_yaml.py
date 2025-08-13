@@ -39,17 +39,19 @@ class Command(BaseCommand):
         self.stdout.write(f"will generate {definition_path} from {source_file}")
         # 如果启用了MCP服务器，则需要生成 mcp_servers 配置
         if hasattr(settings, "BK_APIGW_STAGE_ENABLE_MCP_SERVERS") and settings.BK_APIGW_STAGE_ENABLE_MCP_SERVERS:
-            mcp_server_configs = []
-            spectacular_settings.POSTPROCESSING_HOOKS.append(post_process_mcp_server_config(mcp_server_configs))
-            generator = spectacular_settings.DEFAULT_GENERATOR_CLASS()
-            renderer = OpenApiYamlRenderer()
-            schema = generator.get_schema(request=None, public=True)
-            renderer.render(schema, renderer_context={})
-            # 合并原有配置
+            for mcp_server in settings.STAGE_MCP_SERVERS:
+                mcp_server_tools = mcp_server.get("tools", [])
+                spectacular_settings.POSTPROCESSING_HOOKS.clear()
+                spectacular_settings.POSTPROCESSING_HOOKS.append(
+                    post_process_mcp_server_config(mcp_server_tools, delete_mcp_flag=False))
+                generator = spectacular_settings.DEFAULT_GENERATOR_CLASS()
+                renderer = OpenApiYamlRenderer()
+                schema = generator.get_schema(request=None, public=True)
+                renderer.render(schema, renderer_context={})
+                mcp_server["tools"] = mcp_server_tools
+
             context = {
-                'settings': settings,
-                'mcp_server_tools': mcp_server_configs
-                if getattr(settings, "BK_APIGW_STAGE_ENABLE_MCP_SERVERS", False) else []
+                'settings': settings
             }
             with open(source_file) as f:
                 template = Template(f.read())
