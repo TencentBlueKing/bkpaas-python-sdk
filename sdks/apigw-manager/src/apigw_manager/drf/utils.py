@@ -18,16 +18,16 @@ from django.conf import settings
 
 
 def gen_apigateway_resource_config(
-        is_public: bool = True,
-        allow_apply_permission: bool = True,
-        user_verified_required: bool = False,
-        app_verified_required: bool = True,
-        resource_permission_required: bool = True,
-        description_en: str = "",
-        plugin_configs: Optional[List[Dict]] = None,
-        match_subpath: bool = False,
-        none_schema: bool = False,
-        enable_mcp: bool = False,
+    is_public: bool = True,
+    allow_apply_permission: bool = True,
+    user_verified_required: bool = False,
+    app_verified_required: bool = True,
+    resource_permission_required: bool = True,
+    description_en: str = "",
+    plugin_configs: Optional[List[Dict]] = None,
+    match_subpath: bool = False,
+    none_schema: bool = False,
+    enable_mcp: bool = False,
 ) -> Dict[str, Dict[str, any]]:
     """用于辅助生成 bk-apigateway 的资源配置
     Args:

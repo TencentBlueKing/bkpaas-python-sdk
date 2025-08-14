@@ -38,7 +38,6 @@ class Command(BaseCommand):
         definition_file_path = file_dir / "definition.yaml"
         resources_file_path = file_dir / "resources.yaml"
 
-
         self.stdout.write(f"call sync_apigw_config with definition: {definition_file_path}")
         call_command(
             "sync_apigw_config",
