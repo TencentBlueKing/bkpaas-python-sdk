@@ -15,25 +15,19 @@ from apigw_manager.apigw.command import SyncCommand
 class Command(SyncCommand):
     """Synchronous API gateway stage MCP Servers configuration"""
 
-    default_namespace = "stage"
+    default_namespace = "stages"
 
     def get_definition(self, define, file, namespace, **kwargs):
         definition = self.load_definition(define, file, **kwargs)
         if definition is None:
             return {}
-        if definition.spec_version == 2:
-            namespace = "stages"
-            self.default_namespace = "stages"
-        else:
+        if definition.spec_version != 2:
             raise ValueError("sync apigw_stage_mcp_servers only support spec_version: 2")
         return super().get_definition(define, file, namespace, **kwargs)
 
     def do(self, manager, definition, *args, **kwargs):
-        if self.default_namespace == "stages":
-            for stage_definition in definition:
-                result = manager.sync_stage_mcp_servers(**stage_definition)
-                for mcp_sync_result in result.get("data", []):
-                    print("API gateway stage mcp servers synchronization completed [ id:%s,name:%s,action:%s ]" % (
-                        mcp_sync_result["id"], mcp_sync_result["name"], mcp_sync_result["action"]))
-        else:
-            print("sync apigw_stage_mcp_servers only support spec_version 2")
+        for stage_definition in definition:
+            result = manager.sync_stage_mcp_servers(**stage_definition)
+            for mcp_sync_result in result.get("data", []):
+                print("API gateway stage mcp servers synchronization completed [ id:%s,name:%s,action:%s ]" % (
+                    mcp_sync_result["id"], mcp_sync_result["name"], mcp_sync_result["action"]))
