@@ -64,6 +64,64 @@ def post_process_inject_method_and_path(result, generator, request, public):
     return result
 
 
+def post_process_mcp_server_config(mcp_server_tools: list, delete_mcp_flag: bool) -> callable:
+    """
+    mcp_server_tools: 外部如果指定了mcp_server_tools，则只校验这些工具，如果没有，则校验所有开启了mcp server的工具
+    """
+
+    def get_mcp_server_tools(result, generator, request, public):
+        paths = result.get("paths", None)
+        if not paths:
+            return result
+        tool_set = set(mcp_server_tools)
+        is_specified = len(tool_set) > 0
+        # 可以被添加为mcp tool的工具
+        mcp_can_used_tool = set()
+        # 所有的资源
+        all_resources = set()
+        for uri, methods in paths.items():
+            for method, info in methods.items():
+                name = info.get("operationId")
+                all_resources.add(name)
+                if info.get("x-bk-apigateway-resource", None) and info["x-bk-apigateway-resource"].get("enableMcp",
+                                                                                                       None):
+                    # 生成 resource.yaml 的时候需要删除 enableMcp ，以防导入校验失败
+                    if delete_mcp_flag:
+                        del info["x-bk-apigateway-resource"]["enableMcp"]
+
+                    # 如果 resource 不在指定的tool，则跳过
+                    if name not in tool_set and is_specified:
+                        continue
+                    if info.get("parameters") or info.get("requestBody"):
+                        # 如果没有指定工具，则自动将开启了mcp的资源添加进去
+                        if not is_specified:
+                            mcp_server_tools.append(name)
+                        else:
+                            mcp_can_used_tool.add(name)
+                        continue
+                    elif not info.get("noneSchema"):
+                        raise Exception(f"mcp server tool:{name} need confirm api schema or if no schema and set "
+                                        f"noneSchema=True")
+                    else:
+                        # 如果没有指定直接将符合的api以及开启了mcp的都加入到工具列表里面
+                        if not is_specified:
+                            mcp_server_tools.append(name)
+                        else:
+                            mcp_can_used_tool.add(name)
+        # 如果指定了特定的工具，则需要校验指定的resoruce 是否在定义的资源里面以及是否符合要求
+        if is_specified:
+            for tool in tool_set:
+                if tool not in all_resources:
+                    raise Exception((f"mcp server tool:{tool} not found in resources.yaml"))
+                if tool not in mcp_can_used_tool:
+                    raise Exception(f"mcp server tool:{tool} "
+                                    f"need confirm api schema or set noneSchema=True and enableMcp=True")
+
+        return result
+
+    return get_mcp_server_tools
+
+
 class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
@@ -77,6 +135,9 @@ class Command(BaseCommand):
         resources_path = define_dir / "resources.yaml"
         self.stdout.write(f"will generate {resources_path}")
 
+        if hasattr(settings, "BK_APIGW_STAGE_ENABLE_MCP_SERVERS") and settings.BK_APIGW_STAGE_ENABLE_MCP_SERVERS:
+            spectacular_settings.POSTPROCESSING_HOOKS.append(
+                post_process_mcp_server_config([], delete_mcp_flag=True))
         tags = kwargs.get("tag")
         if tags:
             self.stdout.write(f"get tags, will only use the apis with tags: {tags}")

@@ -14,6 +14,8 @@ import sys
 
 from typing import Dict, List, Optional
 
+from django.conf import settings
+
 
 def gen_apigateway_resource_config(
     is_public: bool = True,
@@ -24,6 +26,8 @@ def gen_apigateway_resource_config(
     description_en: str = "",
     plugin_configs: Optional[List[Dict]] = None,
     match_subpath: bool = False,
+    none_schema: bool = False,
+    enable_mcp: bool = False,
 ) -> Dict[str, Dict[str, any]]:
     """用于辅助生成 bk-apigateway 的资源配置
     Args:
@@ -35,6 +39,8 @@ def gen_apigateway_resource_config(
         description_en (str, optional): 资源的英文描述。默认 ""
         plugin_configs (Optional[List[Dict]], optional): 插件配置，类型为 List[Dict], 用于声明作用在这个资源上的插件，可以参考官方文档。默认 None.
         match_subpath (bool, optional): 匹配所有子路径，默认为 False. 默认 False
+        none_schema (bool, optional): 是否有请求参数. 默认 False，如果需要添加到 mcp server 中使用，没有参数一定要设置为 True
+        enable_mcp (bool, optional): 是否启用 MCP 功能. 默认 False
     Returns:
         Dict[str, Dict[str, any]]: _description_
     """
@@ -46,7 +52,7 @@ def gen_apigateway_resource_config(
     if not plugin_configs:
         plugin_configs = []
 
-    return {
+    resource_config = {
         "x-bk-apigateway-resource": {
             "isPublic": is_public,
             "matchSubpath": match_subpath,
@@ -69,6 +75,12 @@ def gen_apigateway_resource_config(
             "descriptionEn": description_en,
         }
     }
+    if hasattr(settings, "BK_APIGW_STAGE_ENABLE_MCP_SERVERS") and settings.BK_APIGW_STAGE_ENABLE_MCP_SERVERS:
+        if none_schema:
+            resource_config["x-bk-apigateway-resource"]["noneSchema"] = True
+        if enable_mcp:
+            resource_config["x-bk-apigateway-resource"]["enableMcp"] = True
+    return resource_config
 
 
 def get_logging_config_dict(

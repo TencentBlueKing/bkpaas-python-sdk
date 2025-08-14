@@ -93,9 +93,9 @@ class Handler(object):
         # 对于单租户应用，BK_APP_TENANT_ID 可以不设置; 对于全租户应用，BK_APP_TENANT_ID 必须设置，建议设置为 system
         bk_app_tenant_id = self.config.bk_app_tenant_id or ""
         logger.warning(
-            "the [X-Bk-Tenant-Id=%s], if the syncing to apigateway failed, and your app(%s) is a global tenant app, please set the environment variable BK_APP_TENANT_ID to `system` (or set django settings.BK_APP_TENANT_ID to `system`) and try again",
-            bk_app_tenant_id,
+            "[warn] if the syncing to apigateway failed, and your app(%s) is a global tenant app, please set the environment variable BK_APP_TENANT_ID to `system` (or set django settings.BK_APP_TENANT_ID to `system`) and try again. the current value [X-Bk-Tenant-Id=%s].",
             self.config.bk_app_code,
+            bk_app_tenant_id,
         )
         return bk_app_tenant_id
 
@@ -103,6 +103,38 @@ class Handler(object):
         """Call the API instance"""
         data = {
             "path_params": {"api_name": kwargs.pop("gateway_name", self.config.gateway_name)},
+            "data": kwargs,
+            "headers": {
+                "X-Bkapi-Authorization": kwargs.pop("x_bkapi_authorization", self._get_bkapi_authorization()),
+                # the header is required by the API gateway plugin bk-tenant-validate, for global tenant app!
+                # so we set it to system, it would not be used in the gateway
+                "X-Bk-Tenant-Id": self._get_tenant_id(),
+            },
+            "files": files,
+        }
+
+        operation_id = operation.name
+        logger.debug("call api %s, data: %s", operation_id, data)
+
+        try:
+            return operation(**data)
+        except ResponseError as err:
+            message = "%s\n%s\nResponse: %s" % (err, err.curl_command, err.response_text)
+            raise ApiResponseError(message)
+        except Exception as err:
+            raise ApiException(operation_id) from err
+
+    def _call_v2(self, operation, files=None, **kwargs):
+        """Call the API instance：
+          - Uses "gateway_name" as the key in `path_params` instead of "api_name".
+        """
+
+        path_params = {"gateway_name": kwargs.pop("gateway_name", self.config.gateway_name)}
+        if "{stage_name}" in operation.path:
+            path_params["stage_name"] = kwargs.get("name")
+
+        data = {
+            "path_params": path_params,
             "data": kwargs,
             "headers": {
                 "X-Bkapi-Authorization": kwargs.pop("x_bkapi_authorization", self._get_bkapi_authorization()),
