@@ -93,8 +93,7 @@ class TaskPoller(ABC):
     def __init_subclass__(cls, *args, **kwargs):
         if cls.__name__ in cls._registered_pollers:
             raise ValueError(
-                f"A TaskPoller subclass named '{cls.__name__}' is already registered. "
-                f"Poller names must be unique."
+                f"A TaskPoller subclass named '{cls.__name__}' is already registered. Poller names must be unique."
             )
         cls._registered_pollers[cls.__name__] = cls
 
@@ -117,9 +116,7 @@ class TaskPoller(ABC):
         # Start background task
         cls.get_async_task().delay(cls.__name__, handler_name, params)
 
-    def make_next_metadata(
-        self, has_error: bool = False, last_polling_data: Optional[Dict] = None
-    ) -> PollingMetadata:
+    def make_next_metadata(self, has_error: bool = False, last_polling_data: Optional[Dict] = None) -> PollingMetadata:
         """Make the metadata object for next polling
 
         :param has_error: if has error, will affect `retries` attribute
@@ -148,9 +145,7 @@ class TaskPoller(ABC):
 
     def exceeded_timeout(self) -> bool:
         """Check if current polling procedure has exceeded max timeout"""
-        return (
-            time.time() - self.metadata.query_started_at
-        ) > self.get_overall_timeout_seconds()
+        return (time.time() - self.metadata.query_started_at) > self.get_overall_timeout_seconds()
 
     def get_overall_timeout_seconds(self) -> int:
         """The overall timeout seconds for a complete polling procedure"""
@@ -188,9 +183,7 @@ class CallbackResult:
     :param message: extra message of current result
     """
 
-    def __init__(
-        self, status: CallbackStatus, data: Optional[Dict] = None, message: str = ""
-    ):
+    def __init__(self, status: CallbackStatus, data: Optional[Dict] = None, message: str = ""):
         self.status = status
         self.data = data or {}
         self.message = message
@@ -221,8 +214,7 @@ class CallbackHandler(ABC):
     def __init_subclass__(cls, *args, **kwargs):
         if cls.__name__ in cls._registered_handlers:
             raise ValueError(
-                f"A CallbackHandler subclass named '{cls.__name__}' is already registered. "
-                f"Handler names must be unique."
+                f"A CallbackHandler subclass named '{cls.__name__}' is already registered. Handler names must be unique."
             )
         cls._registered_handlers[cls.__name__] = cls
 
@@ -248,9 +240,7 @@ class NullResultHandler(CallbackHandler):
 
 
 @shared_task(acks_late=True, name="poll_task.check_status_until_finished")
-def check_status_until_finished(
-    poller_name: str, handler_name: str, params: Dict, queue: Optional[str] = None
-):
+def check_status_until_finished(poller_name: str, handler_name: str, params: Dict, queue: Optional[str] = None):
     """Main async task for polling
 
     :param poller_name: name of poller class
@@ -339,9 +329,7 @@ class PollTaskScheduler:
             self._callback(ret)
             return None
 
-        metadata = self.poller.make_next_metadata(
-            has_error=False, last_polling_data=polling_result.data
-        )
+        metadata = self.poller.make_next_metadata(has_error=False, last_polling_data=polling_result.data)
         return metadata
 
     @staticmethod
@@ -369,9 +357,7 @@ class PollTaskScheduler:
 
     def _callback_timeout(self):
         """Callback handler with timeout result"""
-        ret = CallbackResult(
-            status=CallbackStatus.TIMEOUT, message="exceeded total timeout"
-        )
+        ret = CallbackResult(status=CallbackStatus.TIMEOUT, message="exceeded total timeout")
         self.handler_cls().handle(ret, self.poller)
 
     def _callback_exception(self, e: Exception):
