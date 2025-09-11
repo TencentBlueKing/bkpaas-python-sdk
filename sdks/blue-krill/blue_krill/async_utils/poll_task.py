@@ -196,11 +196,7 @@ class CallbackResult:
         return {"status": self.status.value, "message": self.message, "data": self.data}
 
     def __str__(self):
-        return "<%s: %s is_exception=%s>" % (
-            self.__class__.__name__,
-            self.to_dict(),
-            self.is_exception,
-        )
+        return "<%s: %s is_exception=%s>" % (self.__class__.__name__, self.to_dict(), self.is_exception)
 
 
 class CallbackHandler(ABC):
@@ -269,12 +265,7 @@ def check_status_until_finished(poller_name: str, handler_name: str, params: Dic
     if next_metadata:
         # Start next polling
         countdown = poller.get_retry_delay()
-        logger.debug(
-            "Will retry query status for %s after %s seconds. metadata=%s",
-            poller,
-            countdown,
-            metadata,
-        )
+        logger.debug("Will retry query status for %s after %s seconds. metadata=%s", poller, countdown, metadata)
         poller.get_async_task().subtask(
             args=(poller_name, handler_name, params),
             kwargs={"queue": queue},
@@ -304,10 +295,7 @@ class PollTaskScheduler:
     def run(self) -> Optional[PollingMetadata]:
         """Start schedule process"""
         if self.poller.exceeded_timeout():
-            logger.info(
-                "exceeded total timeout, ts_query_started=%s",
-                self.poller.metadata.query_started_at,
-            )
+            logger.info("exceeded total timeout, ts_query_started=%s", self.poller.metadata.query_started_at)
             self._callback_timeout()
             return None
 
@@ -344,11 +332,7 @@ class PollTaskScheduler:
             logger.exception("Exception when query status, poll_class=%s", poller)
             raise PollingQueryError(str(e))
 
-        logger.debug(
-            "Query status result, poll_class=%s, polling result: %s",
-            poller,
-            polling_result,
-        )
+        logger.debug("Query status result, poll_class=%s, polling result: %s", poller, polling_result)
         return polling_result
 
     def _callback(self, result: CallbackResult):
