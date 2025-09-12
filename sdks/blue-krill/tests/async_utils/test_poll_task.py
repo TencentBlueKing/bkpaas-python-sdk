@@ -30,7 +30,6 @@ from blue_krill.async_utils.poll_task import (
     TaskPoller,
     check_status_until_finished,
 )
-from tests.utils import generate_random_string
 
 
 class FakeCheckTask:
