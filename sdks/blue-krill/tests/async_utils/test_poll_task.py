@@ -30,6 +30,7 @@ from blue_krill.async_utils.poll_task import (
     TaskPoller,
     check_status_until_finished,
 )
+from tests.utils import generate_random_string
 
 
 class FakeCheckTask:
@@ -99,6 +100,10 @@ class TestPollTaskScheduler:
             def query(self) -> PollingResult:
                 return PollingResult.done(data={"foo": "bar"})
 
+            @classmethod
+            def unregister(cls):
+                del cls._registered_pollers[cls.__name__]
+
         class TimeoutedHandler(CallbackHandler):
             result = None
             poller = None
@@ -106,6 +111,10 @@ class TestPollTaskScheduler:
             def handle(self, result, poller):
                 TimeoutedHandler.result = result
                 TimeoutedHandler.poller = poller
+
+            @classmethod
+            def unregister(cls):
+                del cls._registered_handlers[cls.__name__]
 
         metadata = PollingMetadata(retries=0, query_started_at=time.time(), queried_count=0)
         scheduler = PollTaskScheduler(TimeoutedPoller({"param": 1}, metadata), TimeoutedHandler)
@@ -119,6 +128,9 @@ class TestPollTaskScheduler:
 
         assert TimeoutedHandler.poller
         assert TimeoutedHandler.poller.params == {"param": 1}
+
+        TimeoutedPoller.unregister()
+        TimeoutedHandler.unregister()
 
     def test_exception(self):
         class ExceptionPoller(BasePoller):
@@ -171,12 +183,12 @@ class TestPollTaskScheduler:
 
 class TestTaskPoller:
     def test_continue(self):
-        class DoingPoller(BasePoller):
+        class DoingTaskPoller(BasePoller):
             def query(self) -> PollingResult:
                 return PollingResult.doing()
 
-        DoingPoller.start({}, NullResultHandler)
-        assert DoingPoller.get_async_task().subtask().apply_async.called
+        DoingTaskPoller.start({}, NullResultHandler)
+        assert DoingTaskPoller.get_async_task().subtask().apply_async.called
 
     def test_no_continue(self):
         class DonePoller(BasePoller):
