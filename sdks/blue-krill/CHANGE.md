@@ -1,5 +1,9 @@
 ## Change logs
 
+### 2.1.4
+
+- Fix: `TaskPoller.__init_subclass__` 和 `CallbackHandler.__init_subclass__` 中同名子类注册覆盖的问题
+
 ### 2.1.3
 
 - Fix: EncryptField 无法正常处理以特殊 header 文本开头的内容

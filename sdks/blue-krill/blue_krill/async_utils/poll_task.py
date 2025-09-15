@@ -91,6 +91,10 @@ class TaskPoller(ABC):
         self.metadata = metadata
 
     def __init_subclass__(cls, *args, **kwargs):
+        if cls.__name__ in cls._registered_pollers:
+            raise TypeError(
+                f"A TaskPoller subclass named '{cls.__name__}' is already registered. Poller names must be unique."
+            )
         cls._registered_pollers[cls.__name__] = cls
 
     @classmethod
@@ -204,6 +208,10 @@ class CallbackHandler(ABC):
     _registered_handlers: Dict[str, Type["CallbackHandler"]] = {}
 
     def __init_subclass__(cls, *args, **kwargs):
+        if cls.__name__ in cls._registered_handlers:
+            raise TypeError(
+                f"A CallbackHandler subclass named '{cls.__name__}' is already registered. Handler names must be unique."
+            )
         cls._registered_handlers[cls.__name__] = cls
 
     @classmethod
