@@ -92,7 +92,7 @@ class TaskPoller(ABC):
 
     def __init_subclass__(cls, *args, **kwargs):
         if cls.__name__ in cls._registered_pollers:
-            raise ValueError(
+            raise TypeError(
                 f"A TaskPoller subclass named '{cls.__name__}' is already registered. Poller names must be unique."
             )
         cls._registered_pollers[cls.__name__] = cls
@@ -209,7 +209,7 @@ class CallbackHandler(ABC):
 
     def __init_subclass__(cls, *args, **kwargs):
         if cls.__name__ in cls._registered_handlers:
-            raise ValueError(
+            raise TypeError(
                 f"A CallbackHandler subclass named '{cls.__name__}' is already registered. Handler names must be unique."
             )
         cls._registered_handlers[cls.__name__] = cls
