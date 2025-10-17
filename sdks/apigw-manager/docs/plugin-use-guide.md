@@ -67,7 +67,10 @@
 ```yaml
 - type: bk-ip-restriction
   yaml: |-
-    whitelist: 1.1.1.1
+    whitelist: |-
+      # comment
+      1.1.1.1
+      2.2.2.2
     message: 'Your IP is not allowed'
 ```
 

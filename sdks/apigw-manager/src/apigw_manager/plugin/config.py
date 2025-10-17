@@ -735,7 +735,7 @@ def build_bk_request_body_limit(
     """generate bk-request-body-limit plugin config
 
     Args:
-        max_body_size (str): 最大请求体大小，最大值 33554432（32 M）。
+        max_body_size (int): 最大请求体大小，最大值 33554432（32 M）。
 
     Raises:
         ValueError: max_body_size must be between 1 byte and 33554432 bytes
@@ -832,7 +832,7 @@ def build_proxy_cache(
 
     Args:
         cache_method (List[str]): 缓存方法，仅支持：GET, HEAD。Defaults to [GET].
-        cache_ttl (cache_ttl: int): 缓存时间，最大值 3600 秒。Defaults to 300.
+        cache_ttl (int): 缓存时间，最大值 3600 秒。Defaults to 300.
 
     Raises:
         ValueError: cache_method only supports GET and HEAD
@@ -841,7 +841,7 @@ def build_proxy_cache(
     Returns:
         {
             "type": "proxy-cache",
-            "yaml": "whitelist:\n  - key: GET\n  cache_ttl: 300\n"
+            "yaml": "cache_method:\n  - key: GET\n  cache_ttl: 300\n"
         }
     """
 
