@@ -22,6 +22,10 @@ from apigw_manager.plugin.config import (
     build_redirect,
     build_bk_access_token_source,
     build_bk_username_required,
+    build_bk_request_body_limit,
+    build_bk_user_restriction,
+    build_bk_legacy_invalid_params,
+    build_proxy_cache,
     build_stage_plugin_config_for_definition_yaml,
     UnhealthyConfig,
     HealthyConfig,
@@ -656,6 +660,144 @@ class TestBuildPluginConfig:
         self, expected
     ):
         assert build_bk_username_required() == expected
+
+    @pytest.mark.parametrize(
+        "max_body_size, will_error, expected",
+        [
+            (
+                1024,
+                False,
+                {
+                    "type": "bk-request-body-limit",
+                    "yaml": "max_body_size: 1024\n"
+                },
+            ),
+            (
+                33554433,
+                True,
+                None,
+            ),
+        ]
+    )
+    def test_build_bk_request_body_limit(
+        self, max_body_size, will_error, expected
+    ):
+        if will_error:
+            with pytest.raises(ValueError):
+                build_bk_request_body_limit(max_body_size)
+            return
+
+        assert build_bk_request_body_limit(max_body_size) == expected
+
+    @pytest.mark.parametrize(
+        "whitelist, blacklist, will_error, expected",
+        [
+            (
+                ["admin"],
+                [],
+                False,
+                {
+                    "type": "bk-user-restriction",
+                    "yaml": "whitelist:\n"
+                            "- key: admin\n"
+                },
+            ),
+            (
+                [],
+                ["admin"],
+                False,
+                {
+                    "type": "bk-user-restriction",
+                    "yaml": "blacklist:\n"
+                            "- key: admin\n"
+                },
+            ),
+            (
+                [],
+                [],
+                True,
+                None,
+            ),
+            (
+                ["admin"],
+                ["admin"],
+                True,
+                None,
+            ),
+        ]
+    )
+    def test_build_bk_user_restriction(
+        self, whitelist, blacklist, will_error, expected
+    ):
+        if will_error:
+            with pytest.raises(ValueError):
+                build_bk_user_restriction(whitelist, blacklist)
+            return
+
+        assert build_bk_user_restriction(whitelist, blacklist) == expected
+
+    @pytest.mark.parametrize(
+        "expected",
+        [
+            {
+                "type": "bk-legacy-invalid-params",
+                "yaml": ""
+            },
+        ]
+    )
+    def test_build_bk_legacy_invalid_params(
+        self, expected
+    ):
+        assert build_bk_legacy_invalid_params() == expected
+
+    @pytest.mark.parametrize(
+        "cache_method, cache_ttl, will_error, expected",
+        [
+            (
+                ["GET"],
+                300,
+                False,
+                {
+                    "type": "proxy-cache",
+                    "yaml": "cache_method:\n"
+                            "- key: GET\n"
+                            "cache_ttl: 300\n",
+                },
+            ),
+            (
+                ["HEAD"],
+                300,
+                False,
+                {
+                    "type": "proxy-cache",
+                    "yaml": "cache_method:\n"
+                            "- key: HEAD\n"
+                            "cache_ttl: 300\n",
+                },
+            ),
+            (
+                ["TEST"],
+                300,
+                True,
+                None,
+            ),
+            (
+                ["GET"],
+                33554433,
+                True,
+                None,
+            ),
+        ]
+    )
+    def test_build_proxy_cache(
+        self, cache_method, cache_ttl, will_error, expected
+    ):
+        if will_error:
+            with pytest.raises(ValueError):
+                build_proxy_cache(cache_method, cache_ttl)
+            return
+
+        assert build_proxy_cache(cache_method, cache_ttl) == expected
 
 
 class TestBuildStagePluginConfigForDefinitionYaml:

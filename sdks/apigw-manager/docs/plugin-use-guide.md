@@ -48,7 +48,8 @@
     set:
       - key: test
         value: '2'
-    remove: []
+    remove:
+      - key: X-test
 ```
 
 ## 3. IP 访问保护插件 （配置支持：资源/环境）
@@ -66,8 +67,7 @@
 ```yaml
 - type: bk-ip-restriction
   yaml: |-
-    whitelist: '1.1.1.1'
-    blacklist: '2.2.2.2'
+    whitelist: 1.1.1.1
     message: 'Your IP is not allowed'
 ```
 
@@ -90,7 +90,7 @@
     rates:
       __default:
       - period: 1
-          tokens: 100
+        tokens: 100
 ```
 
 ## 5. mocking 插件（配置支持：资源）
@@ -108,10 +108,10 @@
 ```yaml
 - type: bk-mock
   yaml: |-
-    response_example: ''
+    response_example: "{\"hello\": \"world\"}"
     response_headers:
-      - key: key1
-        value: value1
+      - key: foo
+        value: bar
     response_status: 200
 ```
 
@@ -137,16 +137,16 @@
 ```yaml
 - type: api-breaker
   yaml: |-
-    break_response_body: ''
+    break_response_body: 'test body'
     break_response_headers:
-      - key: key1
-        value: value1
+      - key: foo
+        value: bar
     unhealthy:
-      http_statuses: 
+      http_statuses:
       - 500
       successes: 3
     healthy:
-      http_statuses: 
+      http_statuses:
       - 200
       failures: 3
     break_response_code: 502
@@ -177,13 +177,13 @@
   yaml: |-
     abort:
       http_status: 503
-      body: ''
+      body: "Fault Injection!"
       percentage: 50
-      vars: ''
-    unhealthy:
-      duration: 3 
+      vars: "[[[\"arg_name\", \"==\", \"jack\"], [\"arg_age\", \"==\", 18]]]"
+    delay:
+      duration: 3
       percentage: 30
-      vars: ''
+      vars: "[[[\"http_age\", \"==\", 18]]]"
 ```
 
 ## 8. 请求校验插件 （配置支持：资源）
@@ -202,10 +202,10 @@
 ```yaml
 - type: request-validation
   yaml: |-
-    body_schema: \'{"type": "object"}\'
-    body_schema: \'{"type": "object"}\'
-    rejected_msg: ''
-    rejected_code: 400
+    body_schema: "{\"type\": \"object\",\"required\": [\"Content-Type\"],\"properties\": {\"Content-Type\": {\"type\": \"string\",\"pattern\": \"^application\\/json$\"}}}"
+    header_schema: "{\"type\": \"object\",\"required\": [\"required_payload\"],\"properties\": {\"required_payload\": {\"type\": \"string\"},\"boolean_payload\": {\"type\": \"boolean\"},\"array_payload\": {\"type\": \"array\",\"minItems\": 1,\"items\": {\"type\": \"integer\",\"minimum\": 200,\"maximum\": 599},\"uniqueItems\": true,\"default\": [200]}}}"
+    rejected_msg: "Request header validation failed"
+    rejected_code: 403
 ```
 
 ## 9. Response 转换插件 （配置支持：资源）
@@ -228,18 +228,19 @@
 ```yaml
 - type: response-rewrite
   yaml: |-
-    status_code: 200
-    body: ''
-    vars: ''
+    body: "{\"code\":\"ok\",\"message\":\"new json body\"}"
     body_base64: false
     headers:
       add:
-      - key: 'key1: value1'
-      remove:
-      - key: key1
+        - key: X-Server-balancer-addr
+          value: test
       set:
-      - key: key1
-        value: value1
+        - key: X-Server-id
+          value: "3"
+      remove:
+        - key: X-TO-BE-REMOVED
+    vars: "[[[\"arg_name\", \"==\", \"jack\"], [\"arg_age\", \"==\", 18]]]"
+    status_code: 200
 ```
 
 
@@ -257,7 +258,78 @@
 ```yaml
 - type: redirect
   yaml: |-
-    uri: ''
+    uri: '/test/default.html'
     ret_code: 302
 ```
 
+
+## 11. AccessToken 来源 （配置支持：资源）
+
+### 11.1 参数说明
+
+| 参数         | 类型     | 是否必填 | 默认值     | 描述             |
+|------------|--------|------|---------|------------------------|
+| source     | 字符串    | 是    | "bearer"      | 认证令牌的来源，默认是 bearer。 |
+
+### 11.2 配置例子
+
+```yaml
+- type: bk-access-token-source
+  yaml: 'source: bearer'
+```
+
+## 12. 限制请求大小 （配置支持：资源/环境）
+
+### 12.1 参数说明
+
+| 参数             | 类型   | 是否必填 | 默认值    | 描述                          |
+|----------------|------|------|--------|-----------------------------|
+| max_body_size  | 整数   | 是    |     | 最大请求体大小，最大值 33554432（32 M）。 |
+
+### 12.2 配置例子
+
+```yaml
+- type: bk-request-body-limit
+  yaml: 'max_body_size: 1024'
+```
+
+
+## 13. 用户访问限制 （配置支持：资源）
+
+### 13.1 参数说明
+
+| 参数             | 类型 | 是否必填 | 默认值                        | 描述    |
+|----------------|----|------|----------------------------|-------|
+| whitelist  | 数组 | 否    |                            | 白名单。  |
+| blacklist  | 数组 | 否    |                            | 黑名单。  |
+| message  | 字符串  | 否    | The bk-user is not allowed | 错误提示。 |
+
+### 13.2 配置例子
+
+```yaml
+- type: bk-user-restriction
+  yaml: |-
+    whitelist:
+      - key: admin
+    message: 'The bk-user is not allowed'
+```
+
+
+## 14. 代理缓存 （配置支持：资源）
+
+### 14.1 参数说明
+
+| 参数             | 类型  | 是否必填  | 默认值 | 描述    |
+|----------------|-----|-------|-----|-------|
+| cache_method  | 数组  | 是     | GET | 缓存方法，仅支持：GET, HEAD。  |
+| cache_ttl  | 整数   | 否     | 300 | 缓存时间，最大值 3600 秒。  |
+
+### 14.2 配置例子
+
+```yaml
+- type: proxy-cache
+  yaml: |-
+    cache_method:
+      - key: GET
+    cache_ttl: 300
+```

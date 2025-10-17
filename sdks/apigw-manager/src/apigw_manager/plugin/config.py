@@ -729,6 +729,142 @@ def build_bk_username_required() -> Dict[str, str]:
     }
 
 
+def build_bk_request_body_limit(
+    max_body_size: int,
+) -> Dict[str, str]:
+    """generate bk-request-body-limit plugin config
+
+    Args:
+        max_body_size (str): 最大请求体大小，最大值 33554432（32 M）。
+
+    Raises:
+        ValueError: max_body_size must be between 1 byte and 33554432 bytes
+
+    Returns:
+        {
+            "type": "bk-request-body-limit",
+            "yaml": "max_body_size: 1024\n"
+        }
+    """
+
+    if not (1 <= int(max_body_size) <= 32 * 1024 * 1024):
+        raise ValueError("max_body_size must be between 1 byte and 33554432 bytes")
+
+    return {
+        "type": "bk-request-body-limit",
+        "yaml": yaml_dump(
+            {
+                "max_body_size": max_body_size,
+            }
+        ),
+    }
+
+
+def build_bk_user_restriction(
+    whitelist: Optional[List[str]] = None,
+    blacklist: Optional[List[str]] = None,
+) -> Dict[str, str]:
+    """generate bk-user-restriction plugin config
+
+    Args:
+        whitelist (Optional[List[str]], optional): 用户白名单列表。Defaults to None.
+        blacklist (Optional[List[str]], optional): 用户黑名单列表。Defaults to None.
+
+    Raises:
+        ValueError: whitelist and blacklist can not be set at the same time
+        ValueError: whitelist or blacklist should be set
+
+    Returns:
+        {
+            "type": "bk-user-restriction",
+            "yaml": "whitelist:\n  - key: admin\n"
+        }
+    """
+
+    if whitelist and blacklist:
+        raise ValueError("whitelist and blacklist can not be set at the same time")
+
+    if not (whitelist or blacklist):
+        raise ValueError("whitelist or blacklist should be set")
+
+    if whitelist:
+        return {
+            "type": "bk-user-restriction",
+            "yaml": yaml_dump(
+                {
+                    "whitelist": [{"key": k} for k in whitelist],
+                },
+            ),
+        }
+
+    if blacklist:
+        return {
+            "type": "bk-user-restriction",
+            "yaml": yaml_dump(
+                {
+                    "blacklist": [{"key": k} for k in blacklist],
+                },
+            ),
+        }
+
+
+def build_bk_legacy_invalid_params() -> Dict[str, str]:
+    """generate bk-legacy-invalid-params plugin config
+
+    Returns:
+    {
+        "type": "bk-legacy-invalid-params",
+        "yaml": ""
+    }
+    """
+
+    return {
+        "type": "bk-legacy-invalid-params",
+        "yaml": "",
+    }
+
+
+def build_proxy_cache(
+    cache_method: List[str],
+    cache_ttl: int = 300,
+) -> Dict[str, str]:
+    """generate proxy-cache plugin config
+
+    Args:
+        cache_method (List[str]): 缓存方法，仅支持：GET, HEAD。Defaults to [GET].
+        cache_ttl (cache_ttl: int): 缓存时间，最大值 3600 秒。Defaults to 300.
+
+    Raises:
+        ValueError: cache_method only supports GET and HEAD
+        ValueError: cache_ttl must be between 1 and 3600 seconds
+
+    Returns:
+        {
+            "type": "proxy-cache",
+            "yaml": "whitelist:\n  - key: GET\n  cache_ttl: 300\n"
+        }
+    """
+
+    cache_method_data = []
+    for method in cache_method:
+        if method not in ["GET", "HEAD"]:
+            raise ValueError("cache_method only supports GET and HEAD")
+        cache_method_data.append({"key": method})
+
+    if not (1 <= cache_ttl <= 3600):
+        raise ValueError("cache_ttl must be between 1 and 3600 seconds")
+
+    return {
+        "type": "proxy-cache",
+        "yaml": yaml_dump(
+            {
+                "cache_method": cache_method_data,
+                "cache_ttl": cache_ttl,
+            }
+        ),
+    }
+
+
 def _check_percentage(percentage: int, location: str):
     if percentage and not (0 < percentage <= 100):
         raise ValueError(f"The percentage of {location} must be greater than 0 and less than or equal to 100")
