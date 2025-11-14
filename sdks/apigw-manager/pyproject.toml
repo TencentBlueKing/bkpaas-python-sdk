@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "apigw-manager"
-version = "4.1.2"
+version = "4.2.0"
 description = "The SDK for managing blueking gateway resource."
 readme = "README.md"
 authors = ["blueking <blueking@tencent.com>"]
