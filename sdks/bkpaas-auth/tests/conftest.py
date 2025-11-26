@@ -79,6 +79,7 @@ def get_rtx_user_info_response(settings):
             "bk_username": settings.USER_NAME,
             "LoginName": settings.USER_NAME,
             "ChineseName": settings.USER_NICKNAME,
+            "time_zone": "Asia/Shanghai",
             "avatar_url": "",
         },
         "result": True,

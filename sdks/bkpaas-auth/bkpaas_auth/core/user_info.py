@@ -16,6 +16,7 @@ class UserInfo:
     def __init__(self, username, **kwargs):
         self.username = username
         self.display_name = kwargs.get("display_name") or username
+        self.time_zone = kwargs.get("time_zone")
         self.tenant_id = kwargs.get("tenant_id")
 
     def provide(self, user: 'User'):

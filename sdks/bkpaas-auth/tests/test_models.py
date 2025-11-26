@@ -34,6 +34,7 @@ class TestUser:
             user_info = get_rtx_user_info(username=settings.USER_NAME)
             assert user_info.username == settings.USER_NAME
             assert user_info.chinese_name == settings.USER_NICKNAME
+            assert user_info.time_zone == "Asia/Shanghai"
 
             user = User(token)
             user_info.provide(user)
@@ -41,3 +42,4 @@ class TestUser:
             assert user.email == f'{settings.USER_NAME}@tencent.com'
             assert user.username == settings.USER_NAME
             assert user.chinese_name == settings.USER_NICKNAME
+            assert user.time_zone == "Asia/Shanghai"

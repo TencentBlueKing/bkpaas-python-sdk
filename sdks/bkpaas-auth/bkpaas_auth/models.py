@@ -13,7 +13,7 @@ class AbstractUserWithProvider(models.AbstractBaseUser, models.AnonymousUser):
 
     bkpaas_user_id = db_models.CharField(primary_key=True, max_length=255)
     USERNAME_FIELD = 'bkpaas_user_id'
-    USERINFO_FIELDS = ('display_name', 'tenant_id', 'nickname', 'chinese_name', 'avatar_url', 'email', 'phone')
+    USERINFO_FIELDS = ('display_name', 'tenant_id', 'time_zone', 'nickname', 'chinese_name', 'avatar_url', 'email', 'phone')
 
     def __init__(self, provider_type, username):
         if not provider_type:

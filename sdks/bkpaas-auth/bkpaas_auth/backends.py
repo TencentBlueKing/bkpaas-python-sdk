@@ -70,6 +70,7 @@ class UniversalAuthBackend:
             token.user_info = UserInfo(
                 username=user_account.bk_username,
                 display_name=user_account.display_name,
+                time_zone=user_account.time_zone,
                 tenant_id=user_account.tenant_id,
             )
             logger.debug("New login token exchanged by credentials")
@@ -209,13 +210,14 @@ class APIGatewayAuthBackend:
     _TOKEN_EXPIRE_TIME = 86400  # 24 hours in seconds
 
     def _create_authenticated_user(
-        self, username: str, provider_type: ProviderType, tenant_id: str | None = None
+        self, username: str, provider_type: ProviderType, time_zone: str | None = None, tenant_id: str | None = None
     ) -> User:
         """Create a user object for authenticated requests."""
         return User(
             token=LoginToken("any_token", expires_in=self._TOKEN_EXPIRE_TIME),
             provider_type=provider_type,
             username=username,
+            time_zone=time_zone,
             tenant_id=tenant_id,
         )
 
@@ -235,8 +237,8 @@ class APIGatewayAuthBackend:
         request: HttpRequest,
         gateway_name: str,
         bk_username: str,
-        tenant_id: str,
-        verified: bool,
+        tenant_id: str | None = None,
+        verified: bool = False,
         **credentials: Dict,
     ) -> Union[User, AnonymousUser]:
         """authenticate function with signature required by ApiGatewayJWTUserMiddleware in apigw_manager == '^3.0.0'"""

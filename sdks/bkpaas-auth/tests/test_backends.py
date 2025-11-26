@@ -70,6 +70,7 @@ class TestUniversalAuthBackend:
         assert user.username == "5461b239-5ef2-4c81-a682-5907dbd5f394"
         assert getattr(user, "display_name") == "foo"
         assert getattr(user, "tenant_id") == "system"
+        assert getattr(user, "time_zone") == "Asia/Shanghai"
 
 
 class TestAPIGatewayAuthBackend:
