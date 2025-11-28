@@ -210,14 +210,13 @@ class APIGatewayAuthBackend:
     _TOKEN_EXPIRE_TIME = 86400  # 24 hours in seconds
 
     def _create_authenticated_user(
-        self, username: str, provider_type: ProviderType, time_zone: str | None = None, tenant_id: str | None = None
+        self, username: str, provider_type: ProviderType, tenant_id: str | None = None
     ) -> User:
         """Create a user object for authenticated requests."""
         return User(
             token=LoginToken("any_token", expires_in=self._TOKEN_EXPIRE_TIME),
             provider_type=provider_type,
             username=username,
-            time_zone=time_zone,
             tenant_id=tenant_id,
         )
 
