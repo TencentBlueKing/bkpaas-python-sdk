@@ -43,3 +43,26 @@ class TestUser:
             assert user.username == settings.USER_NAME
             assert user.chinese_name == settings.USER_NICKNAME
             assert user.time_zone == "Asia/Shanghai"
+
+    def test_user_info_without_time_zone(self, get_rtx_user_info_response_without_time_zone):
+        """Test that system handles API response without time_zone field gracefully"""
+
+        with (
+            mock.patch('requests.Session.request') as mocked_request,
+            mock.patch('django.core.cache.cache.get', return_value=None),
+            mock.patch('django.core.cache.cache.set'),
+        ):
+            mocked_request.return_value = mock_json_response(get_rtx_user_info_response_without_time_zone)
+
+            token = LoginToken('token', expires_in=86400)
+            user_info = get_rtx_user_info(username=settings.USER_NAME)
+            assert user_info.username == settings.USER_NAME
+            assert user_info.chinese_name == settings.USER_NICKNAME
+            assert user_info.time_zone is None
+
+            user = User(token)
+            user_info.provide(user)
+            assert user.email == f'{settings.USER_NAME}@tencent.com'
+            assert user.username == settings.USER_NAME
+            assert user.chinese_name == settings.USER_NICKNAME
+            assert user.time_zone is None

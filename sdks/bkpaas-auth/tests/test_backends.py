@@ -72,6 +72,38 @@ class TestUniversalAuthBackend:
         assert getattr(user, "tenant_id") == "system"
         assert getattr(user, "time_zone") == "Asia/Shanghai"
 
+    @override_settings(
+        BKAUTH_ENABLE_MULTI_TENANT_MODE=True,
+        BKAUTH_BACKEND_TYPE="bk_token",
+        BKAUTH_USER_INFO_APIGW_URL="fake_url",
+    )
+    @mock.patch("requests.Session.request")
+    def test_authenticate_bk_token_for_tenant_mode_without_time_zone(self, mock_request, mocker):
+        """Test that system handles API response without time_zone field in tenant mode"""
+        mock_request.return_value = mock_raw_response(
+            {
+                "data": {
+                    "bk_username": "5461b239-5ef2-4c81-a682-5907dbd5f394",
+                    "tenant_id": "system",
+                    "display_name": "foo",
+                    "language": "zh-cn",
+                    # time_zone field is intentionally omitted
+                }
+            }
+        )
+
+        user = UniversalAuthBackend().authenticate(
+            request=mocker.MagicMock(), auth_credentials={"bk_token": generate_random_string()}
+        )
+
+        assert user
+        assert not user.is_anonymous
+        assert user.is_authenticated
+        assert user.username == "5461b239-5ef2-4c81-a682-5907dbd5f394"
+        assert getattr(user, "display_name") == "foo"
+        assert getattr(user, "tenant_id") == "system"
+        # time_zone should be None when not provided in API response
+        assert getattr(user, "time_zone") is None
 
 class TestAPIGatewayAuthBackend:
     @pytest.fixture()

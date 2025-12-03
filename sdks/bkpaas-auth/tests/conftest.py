@@ -85,3 +85,20 @@ def get_rtx_user_info_response(settings):
         "result": True,
         "request_id": "ed3c8f75-d956-4dcd-b5d0-7bcd6c2e386a",
     }
+
+
+@pytest.fixture
+def get_rtx_user_info_response_without_time_zone(settings):
+    """Fixture for API response without time_zone field to test missing field scenario"""
+    return {
+        "message": "",
+        "code": 0,
+        "data": {
+            "bk_username": settings.USER_NAME,
+            "LoginName": settings.USER_NAME,
+            "ChineseName": settings.USER_NICKNAME,
+            "avatar_url": "",
+        },
+        "result": True,
+        "request_id": "ed3c8f75-d956-4dcd-b5d0-7bcd6c2e386a",
+    }
