@@ -51,6 +51,9 @@ jobs:
         uses: astral-sh/setup-uv@v5
       - name: Install Nox
         run:  uv pip install --system nox
+      - name: Show nox version
+        working-directory: sdks/bkpaas-auth
+        run: nox --version
       - name: Run tests on ${{ matrix.os }}
         working-directory: sdks/bkpaas-auth
         run: nox --non-interactive --error-on-missing-interpreter --session "tests(python='${{ matrix.python-version }}')" -- --full-trace
