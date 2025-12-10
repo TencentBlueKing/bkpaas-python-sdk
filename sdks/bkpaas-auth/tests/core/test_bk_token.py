@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-import mock
+from unittest import mock
+
 import pytest
 from django.conf import settings
 
@@ -14,14 +15,14 @@ from tests.utils import mock_json_response
 
 @pytest.fixture(autouse=True)
 def use_bk_token_settings(settings):
-    settings.BKAUTH_BACKEND_TYPE = 'bk_token'
-    settings.USER_ID = '0335cce79c92'
-    settings.USER_NAME = 'admin'
-    settings.USER_NICKNAME = 'admin的中文名'
+    settings.BKAUTH_BACKEND_TYPE = "bk_token"
+    settings.USER_ID = "0335cce79c92"
+    settings.USER_NAME = "admin"
+    settings.USER_NICKNAME = "admin的中文名"
 
 
 class TestMisc:
-    @mock.patch('requests.Session.request')
+    @mock.patch("requests.Session.request")
     def test_get_user_by_user_id(self, mocked_request):
         mocked_request.return_value = mock_json_response(
             {
@@ -46,9 +47,9 @@ class TestMisc:
 
 
 class TestUser:
-    @mock.patch('requests.Session.request')
+    @mock.patch("requests.Session.request")
     def test_user_info(self, mocked_request):
-        token = LoginToken('token', expires_in=86400)
+        token = LoginToken("token", expires_in=86400)
         mocked_request.return_value = mock_json_response(
             {
                 "message": "",
@@ -69,17 +70,17 @@ class TestUser:
         user = User(token)
         user_info.provide(user)
         assert user.bkpaas_user_id == settings.USER_ID
-        assert user.email == ''
+        assert user.email == ""
         assert user.username == settings.USER_NAME
         assert user.chinese_name == settings.USER_NICKNAME
 
 
 class TestToken:
-    @mock.patch('requests.Session.request')
+    @mock.patch("requests.Session.request")
     def test_create_user_from_token(self, mocked_request):
-        token = LoginToken('token3', expires_in=3600)
+        token = LoginToken("token3", expires_in=3600)
 
-        token.user_info = BkUserInfo(bk_username=settings.USER_NAME, chname='', email='', phone='')
+        token.user_info = BkUserInfo(bk_username=settings.USER_NAME, chname="", email="", phone="")
         user = create_user_from_token(token)
         assert user.provider_type == ProviderType.BK
         assert user.username == settings.USER_NAME

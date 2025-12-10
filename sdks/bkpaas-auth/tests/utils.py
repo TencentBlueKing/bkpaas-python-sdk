@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import random
 import string
+from unittest import mock
 
-import mock
 import requests
 
 DFT_RANDOM_CHARACTER_SET = string.ascii_lowercase + string.digits
@@ -22,7 +22,7 @@ def mock_raw_response(data):
     def to_json(**kwargs):
         return data
 
-    setattr(resp, 'json', to_json)
+    setattr(resp, "json", to_json)
     return resp
 
 
@@ -35,4 +35,4 @@ def generate_random_string(length=30, chars=DFT_RANDOM_CHARACTER_SET):
     why SystemRandom is used instead of the default random.choice method.
     """
     rand = random.SystemRandom()
-    return ''.join(rand.choice(chars) for x in range(length))
+    return "".join(rand.choice(chars) for x in range(length))

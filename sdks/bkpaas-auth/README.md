@@ -11,19 +11,9 @@
 ### 发布包
 
 - 在 `bkpaas_auth/__init__.py`  文件中更新 `__version__`
-- 在 `setup.py` 文件中更新 `version`
 - 在 `pyproject.toml` 中更新 `version`
 - 在 `CHANGES.md` 中添加对应的版本日志
 - 执行 `poetry build` 命令在 dist 目录下生成当前版本的包。然后执行 `twine upload dist/* --repository-url {pypi_address} --username {your_name} --password {your_token}` 将其上传到 pypi 服务器上。
-
-### 关于 setup.py
-
-虽然在 [PEP 517](https://python-poetry.org/docs/pyproject/#poetry-and-pep-517) 规范里，Python 包不再需要 `setup.py` 文件。但真正少了 `setup.py` 文件后，会发现有些功能就没法正常使用，比如 pip 的可编辑安装模式、tox 等（[相关文档](https://github.com/python-poetry/poetry/issues/761)）。所以我们仍然需要它。
-
-为了避免维护重复的 `pyproject.toml` 和 `setup.py` 文件，我们使用了 [dephell](https://github.com/dephell/dephell) 工具来自动生成 `setup.py` 文件。
-
-- 安装 dephell
-- 在根目录执行 `dephell deps convert --from pyproject.toml --to setup.py`
 
 ## 使用指南
 1. 更新 settings：

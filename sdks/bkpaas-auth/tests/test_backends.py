@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-import mock
+from unittest import mock
+
 import pytest
 from django.test.utils import override_settings
 
@@ -111,8 +112,9 @@ class TestUniversalAuthBackend:
 
         assert getattr(user, "time_zone") == expected_time_zone
 
+
 class TestAPIGatewayAuthBackend:
-    @pytest.fixture()
+    @pytest.fixture
     def backend(self):
         return APIGatewayAuthBackend()
 
