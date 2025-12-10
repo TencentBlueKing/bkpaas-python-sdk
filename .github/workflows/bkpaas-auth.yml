@@ -20,35 +20,25 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: 3.11
-      - name: Format with isort
-        working-directory: sdks/bkpaas-auth
-        run: |
-          pip install isort==5.12.0
-          isort . --settings-path=pyproject.toml
-      - name: Format with black
-        working-directory: sdks/bkpaas-auth
-        run: |
-          pip install black==23.7.0 click==8.1.6
-          black . --config=pyproject.toml
-      - name: Lint with flake8
-        working-directory: sdks/bkpaas-auth
-        run: |
-          pip install flake8==4.0.1 pyproject-flake8==0.0.1a5
-          pflake8 . --config=pyproject.toml
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+      - name: Install Poetry system-wide
+        # Use uv install to install poetry directly instead github action for simplicity
+        run: uv pip install --system poetry==2.1.3
+      - name: Ruff check
+        run: poetry install && poetry run ruff check ./sdks/bkpaas-auth --config ./pyproject.toml
       - name: Lint with mypy
         working-directory: sdks/bkpaas-auth
-        run: |
-          pip install mypy==1.12.0 types-mock==4.0.15.2 types-requests==2.32.0.20241016 types-six==1.16.21.20241009
-          mypy . --config-file=pyproject.toml
+        run: poetry install && poetry run mypy . --config-file=./pyproject.toml
 
   test:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.9", "3.10", "3.11"]
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
@@ -57,20 +47,16 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Set up Poetry
-        uses: abatilo/actions-poetry@v2.3.0
-        with:
-          poetry-version: 1.5.1
-      - name: Install dependencies
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+      - name: Install Nox
+        run:  uv pip install --system nox==2025.11.12
+      - name: Show nox version
         working-directory: sdks/bkpaas-auth
-        run: |
-          poetry export --without-hashes --dev -o requirements-dev.txt
-          python -m pip install --upgrade pip
-          python -m pip install -r requirements-dev.txt
-          python -m pip install tox-gh-actions==2.8.1
-      - name: Run test with tox targets for ${{ matrix.python-version }}
+        run: nox --version
+      - name: Run tests on ${{ matrix.os }}
         working-directory: sdks/bkpaas-auth
-        run: tox
+        run: nox --non-interactive --error-on-missing-interpreters --session "tests(python='${{ matrix.python-version }}')" -- --full-trace
 
   build:
     runs-on: macos-latest
@@ -78,19 +64,19 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: 3.11
       - name: Set up Poetry
         uses: abatilo/actions-poetry@v2.3.0
         with:
-          poetry-version: 1.5.1
+          poetry-version: 2.1.1
       - name: Build bkpaas-auth
         run: |
           cd sdks/bkpaas-auth
           poetry install
           poetry build
-          echo "${{ github.event.relesae.tag_name }} ${{ github.sha }}" > Release.txt
+          echo "${{ github.event.release.tag_name }} ${{ github.sha }}" > Release.txt
           cat Release.txt
       - name: Release
         uses: softprops/action-gh-release@v1

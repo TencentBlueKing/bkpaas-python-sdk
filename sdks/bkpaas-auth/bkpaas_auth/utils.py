@@ -1,16 +1,16 @@
 from typing import Any, Dict
 
 DEFAULT_SCRUBBED_FIELDS = (
-    'password',
-    'secret',
-    'passwd',
-    'api_key',
-    'apikey',
-    'bk_token',
-    'bk_ticket',
-    'access_token',
-    'auth',
-    'credentials',
+    "password",
+    "secret",
+    "passwd",
+    "api_key",
+    "apikey",
+    "bk_token",
+    "bk_ticket",
+    "access_token",
+    "auth",
+    "credentials",
 )
 
 
@@ -24,10 +24,7 @@ def scrub_data(data: Dict[str, Any]) -> Dict[str, Any]:
 
     def _key_is_sensitive(key: str) -> bool:
         """Check if given key is sensitive."""
-        for field in DEFAULT_SCRUBBED_FIELDS:
-            if field in key.lower():
-                return True
-        return False
+        return any(field in key.lower() for field in DEFAULT_SCRUBBED_FIELDS)
 
     result: Dict[str, Any] = {}
 
@@ -38,7 +35,7 @@ def scrub_data(data: Dict[str, Any]) -> Dict[str, Any]:
 
         for key, value in current_data.items():
             if _key_is_sensitive(key):
-                current_result[key] = '******'
+                current_result[key] = "******"
                 continue
 
             # Process nested data by push it to the stack

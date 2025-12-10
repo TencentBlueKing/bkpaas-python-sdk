@@ -1,5 +1,8 @@
 # 版本历史
 
+## 3.1.3
+- feat: 用户模型增加时区支持，新增 time_zone 属性，由认证服务返回时区
+
 ## 3.1.2
 - fix: 修复通过 APIGatewayAuthBackend 认证无法获取 tenant_id 的问题
 

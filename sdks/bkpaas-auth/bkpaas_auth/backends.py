@@ -210,7 +210,7 @@ class APIGatewayAuthBackend:
     _TOKEN_EXPIRE_TIME = 86400  # 24 hours in seconds
 
     def _create_authenticated_user(
-        self, username: str, provider_type: ProviderType, tenant_id: str | None = None
+        self, username: str, provider_type: ProviderType, tenant_id: Optional[str] = None
     ) -> User:
         """Create a user object for authenticated requests."""
         return User(
@@ -221,7 +221,7 @@ class APIGatewayAuthBackend:
         )
 
     def _authenticate_common(
-        self, verified: bool, username: str | None = None, tenant_id: str | None = None
+        self, verified: bool, username: Optional[str] = None, tenant_id: Optional[str] = None
     ) -> Union[User, AnonymousUser]:
         """Common authentication logic for all versions."""
         if not verified or not username:
@@ -236,7 +236,7 @@ class APIGatewayAuthBackend:
         request: HttpRequest,
         gateway_name: str,
         bk_username: str,
-        tenant_id: str | None = None,
+        tenant_id: Optional[str] = None,
         verified: bool = False,
         **credentials: Dict,
     ) -> Union[User, AnonymousUser]:

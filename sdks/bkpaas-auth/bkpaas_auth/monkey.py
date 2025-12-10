@@ -7,6 +7,7 @@ auth middleware to point to our overridden method.
 Calling the "patch_middleware_get_user" method somewhere like our urls.py
 file takes care of hooking it in appropriately.
 """
+
 import logging
 
 from django.contrib import auth
@@ -31,7 +32,7 @@ def get_user(request):
     except KeyError:
         user = models.AnonymousUser()
     except ImportError as e:
-        logger.exception(f"get an anonymous user, error: {e}")
+        logger.exception(f"get an anonymous user, error: {e}")  # noqa: TRY401
         user = models.AnonymousUser()
     return user
 

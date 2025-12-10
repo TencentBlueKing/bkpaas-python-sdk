@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Access token for blueking
-"""
+"""Access token for blueking"""
+
 import datetime
 import json
 import logging
 from abc import abstractmethod
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 
 from django.utils.timezone import now
 from django.utils.translation import get_language
@@ -40,8 +40,8 @@ class UserAccount(NamedTuple):
 
     bk_username: str
     display_name: str
-    time_zone: str | None = None
-    tenant_id: str | None = None
+    time_zone: Optional[str] = None
+    tenant_id: Optional[str] = None
 
 
 class AbstractRequestBackend:
@@ -70,7 +70,6 @@ class AbstractRequestBackend:
 
 
 class TokenRequestBackend(AbstractRequestBackend):
-
     provider_type = ProviderType.BK
 
     @staticmethod
@@ -80,7 +79,7 @@ class TokenRequestBackend(AbstractRequestBackend):
                 bkauth_settings.USER_INFO_APIGW_URL,
                 timeout=10,
                 headers={
-                    'blueking-language': get_language(),
+                    "blueking-language": get_language(),
                     "X-Bkapi-Authorization": json.dumps(get_app_credentials()),
                     # 全租户应用，调用全租户网关时，网关会强制要求传递 X-Bk-Tenant-Id, 但不会实际校验值的有效性, 统一传 default
                     "X-Bk-Tenant-Id": "default",
@@ -88,12 +87,12 @@ class TokenRequestBackend(AbstractRequestBackend):
                 params=credentials,
             )
         except HttpRequestError:
-            raise ServiceError('Unable to request services')
+            raise ServiceError("Unable to request services")
 
         resp_json = resp_to_json(resp)
 
         if not isinstance(resp_json, dict):
-            raise ValueError(f'response type expect dict, got: {resp_json}')
+            raise ValueError(f"response type expect dict, got: {resp_json}")  # noqa: TRY004
 
         if resp.status_code == 200:
             bk_username = resp_json["data"]["bk_username"]
@@ -116,39 +115,38 @@ class TokenRequestBackend(AbstractRequestBackend):
                 bkauth_settings.USER_COOKIE_VERIFY_URL,
                 timeout=10,
                 headers={
-                    'blueking-language': get_language(),
+                    "blueking-language": get_language(),
                     "X-Bkapi-Authorization": json.dumps(dict(credentials, **get_app_credentials())),
                 },
                 params=credentials,
             )
         except HttpRequestError:
-            raise ServiceError('unable to fetch token services')
+            raise ServiceError("unable to fetch token services")
 
         resp_json = resp_to_json(resp)
 
         if not isinstance(resp_json, dict):
-            raise ValueError(f'response type expect dict, got: {resp_json}')
+            raise ValueError(f"response type expect dict, got: {resp_json}")  # noqa: TRY004
 
         # API 返回格式为：{"result": true, "code": 0, "message": "", "data": {"bk_username": "xxx"}}
-        code = resp_json.get('code')
+        code = resp_json.get("code")
         if code == 0:
             username = resp_json["data"]["bk_username"]
             return UserAccount(bk_username=username, display_name=username)
 
         logger.debug(
-            f'Get user fail, url: {bkauth_settings.USER_COOKIE_VERIFY_URL}, '
-            f'params: {scrub_data(credentials)}, response: {resp_json}'
+            f"Get user fail, url: {bkauth_settings.USER_COOKIE_VERIFY_URL}, "
+            f"params: {scrub_data(credentials)}, response: {resp_json}"
         )
 
         # 用户认证成功，但用户无应用访问权限
         if code == ACCESS_PERMISSION_DENIED_CODE:
-            raise AccessPermissionDenied(resp_json.get('message'))
+            raise AccessPermissionDenied(resp_json.get("message"))
 
-        raise InvalidTokenCredentialsError('Invalid credentials given')
+        raise InvalidTokenCredentialsError("Invalid credentials given")
 
 
 class RequestBackend(AbstractRequestBackend):
-
     provider_type = ProviderType.RTX
 
     @staticmethod
@@ -156,20 +154,20 @@ class RequestBackend(AbstractRequestBackend):
         try:
             resp = http_get(bkauth_settings.USER_COOKIE_VERIFY_URL, params=credentials, timeout=10)
         except HttpRequestError:
-            raise ServiceError('unable to fetch token services')
+            raise ServiceError("unable to fetch token services")
 
         resp_json = resp_to_json(resp)
 
         if not isinstance(resp_json, dict):
-            raise ValueError(f'response type expect dict, got: {resp_json}')
+            raise ValueError(f"response type expect dict, got: {resp_json}")  # noqa: TRY004
 
         # API 返回格式为：{"msg": "", "data": {"username": "xxx"}, "ret": 0}
-        if resp_json.get('ret') != 0:
+        if resp_json.get("ret") != 0:
             logger.debug(
-                f'Get user fail, url: {bkauth_settings.USER_COOKIE_VERIFY_URL}, '
-                f'params: {scrub_data(credentials)}, response: {resp_json}'
+                f"Get user fail, url: {bkauth_settings.USER_COOKIE_VERIFY_URL}, "
+                f"params: {scrub_data(credentials)}, response: {resp_json}"
             )
-            raise InvalidTokenCredentialsError('Invalid credentials given')
+            raise InvalidTokenCredentialsError("Invalid credentials given")
 
         username = resp_json["data"]["username"]
         return UserAccount(bk_username=username, display_name=username)
@@ -185,15 +183,15 @@ class LoginToken:
     token_timeout_margin = 300
 
     def __init__(self, login_token=None, expires_in=None):
-        assert login_token, 'Must provide token string'
-        assert expires_in, 'Must provide expires_in seconds'
+        assert login_token, "Must provide token string"
+        assert expires_in, "Must provide expires_in seconds"
         self.login_token = login_token
         self.expires_at = now() + datetime.timedelta(seconds=expires_in)
         self.issued_at = now()
-        self.user_info = UserInfo(username='AnonymousUser')
+        self.user_info = UserInfo(username="AnonymousUser")
 
     def __str__(self):
-        return 'token: {} expires_at: {}'.format(self.login_token, self.expires_at)
+        return "token: {} expires_at: {}".format(self.login_token, self.expires_at)
 
     def expired(self):
         return self.expires_at < now()
@@ -213,9 +211,9 @@ def mocked_create_user_from_token(
             ChineseName=username,
         )
     elif provider_type == ProviderType.BK:
-        token.user_info = BkUserInfo(bk_username=username, chname=username, email='', phone='')
+        token.user_info = BkUserInfo(bk_username=username, chname=username, email="", phone="")
     else:
-        raise ValueError('Invalid provider_type given.')
+        raise ValueError("Invalid provider_type given.")
     return create_user_from_token(token)
 
 

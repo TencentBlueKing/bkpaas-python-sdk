@@ -57,10 +57,10 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@v5
       - name: Install Nox
-        run:  uv pip install --system nox
+        run:  uv pip install --system nox==2025.11.12
       - name: Run tests on ${{ matrix.os }}
         working-directory: sdks/blue-krill
-        run: nox --non-interactive --error-on-missing-interpreter --session "tests(python='${{ matrix.python-version }}')" -- --full-trace
+        run: nox --non-interactive --error-on-missing-interpreters --session "tests(python='${{ matrix.python-version }}')" -- --full-trace
   build:
     runs-on: macos-latest
     if: github.event.release && contains(github.event.release.tag_name, 'blue-krill')

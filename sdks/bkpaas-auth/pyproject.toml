@@ -1,67 +1,36 @@
 [tool.poetry]
+classifiers = ["License :: OSI Approved :: MIT License"]
+
+[project]
+# PEP 621 project metadata
+# See https://www.python.org/dev/peps/pep-0621/
 name = "bkpaas-auth"
-version = "3.1.2"
+version = "3.1.3"
 description = "User authentication django app for blueking internal projects"
 readme = "README.md"
-authors = ["blueking <blueking@tencent.com>"]
+authors = [{ name = "blueking", email = "blueking@tencent.com" }]
 license = "MIT"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-]
+# classifiers is dynamic because we want to create Python classifiers automatically
+dynamic = ["classifiers"]
+requires-python = '>=3.9,<4.0'
+dependencies = ['django (>=4.2,<5.0)', 'requests', 'six']
 
 [project.urls]
 Homepage = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
 Repository = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
 
-[tool.poetry.dependencies]
-python = ">=3.8,<4.0"
-django = ">=4.2,<5.0"
-requests = "*"
-six = "*"
-
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pytest = "^6.2.5"
 pytest-django = "^3.8.0"
-mock = "^4.0.2"
 mypy = "^1.12.0"
-flake8 = "^3.8.4"
-rope = "^0.18.0"
 pytest-mock = "^3.4.0"
 types-six = "^1.16.12"
 types-requests = "^2.27.16"
 types-mock = "^4.0.13"
 
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
-
-[tool.black]
-line-length = 119
-skip-string-normalization = 'true'
-exclude = '''
-/(
-    .*/migrations/.*
-    | .+/dist/.*
-)/
-'''
-
-[tool.isort]
-multi_line_output = 3
-include_trailing_comma = 'true'
-force_grid_wrap = 0
-use_parentheses = 'true'
-line_length = 119
-# ignore example
-skip_glob = ["*/dist/**"]
-
-[tool.flake8]
-ignore = "C901,E203,W503"
-max-line-length = 119
-max-complexity = 12
-format = "pylint"
-# ignore example
-exclude = "*.pyc,.git,__pycache__,*/dist/*,*migrations*"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
 ignore_missing_imports = true
