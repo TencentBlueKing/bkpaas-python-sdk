@@ -50,7 +50,7 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@v5
       - name: Install Nox
-        run:  uv pip install --system nox=2025.11.12
+        run:  uv pip install --system nox==2025.11.12
       - name: Show nox version
         working-directory: sdks/bkpaas-auth
         run: nox --version
