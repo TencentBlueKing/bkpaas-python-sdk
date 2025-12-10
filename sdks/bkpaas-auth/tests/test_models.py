@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import copy
 from unittest import mock
 
 import pytest
@@ -61,11 +62,11 @@ class TestUser:
     ):
         """Test time_zone field handling with various values"""
         with mock.patch('requests.Session.request') as mocked_request:
-            response_data = get_rtx_user_info_response.copy()
+            response_data = copy.deepcopy(get_rtx_user_info_response)
             if api_time_zone is None:
-                response_data.pop("time_zone", None)
+                response_data["data"].pop("time_zone", None)
             else:
-                response_data["time_zone"] = api_time_zone
+                response_data["data"]["time_zone"] = api_time_zone
 
             mocked_request.return_value = mock_json_response(response_data)
 
