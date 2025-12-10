@@ -48,6 +48,7 @@ class TestUniversalAuthBackend:
     )
     @mock.patch("requests.Session.request")
     def test_authenticate_bk_token_for_tenant_mode(self, mock_request, mocker):
+        """Test basic fields validation for tenant mode authentication"""
         mock_request.return_value = mock_raw_response(
             {
                 "data": {
@@ -55,7 +56,6 @@ class TestUniversalAuthBackend:
                     "tenant_id": "system",
                     "display_name": "foo",
                     "language": "zh-cn",
-                    "time_zone": "Asia/Shanghai",
                 }
             }
         )
@@ -71,6 +71,45 @@ class TestUniversalAuthBackend:
         assert getattr(user, "display_name") == "foo"
         assert getattr(user, "tenant_id") == "system"
 
+    @override_settings(
+        BKAUTH_ENABLE_MULTI_TENANT_MODE=True,
+        BKAUTH_BACKEND_TYPE="bk_token",
+        BKAUTH_USER_INFO_APIGW_URL="fake_url",
+    )
+    @pytest.mark.parametrize(
+        ("api_time_zone", "expected_time_zone"),
+        [
+            # Valid time zones
+            ("Asia/Shanghai", "Asia/Shanghai"),
+            ("UTC", "UTC"),
+            ("Asia/Tokyo", "Asia/Tokyo"),
+            # Missing time_zone field
+            (None, None),
+        ],
+    )
+    @mock.patch("requests.Session.request")
+    def test_authenticate_bk_token_for_tenant_mode_time_zone(
+        self, mock_request, mocker, api_time_zone, expected_time_zone
+    ):
+        """Test time_zone field handling in tenant mode authentication"""
+        response_data = {
+            "data": {
+                "bk_username": "test_user",
+                "tenant_id": "system",
+                "display_name": "test",
+                "language": "zh-cn",
+            }
+        }
+        if api_time_zone is not None:
+            response_data["data"]["time_zone"] = api_time_zone
+
+        mock_request.return_value = mock_raw_response(response_data)
+
+        user = UniversalAuthBackend().authenticate(
+            request=mocker.MagicMock(), auth_credentials={"bk_token": generate_random_string()}
+        )
+
+        assert getattr(user, "time_zone") == expected_time_zone
 
 class TestAPIGatewayAuthBackend:
     @pytest.fixture()

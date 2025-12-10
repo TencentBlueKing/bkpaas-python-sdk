@@ -70,6 +70,7 @@ class UniversalAuthBackend:
             token.user_info = UserInfo(
                 username=user_account.bk_username,
                 display_name=user_account.display_name,
+                time_zone=user_account.time_zone,
                 tenant_id=user_account.tenant_id,
             )
             logger.debug("New login token exchanged by credentials")
@@ -235,8 +236,8 @@ class APIGatewayAuthBackend:
         request: HttpRequest,
         gateway_name: str,
         bk_username: str,
-        tenant_id: str,
-        verified: bool,
+        tenant_id: str | None = None,
+        verified: bool = False,
         **credentials: Dict,
     ) -> Union[User, AnonymousUser]:
         """authenticate function with signature required by ApiGatewayJWTUserMiddleware in apigw_manager == '^3.0.0'"""

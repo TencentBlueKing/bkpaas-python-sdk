@@ -34,11 +34,13 @@ class UserAccount(NamedTuple):
 
     :param bk_username: 用户唯一标识，全局唯一
     :param display_name: 用户展示名.
+    :param time_zone: 用户时区信息. 为 None 时表示用户无时区信息(可能接口不支持)
     :param tenant_id: 用户所属租户 ID. 为 None 时表示用户无租户信息(可能接口不支持)
     """
 
     bk_username: str
     display_name: str
+    time_zone: str | None = None
     tenant_id: str | None = None
 
 
@@ -98,6 +100,7 @@ class TokenRequestBackend(AbstractRequestBackend):
             return UserAccount(
                 bk_username=bk_username,
                 display_name=resp_json["data"].get("display_name") or bk_username,
+                time_zone=resp_json["data"].get("time_zone"),
                 tenant_id=resp_json["data"].get("tenant_id"),
             )
 
