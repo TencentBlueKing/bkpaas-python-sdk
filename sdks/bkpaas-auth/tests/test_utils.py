@@ -4,7 +4,7 @@ from bkpaas_auth.utils import scrub_data
 
 
 @pytest.mark.parametrize(
-    'input,output',
+    ("input", "output"),
     [
         # Data remain intact
         ({"obj": {"value": 3}}, {"obj": {"value": 3}}),

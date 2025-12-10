@@ -7,7 +7,7 @@ from bkpaas_auth.core.encoder import user_id_encoder
 
 class TestUserIdGeneration:
     @pytest.mark.parametrize(
-        "input, expected_encoded",
+        ("input", "expected_encoded"),
         [
             ((1, "3"), "0167"),
             ((ProviderType.UIN, "3"), "0167"),
@@ -21,7 +21,7 @@ class TestUserIdGeneration:
         assert user_id_encoder.encode(*input) == expected_encoded
 
     @pytest.mark.parametrize(
-        "input, expected_decoded",
+        ("input", "expected_decoded"),
         [
             ("0167", (1, "3")),
             ("0167", (ProviderType.UIN, "3")),
