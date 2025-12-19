@@ -1,5 +1,10 @@
 ## Change logs
 
+### 2.1.5
+
+- Fix: BKRepoManager 和 BKGenericRepo 不支持 endpoint_url 带子路径的问题
+
+
 ### 2.1.4
 
 - Fix: `TaskPoller.__init_subclass__` 和 `CallbackHandler.__init_subclass__` 中同名子类注册覆盖的问题

@@ -118,7 +118,7 @@ class BKRepoManager:
         :param project: 项目 ID
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, "/auth/api/user/create/repo")
+        url = safe_urljoin(self.endpoint_url, "auth/api/user/create/repo")
         data = {
             "admin": False,
             "name": username,
@@ -134,14 +134,14 @@ class BKRepoManager:
     def update_user(self, username: str, password: str, association_users: List[str]):
         """更新用户信息"""
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f"/auth/api/user/{username}")
+        url = safe_urljoin(self.endpoint_url, f"auth/api/user/{username}")
         data = {"admin": False, "name": username, "pwd": password, "asstUsers": association_users}
         return _validate_resp(client.put(url, json=data, timeout=TIMEOUT_THRESHOLD))
 
     def delete_user(self, username: str):
         """删除用户"""
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f"/auth/api/user/{username}")
+        url = safe_urljoin(self.endpoint_url, f"auth/api/user/{username}")
         return _validate_resp(client.delete(url, timeout=TIMEOUT_THRESHOLD))
 
     def create_repo(self, project: str, repo: str, repo_type: str = RepositoryType.GENERIC, public: bool = False):
@@ -151,7 +151,7 @@ class BKRepoManager:
         :param project: 项目 ID
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, "/repository/api/repo/create")
+        url = safe_urljoin(self.endpoint_url, "repository/api/repo/create")
         data = {
             "projectId": project,
             "name": repo,
@@ -172,7 +172,7 @@ class BKRepoManager:
         :param forced: 是否强制删除, 如果为false，当仓库中存在文件时，将无法删除仓库
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f"/repository/api/repo/delete/{project}/{repo}?forced={forced}")
+        url = safe_urljoin(self.endpoint_url, f"repository/api/repo/delete/{project}/{repo}?forced={forced}")
         return _validate_resp(client.delete(url, timeout=TIMEOUT_THRESHOLD))
 
     # 以下是项目无关的管理接口
@@ -183,7 +183,7 @@ class BKRepoManager:
         :param project_name: 项目名称
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, "/repository/api/project/create")
+        url = safe_urljoin(self.endpoint_url, "repository/api/project/create")
         # Note: 创建项目时传的是项目名称，创建成功后 API 未返回项目 ID 信息
         # 按目前 bk-repo 的规则，启用/关闭多租户模式的情况下:
         # 关闭多租户: 项目 ID == 项目名称
@@ -200,7 +200,7 @@ class BKRepoManager:
         :param project: 项目 ID
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, "/auth/api/user/create/project")
+        url = safe_urljoin(self.endpoint_url, "auth/api/user/create/project")
         data = {
             "admin": False,
             "name": username,
@@ -260,7 +260,7 @@ class BKGenericRepo(BlobStore):
         :param allow_overwrite: 是否覆盖已存在文件
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f"/generic/{self.project}/{self.bucket}/{key}")
+        url = safe_urljoin(self.endpoint_url, f"generic/{self.project}/{self.bucket}/{key}")
         src = getattr(fh, "name", "<memory>")
         headers = {"X-BKREPO-OVERWRITE": str(allow_overwrite)}
 
@@ -295,7 +295,7 @@ class BKGenericRepo(BlobStore):
         :param fh: 文件句柄
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f"/generic/{self.project}/{self.bucket}/{key}")
+        url = safe_urljoin(self.endpoint_url, f"generic/{self.project}/{self.bucket}/{key}")
         dest = getattr(fh, "name", "<memory>")
         try:
             resp = client.get(url, stream=True, timeout=TIMEOUT_THRESHOLD)
@@ -327,7 +327,7 @@ class BKGenericRepo(BlobStore):
         :param key: 文件完整路径
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f"/generic/{self.project}/{self.bucket}/{key}")
+        url = safe_urljoin(self.endpoint_url, f"generic/{self.project}/{self.bucket}/{key}")
         resp = client.delete(url, timeout=TIMEOUT_THRESHOLD)
         return _validate_resp(resp)
 
@@ -337,7 +337,7 @@ class BKGenericRepo(BlobStore):
         :param key: 文件完整路径
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f"/generic/{self.project}/{self.bucket}/{key}")
+        url = safe_urljoin(self.endpoint_url, f"generic/{self.project}/{self.bucket}/{key}")
         resp = client.head(url, timeout=TIMEOUT_THRESHOLD)
         if resp.status_code == 200:
             return resp.headers
@@ -354,7 +354,7 @@ class BKGenericRepo(BlobStore):
         :param token_type: [deprecated] token类型。UPLOAD:允许上传, DOWNLOAD: 允许下载, ALL: 同时允许上传和下载。
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, "/generic/temporary/url/create")
+        url = safe_urljoin(self.endpoint_url, "generic/temporary/url/create")
 
         token_type = signature_type.value
         if "token_type" in kwargs:
@@ -374,3 +374,19 @@ class BKGenericRepo(BlobStore):
         )
         data = _validate_resp(resp)
         return data[0]["url"]
+
+
+def safe_urljoin(base: str, path: str) -> str:
+    """
+    安全拼接 URL，自动处理开头/结尾的斜杠。
+    即使 path 以 '/' 开头，也会保留 base 的路径。
+
+    示例: "http://example.com/base-path" 和 "/custom-path" 可以正确拼接为 "http://example.com/base-path/custom-path",
+
+    :param base: 基础 URL
+    :param path: 要拼接的路径
+    """
+    path = path.lstrip('/')
+    if not base.endswith('/'):
+        base += '/'
+    return urljoin(base, path)
