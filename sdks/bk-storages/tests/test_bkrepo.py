@@ -17,9 +17,9 @@ import requests
 import requests_mock
 from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.base import File
-from six.moves.urllib_parse import urljoin
 
 from bkstorages.backends.bkrepo import BKGenericRepoClient, BKRepoFile, BKRepoStorage, parse_gmt_datetime
+from bkstorages.utils import safe_join
 from tests.utils import generate_random_string
 
 
@@ -67,11 +67,11 @@ def make_dummy_file(adapter, endpoint):
             return True
 
         g = adapter.register_uri(
-            "GET", urljoin(endpoint, f"/generic/dummy-project/dummy-bucket/{key}"), body=io.BytesIO(content)
+            "GET", safe_join(endpoint, f"generic/dummy-project/dummy-bucket/{key}"), body=io.BytesIO(content)
         )
         adapter.register_uri(
             "PUT",
-            urljoin(endpoint, f"/generic/dummy-project/dummy-bucket/{key}"),
+            safe_join(endpoint, f"generic/dummy-project/dummy-bucket/{key}"),
             json={"code": 0, "message": ""},
             additional_matcher=fake_upload,
         )
@@ -131,9 +131,9 @@ class TestBKRepoStorage:
         for idx, records in enumerate(mock_responses):
             adapter.register_uri(
                 "GET",
-                urljoin(
+                safe_join(
                     endpoint,
-                    f"/repository/api/node/page/dummy-project/dummy-bucket/"
+                    f"repository/api/node/page/dummy-project/dummy-bucket/"
                     f"{path}?pageSize=1000&pageNumber={idx + 1}&includeFolder=True",
                 ),
                 json={"code": 0, "message": 0, "data": {"totalPages": len(mock_responses), "records": records}},
@@ -149,7 +149,7 @@ class TestBKRepoStorage:
         content = b"aaa"
         fh = File(io.BytesIO(content))
         adapter.register_uri(
-            "PUT", urljoin(endpoint, f"/generic/dummy-project/dummy-bucket/{filename}"), json={"code": 0}
+            "PUT", safe_join(endpoint, f"generic/dummy-project/dummy-bucket/{filename}"), json={"code": 0}
         )
         assert bk_repo_storage.save(filename, fh)
         assert adapter.called
@@ -174,7 +174,7 @@ class TestBKRepoStorage:
         content = b"import this"
         fh = File(io.BytesIO(content), name="foobar.py")
         adapter.register_uri(
-            "PUT", urljoin(endpoint, f"/generic/dummy-project/dummy-bucket/{expected_key}"), json={"code": 0}
+            "PUT", safe_join(endpoint, f"generic/dummy-project/dummy-bucket/{expected_key}"), json={"code": 0}
         )
         if has_error:
             with pytest.raises(SuspiciousFileOperation):

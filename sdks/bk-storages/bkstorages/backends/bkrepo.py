@@ -24,7 +24,6 @@ from django.utils.functional import cached_property
 from django.utils.timezone import localtime
 from requests.adapters import HTTPAdapter
 from requests.auth import HTTPBasicAuth
-from six.moves.urllib_parse import urljoin
 
 from bkstorages.exceptions import DownloadFailedError, ObjectAlreadyExists, RequestError, UploadFailedError
 from bkstorages.utils import clean_name, get_available_overwrite_name, get_setting, safe_join, setting
@@ -92,7 +91,7 @@ class BKGenericRepoClient:
         :param bool allow_overwrite: 是否覆盖已存在文件
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f'/generic/{self.project}/{self.bucket}/{key}')
+        url = safe_join(self.endpoint_url, f'generic/{self.project}/{self.bucket}/{key}')
         src = getattr(fh, "name", "<memory>")
         headers = {"X-BKREPO-OVERWRITE": str(allow_overwrite)}
 
@@ -127,7 +126,7 @@ class BKGenericRepoClient:
         :param IO fh: 文件句柄
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f'/generic/{self.project}/{self.bucket}/{key}')
+        url = safe_join(self.endpoint_url, f'generic/{self.project}/{self.bucket}/{key}')
         dest = getattr(fh, "name", "<memory>")
         try:
             resp = client.get(url, stream=True, timeout=TIMEOUT_THRESHOLD)
@@ -156,14 +155,14 @@ class BKGenericRepoClient:
         :param str key: 文件完整路径
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f'/generic/{self.project}/{self.bucket}/{key}')
+        url = safe_join(self.endpoint_url, f'generic/{self.project}/{self.bucket}/{key}')
         resp = client.delete(url, timeout=TIMEOUT_THRESHOLD)
         self._validate_resp(resp)
 
     def get_file_metadata(self, key: str, *args, **kwargs) -> Dict:
         """具体返回值请看 bk-repo 的文档."""
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f'/generic/{self.project}/{self.bucket}/{key}')
+        url = safe_join(self.endpoint_url, f'generic/{self.project}/{self.bucket}/{key}')
         resp = client.head(url, timeout=TIMEOUT_THRESHOLD)
         if resp.status_code == 200:
             return dict(resp.headers)
@@ -178,7 +177,7 @@ class BKGenericRepoClient:
         while key.startswith("/"):
             key = key[1:]
         download = "true" if force_download else "false"
-        url = urljoin(self.endpoint_url, f'/generic/{self.project}/{self.bucket}/{key}?download={download}')
+        url = safe_join(self.endpoint_url, f'generic/{self.project}/{self.bucket}/{key}?download={download}')
         return url
 
     def generate_presigned_url(self, key: str, expires_in: int, token_type: str = "DOWNLOAD", *args, **kwargs) -> str:
@@ -189,7 +188,7 @@ class BKGenericRepoClient:
         :param str token_type: token类型。UPLOAD:允许上传, DOWNLOAD: 允许下载, ALL: 同时允许上传和下载。
         """
         client = self.get_client()
-        url = urljoin(self.endpoint_url, '/generic/temporary/url/create')
+        url = safe_join(self.endpoint_url, 'generic/temporary/url/create')
 
         resp = client.post(
             url,
@@ -210,7 +209,7 @@ class BKGenericRepoClient:
             if str(e.code) != '250102':
                 raise
             logger.warning("BKREPO中不存在该文件, 避免报错仅拼接 url ")
-            return urljoin(self.endpoint_url, f'/generic/temporary/token/download/{self.project}/{self.bucket}/{key}')
+            return safe_join(self.endpoint_url, f'generic/temporary/token/download/{self.project}/{self.bucket}/{key}')
 
     def list_dir(self, key_prefix: str) -> Tuple[List, List]:
         """
@@ -234,7 +233,7 @@ class BKGenericRepoClient:
         """
         directories, files = [], []
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f"/repository/api/node/page/{self.project}/{self.bucket}/{key_prefix}")
+        url = safe_join(self.endpoint_url, f"repository/api/node/page/{self.project}/{self.bucket}/{key_prefix}")
         # NOTE: 按分页查询 bkrepo 的文件数, 1000 是一个经验值, 设置仅可能大的数值是避免发送太多次请求到 bk-repo
         params = {"pageSize": 1000, "pageNumber": cur_page, "includeFolder": True}
         resp = client.get(url, params=params, timeout=TIMEOUT_THRESHOLD)
@@ -250,7 +249,7 @@ class BKGenericRepoClient:
     def get_bucket_metadata(self) -> Dict:
         """查询仓库信息"""
         client = self.get_client()
-        url = urljoin(self.endpoint_url, f"/repository/api/repo/info/{self.project}/{self.bucket}/GENERIC")
+        url = safe_join(self.endpoint_url, f"repository/api/repo/info/{self.project}/{self.bucket}/GENERIC")
         resp = client.get(url)
         data = self._validate_resp(resp)
         return data
