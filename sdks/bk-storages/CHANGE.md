@@ -1,5 +1,9 @@
 ## Change logs
 
+### 2.0.2
+
+- 修复 `BKGenericRepoClient` 不支持 endpoint_url 带子路径的问题 
+
 ### 2.0.1
 
 - 修复 `BKGenericRepoClient.list_dir` 方法在请求 bkrepo 分页查询时，参数名错误的问题
