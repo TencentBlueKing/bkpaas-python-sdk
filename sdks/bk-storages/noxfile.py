@@ -53,5 +53,6 @@ def tests(session):
         "django",
         "pytest-django",
         "pytest-mock",
+        "moto[s3]"
     )
     session.run("pytest", *session.posargs)
