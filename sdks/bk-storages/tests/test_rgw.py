@@ -87,7 +87,7 @@ class TestRGWBoto3Storage:
 
 
 class TestFileWithStorage:
-    @pytest.mark.parametrize("pic_filename", ["tests/test.txt"])
+    @pytest.mark.parametrize("pic_filename", ["tests/flower.png"])
     def test_upload(self, pic_filename, storage):
         RGWFile._meta.get_field("user_file").storage = storage
 
