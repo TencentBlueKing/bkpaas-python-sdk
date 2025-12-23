@@ -23,34 +23,34 @@ from bkstorages.utils import safe_join
 from tests.utils import generate_random_string
 
 
-@pytest.fixture()
+@pytest.fixture
 def username():
     return generate_random_string()
 
 
-@pytest.fixture()
+@pytest.fixture
 def password():
     return generate_random_string()
 
 
-@pytest.fixture()
+@pytest.fixture
 def endpoint():
     return "http://example.com"
 
 
-@pytest.fixture()
+@pytest.fixture
 def session():
     return requests.session()
 
 
-@pytest.fixture()
+@pytest.fixture
 def adapter(session):
     adapter = requests_mock.Adapter()
     session.mount("http://", adapter)
     return adapter
 
 
-@pytest.fixture()
+@pytest.fixture
 def bk_repo_client(session, username, password, endpoint):
     bk_repo_client = BKGenericRepoClient(
         bucket="dummy-bucket", username=username, password=password, project="dummy-project", endpoint_url=endpoint
@@ -59,7 +59,7 @@ def bk_repo_client(session, username, password, endpoint):
         yield bk_repo_client
 
 
-@pytest.fixture()
+@pytest.fixture
 def make_dummy_file(adapter, endpoint):
     def core(key, content):
         def fake_upload(request):
@@ -79,7 +79,7 @@ def make_dummy_file(adapter, endpoint):
     return core
 
 
-@pytest.fixture()
+@pytest.fixture
 def bk_repo_storage(bk_repo_client):
     storage = BKRepoStorage()
     storage.client = bk_repo_client

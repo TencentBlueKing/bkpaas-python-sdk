@@ -106,7 +106,7 @@ class BKGenericRepoClient:
             logger.exception("Request success, but the server rejects the upload request.")
             raise UploadFailedError(key=key, src=src) from e
         except Exception as e:
-            logger.exception("An unexpected exception occurred, detail: %s", e)
+            logger.exception("An unexpected exception occurred")
             raise UploadFailedError(key=key, src=src) from e
 
     def download_file(self, key: str, filepath: PathLike, *args, **kwargs) -> PathLike:
@@ -146,7 +146,7 @@ class BKGenericRepoClient:
                 if chunk:
                     fh.write(chunk)
         except Exception as e:
-            logger.exception("File save failed, detail %s", e)
+            logger.exception("File save failed")
             raise DownloadFailedError(key=key, dest=dest) from e
 
     def delete_file(self, key: str, *args, **kwargs):
@@ -282,7 +282,7 @@ class BKRepoFile(File):
 
     def _get_file(self):
         if self._file is None:
-            self._file = SpooledTemporaryFile()
+            self._file = SpooledTemporaryFile() # noqa: SIM115
             self._storage.client.download_fileobj(key=self.name, fh=self._file)
             self._file.seek(0)
             self._dirty = False

@@ -13,7 +13,7 @@
 def pytest_configure():
     from django.conf import settings
 
-    MIDDLEWARE = []
+    middleware = []
 
     settings.configure(
         DEBUG_PROPAGATE_EXCEPTIONS=True,
@@ -32,8 +32,8 @@ def pytest_configure():
         ],
         USE_TZ=True,
         TIME_ZONE='Asia/Shanghai',
-        MIDDLEWARE=MIDDLEWARE,
-        MIDDLEWARE_CLASSES=MIDDLEWARE,
+        MIDDLEWARE=middleware,
+        MIDDLEWARE_CLASSES=middleware,
         INSTALLED_APPS=(
             'bkstorages',
             'tests',
