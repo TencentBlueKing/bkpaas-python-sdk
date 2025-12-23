@@ -54,6 +54,7 @@ def tests(session):
         "pytest-django",
         "pytest-mock",
         "moto[s3]==3.1.3",
-        "requests-mock"
+        "requests-mock",
+        "boto3==1.21.32"
     )
     session.run("pytest", *session.posargs)
