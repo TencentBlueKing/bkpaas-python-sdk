@@ -91,7 +91,7 @@ class TestFileWithStorage:
     def test_upload(self, pic_filename, storage):
         RGWFile._meta.get_field("user_file").storage = storage
 
-        f = File(open(pic_filename, "rb"))
+        f = File(open(pic_filename, "rb")) # noqa: SIM115
         obj = RGWFile(user_id=3074, user_file=f)
         obj.save()
 

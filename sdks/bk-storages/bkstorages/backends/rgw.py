@@ -120,7 +120,7 @@ class RGWBoto3StorageFile(File):
                 max_size=self._storage.max_memory_size,
                 suffix=".RGWBoto3StorageFile",
                 dir=setting("FILE_UPLOAD_TEMP_DIR", None),
-            )
+            ) # noqa: SIM115
             if 'r' in self._mode:
                 self._is_dirty = False
                 self._file.write(self.obj.get()['Body'].read())
@@ -182,8 +182,7 @@ class RGWBoto3StorageFile(File):
             # s3boto's behavior.
             parts = [{'ETag': part.e_tag, 'PartNumber': part.part_number} for part in self._multipart.parts.all()]
             self._multipart.complete(MultipartUpload={'Parts': parts})
-        else:
-            if self._multipart is not None:
+        elif self._multipart is not None:
                 self._multipart.abort()
         if self._file is not None:
             self._file.close()
@@ -343,6 +342,7 @@ class RGWBoto3Storage(Storage):
                 value = os.environ.get(name)
                 if value:
                     return value
+            return None
 
         access_key = self.access_key or lookup_env(self.access_key_names)
         secret_key = self.secret_key or lookup_env(self.secret_key_names)
@@ -476,19 +476,21 @@ class RGWBoto3Storage(Storage):
     def exists(self, name):
         if not name:
             try:
-                self.bucket
-                return True
+                _ = self.bucket
             except ImproperlyConfigured:
                 return False
+            else:
+                return True
         name = self._normalize_name(clean_name(name))
         if self.entries:
             return name in self.entries
         obj = self.bucket.Object(self._encode_name(name))
         try:
             obj.load()
-            return True
         except self.connection_response_error:
             return False
+        else:
+            return True
 
     def listdir(self, name):
         name = self._normalize_name(clean_name(name))
