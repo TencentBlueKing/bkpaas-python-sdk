@@ -116,11 +116,11 @@ class RGWBoto3StorageFile(File):
 
     def _get_file(self):
         if self._file is None:
-            self._file = SpooledTemporaryFile(
+            self._file = SpooledTemporaryFile( # noqa: SIM115
                 max_size=self._storage.max_memory_size,
                 suffix=".RGWBoto3StorageFile",
                 dir=setting("FILE_UPLOAD_TEMP_DIR", None),
-            ) # noqa: SIM115
+            )
             if 'r' in self._mode:
                 self._is_dirty = False
                 self._file.write(self.obj.get()['Body'].read())
