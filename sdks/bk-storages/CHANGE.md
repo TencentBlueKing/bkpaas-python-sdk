@@ -1,8 +1,9 @@
 ## Change logs
 
-### 2.0.2
+### 2.0.3
 
 - 修复 `BKGenericRepoClient` 不支持 endpoint_url 带子路径的问题 
+- 升级 poetry 版本到 2.1.1
 
 ### 2.0.1
 
