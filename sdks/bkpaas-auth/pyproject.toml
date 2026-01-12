@@ -12,7 +12,7 @@ authors = [{ name = "blueking", email = "blueking@tencent.com" }]
 license = "MIT"
 # classifiers is dynamic because we want to create Python classifiers automatically
 dynamic = ["classifiers"]
-requires-python = '>=3.9,<4.0'
+requires-python = '>=3.10,<4.0'
 dependencies = ['django (>=4.2,<6.0)', 'requests', 'six']
 
 [project.urls]

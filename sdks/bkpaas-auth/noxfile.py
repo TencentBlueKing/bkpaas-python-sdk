@@ -2,6 +2,7 @@ import os
 import tempfile
 
 import nox
+from nox.command import CommandFailed
 
 ALL_PYTHON = ["3.10", "3.11", "3.12"]
 
@@ -54,7 +55,10 @@ def tests(session):
     )
     # Install the SQLite driver manually because some environment's sqlite3 version is too old
     # to meet the Django requirement.
-    session.install("pysqlite3-binary")
+    try:
+        session.install("pysqlite3-binary")
+    except CommandFailed:
+        print("pysqlite3-binary installation failed, continuing...")
 
     django_versions = [
         ">=4.2,<5",
