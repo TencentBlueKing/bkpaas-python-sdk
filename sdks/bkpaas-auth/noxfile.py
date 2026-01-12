@@ -4,6 +4,7 @@ import tempfile
 import nox
 
 ALL_PYTHON = ["3.9", "3.10", "3.11"]
+nox.options.error_on_missing_interpreters = False
 
 
 # ref: https://stackoverflow.com/questions/59768651/how-to-use-nox-with-poetry
@@ -49,8 +50,15 @@ def tests(session):
     install_with_constraints(
         session,
         "pytest",
-        "django",
         "pytest-django",
         "pytest-mock",
     )
-    session.run("pytest", *session.posargs)
+
+    django_versions = [">=4.2,<5"]
+    if session.python:
+        major, minor = (int(part) for part in session.python.split(".")[:2])
+        if (major, minor) >= (3, 10):
+            django_versions.append(">=5.0,<6")
+    for django in django_versions:
+        session.install(f"django{django}")
+        session.run("pytest", *session.posargs)
