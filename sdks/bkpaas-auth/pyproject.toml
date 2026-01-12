@@ -5,7 +5,7 @@ classifiers = ["License :: OSI Approved :: MIT License"]
 # PEP 621 project metadata
 # See https://www.python.org/dev/peps/pep-0621/
 name = "bkpaas-auth"
-version = "3.1.3"
+version = "3.2.0"
 description = "User authentication django app for blueking internal projects"
 readme = "README.md"
 authors = [{ name = "blueking", email = "blueking@tencent.com" }]
@@ -13,7 +13,7 @@ license = "MIT"
 # classifiers is dynamic because we want to create Python classifiers automatically
 dynamic = ["classifiers"]
 requires-python = '>=3.9,<4.0'
-dependencies = ['django (>=4.2,<5.0)', 'requests', 'six']
+dependencies = ['django (>=4.2,<6.0)', 'requests', 'six']
 
 [project.urls]
 Homepage = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
