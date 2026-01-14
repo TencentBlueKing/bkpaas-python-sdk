@@ -2,8 +2,9 @@ import os
 import tempfile
 
 import nox
+from nox.command import CommandFailed
 
-ALL_PYTHON = ["3.9", "3.10", "3.11"]
+ALL_PYTHON = ["3.10", "3.11", "3.12"]
 
 
 # ref: https://stackoverflow.com/questions/59768651/how-to-use-nox-with-poetry
@@ -49,8 +50,20 @@ def tests(session):
     install_with_constraints(
         session,
         "pytest",
-        "django",
         "pytest-django",
         "pytest-mock",
     )
-    session.run("pytest", *session.posargs)
+    # Install the SQLite driver manually because some environment's sqlite3 version is too old
+    # to meet the Django requirement.
+    try:
+        session.install("pysqlite3-binary")
+    except CommandFailed:
+        print("pysqlite3-binary installation failed, continuing...")
+
+    django_versions = [
+        ">=4.2,<5",
+        ">=5.0,<6",
+    ]
+    for django in django_versions:
+        session.install(f"django{django}")
+        session.run("pytest", *session.posargs)
