@@ -1,36 +1,36 @@
-[tool]
 [tool.poetry]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+]
+
+[project]
+# PEP 621 project metadata
+# See https://www.python.org/dev/peps/pep-0621/
 name = "paas_service"
 version = "2.0.3"
 description = "A Django application for developing BK-PaaS add-on services."
 readme = "README.md"
-authors = ["blueking <blueking@tencent.com>"]
+authors = [{ name = "blueking", email = "blueking@tencent.com" }]
 license = "MIT"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
+# classifiers is dynamic because we want to create Python classifiers automatically
+dynamic = ["classifiers"]
+requires-python = ">=3.8,<3.12"
+dependencies = [
+    "jsonfield",
+    "pyjwt (>=2.4.0,<3.0.0)",
+    "django-translated-fields",
+    "blue-krill (>=2.0.7,<3.0.0)",
+    "django (>=4.2.16,<5.0.0)",
+    "djangorestframework (>=3.15.2,<4.0.0)",
+    "pydantic (==2.9.2)",
 ]
 
 [project.urls]
 Homepage = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
 Repository = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
 
-[[tool.poetry.source]]
-url = "https://mirrors.tencent.com/pypi/simple/"
-name = "pypi-tencent-mirror"
-default = true
-
-[tool.poetry.dependencies]
-python = ">=3.8,<3.12"
-jsonfield = "*"
-pyjwt = "^2.4.0"
-django-translated-fields = "*"
-blue-krill = "^2.0.7"
-django = "^4.2.16"
-djangorestframework = "^3.15.2"
-pydantic = "2.9.2"
-
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 django-dynamic-fixture = ">=4.0.1"
 pytest = "*"
 pytest-django = "*"
@@ -41,29 +41,11 @@ mypy = "^0.910"
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.black]
-line-length = 119
-skip-string-normalization = 'true'
-exclude = '''
-/(
-    .*/migrations/.*
-)/
-'''
-
-[tool.isort]
-multi_line_output = 3
-include_trailing_comma = 'true'
-force_grid_wrap = 0
-use_parentheses = 'true'
-line_length = 119
-
 [tool.mypy]
 ignore_missing_imports = true
 show_error_codes = true
 check_untyped_defs = true
 
 [[tool.mypy.overrides]]
-module = [
-  "paas_service.migrations.*"
-]
+module = ["paas_service.migrations.*"]
 ignore_errors = true
