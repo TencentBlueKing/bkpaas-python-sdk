@@ -33,7 +33,7 @@ jobs:
       uses: astral-sh/setup-uv@v5
 
     - name: Install Nox
-      run: uv pip install --system nox==2025.11.12
+      run: uv pip install --system nox
 
     - name: Run tests on ${{ matrix.os }}
       working-directory: sdks/bkapi-client-core
