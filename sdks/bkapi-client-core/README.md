@@ -16,6 +16,21 @@
 - 对 IDE 开发友好，SDK 支持常见 IDE 智能提示及补全；
 - 兼容 Python2 及 Python3 的类型补全；
 
+## 如何使用 Nox 运行测试
+
+测试分两步，先导出依赖，再执行测试：
+
+```bash
+# 使用 Python 3.11 导出 requirements.txt（包含 dev 依赖）
+# 因为 pyproject.toml 已经更新为 PEP-621 版本，所以必须使用比较新的 Python 版本来导出
+nox -s export_deps
+
+# 安装依赖并运行测试（依赖安装会以 requirements.txt 作为 constraints）
+nox -s tests
+```
+
+若依赖或锁文件有变更，请先重新执行 `nox -s export_deps`。
+
 ## SDK 使用样例
 
 ### 1. 使用 Client

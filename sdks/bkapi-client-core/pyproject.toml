@@ -69,23 +69,3 @@ ignore_errors = true
 [tool.pytest.ini_options]
 addopts = "-p no:pastebin -p no:nose -p no:doctest -p no:warnings"
 testpaths = ["tests"]
-
-[tool.tox]
-legacy_tox_ini = """
-[tox]
-minversion = 3.23.0
-isolated_build = True
-envlist = py{37}-requests2-{20,26}
-
-[gh-actions]
-python =
-    3.7: py37
-
-[testenv]
-allowlist_externals = pytest
-deps =
-  requests2-20: requests==2.20
-  requests2-26: requests==2.26
-commands =
-  pytest tests
-"""
