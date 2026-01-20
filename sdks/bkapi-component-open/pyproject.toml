@@ -1,0 +1,24 @@
+[tool.poetry]
+classifiers = ["License :: OSI Approved :: MIT License"]
+packages = [{ include = "bkapi_component" }]
+
+[project]
+# PEP 621 project metadata
+# See https://www.python.org/dev/peps/pep-0621/
+name = "bkapi-component-open"
+version = "2.1.0"
+description = "Blueking component API client."
+readme = "README.md"
+authors = [{ name = "blueking", email = "blueking@tencent.com" }]
+license = "MIT"
+dynamic = ["classifiers"]
+requires-python = ">=2.7,<4.0,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*"
+dependencies = ["bkapi-client-core (>=1.1.0,<2.0.0)"]
+
+[project.urls]
+Homepage = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
+Repository = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
