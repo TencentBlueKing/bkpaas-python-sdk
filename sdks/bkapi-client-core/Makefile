@@ -67,6 +67,9 @@ build: ALL
 publish: build
 	poetry publish -r pypi
 
+.PHONY: nox
+nox:
+	nox
+
 .PHONY: tox
-tox:
-	tox
+tox: nox
