@@ -53,8 +53,9 @@ celery = "^5.0.5"
 pytest = "^6.2.2"
 pytest-django = "^4.1.0"
 # mypy
-mypy = "^1.15.0"
+mypy = "^1.19.0"
 # install extension stubs if missing
+typing-extensions = "^4.15.0"
 types-requests = "2.31.0.6"
 types-setuptools = "^57.0.0"
 types-dataclasses = "^0.1.5"
