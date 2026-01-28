@@ -1,9 +1,12 @@
 ## Change logs
 
+### 2.2.0
+
+- 更新依赖，移除 urllib3，增大 curlify 最大支持版本
+
 ### 2.1.5
 
 - Fix: BKRepoManager 和 BKGenericRepo 不支持 endpoint_url 带子路径的问题
-
 
 ### 2.1.4
 
