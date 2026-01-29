@@ -42,7 +42,12 @@ def tests(session):
     # Prepare pip and poetry
     session.run("python", "-m", "ensurepip", "--upgrade")
     session.install("poetry")
-    session.run("poetry", "self", "add", "poetry-plugin-export@latest")
+
+    if session.python == "3.9":
+        # Install the last compatible version of the plugin
+        session.run("poetry", "self", "add", "poetry-plugin-export@1.9.0")
+    else:
+        session.run("poetry", "self", "add", "poetry-plugin-export@latest")
 
     # Install dev/test dependencies
     session.install("-e", ".[all]")
