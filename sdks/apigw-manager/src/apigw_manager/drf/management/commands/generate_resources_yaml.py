@@ -99,7 +99,7 @@ def post_process_mcp_server_config(mcp_server_tools: list, delete_mcp_flag: bool
                         else:
                             mcp_can_used_tool.add(name)
                         continue
-                    elif not info.get("noneSchema"):
+                    elif not info.get("noneSchema") and not info["x-bk-apigateway-resource"].get("noneSchema") :
                         raise Exception(f"mcp server tool:{name} need confirm api schema or if no schema and set "
                                         f"noneSchema=True")
                     else:
