@@ -62,6 +62,7 @@ stages:
     mcp_servers:
       {% for mcp_server in settings.BK_APIGW_STAGE_MCP_SERVERS %}
       - name: "{{ mcp_server.name }}"
+        title: "{{ mcp_server.title }}"
         description: "{{ mcp_server.description }}"
         {% if mcp_server.labels %}
         labels:
@@ -74,6 +75,7 @@ stages:
           - "{{ resource }}"
           {% endfor %}
         is_public: {{ mcp_server.is_public }}
+        protocol_type: "{{ mcp_server.protocol_type }}"
         status: {{ mcp_server.status }}
         {% if mcp_server.target_app_codes %}
         target_app_codes:
