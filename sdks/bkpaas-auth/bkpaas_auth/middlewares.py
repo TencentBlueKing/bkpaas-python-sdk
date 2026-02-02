@@ -4,12 +4,14 @@ import logging
 import pickle
 import time
 from typing import Dict
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from django.conf import settings
 from django.contrib import auth
 from django.http import HttpRequest, HttpResponse
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.encoding import force_str
+from django.utils import timezone as dj_timezone
 
 from bkpaas_auth.backends import UniversalAuthBackend
 from bkpaas_auth.core.constants import ACCESS_PERMISSION_DENIED_CODE
@@ -94,3 +96,51 @@ class CookieLoginMiddleware(MiddlewareMixin):
         # rotation.
         if getattr(request, "user", None) != user:
             auth.login(request, user)
+
+
+class UserTimezoneMiddleware(MiddlewareMixin):
+    """按用户的时区属性激活 Django 时区。
+
+    该中间件从用户管理系统获取用户时区信息并激活，使所有时间相关的序列化输出
+    都使用用户所在时区的偏移量。
+
+    执行逻辑:
+    1. 未登录用户跳过处理
+    2. 从 request.user 读取 time_zone 属性
+    3. 若时区字段缺失或非法，回退到默认时区 settings.TIME_ZONE
+    4. 在响应返回时重置时区，避免线程复用导致的时区污染
+
+    Note: 必须放在所有用户认证中间件之后
+    """
+
+    def process_request(self, request):
+        # Ignore request without user attribute or anonymous user
+        if not hasattr(request, "user") or not request.user.is_authenticated:
+            return
+
+        user = request.user
+        tz_name = getattr(user, "time_zone", None)
+
+        # Try to activate user's timezone if it's a non-empty string
+        if tz_name and isinstance(tz_name, str):
+            try:
+                user_tz = ZoneInfo(tz_name)
+                dj_timezone.activate(user_tz)
+            except ZoneInfoNotFoundError as e:
+                logger.warning(
+                    "Invalid time_zone '%s' for user '%s', fallback to default. Error: %s",
+                    tz_name,
+                    user.username,
+                    str(e),
+                )
+            else:
+                logger.debug("Activated timezone '%s' for user '%s'", tz_name, user.username)
+                return
+
+        # Fallback to default timezone when time_zone is empty or invalid
+        dj_timezone.activate(dj_timezone.get_default_timezone())
+
+    def process_response(self, request, response):
+        """重置时区"""
+        dj_timezone.deactivate()
+        return response
