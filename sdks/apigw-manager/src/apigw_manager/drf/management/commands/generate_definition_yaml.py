@@ -62,7 +62,8 @@ class Command(BaseCommand):
         if render:
             with open(source_file) as f:
                 template = Template(f.read())
-                rendered = render_to_string(template, Context(context))
+                context_dict = {"settings": settings}
+                rendered = template.render(Context(context_dict))
                 cleaned = re.sub(r'\n\s*\n', '\n', rendered).strip()
                 self.stdout.write(cleaned)
             with open(definition_path, 'w') as f:
