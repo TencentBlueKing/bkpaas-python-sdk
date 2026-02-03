@@ -4,7 +4,6 @@ import string
 from contextlib import contextmanager
 from typing import Dict
 from unittest.mock import MagicMock, patch
-from zoneinfo import ZoneInfo
 
 import pytest
 from django.contrib.auth import SESSION_KEY, get_user_model
