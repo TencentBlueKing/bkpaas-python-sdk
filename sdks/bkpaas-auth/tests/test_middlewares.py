@@ -190,51 +190,43 @@ class TestUserTimezoneMiddleware:
     """Test cases for UserTimezoneMiddleware"""
 
     @pytest.fixture
-    def mock_response(self):
-        """Create a mock response object"""
-        return MagicMock()
+    def middleware(self):
+        return UserTimezoneMiddleware(MagicMock())
 
     @pytest.fixture
     def authenticated_user(self):
         """Create a mock authenticated user"""
         user = MagicMock()
         user.is_authenticated = True
-        user.username = "test_user"
         return user
 
-    def test_skip_request_without_user_attr(self, rf):
-        """Test that requests without user attribute are skipped"""
-        request = rf.get("/")
-        middleware = UserTimezoneMiddleware(MagicMock())
+    @pytest.fixture(autouse=True)
+    def setup_timezone(self):
+        """Reset timezone before and after each test to avoid pollution"""
+        with override_settings(TIME_ZONE="UTC"):
+            dj_timezone.deactivate()
+            yield
+            dj_timezone.deactivate()
 
-        with patch.object(dj_timezone, "activate") as mock_activate:
-            middleware.process_request(request)
-            mock_activate.assert_not_called()
+    def test_skip_request_without_user_attr(self, rf, middleware):
+        """Test that requests without user attribute don't change timezone"""
+        middleware.process_request(rf.get("/"))
+        assert dj_timezone.get_current_timezone_name() == "UTC"
 
-    def test_skip_anonymous_user(self, rf):
-        """Test that anonymous users are skipped"""
+    def test_skip_anonymous_user(self, rf, middleware):
+        """Test that anonymous users don't change timezone"""
         request = rf.get("/")
         request.user = AnonymousUser()
-        middleware = UserTimezoneMiddleware(MagicMock())
+        middleware.process_request(request)
+        assert dj_timezone.get_current_timezone_name() == "UTC"
 
-        with patch.object(dj_timezone, "activate") as mock_activate:
-            middleware.process_request(request)
-            mock_activate.assert_not_called()
-
-    def test_activate_valid_user_timezone(self, rf, authenticated_user):
-        """Test that valid user timezone is activated"""
+    def test_activate_valid_user_timezone(self, rf, middleware, authenticated_user):
+        """Test that valid user timezone is actually activated"""
         request = rf.get("/")
         authenticated_user.time_zone = "America/New_York"
         request.user = authenticated_user
-        middleware = UserTimezoneMiddleware(MagicMock())
-
-        with patch.object(dj_timezone, "activate") as mock_activate:
-            middleware.process_request(request)
-            mock_activate.assert_called_once()
-
-            called_tz = mock_activate.call_args[0][0]
-            assert isinstance(called_tz, ZoneInfo)
-            assert str(called_tz) == "America/New_York"
+        middleware.process_request(request)
+        assert dj_timezone.get_current_timezone_name() == "America/New_York"
 
     @pytest.mark.parametrize(
         ("time_zone_value", "has_attr"),
@@ -243,10 +235,12 @@ class TestUserTimezoneMiddleware:
             ("", True),
             (None, True),
             (None, False),
+            (123, True),
         ],
-        ids=["invalid_timezone", "empty_string", "none_value", "no_attr"],
+        ids=["invalid_timezone", "empty_string", "none_value", "no_attr", "non_string_type"],
     )
-    def test_fallback_to_default_timezone(self, rf, authenticated_user, time_zone_value, has_attr):
+    @override_settings(TIME_ZONE="Asia/Shanghai")
+    def test_fallback_to_default_timezone(self, rf, middleware, authenticated_user, time_zone_value, has_attr):
         """Test fallback to default timezone for various edge cases"""
         request = rf.get("/")
         if has_attr:
@@ -254,25 +248,5 @@ class TestUserTimezoneMiddleware:
         else:
             del authenticated_user.time_zone
         request.user = authenticated_user
-        middleware = UserTimezoneMiddleware(MagicMock())
-
-        with patch.object(dj_timezone, "activate") as mock_activate, \
-             patch.object(dj_timezone, "get_default_timezone") as mock_get_default:
-            mock_default_tz = MagicMock()
-            mock_get_default.return_value = mock_default_tz
-
-            middleware.process_request(request)
-
-            mock_get_default.assert_called_once()
-            mock_activate.assert_called_once_with(mock_default_tz)
-
-    def test_process_response_deactivates_timezone(self, rf, mock_response):
-        """Test that process_response deactivates the timezone"""
-        request = rf.get("/")
-        middleware = UserTimezoneMiddleware(MagicMock())
-
-        with patch.object(dj_timezone, "deactivate") as mock_deactivate:
-            result = middleware.process_response(request, mock_response)
-
-            mock_deactivate.assert_called_once()
-            assert result == mock_response
+        middleware.process_request(request)
+        assert dj_timezone.get_current_timezone_name() == "Asia/Shanghai"

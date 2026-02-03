@@ -110,7 +110,7 @@ class UserTimezoneMiddleware(MiddlewareMixin):
     3. 若时区字段缺失或非法，回退到默认时区 settings.TIME_ZONE
     4. 在响应返回时重置时区，避免线程复用导致的时区污染
 
-    Note: 必须放在所有用户认证中间件之后
+    NOTE: 必须放在所有用户认证中间件之后
     """
 
     def process_request(self, request):
