@@ -55,7 +55,9 @@ stages:
       {% for plugin_config in settings.BK_APIGW_STAGE_PLUGIN_CONFIGS %}
       - type: {{ plugin_config.type }}
         yaml: |-
+{% autoescape off %}
           {{ plugin_config.yaml }}
+{% endautoescape %}
       {% endfor %}
     {% endif %}
     {% if settings.BK_APIGW_STAGE_ENABLE_MCP_SERVERS %}
