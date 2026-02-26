@@ -12,12 +12,13 @@ from django.contrib.auth.models import AnonymousUser
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.http import HttpRequest
 from django.test.utils import override_settings
+from django.utils import timezone as dj_timezone
 
 from bkpaas_auth.backends import UniversalAuthBackend
 from bkpaas_auth.core.constants import ACCESS_PERMISSION_DENIED_CODE, ProviderType
 from bkpaas_auth.core.exceptions import AccessPermissionDenied
 from bkpaas_auth.core.token import LoginToken
-from bkpaas_auth.middlewares import CookieLoginMiddleware, auth
+from bkpaas_auth.middlewares import CookieLoginMiddleware, auth, UserTimezoneMiddleware
 from bkpaas_auth.models import User
 from tests.utils import generate_random_string
 
@@ -182,3 +183,69 @@ class TestCookieLoginMiddlewareWithDjangoUser:
         assert isinstance(user, UserModel)
         assert not isinstance(user, User)
         assert isinstance(user.pk, int)
+
+
+class TestUserTimezoneMiddleware:
+    """Test cases for UserTimezoneMiddleware"""
+
+    @pytest.fixture
+    def middleware(self):
+        return UserTimezoneMiddleware(MagicMock())
+
+    @pytest.fixture
+    def authenticated_user(self):
+        """Create a mock authenticated user"""
+        user = MagicMock()
+        user.is_authenticated = True
+        return user
+
+    @pytest.fixture(autouse=True)
+    def setup_timezone(self):
+        """Reset timezone before and after each test to avoid pollution"""
+        with override_settings(TIME_ZONE="UTC"):
+            dj_timezone.deactivate()
+            yield
+            dj_timezone.deactivate()
+
+    def test_skip_request_without_user_attr(self, rf, middleware):
+        """Test that requests without user attribute don't change timezone"""
+        middleware.process_request(rf.get("/"))
+        assert dj_timezone.get_current_timezone_name() == "UTC"
+
+    def test_skip_anonymous_user(self, rf, middleware):
+        """Test that anonymous users don't change timezone"""
+        request = rf.get("/")
+        request.user = AnonymousUser()
+        middleware.process_request(request)
+        assert dj_timezone.get_current_timezone_name() == "UTC"
+
+    def test_activate_valid_user_timezone(self, rf, middleware, authenticated_user):
+        """Test that valid user timezone is actually activated"""
+        request = rf.get("/")
+        authenticated_user.time_zone = "America/New_York"
+        request.user = authenticated_user
+        middleware.process_request(request)
+        assert dj_timezone.get_current_timezone_name() == "America/New_York"
+
+    @pytest.mark.parametrize(
+        ("time_zone_value", "has_attr"),
+        [
+            ("Invalid/Timezone", True),
+            ("", True),
+            (None, True),
+            (None, False),
+            (123, True),
+        ],
+        ids=["invalid_timezone", "empty_string", "none_value", "no_attr", "non_string_type"],
+    )
+    @override_settings(TIME_ZONE="Asia/Shanghai")
+    def test_fallback_to_default_timezone(self, rf, middleware, authenticated_user, time_zone_value, has_attr):
+        """Test fallback to default timezone for various edge cases"""
+        request = rf.get("/")
+        if has_attr:
+            authenticated_user.time_zone = time_zone_value
+        else:
+            del authenticated_user.time_zone
+        request.user = authenticated_user
+        middleware.process_request(request)
+        assert dj_timezone.get_current_timezone_name() == "Asia/Shanghai"

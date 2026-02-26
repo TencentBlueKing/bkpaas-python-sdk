@@ -152,3 +152,45 @@ MIDDLEWARE += [
 ```
 
 设置之后，通过 JWT 透传的用户态会验证后，会写入到 `request.user` 中。注意，配置了不认证用户的网关资源透传的请求，会生成一个有对应用户名的匿名用户对象（`is_authenticated` 为 `False`）。
+
+### UserTimezoneMiddleware 用户时区中间件
+
+`UserTimezoneMiddleware` 是一个用于根据用户配置的时区自动设置 Django 时区的中间件。
+
+#### 功能特性
+
+- 自动从用户对象的 `time_zone` 属性读取时区配置
+- 时区配置无效时自动回退到默认时区 `settings.TIME_ZONE`
+- 响应返回时自动重置时区，避免线程复用导致的时区污染
+
+#### 使用说明
+
+1. **配置要求**：
+   - 用户对象必须包含 `time_zone` 属性（字符串类型）
+   - 时区名称必须符合 IANA 时区数据库标准（如 "Asia/Shanghai"）
+
+2. **中间件顺序**：
+   - 必须放在所有用户认证中间件之后
+   - 建议放在 `CookieLoginMiddleware` 之后
+
+3. **执行逻辑**：
+   - 未登录用户跳过时区设置
+   - 读取用户 `time_zone` 属性并验证有效性
+   - 时区无效时记录警告日志并回退到默认时区
+   - 响应处理完成后自动重置时区
+
+#### 日志输出示例
+
+```bash
+# 时区激活成功
+DEBUG: Activated timezone 'Asia/Shanghai' for user 'test_user'
+
+# 时区无效警告
+WARNING: Invalid time_zone 'Invalid/Timezone' for user 'test_user', fallback to default. Error: ...
+```
+
+#### 注意事项
+
+- 确保用户管理系统正确设置 `time_zone` 属性
+- 时区名称必须为有效的 IANA 时区标识符
+- 中间件依赖 Django 的时区功能，确保 `USE_TZ = True`
