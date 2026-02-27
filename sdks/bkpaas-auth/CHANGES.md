@@ -3,6 +3,7 @@
 ## 3.2.0
 
 - 增加对 Django 5.x 版本的支持，并移除对 Python 3.9 版本的支持
+- 增加 UserTimezoneMiddleware 用户时区设置中间件
 
 ## 3.1.3
 - feat: 用户模型增加时区支持，新增 time_zone 属性，由认证服务返回时区
