@@ -1,5 +1,12 @@
 ## Change logs
 
+### 4.2.3
+
+- 支持同步网关环境 MCP Server 配置，新增 Django Command `sync_apigw_stage_mcp_servers`
+- 基础镜像 sync-apigateway.sh 支持通过环境变量 `ENABLE_SYNC_MCP_SERVERS=true` 开启 MCP Server 同步
+- DRF 集成支持 MCP Server 配置生成与同步（`gen_apigateway_resource_config` 新增 `enable_mcp`/`none_schema` 参数）
+- 完善 examples 中的 definition.yaml 和 sync-apigateway.sh 样例，添加 MCP Server 配置示例
+
 ### 4.1.0
 
 - [breaking change] 做了多租户改造的全租户应用必须显式设置 `BK_APP_TENANT_ID=system` (环境变量或django settings)

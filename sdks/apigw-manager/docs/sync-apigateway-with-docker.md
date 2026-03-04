@@ -33,6 +33,7 @@
 - `SYNC_RESOURCE_DOCS_BY_ARCHIVE_ARGS`: 默认值： "--safe-mode"，用于命令 `sync_resource_docs_by_archive`，同步网关文档
 - `CREATE_VERSION_AND_RELEASE_APIGW_ARGS`: 默认值："--generate-sdks"，用于命令 `create_version_and_release_apigw`,创建资源版本并发布
 - `ENABLE_SYNC_MCP_SERVERS`: 用于命令 `sync_apigw_stage_mcp_servers`, 是否开启同步环境 MCP Server
+- `SYNC_APIGW_STAGE_MCP_SERVERS_ARGS`: 用于命令 `sync_apigw_stage_mcp_servers`，同步环境 MCP Server 的额外参数
 
 基础镜像提供了一些自定义同步脚本常用的 bash 函数，以及执行 Django Command 指令的辅助脚本：
 
@@ -86,6 +87,9 @@ title "releasing"
 # 创建资源版本并发布；指定参数 --generate-sdks 时，会同时生成资源版本对应的网关 SDK, 指定 --stage stage1 stage2 时会发布指定环境,不设置则发布所有环境
 # 指定参数 --no-pub 则只生成版本，不发布
 call_definition_command_or_exit create_version_and_release_apigw "${definition_file}" --gateway-name=${gateway_name}
+
+# 可选：需要同步 MCP Server 时调用。注意：前提是该 stage 有生效的版本且声明的 mcp tool 在生效版本的资源列表里且确认过请求参数
+# call_definition_command_or_exit sync_apigw_stage_mcp_servers "${definition_file}" --gateway-name=${gateway_name}
 
 log_info "done"
 ```
@@ -314,4 +318,7 @@ call_definition_command_or_exit sync_apigw_stage "${definition_file}" --gateway-
 
 # 可选，同步资源文档
 call_definition_command_or_exit sync_resource_docs_by_archive "${definition_file}" --gateway-name=${gateway_name} --safe-mode
+
+# 可选：需要同步 MCP Server 时调用。注意：前提是该 stage 有生效的版本且声明的 mcp tool 在生效版本的资源列表里且确认过请求参数
+# call_definition_command_or_exit sync_apigw_stage_mcp_servers "${definition_file}" --gateway-name=${gateway_name}
 ```
