@@ -27,6 +27,27 @@ stages:
            - host: "https://httpbin.org"
              weight: 100
 
+    # 同步 MCP Server 相关配置（可选）
+    # mcp_servers:
+    #   - name: "mcp_server1"
+    #     # MCP Server 中文名/显示名称
+    #     title: "MCP Server 示例"
+    #     description: "mcp-server demo"
+    #     labels:
+    #       - "test"
+    #     # 添加的 tool 对应的资源名称
+    #     resource_names:
+    #       - resource1
+    #     # 是否公开
+    #     is_public: true
+    #     # 1: 开启, 0: 停止; 默认是开启
+    #     status: 1
+    #     # MCP 协议类型: sse（默认）、streamable_http
+    #     protocol_type: "sse"
+    #     # 授权的应用
+    #     target_app_codes:
+    #       - "bk_app_code1"
+
 # 资源文档
 # 资源文档的目录格式样例如下，en 为英文文档，zh 为中文文档：
 # ./
