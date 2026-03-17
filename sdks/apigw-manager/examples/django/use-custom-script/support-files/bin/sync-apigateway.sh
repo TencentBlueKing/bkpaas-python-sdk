@@ -23,6 +23,10 @@ python manage.py sync_apigw_stage --gateway-name=${gateway_name} --file="${defin
 python manage.py sync_apigw_resources --delete --gateway-name=${gateway_name} --file="${resources_file}"
 python manage.py sync_resource_docs_by_archive --gateway-name=${gateway_name} --file="${definition_file}"
 python manage.py create_version_and_release_apigw --gateway-name=${gateway_name} --file="${definition_file}"
+
+# 可选：需要同步 MCP Server 时调用。注意：前提是该 stage 有生效的版本且声明的 mcp tool 在生效版本的资源列表里且确认过请求参数
+# python manage.py sync_apigw_stage_mcp_servers --gateway-name=${gateway_name} --file="${definition_file}"
+
 python manage.py grant_apigw_permissions --gateway-name=${gateway_name} --file="${definition_file}"
 python manage.py fetch_apigw_public_key --gateway-name=${gateway_name}
 echo "gateway ${gateway_name} sync definition end"
