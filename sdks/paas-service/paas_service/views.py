@@ -226,7 +226,7 @@ class SvcInstanceViewSet(viewsets.ViewSet):
 
         # if the provider implements 'on_async_delete_request' method, call it
         provider_cls = get_provider_cls()
-        if getattr(provider_cls, 'on_async_delete_request', None):
+        if hasattr(provider_cls, 'on_async_delete_request'):
             plan_config = json.loads(instance.plan.config)
             instance_data = InstanceData(
                 credentials=json.loads(instance.credentials),
