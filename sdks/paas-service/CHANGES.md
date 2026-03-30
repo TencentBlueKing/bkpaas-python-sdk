@@ -1,4 +1,8 @@
 # 版本历史
+
+## 2.0.4
+- 支持 `async_delete` pre-hook 自定义逻辑
+
 ## 2.0.3
 - service list 接口返回增加 `plan_schema` 字段，以指导服务方案配置 
 
