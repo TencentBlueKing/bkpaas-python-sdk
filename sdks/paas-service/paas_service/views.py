@@ -224,6 +224,19 @@ class SvcInstanceViewSet(viewsets.ViewSet):
         """Destroy an instance async, record it into db"""
         instance = get_object_or_404(ServiceInstance, pk=instance_id)
 
+        # if the provider implements 'on_async_delete_request' method, call it
+        provider_cls = get_provider_cls()
+        if getattr(provider_cls, 'on_async_delete_request', None):
+            plan_config = json.loads(instance.plan.config)
+            instance_data = InstanceData(
+                credentials=json.loads(instance.credentials),
+                config=instance.config,
+            )
+            with wrap_provider_action_exc(f'async delete requested for instance {instance.uuid}') as ret:
+                provider_cls(**plan_config).on_async_delete_request(instance_data)
+            if ret.has_error:
+                return ret.response
+
         try:
             instance.to_be_deleted = True
             instance.save(update_fields=["to_be_deleted"])
