@@ -26,7 +26,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.utils.module_loading import import_string
 
 
-def get_provider_cls():
+def get_provider_cls() -> 'type[BaseProvider]':
     try:
         SVC_PROVIDER_CLS = settings.PAAS_SERVICE_PROVIDER_CLS
     except AttributeError:

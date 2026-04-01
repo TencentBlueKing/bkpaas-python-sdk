@@ -41,8 +41,8 @@ urlpatterns += [
     ),
     re_path(
         r'^services/(?P<service_id>[0-9a-f-]{32,36})/instances/$',
-        views.SvcInstanceViewSet.as_view({'get': 'retrieve_by_fields'}),
-        name='api.services.instances_retrieve_by_fields',
+        views.SvcInstanceViewSet.as_view({'get': 'retrieve_by_fields', 'post': 'idempotent_provision'}),
+        name='api.services.instances_actions',
     ),
     re_path(
         r'^services/(?P<service_id>[0-9a-f-]{32,36})/client-side-instances/(?P<instance_id>[0-9a-f-]{32,36})/$',
@@ -78,5 +78,10 @@ urlpatterns += [
         r'^instances/(?P<instance_id>[0-9a-f-]{32,36})/config/$',
         views.SvcInstanceConfigViewSet.as_view({'get': 'retrieve', 'put': 'update'}),
         name='api.services.instance_config',
+    ),
+    re_path(
+        r'^instances/(?P<instance_id>[0-9a-f-]{32,36})/confirm_bound/$',
+        views.SvcInstanceViewSet.as_view({'patch': 'confirm_bound'}),
+        name='api.services.instance.confirm_bound',
     ),
 ]

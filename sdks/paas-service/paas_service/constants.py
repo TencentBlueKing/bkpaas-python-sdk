@@ -18,12 +18,27 @@ to the current version of the project delivered to anyone in the future.
 """
 from enum import Enum
 
+from blue_krill.data_types.enum import StrStructuredEnum, EnumField
+
 
 class Category(int, Enum):
     """Paas service categories"""
 
     DATA_STORAGE = 1
     MONITORING_HEALTHY = 2
+
+
+class InstanceRecordStatus(StrStructuredEnum):
+    # 实例创建中
+    PROVISIONING = EnumField("provisioning", label="分配资源中")
+    # 成功：物理资源已创建
+    SUCCESS = EnumField("success", label="分配成功")
+
+    # 异步删除已标记，此时不再允许被新请求复用
+    DELETING = EnumField("deleting", label="异步删除中")
+    FAILED = EnumField("failed", label="分配失败")
+
+    # 已删除：物理资源已删除，记录会同步被直接删除，故没有已删除状态
 
 
 # Login 服务的重定向链接字段名
@@ -33,3 +48,10 @@ REDIRECT_FIELD_NAME = "c_url"
 # it serves as a reserved value. When multi-tenant mode is enabled, no tenant id can
 # be "default".
 DEFAULT_TENANT_ID = "default"
+
+# 默认锁定时间，单位为秒，15分钟
+DEFAULT_LOCK_TIMEOUT_SECONDS = 15 * 60
+# 获取锁失败后的默认轮询间隔
+DEFAULT_LOCK_POLL_INTERVAL_SECONDS = 1
+# 获取锁最大轮询次数
+DEFAULT_LOCK_POLL_MAX_RETRIES = 200
