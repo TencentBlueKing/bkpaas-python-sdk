@@ -17,8 +17,7 @@ tox:
 	poetry run tox
 
 poetry.lock: pyproject.toml
-	poetry lock --no-update
-	touch poetry.lock
+	poetry lock
 
 .PHONY: requirements
 requirements: poetry.lock

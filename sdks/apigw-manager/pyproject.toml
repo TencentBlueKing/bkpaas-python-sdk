@@ -17,7 +17,7 @@ license = "MIT"
 dynamic = ["version", "classifiers", "dependencies"]
 readme = "README.md"
 authors = [{name = "blueking", email = "blueking@tencent.com"}]
-requires-python = '>=3.8,<3.13'
+requires-python = '>=3.9,<3.13'
 
 
 [project.urls]
@@ -30,9 +30,10 @@ drf = ["django", 'cryptography', 'pyjwt', 'djangorestframework (>=3.10.3)', 'drf
 django = ["django", 'pyjwt']
 demo = ['django-environ (>=0.8.1)', "django", 'PyMySQL (>=1.0.2,<2.0.0)', 'pyjwt']
 kubernetes = ['kubernetes']
+
 [tool.poetry.dependencies]
-python = ">=3.8,<3.13"
-setuptools = ">=21.0.0"
+python = ">=3.9,<3.13"
+setuptools = ">=78.1.1"
 urllib3 = ">=1.25.3"
 pyyaml = ">=5.4.2"
 bkapi-client-core = ">=1.2.0"
@@ -55,7 +56,7 @@ django = ["django", "pyjwt"]
 demo = ["django-environ", "django", "PyMySQL", "pyjwt"]
 kubernetes = ["kubernetes"]
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
 pytest-cov = "^5.0.0"
 pytest-mock = "^3.14.0"
@@ -67,7 +68,7 @@ pre-commit = "^3"
 m2r = "^0.2.1"
 tox = "4.23.2"
 tox-pyenv-redux = "^1.1.0"
-ipython = "^7"
+ipython = ">=8.10.0"
 twine = "5.1.1"
 django = ">=1.11.1"
 kubernetes = "31.0.0"
