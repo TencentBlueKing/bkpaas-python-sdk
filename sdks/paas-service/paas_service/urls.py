@@ -79,9 +79,4 @@ urlpatterns += [
         views.SvcInstanceConfigViewSet.as_view({'get': 'retrieve', 'put': 'update'}),
         name='api.services.instance_config',
     ),
-    re_path(
-        r'^instances/(?P<instance_id>[0-9a-f-]{32,36})/confirm_bound/$',
-        views.SvcInstanceViewSet.as_view({'patch': 'confirm_bound'}),
-        name='api.services.instance.confirm_bound',
-    ),
 ]

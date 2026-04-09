@@ -191,7 +191,7 @@ class InstanceRecord(UuidAuditedModel):
         ServiceInstance,
         verbose_name="实例",
         on_delete=models.CASCADE,
-        related_name="records",
+        related_name="record",
         db_constraint=False,
         null=True,
     )
