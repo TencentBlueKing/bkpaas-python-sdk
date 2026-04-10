@@ -347,6 +347,7 @@ class SvcInstanceViewSet(viewsets.ViewSet):
             record.status = InstanceRecordStatus.DELETING
             record.save(update_fields=['status', 'updated'])
         except InstanceRecord.DoesNotExist:
+            #  兼容线上历史数据无对应 InstanceRecord 的情况
             pass
 
         return Response(status=204)
