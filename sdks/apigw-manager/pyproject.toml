@@ -33,7 +33,7 @@ kubernetes = ['kubernetes']
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.13"
-setuptools = "=78.1.1"
+setuptools = ">=78.1.1"
 urllib3 = ">=1.25.3"
 pyyaml = ">=5.4.2"
 bkapi-client-core = ">=1.2.0"
@@ -68,7 +68,7 @@ pre-commit = "^3"
 m2r = "^0.2.1"
 tox = "4.23.2"
 tox-pyenv-redux = "^1.1.0"
-ipython = "^7"
+ipython = ">=8.10.0"
 twine = "5.1.1"
 django = ">=1.11.1"
 kubernetes = "31.0.0"
