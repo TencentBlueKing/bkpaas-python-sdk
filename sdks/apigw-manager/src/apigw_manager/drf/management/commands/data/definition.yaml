@@ -73,9 +73,15 @@ stages:
           {% endfor %}
         {% endif %}
         resource_names:
-          {% for resource in mcp_server.tools %}
+          {% for resource in mcp_server.resource_names %}
           - "{{ resource }}"
           {% endfor %}
+        {% if mcp_server.tool_names %}
+        tool_names:
+          {% for tool in mcp_server.tool_names %}
+          - "{{ tool }}"
+          {% endfor %}
+        {% endif %}
         is_public: {{ mcp_server.is_public }}
         protocol_type: "{{ mcp_server.protocol_type }}"
         status: {{ mcp_server.status }}
@@ -83,6 +89,18 @@ stages:
         target_app_codes:
           {% for app_code in mcp_server.target_app_codes %}
           - "{{ app_code }}"
+          {% endfor %}
+        {% endif %}
+        {% if mcp_server.oauth2_public_client_enabled is not none %}
+        oauth2_public_client_enabled: {{ mcp_server.oauth2_public_client_enabled }}
+        {% endif %}
+        {% if mcp_server.raw_response_enabled is not none %}
+        raw_response_enabled: {{ mcp_server.raw_response_enabled }}
+        {% endif %}
+        {% if mcp_server.category_names %}
+        category_names:
+          {% for category in mcp_server.category_names %}
+          - "{{ category }}"
           {% endfor %}
         {% endif %}
       {% endfor %}

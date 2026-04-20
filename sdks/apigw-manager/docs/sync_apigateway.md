@@ -102,20 +102,34 @@ stages:
               weight: 100
 #  同步 MCP Server 相关配置
 #    mcp_servers:
-#      - name: "mcp_server1",
+#      - name: "mcp_server1"
+#        # MCP Server 中文名/显示名称
+#        title: "MCP Server 示例"
 #        description: "mcp-server demo"
-#        labels: 
+#        labels:
 #          - "test"
 #        # 添加的tool对应的资源名称
 #        resource_names:
 #          - resource1
+#        # 工具名称列表，默认等于 resource_names；如需重命名资源可设置此字段，长度必须与 resource_names 一致，且不能重复
+#        tool_names:
+#          - tool1
 #        # 是否公开
 #        is_public: true
 #        # 1: 开启,0: 停止; 默认是开启
 #        status: 1
+#        # MCP 协议类型: sse（默认）、streamable_http
+#        protocol_type: "sse"
 #        # 授权的应用
 #        target_app_codes:
 #          - "bk_app_code1"
+#        # 是否开启 OAuth2 公开客户端模式，开启后将对 bk_app_code=public 的应用进行授权
+#        oauth2_public_client_enabled: false
+#        # 是否返回原始响应，开启后 mcp-proxy 将直接返回 API 响应结果，不添加 request_id 等额外信息
+#        raw_response_enabled: false
+#        # MCP Server 分类名称列表，支持的分类：Uncategorized, Official, Featured, Monitoring, ConfigManagement, DevOps, Emergency, Database, Automation, Observability, Security, ResourceOptimize, ChaosEngineering, Network
+#        category_names:
+#          - "Official"
 ```
 
 > 📢 注意：如果之前接入过的，建议将 spec_version 改成 2，并将原先 `stage:{}`改成 `stages: []`
@@ -183,19 +197,33 @@ stages:
     #  同步 MCP Server 相关配置
     # mcp_servers:
     #  - name: "mcp_server1"
+    #    # MCP Server 中文名/显示名称
+    #    title: "MCP Server 示例"
     #    description: "mcp-server demo"
-    #    labels: 
+    #    labels:
     #      - "test"
     #    # 添加的tool对应的资源名称
     #    resource_names:
     #      - resource1
+    #    # 工具名称列表，默认等于 resource_names；如需重命名资源可设置此字段，长度必须与 resource_names 一致，且不能重复
+    #    tool_names:
+    #      - tool1
     #    # 是否公开
     #    is_public: true
     #    # 1: 开启,0: 停止；默认是开启
     #    status: 1
+    #    # MCP 协议类型: sse（默认）、streamable_http
+    #    protocol_type: "sse"
     #    # 授权的应用
-    #     target_app_codes:
-    #       - "bk_app_code1"
+    #    target_app_codes:
+    #      - "bk_app_code1"
+    #    # 是否开启 OAuth2 公开客户端模式，开启后将对 bk_app_code=public 的应用进行授权
+    #    oauth2_public_client_enabled: false
+    #    # 是否返回原始响应，开启后 mcp-proxy 将直接返回 API 响应结果，不添加 request_id 等额外信息
+    #    raw_response_enabled: false
+    #    # MCP Server 分类名称列表，支持的分类：Uncategorized, Official, Featured, Monitoring, ConfigManagement, DevOps, Emergency, Database, Automation, Observability, Security, ResourceOptimize, ChaosEngineering, Network
+    #    category_names:
+    #      - "Official"
 
     # 环境插件配置
     # plugin_configs:
