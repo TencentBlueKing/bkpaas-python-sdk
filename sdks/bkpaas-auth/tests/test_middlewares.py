@@ -18,7 +18,8 @@ from bkpaas_auth.backends import UniversalAuthBackend
 from bkpaas_auth.core.constants import ACCESS_PERMISSION_DENIED_CODE, ProviderType
 from bkpaas_auth.core.exceptions import AccessPermissionDenied
 from bkpaas_auth.core.token import LoginToken
-from bkpaas_auth.middlewares import CookieLoginMiddleware, auth, UserTimezoneMiddleware
+from bkpaas_auth.core.user_info import UserInfo
+from bkpaas_auth.middlewares import CookieLoginMiddleware, UserTimezoneMiddleware, auth
 from bkpaas_auth.models import User
 from tests.utils import generate_random_string
 
@@ -44,6 +45,8 @@ def dj_request(rf, bk_token):
 
 def create_uin_user(uin):
     token = LoginToken("token", expires_in=86400)
+    token.user_info = UserInfo(username=uin, display_name=uin)
+    token.user_info.provider_type = ProviderType.BK
     user = User(token=token, provider_type=ProviderType.BK, username=uin)
     user.email = "dummy"
     user.backend = "bkpaas_auth.backends.UniversalAuthBackend"
@@ -97,6 +100,7 @@ class TestCookieLoginMiddleware:
             assert mocked_authenticate.call_args[1]["auth_credentials"] == {"bk_token": bk_token}
             # Assert user session id has been written to session
             assert dj_request.session.get(SESSION_KEY) is not None
+            assert LoginToken.parse_json(dj_request.session["user_token"]).user_info.username == bk_token
             assert isinstance(dj_request.user, User)
 
     def test_logout_when_credentials_empty(self, db, dj_request):
@@ -124,7 +128,7 @@ class TestCookieLoginMiddleware:
         assert dj_request.session.get(SESSION_KEY) is None
         assert isinstance(dj_request.user, AnonymousUser)
 
-    def test_not_re_authenticate(self, db, dj_request):
+    def test_no_re_authenticate(self, db, dj_request):
         with self.login_by_credentials(dj_request) as mocked_authenticate:
             # Assert login succeeded
             assert dj_request.session.get(SESSION_KEY) is not None

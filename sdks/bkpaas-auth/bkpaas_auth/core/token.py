@@ -5,7 +5,7 @@ import datetime
 import json
 import logging
 from abc import abstractmethod
-from typing import NamedTuple, Optional
+from typing import Any, ClassVar, NamedTuple, Optional, Tuple
 
 from django.utils.timezone import now
 from django.utils.translation import get_language
@@ -23,9 +23,20 @@ from bkpaas_auth.core.http import http_get, resp_to_json
 from bkpaas_auth.core.services import get_app_credentials
 from bkpaas_auth.core.user_info import BkUserInfo, RtxUserInfo, UserInfo
 from bkpaas_auth.models import User
-from bkpaas_auth.utils import scrub_data
+from bkpaas_auth.utils import deserialize_datetime, scrub_data, serialize_datetime
 
 logger = logging.getLogger(__name__)
+
+# Constants related with serialization of UserInfo in LoginToken.
+#
+# The field name to store the type of user_info instance.
+_USER_INFO_TYPE_FIELD = "_user_info_type"
+# The mapping between user_info type name and the actual class.
+_USER_INFO_TYPES: dict[str, type[UserInfo]] = {
+    UserInfo.__name__: UserInfo,
+    RtxUserInfo.__name__: RtxUserInfo,
+    BkUserInfo.__name__: BkUserInfo,
+}
 
 
 class UserAccount(NamedTuple):
@@ -181,6 +192,12 @@ class LoginToken:
     """Access token object"""
 
     token_timeout_margin = 300
+    _json_fields: ClassVar[Tuple[str, ...]] = (
+        "login_token",
+        "expires_at",
+        "issued_at",
+        "user_info",
+    )
 
     def __init__(self, login_token=None, expires_in=None):
         assert login_token, "Must provide token string"
@@ -199,6 +216,49 @@ class LoginToken:
     def make_user(self, provider_type):
         self.user_info.provider_type = provider_type
         return create_user_from_token(self)
+
+    def dump_json(self) -> str:
+        """Serialize the token to JSON string."""
+        user_info_type = type(self.user_info).__name__
+        if user_info_type not in _USER_INFO_TYPES:
+            raise TypeError(f"unsupported user info type: {user_info_type}")
+
+        payload = {}
+        for field in self._json_fields:
+            value = getattr(self, field)
+            match field:
+                case "expires_at" | "issued_at":
+                    value = serialize_datetime(value)
+                case "user_info":
+                    value = json.loads(value.dump_json())
+            payload[field] = value
+
+        payload[_USER_INFO_TYPE_FIELD] = user_info_type
+        return json.dumps(payload)
+
+    @classmethod
+    def parse_json(cls, payload: str | dict[str, Any]) -> "LoginToken":
+        """Parse the token from JSON string or dict."""
+        if isinstance(payload, str):
+            payload = json.loads(payload)
+        if not isinstance(payload, dict):
+            raise TypeError(f"serialized payload must be dict, got: {type(payload)!r}")
+
+        user_info_type = payload.get(_USER_INFO_TYPE_FIELD)
+        if user_info_type not in _USER_INFO_TYPES:
+            raise ValueError(f"unexpected serialized type: {user_info_type!r}")
+
+        # Bypass __init__ so the original issued/expires timestamps survive the round trip.
+        token = cls.__new__(cls)
+        for field in cls._json_fields:
+            value = payload[field]
+            match field:
+                case "expires_at" | "issued_at":
+                    value = deserialize_datetime(value)
+                case "user_info":
+                    value = _USER_INFO_TYPES[user_info_type].parse_json(value)
+            setattr(token, field, value)
+        return token
 
 
 def mocked_create_user_from_token(

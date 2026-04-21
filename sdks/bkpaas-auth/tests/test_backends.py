@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import pickle
 from unittest import mock
 
 import pytest
@@ -6,6 +7,8 @@ from django.test.utils import override_settings
 
 from bkpaas_auth.backends import APIGatewayAuthBackend, UniversalAuthBackend
 from bkpaas_auth.core.constants import ProviderType
+from bkpaas_auth.core.token import LoginToken
+from bkpaas_auth.core.user_info import UserInfo
 from tests.utils import generate_random_string, mock_json_response, mock_raw_response
 
 
@@ -111,6 +114,42 @@ class TestUniversalAuthBackend:
         )
 
         assert getattr(user, "time_zone") == expected_time_zone
+
+    @override_settings(BKAUTH_BACKEND_TYPE="bk_token")
+    def test_get_token_from_session(self):
+        token = LoginToken("session-token", expires_in=86400)
+        token.user_info = UserInfo(
+            username="session-user",
+            display_name="Session User",
+            time_zone="Asia/Shanghai",
+            tenant_id="system",
+        )
+        token.user_info.provider_type = ProviderType.BK
+        request = mock.MagicMock()
+        request.session = {"user_token": token.dump_json()}
+
+        restored = UniversalAuthBackend().get_token_from_session(request)
+
+        assert restored is not None
+        assert restored.login_token == token.login_token
+        assert restored.expires_at == token.expires_at
+        assert restored.issued_at == token.issued_at
+        assert restored.user_info == token.user_info
+
+    @override_settings(BKAUTH_BACKEND_TYPE="bk_token")
+    def test_get_token_from_session_with_invalid_payload(self):
+        request = mock.MagicMock()
+        request.session = {"user_token": "not-json"}
+
+        assert UniversalAuthBackend().get_token_from_session(request) is None
+
+    @override_settings(BKAUTH_BACKEND_TYPE="bk_token")
+    def test_get_token_from_session_with_legacy_pickled_payload(self):
+        token = LoginToken("session-token", expires_in=86400)
+        request = mock.MagicMock()
+        request.session = {"user_token": pickle.dumps(token).decode("latin1")}
+
+        assert UniversalAuthBackend().get_token_from_session(request) is None
 
 
 class TestAPIGatewayAuthBackend:

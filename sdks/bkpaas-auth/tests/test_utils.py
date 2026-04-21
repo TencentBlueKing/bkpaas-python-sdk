@@ -1,6 +1,7 @@
 import pytest
+from django.utils.timezone import now
 
-from bkpaas_auth.utils import scrub_data
+from bkpaas_auth.utils import deserialize_datetime, scrub_data, serialize_datetime
 
 
 @pytest.mark.parametrize(
@@ -22,3 +23,8 @@ from bkpaas_auth.utils import scrub_data
 )
 def test_scrub_data(input, output):
     assert scrub_data(input) == output
+
+
+def test_datetime_json_round_trip():
+    value = now()
+    assert deserialize_datetime(serialize_datetime(value)) == value
