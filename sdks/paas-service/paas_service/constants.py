@@ -33,7 +33,7 @@ class ProvisionRecordStatus(StrStructuredEnum):
     PROVISIONING = EnumField("provisioning", label="分配资源中")
     # 成功：物理资源已创建
     SUCCESS = EnumField("success", label="分配成功")
-    
+
     # 异步删除触发，或分配发生错误，都会直接删除 ProvisionRecord，所以对应的状态
 
 

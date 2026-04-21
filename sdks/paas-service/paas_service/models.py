@@ -21,8 +21,8 @@ import uuid
 from typing import Any, Dict, List
 
 from blue_krill.models.fields import EncryptField
-from django.db import models
 from django.conf import settings
+from django.db import models
 from django.http import HttpRequest
 from django.utils.functional import cached_property
 from django.utils.module_loading import import_string
@@ -189,10 +189,10 @@ class ProvisionRecord(UuidAuditedModel):
     Lifecycle (define in constants.ProvisionRecordStatus):
         1. `provisioning`: record exists, `service_instance` is empty
         2. `success`: instance has been created and bound to this record
-        3. any error or delete/async delete will directly delete the record
+        3. any error or delete/async_delete will directly delete the record
     """
     provision_key = models.CharField(unique=True, verbose_name="幂等分配键", max_length=64)
-    
+
     service_instance = models.OneToOneField(
         ServiceInstance,
         verbose_name="实例",
@@ -205,7 +205,7 @@ class ProvisionRecord(UuidAuditedModel):
     status = models.CharField(verbose_name="状态", max_length=16)
 
     tenant_id = tenant_id_field_factory()
-    
+
 
 class ServiceInstanceConfig(UuidAuditedModel):
     """Extra config for instance"""

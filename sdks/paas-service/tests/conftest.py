@@ -18,8 +18,8 @@ to the current version of the project delivered to anyone in the future.
 """
 import pytest
 from paas_service.auth.backends import Client
-from paas_service.models import Plan, Service, ServiceInstance, SpecDefinition, ProvisionRecord
 from paas_service.constants import ProvisionRecordStatus
+from paas_service.models import Plan, ProvisionRecord, Service, ServiceInstance, SpecDefinition
 
 
 @pytest.fixture
@@ -78,6 +78,7 @@ def provisioning_record(plan):
         plan_id=plan.uuid,
         status=ProvisionRecordStatus.PROVISIONING,
     )
+
 
 @pytest.fixture
 def success_record(plan, instance_with_credentials):

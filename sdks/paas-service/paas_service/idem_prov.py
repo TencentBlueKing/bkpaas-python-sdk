@@ -1,14 +1,30 @@
-from datetime import timedelta
+# -*- coding: utf-8 -*-
+"""
+TencentBlueKing is pleased to support the open source community by making
+蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
+Licensed under the MIT License (the "License"); you may not use this file except
+in compliance with the License. You may obtain a copy of the License at
+
+    http://opensource.org/licenses/MIT
+
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+either express or implied. See the License for the specific language governing permissions and
+limitations under the License.
+
+We undertake not to change the open source license (MIT license) applicable
+to the current version of the project delivered to anyone in the future.
+"""
 import json
 from typing import Callable
 
 from django.db import IntegrityError, transaction
-from django.utils import timezone
 
 from paas_service.base_vendor import BaseProvider, get_provider_cls
 from paas_service.models import Plan, Service
 
-from .constants import ProvisionRecordStatus, MAX_PROVISION_TIMEOUT_SECONDS
+from .constants import ProvisionRecordStatus
 from .models import ProvisionRecord, ServiceInstance
 
 
@@ -25,7 +41,7 @@ def idempotent_provision_instance(
         (service_instance, created)
         `service_instance=None` when provisioning
     """
-    
+
     try:
         with transaction.atomic():
             record = ProvisionRecord.objects.create(
@@ -36,7 +52,7 @@ def idempotent_provision_instance(
             acquired = True
     except IntegrityError:
         acquired = False
-    
+
     if not acquired:
         record = ProvisionRecord.objects.select_related('service_instance').get(
             provision_key=provision_key,

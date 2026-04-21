@@ -185,8 +185,8 @@ class SvcInstanceViewSet(viewsets.ViewSet):
                     "engine_app_name": "bkapp-myapp-stag", # required, defualt provision/idempotent key
                 }
             }
-        
-        response:
+
+        Response:
             [http status code]    [description]
             200                   existing instance is reused
             201                   instance provisioned successfully
@@ -237,7 +237,7 @@ class SvcInstanceViewSet(viewsets.ViewSet):
 
         service = get_object_or_404(Service, pk=service_id)
         plan = get_object_or_404(Plan, service=service, pk=plan_id)
-        
+
         with wrap_provider_action_exc('create instance') as ret:
             service_instance, created = idempotent_provision_instance(
                 service=service,
@@ -249,7 +249,8 @@ class SvcInstanceViewSet(viewsets.ViewSet):
 
         if ret.has_error:
             return ret.response
-        
+
+        # 分配中...
         if service_instance is None:
             return Response(
                 data={'detail': 'instance is being provisioned, please retry later'},
@@ -261,7 +262,7 @@ class SvcInstanceViewSet(viewsets.ViewSet):
                 data={'detail': 'an instance with the same provision key already exists but with different plan, unable to provision'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         service_instance.prerender(request)
         status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
         return Response(serializers.ServiceInstanceSLZ(service_instance).data, status=status_code)
