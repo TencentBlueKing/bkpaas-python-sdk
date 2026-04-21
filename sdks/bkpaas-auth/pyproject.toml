@@ -20,7 +20,7 @@ Homepage = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
 Repository = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^6.2.5"
+pytest = "^9.0.3"
 pytest-django = "^3.8.0"
 mypy = "^1.12.0"
 pytest-mock = "^3.4.0"
