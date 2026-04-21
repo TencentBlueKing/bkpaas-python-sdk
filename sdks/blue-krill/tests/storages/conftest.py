@@ -27,14 +27,12 @@ def mktemp() -> Generator[Callable[..., Path], None, None]:
 
     def core(content: Optional[str] = None):
         if content is not None:
-            fh = NamedTemporaryFile(mode="w", delete=False)
-            fh.write(content)
-            fh.close()
-            filepath = Path(fh.name)
+            with NamedTemporaryFile(mode="w", delete=False) as fh:
+                fh.write(content)
+                filepath = Path(fh.name)
         else:
-            fh = NamedTemporaryFile(delete=False)
-            fh.close()
-            filepath = Path(fh.name)
+            with NamedTemporaryFile(delete=False) as fh:
+                filepath = Path(fh.name)
         files.append(filepath)
         return filepath
 
