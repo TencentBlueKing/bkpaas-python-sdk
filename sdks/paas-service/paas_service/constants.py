@@ -44,5 +44,3 @@ REDIRECT_FIELD_NAME = "c_url"
 # it serves as a reserved value. When multi-tenant mode is enabled, no tenant id can
 # be "default".
 DEFAULT_TENANT_ID = "default"
-
-MAX_PROVISION_TIMEOUT_SECONDS = 15 * 60
