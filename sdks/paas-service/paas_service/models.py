@@ -18,12 +18,10 @@ to the current version of the project delivered to anyone in the future.
 """
 import json
 import uuid
-from datetime import timedelta
 from typing import Any, Dict, List
 
 from blue_krill.models.fields import EncryptField
-from django.db import models, IntegrityError
-from django.utils import timezone
+from django.db import models
 from django.conf import settings
 from django.http import HttpRequest
 from django.utils.functional import cached_property
@@ -33,8 +31,6 @@ from jsonfield import JSONField
 from translated_fields import TranslatedField
 
 from paas_service.fields import tenant_id_field_factory
-
-from .constants import DEFAULT_LOCK_TIMEOUT_SECONDS
 
 # Base Models start
 
@@ -185,8 +181,18 @@ class ServiceInstance(UuidAuditedModel):
         return self._prepared_fields_data
 
 
-class InstanceRecord(UuidAuditedModel):
-    engine_app_name = models.CharField(verbose_name="引擎应用名称", max_length=64)
+class ProvisionRecord(UuidAuditedModel):
+    """
+    ProvisionRecord used to make instance creation idempotent
+    provision_key now is `engine_app_name`, which is unique in global(across tenant)
+
+    Lifecycle (define in constants.ProvisionRecordStatus):
+        1. `provisioning`: record exists, `service_instance` is empty
+        2. `success`: instance has been created and bound to this record
+        3. any error or delete/async delete will directly delete the record
+    """
+    provision_key = models.CharField(unique=True, verbose_name="幂等分配键", max_length=64)
+    
     service_instance = models.OneToOneField(
         ServiceInstance,
         verbose_name="实例",
@@ -197,46 +203,9 @@ class InstanceRecord(UuidAuditedModel):
     )
     plan_id = models.UUIDField(verbose_name="方案 ID")
     status = models.CharField(verbose_name="状态", max_length=16)
+
     tenant_id = tenant_id_field_factory()
-
-
-class OperationLock(models.Model):
-    id = models.AutoField(primary_key=True)
-    lock_key = models.CharField(verbose_name="锁的 key", max_length=64, unique=True)
-    expires_at = models.DateTimeField(verbose_name="过期时间")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
-
-    @classmethod
-    def acquire_lock(cls, lock_key: str, timeout_seconds: int | None = None) -> bool:
-        """尝试获取锁
-
-        利用 lock_key 的 UNIQUE 约束实现互斥：
-        - 若无同名记录，INSERT 成功即获锁。
-        - 若已有同名记录但已过期，先清理再重新 INSERT。
-        - 若已有同名记录且未过期，说明有并发任务持锁，返回 False。
-        """
-
-        if timeout_seconds is None:
-            timeout_seconds = DEFAULT_LOCK_TIMEOUT_SECONDS
-
-        now = timezone.now()
-        expires_at = now + timedelta(seconds=timeout_seconds)
-
-        # 尝试清理已过期的同 key 锁记录
-        cls.objects.filter(lock_key=lock_key, expires_at__lt=now).delete()
-
-        try:
-            cls.objects.create(lock_key=lock_key, expires_at=expires_at)
-            return True
-        except IntegrityError:
-            # 已有未过期的锁存在，获取失败
-            return False
-
-    @classmethod
-    def release_lock(cls, lock_key: str) -> None:
-        """释放指定 key 的锁"""
-        cls.objects.filter(lock_key=lock_key).delete()
-
+    
 
 class ServiceInstanceConfig(UuidAuditedModel):
     """Extra config for instance"""

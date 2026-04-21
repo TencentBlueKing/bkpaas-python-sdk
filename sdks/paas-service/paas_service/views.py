@@ -18,7 +18,6 @@ to the current version of the project delivered to anyone in the future.
 """
 import json
 import logging
-import time
 from contextlib import contextmanager
 
 from django.http import Http404, HttpResponse
@@ -29,14 +28,14 @@ from paas_service import __version__, serializers
 from paas_service.auth.backends import InstanceAuthBackend, InstanceAuthFailed
 from paas_service.auth.decorator import verified_client_required, verified_client_role_require
 from paas_service.base_vendor import ArgumentInvalidError, InstanceData, OperationFailed, get_provider_cls
+from paas_service.idem_prov import idempotent_provision_instance
 from paas_service.mixins import LoginRequiredMixin
 from paas_service.models import Plan, Service, ServiceInstance, ServiceInstanceConfig
 from paas_service.utils import parse_redirect_params
 from rest_framework import status, viewsets
 from rest_framework.response import Response
 
-from .constants import InstanceRecordStatus, DEFAULT_LOCK_POLL_MAX_RETRIES, DEFAULT_LOCK_POLL_INTERVAL_SECONDS
-from .models import InstanceRecord, OperationLock
+from .models import ProvisionRecord
 
 logger = logging.getLogger(__name__)
 
@@ -174,38 +173,58 @@ class SvcInstanceViewSet(viewsets.ViewSet):
         service_instance.prerender(request)
         return Response(serializers.ServiceInstanceSLZ(service_instance).data, status=201)
 
-    def _get_existing_instance_response(self, request, engine_app_name, plan_id):
-        """检查是否有可复用的实例资源"""
-        record = InstanceRecord.objects.filter(
-            engine_app_name=engine_app_name,
-            status=InstanceRecordStatus.SUCCESS
-        ).first()
-
-        if record:
-            if str(record.plan_id) != str(plan_id):
-                return Response(
-                    data={'detail': f'an instance with engine_app_name {engine_app_name} already exists but with a different plan'},
-                    status=400
-                )
-
-            instance = get_object_or_404(ServiceInstance, pk=record.service_instance_id)
-            instance.prerender(request)
-            return Response(serializers.ServiceInstanceSLZ(instance).data, status=status.HTTP_200_OK)
-        return None
-
     @verified_client_role_require('internal_platform')
-    def idempotent_provision(self, request, service_id):
-        """Provision a new instance with idempotency.
+    def idem_prov(self, request, service_id):
+        """
+        Provision a new instance with idempotency
 
-        核心机制：基于 engine_app_name 作为幂等键
-
-        请求示例:
+        request example:
             {
                 "plan_id": "f8ad12f2-4dd5-4871-8e31-9a1f9f3795a2",
                 "params": {
-                    "engine_app_name": "bkapp-myapp-stag", # 必填，作为幂等键
+                    "engine_app_name": "bkapp-myapp-stag", # required, defualt provision/idempotent key
                 }
             }
+        
+        response:
+            [http status code]    [description]
+            200                   existing instance is reused
+            201                   instance provisioned successfully
+            202                   instance is still being provisioned, retry later
+            400                   bad request, e.g. missing required params or provision key conflict with plan_id
+            500                   provider operation failed or unknown error occurred
+
+        Flow:
+            Create Req ---> [provision key] ----|
+                                                |---> Record exists && status=SUCCESS
+                                                |       && instance.plan=plan
+                                                |       ---> Reuse existing instance ---> 200
+                                                |
+                                                |---> Record exists && status=SUCCESS
+                                                |       && instance.plan!=plan
+                                                |       ---> Reject due to plan conflict ---> 400
+                                                |
+                                                |---> Record exists && status=PROVISIONING
+                                                |       ---> Another request is still creating
+                                                |             the instance ---> 202
+                                                |             ^
+                                                |             |
+                                                |       if provider create takes too long,
+                                                |       caller may retry Create Req and will
+                                                |       hit this branch until the first request
+                                                |       finishes or fails
+                                                |
+                                                |---> No record
+                                                        ---> Create PROVISIONING record
+                                                        ---> Start provider.create()
+                                                                |---> Success
+                                                                |       ---> Create instance
+                                                                |       ---> Mark record SUCCESS
+                                                                |       ---> 201
+                                                                |
+                                                                |---> Failed
+                                                                        ---> Delete record
+                                                                        ---> 500
         """
         plan_id = request.data.get('plan_id')
         params = request.data.get('params', {})
@@ -213,73 +232,40 @@ class SvcInstanceViewSet(viewsets.ViewSet):
         if not (engine_app_name and plan_id):
             return Response(
                 data={'detail': f"{'engine_app_name' if not engine_app_name else 'plan_id'} is required"},
-                status=400
+                status=status.HTTP_400_BAD_REQUEST
             )
 
         service = get_object_or_404(Service, pk=service_id)
         plan = get_object_or_404(Plan, service=service, pk=plan_id)
-
-        if resp := self._get_existing_instance_response(request, engine_app_name, plan_id):
-            return resp
-
-        lock_key = engine_app_name
-        lock_acquired = False
-        for _ in range(DEFAULT_LOCK_POLL_MAX_RETRIES):
-            lock_acquired = OperationLock.acquire_lock(lock_key)
-            if lock_acquired:
-                break
-
-            time.sleep(DEFAULT_LOCK_POLL_INTERVAL_SECONDS)
-            if resp := self._get_existing_instance_response(request, engine_app_name, plan_id):
-                return resp
-
-        if not lock_acquired:
-            return Response(
-                data={'detail': f'unable to acquire lock for {engine_app_name}, concurrent provision in progress'},
-                status=status.HTTP_409_CONFLICT,
-            )
-        # 获锁后再做一次预检，防止等待锁期间被先行者完成了资源创建
-        if resp := self._get_existing_instance_response(request, engine_app_name, plan_id):
-            return resp
-
-        try:
-            record = InstanceRecord.objects.create(
-                engine_app_name=engine_app_name,
-                plan_id=plan_id,
-                status=InstanceRecordStatus.PROVISIONING,
-                tenant_id=plan.tenant_id,
-            )
-
-            provider_cls = get_provider_cls()
-            plan_config = json.loads(plan.config)
-            with wrap_provider_action_exc('create instance') as ret:
-                instance_data = provider_cls(**plan_config).create(params=params)
-
-            if ret.has_error:
-                record.status = InstanceRecordStatus.FAILED
-                record.save(update_fields=['status', 'updated'])
-                return ret.response
-
-            service_instance = ServiceInstance.objects.create(
+        
+        with wrap_provider_action_exc('create instance') as ret:
+            service_instance, created = idempotent_provision_instance(
                 service=service,
                 plan=plan,
-                config=instance_data.config,
-                credentials=json.dumps(instance_data.credentials),
-                tenant_id=plan.tenant_id,
+                provision_key=engine_app_name,
+                params=params,
+                provider_cls_getter=get_provider_cls,
             )
 
-            record.service_instance = service_instance
-            record.status = InstanceRecordStatus.SUCCESS
-            record.save(update_fields=['service_instance', 'status', 'updated'])
-
-            service_instance.prerender(request)
+        if ret.has_error:
+            return ret.response
+        
+        if service_instance is None:
             return Response(
-                serializers.ServiceInstanceSLZ(service_instance).data,
-                status=status.HTTP_201_CREATED,
+                data={'detail': 'instance is being provisioned, please retry later'},
+                status=status.HTTP_202_ACCEPTED
             )
-        finally:
-            # 无论成功或异常，一定释放锁
-            OperationLock.release_lock(lock_key)
+
+        if service_instance.plan.uuid != plan.uuid:
+            return Response(
+                data={'detail': 'an instance with the same provision key already exists but with different plan, unable to provision'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        service_instance.prerender(request)
+        status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        return Response(serializers.ServiceInstanceSLZ(service_instance).data, status=status_code)
+
 
     @m_verified_client_required
     def retrieve(self, request, instance_id):
@@ -343,10 +329,9 @@ class SvcInstanceViewSet(viewsets.ViewSet):
             return Response(data={'detail': f'unable to mark instance<{instance_id}> to delete: {e}'})
 
         try:
-            record = InstanceRecord.objects.get(service_instance=instance)
-            record.status = InstanceRecordStatus.DELETING
-            record.save(update_fields=['status', 'updated'])
-        except InstanceRecord.DoesNotExist:
+            record = ProvisionRecord.objects.get(service_instance=instance)
+            record.delete()
+        except ProvisionRecord.DoesNotExist:
             #  兼容线上历史数据无对应 InstanceRecord 的情况
             pass
 

@@ -28,17 +28,13 @@ class Category(int, Enum):
     MONITORING_HEALTHY = 2
 
 
-class InstanceRecordStatus(StrStructuredEnum):
+class ProvisionRecordStatus(StrStructuredEnum):
     # 实例创建中
     PROVISIONING = EnumField("provisioning", label="分配资源中")
     # 成功：物理资源已创建
     SUCCESS = EnumField("success", label="分配成功")
-
-    # 异步删除已标记，此时不再允许被新请求复用
-    DELETING = EnumField("deleting", label="异步删除中")
-    FAILED = EnumField("failed", label="分配失败")
-
-    # 已删除：物理资源已删除，记录会同步被直接删除，故没有已删除状态
+    
+    # 异步删除触发，或分配发生错误，都会直接删除 ProvisionRecord，所以对应的状态
 
 
 # Login 服务的重定向链接字段名
@@ -49,9 +45,4 @@ REDIRECT_FIELD_NAME = "c_url"
 # be "default".
 DEFAULT_TENANT_ID = "default"
 
-# 默认锁定时间，单位为秒，15分钟
-DEFAULT_LOCK_TIMEOUT_SECONDS = 15 * 60
-# 获取锁失败后的默认轮询间隔
-DEFAULT_LOCK_POLL_INTERVAL_SECONDS = 1
-# 获取锁最大轮询次数
-DEFAULT_LOCK_POLL_MAX_RETRIES = 200
+MAX_PROVISION_TIMEOUT_SECONDS = 15 * 60

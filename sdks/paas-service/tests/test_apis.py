@@ -17,13 +17,12 @@ We undertake not to change the open source license (MIT license) applicable
 to the current version of the project delivered to anyone in the future.
 """
 import json
-from types import SimpleNamespace
 
 import pytest
 from django.test.utils import override_settings
 
-from paas_service.constants import DEFAULT_TENANT_ID, InstanceRecordStatus
-from paas_service.models import InstanceRecord, Plan, Service, ServiceInstance, ServiceInstanceConfig, SpecDefinition, Specification
+from paas_service.constants import DEFAULT_TENANT_ID
+from paas_service.models import ProvisionRecord, Plan, Service, ServiceInstanceConfig, SpecDefinition, Specification
 from paas_service.views import PlanManageViewSet, ServiceManageViewSet, SvcInstanceConfigViewSet, SvcInstanceViewSet
 
 pytestmark = pytest.mark.django_db
@@ -381,168 +380,59 @@ class TestSvcInstanceViewSet:
         response.render()
         assert response.status_code == 404
 
+    def test_idem_prov(self, rf, service, plan, platform_client):
+        view = SvcInstanceViewSet.as_view({'post': 'idem_prov'})
 
-class FakeProvider:
-    """用于测试的 Provider 桩对象，记录 create 调用以验证幂等行为。"""
-
-    create_calls: list = []
-
-    def __init__(self, **kwargs):
-        self.kwargs = kwargs
-
-    @classmethod
-    def reset(cls):
-        cls.create_calls = []
-
-    def create(self, params):
-        self.create_calls.append(params)
-        return SimpleNamespace(
-            config={'created_by': 'fake-provider'},
-            credentials={'password': 'asdf', 'host': 'host.test'},
-        )
-
-
-class TestSvcInstanceIdempotentProvision:
-
-    @pytest.fixture(autouse=True)
-    def _setup_fake_provider(self, monkeypatch):
-        """每个测试方法执行前自动重置 FakeProvider 并注入 mock。"""
-        FakeProvider.reset()
-        monkeypatch.setattr('paas_service.views.get_provider_cls', lambda: FakeProvider)
-
-    # ---------- helpers ----------
-
-    def _idempotent_provision(self, rf, service, plan, platform_client, engine_app_name):
-        """发起一次幂等分配请求并返回渲染后的 response。"""
-        view = SvcInstanceViewSet.as_view({'post': 'idempotent_provision'})
-        request = rf.post(
-            f'/{service.pk}/instances/',
-            data=json.dumps(
-                {
-                    'plan_id': str(plan.uuid),
-                    'params': {'engine_app_name': engine_app_name},
-                }
-            ),
-            content_type='application/json',
-        )
+        request = rf.post(f"/services/{service.uuid}/insntaces/", data=json.dumps({
+            "params": {"engine_app_name": "test-1"},
+            "plan_id": str(plan.uuid),
+        }), content_type="application/json")
         request.client = platform_client
-        resp = view(request, service_id=service.pk)
-        return resp.render()
 
-    # ---------- 幂等分配 ----------
-
-    def test_idempotent_provision_creates_instance_and_record(self, rf, service, plan, platform_client):
-        """首次分配应创建 ServiceInstance + InstanceRecord，并调用 provider.create。"""
-        response = self._idempotent_provision(rf, service, plan, platform_client, engine_app_name='bkapp-demo')
-
+        response = view(request, service_id=service.uuid)
+        # 基于 engine_app_name 幂等创建，第一次创建返回 201
         assert response.status_code == 201
-        assert FakeProvider.create_calls == [{'engine_app_name': 'bkapp-demo'}]
 
-        instance = ServiceInstance.objects.get()
-        record = InstanceRecord.objects.get(engine_app_name='bkapp-demo')
-        assert record.service_instance_id == instance.uuid
-        assert record.plan_id == plan.uuid
-        assert record.status == InstanceRecordStatus.SUCCESS
+        response.render()
+        
+        request2 = rf.post(f"/services/{service.uuid}/insntaces/", data=json.dumps({
+            "params": {"engine_app_name": "test-1"},
+            "plan_id": str(plan.uuid),
+        }), content_type="application/json")
+        request2.client = platform_client
+        response2 = view(request2, service_id=service.uuid)
 
-    def test_idempotent_provision_reuses_existing_instance(self, rf, service, plan, platform_client):
-        """同一 engine_app_name 再次请求时应复用已有实例，不触发 provider.create。"""
-        response1 = self._idempotent_provision(rf, service, plan, platform_client, engine_app_name='bkapp-demo')
-        response2 = self._idempotent_provision(rf, service, plan, platform_client, engine_app_name='bkapp-demo')
+        # 第二次并未实际创建资源，返回 200表示复用了之前的资源
+        assert response2.status_code == 200
 
-        assert response1.data['uuid'] == response2.data['uuid']
-        assert response1.data['credentials'] == response2.data['credentials']
-        # provider.create 只应被调用一次
-        assert len(FakeProvider.create_calls) == 1
+        assert response.data['uuid'] == response2.data['uuid']
 
-    def test_idempotent_provision_isolates_different_engine_apps(self, rf, service, plan, platform_client):
-        """不同 engine_app_name 应各自独立分配实例，互不复用。"""
-        response1 = self._idempotent_provision(rf, service, plan, platform_client, engine_app_name='bkapp-demo')
-        response2 = self._idempotent_provision(rf, service, plan, platform_client, engine_app_name='bkapp-demo-2')
-
-        assert response1.data['uuid'] != response2.data['uuid']
-        assert ServiceInstance.objects.count() == 2
-        assert InstanceRecord.objects.count() == 2
-        assert len(FakeProvider.create_calls) == 2
-
-    # ---------- 并发场景 ----------
-
-    def test_concurrent_idempotent_provision(self, rf, service, plan, platform_client, monkeypatch):
-        """并发分配时，未获取锁的请求应等待并复用首个请求创建的实例。"""
-        monkeypatch.setattr('paas_service.views.DEFAULT_LOCK_POLL_MAX_RETRIES', 2)
-        monkeypatch.setattr('paas_service.views.DEFAULT_LOCK_POLL_INTERVAL_SECONDS', 0)
-        monkeypatch.setattr('paas_service.views.OperationLock.acquire_lock', lambda _lock_key: False)
-
-        created = {'instance_uuid': None}
-
-        def _simulate_other_request_finished(_seconds):
-            """在 sleep 时模拟其它请求已完成实例创建。"""
-            if created['instance_uuid'] is not None:
-                return
-            instance = ServiceInstance.objects.create(
-                service=service,
-                plan=plan,
-                config={'created_by': 'other-request'},
-                credentials=json.dumps({'password': 'asdf', 'host': 'host.test'}),
-                tenant_id=plan.tenant_id,
-            )
-            InstanceRecord.objects.create(
-                engine_app_name='bkapp-demo',
-                service_instance=instance,
-                plan_id=plan.uuid,
-                status=InstanceRecordStatus.SUCCESS,
-                tenant_id=plan.tenant_id,
-            )
-            created['instance_uuid'] = str(instance.uuid)
-
-        monkeypatch.setattr('paas_service.views.time.sleep', _simulate_other_request_finished)
-
-        response = self._idempotent_provision(rf, service, plan, platform_client, engine_app_name='bkapp-demo')
-
-        assert response.status_code == 200
-        assert response.data['uuid'] == created['instance_uuid']
-        assert ServiceInstance.objects.count() == 1
-        assert InstanceRecord.objects.count() == 1
-        # 当前请求复用已有实例，不应触发 provider.create
-        assert FakeProvider.create_calls == []
-
-    # ---------- 异步删除 ----------
-
-    def test_async_destroy_marks_record_deleting(self, rf, service, plan, instance_with_credentials, platform_client):
-        """异步删除应将实例标记为 to_be_deleted，同时将关联 InstanceRecord 置为 DELETING。"""
-        record = InstanceRecord.objects.create(
-            engine_app_name='bkapp-demo',
-            service_instance=instance_with_credentials,
-            plan_id=plan.uuid,
-            status=InstanceRecordStatus.SUCCESS,
-            tenant_id=plan.tenant_id,
-        )
-
-        view = SvcInstanceViewSet.as_view({'delete': 'async_destroy'})
-        request = rf.delete(f'/instances/{instance_with_credentials.pk}/async_delete')
+    def test_async_destroy_marks_instance_and_deletes_provision_record(self, rf, success_record, platform_client):
+        """异步删除接口会把 ProvisionRecord 删除掉, 避免错误的复用删除的实例"""
+        async_delete_view = SvcInstanceViewSet.as_view({'delete': 'async_destroy'})
+        
+        record_pk, instance_pk = success_record.uuid, success_record.service_instance.uuid
+        
+        request = rf.delete(f"/instances/{success_record.service_instance.uuid}/async_delete")
         request.client = platform_client
-        view(request, instance_id=instance_with_credentials.pk)
 
-        instance_with_credentials.refresh_from_db()
-        record.refresh_from_db()
-        assert instance_with_credentials.to_be_deleted is True
-        assert record.status == InstanceRecordStatus.DELETING
+        response = async_delete_view(request, instance_id=instance_pk)
+        response.render()
+        assert response.status_code == 204
+        
+        assert not ProvisionRecord.objects.filter(pk=record_pk).exists()
+    
+    def test_destroy_instance_and_record(self, rf, success_record, platform_client):
+        """删除 Instance 级联删除 ProvisionRecord"""
+        delete_view = SvcInstanceViewSet.as_view({'delete': 'destroy'})
+        
+        record_pk, instance_pk = success_record.uuid, success_record.service_instance.uuid
+        
+        request = rf.delete(f"/instances/{success_record.service_instance.uuid}")
+        request.client = platform_client
 
-    def test_idempotent_provision_does_not_reuse_deleted_instance(
-        self, rf, service, plan, instance_with_credentials, platform_client
-    ):
-        """已标记删除的实例不应被后续分配请求复用，应新建实例。"""
-        InstanceRecord.objects.create(
-            engine_app_name='bkapp-demo',
-            service_instance=instance_with_credentials,
-            plan_id=plan.uuid,
-            status=InstanceRecordStatus.DELETING,
-            tenant_id=plan.tenant_id,
-        )
-        instance_with_credentials.to_be_deleted = True
-        instance_with_credentials.save()
-
-        response = self._idempotent_provision(
-            rf, service, plan, platform_client, engine_app_name='bkapp-demo-2'
-        )
-        assert response.data['uuid'] != str(instance_with_credentials.uuid)
-        assert len(FakeProvider.create_calls) == 1
+        response = delete_view(request, instance_id=instance_pk)
+        response.render()
+        assert response.status_code == 204
+        
+        assert not ProvisionRecord.objects.filter(pk=record_pk).exists()

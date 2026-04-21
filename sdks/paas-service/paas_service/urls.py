@@ -41,7 +41,7 @@ urlpatterns += [
     ),
     re_path(
         r'^services/(?P<service_id>[0-9a-f-]{32,36})/instances/$',
-        views.SvcInstanceViewSet.as_view({'get': 'retrieve_by_fields', 'post': 'idempotent_provision'}),
+        views.SvcInstanceViewSet.as_view({'get': 'retrieve_by_fields', 'post': 'idem_prov'}),
         name='api.services.instances_actions',
     ),
     re_path(
