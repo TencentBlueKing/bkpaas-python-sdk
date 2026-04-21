@@ -1,7 +1,10 @@
 # 版本历史
 
 ## 2.0.4
-- 新增根据 `engine_app_name` 幂等性分配实例资源接口
+- 新增幂等分配实例的接口：POST `services/<service_id>/instances/`，幂等键默认为 `engine_app_name`
+和老分配接口 POST `services/<service_id>/instances/<instance_id>/` 不同：
+    a. 一个幂等键（engine_app_name）只会分配一个增强服务实例，请求会尝试复用已分配的同幂等键下的实例
+    b. 无需传递路径参数 `<instance_id>`
 
 ## 2.0.3
 - service list 接口返回增加 `plan_schema` 字段，以指导服务方案配置 
