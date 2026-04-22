@@ -204,8 +204,6 @@ class ProvisionRecord(UuidAuditedModel):
     plan_id = models.UUIDField(verbose_name="方案 ID")
     status = models.CharField(verbose_name="状态", max_length=16)
 
-    tenant_id = tenant_id_field_factory()
-
 
 class ServiceInstanceConfig(UuidAuditedModel):
     """Extra config for instance"""
