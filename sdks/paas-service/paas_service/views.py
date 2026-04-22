@@ -176,7 +176,8 @@ class SvcInstanceViewSet(viewsets.ViewSet):
     @verified_client_role_require('internal_platform')
     def idem_prov(self, request, service_id):
         """
-        Provision a new instance with idempotency
+        Provision a new instance with idempotency, use it when the provisioning process
+        is expected to be slow and caller want to avoid duplicated instance created by retrying
 
         request example:
             {
@@ -200,8 +201,7 @@ class SvcInstanceViewSet(viewsets.ViewSet):
                                                 |       && instance.plan=plan
                                                 |       ---> Reuse existing instance ---> 200
                                                 |
-                                                |---> Record exists && status=SUCCESS
-                                                |       && instance.plan!=plan
+                                                |---> Input params error or conflict:
                                                 |       ---> Reject due to plan conflict ---> 400
                                                 |
                                                 |---> Record exists && status=PROVISIONING
