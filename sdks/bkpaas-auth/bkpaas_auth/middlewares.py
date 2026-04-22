@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 import json
 import logging
-import pickle
 import time
 from typing import Dict
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from django.conf import settings
 from django.contrib import auth
 from django.http import HttpRequest, HttpResponse
-from django.utils.deprecation import MiddlewareMixin
-from django.utils.encoding import force_str
 from django.utils import timezone as dj_timezone
+from django.utils.deprecation import MiddlewareMixin
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from bkpaas_auth.backends import UniversalAuthBackend
 from bkpaas_auth.core.constants import ACCESS_PERMISSION_DENIED_CODE
@@ -24,7 +22,7 @@ class CookieLoginMiddleware(MiddlewareMixin):
     """Call auth.login when user credential cookies changes"""
 
     def process_request(self, request):
-        assert hasattr(request, 'session'), (
+        assert hasattr(request, "session"), (
             "The CookieLoginMiddleware requires session middleware "
             "to be installed. Edit your MIDDLEWARE%s setting to insert "
             "'django.contrib.sessions.middleware.SessionMiddleware' before "
@@ -44,7 +42,7 @@ class CookieLoginMiddleware(MiddlewareMixin):
                 self.authenticate_and_login(request, credentials)
             except AccessPermissionDenied as e:
                 resp = HttpResponse(
-                    json.dumps({'code': ACCESS_PERMISSION_DENIED_CODE, 'detail': str(e)}),
+                    json.dumps({"code": ACCESS_PERMISSION_DENIED_CODE, "detail": str(e)}),
                     content_type="application/json",
                 )
                 resp.status_code = 403
@@ -57,7 +55,7 @@ class CookieLoginMiddleware(MiddlewareMixin):
     ) -> bool:
         """Decide whether to re-authenticate current credentials or not"""
         # Force re-login if credentials is different from last time
-        credentials_been_modified = credentials != request.session.get('auth_credentials', {})
+        credentials_been_modified = credentials != request.session.get("auth_credentials", {})
         if credentials_been_modified:
             return True
 
@@ -71,10 +69,10 @@ class CookieLoginMiddleware(MiddlewareMixin):
         :params request: Current request object
         :params credentials: user credentials, such as uin/skey pair
         """
-        logger.debug('Authenticating credentials...')
+        logger.debug("Authenticating credentials...")
         user = auth.authenticate(request=request, auth_credentials=credentials)
         if user is None or not user.is_authenticated:
-            logger.info('Authentication failed, logout.')
+            logger.info("Authentication failed, logout.")
             auth.logout(request)
             return
 
@@ -83,13 +81,12 @@ class CookieLoginMiddleware(MiddlewareMixin):
             logger.info("User is not validate by UniversalAuthBackend, skip login processes.")
             return
 
-        logger.debug('Authentication finished, username: %s', user.username)
-        request.session['provider_type'] = user.provider_type.value
-        request.session['bkpaas_user_id'] = user.bkpaas_user_id
-        request.session['bkpaas_authenticated_at'] = time.time()
-        request.session['auth_credentials'] = credentials
-        # python3 compatibility
-        request.session['user_token'] = force_str(pickle.dumps(user.token), 'latin1')
+        logger.debug("Authentication finished, username: %s", user.username)
+        request.session["provider_type"] = user.provider_type.value
+        request.session["bkpaas_user_id"] = user.bkpaas_user_id
+        request.session["bkpaas_authenticated_at"] = time.time()
+        request.session["auth_credentials"] = credentials
+        request.session["user_token"] = user.token.dump_json()
 
         # Calling `auth.login` will rotate CSRF token and modify user session, only do this when the authenticated
         # user was different with the user stored in session. Otherwise CSRF token validation may fail due to the

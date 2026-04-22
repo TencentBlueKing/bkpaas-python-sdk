@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import inspect
 import logging
-import pickle
 from typing import Dict, Optional, Union
 
 from django.conf import settings
@@ -9,7 +8,6 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ImproperlyConfigured
 from django.http import HttpRequest
-from django.utils.encoding import force_bytes
 
 from bkpaas_auth.conf import bkauth_settings
 from bkpaas_auth.core.constants import ProviderType
@@ -108,11 +106,15 @@ class UniversalAuthBackend:
         if "user_token" not in request.session:
             return None
 
+        raw_user_token = request.session["user_token"]
+        if not isinstance(raw_user_token, str) or not raw_user_token.startswith("{"):
+            logger.warning("ignore legacy or invalid session user_token payload")
+            return None
+
         try:
-            user_token_pickled = force_bytes(request.session["user_token"], "latin1")
-            user_token: LoginToken = pickle.loads(user_token_pickled)
+            user_token: LoginToken = LoginToken.parse_json(raw_user_token)
         except Exception:
-            logger.exception("pickle loads user_token failed")
+            logger.exception("deserialize user_token failed")
             return None
 
         # token 已经过期则不返回，否则会出现 403

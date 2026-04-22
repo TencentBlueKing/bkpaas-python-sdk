@@ -1,3 +1,4 @@
+import datetime
 from typing import Any, Dict
 
 DEFAULT_SCRUBBED_FIELDS = (
@@ -46,3 +47,15 @@ def scrub_data(data: Dict[str, Any]) -> Dict[str, Any]:
             else:
                 current_result[key] = value
     return result
+
+
+def serialize_datetime(value: datetime.datetime) -> str:
+    if not isinstance(value, datetime.datetime):
+        raise TypeError(f"datetime value required, got: {type(value)!r}")
+    return value.isoformat()
+
+
+def deserialize_datetime(value: str) -> datetime.datetime:
+    if not isinstance(value, str):
+        raise TypeError(f"datetime payload must be str, got: {type(value)!r}")
+    return datetime.datetime.fromisoformat(value)
