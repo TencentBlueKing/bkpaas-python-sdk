@@ -50,7 +50,7 @@ moto = "^2.3.2"
 django-rest-framework = "^0.1.0"
 celery = "^5.0.5"
 # pytest
-pytest = "^6.2.2"
+pytest = ">=7,<8"
 pytest-django = "^4.1.0"
 # mypy
 mypy = "^1.19.0"

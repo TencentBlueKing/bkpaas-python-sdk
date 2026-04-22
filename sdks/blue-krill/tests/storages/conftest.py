@@ -15,23 +15,25 @@
 # We undertake not to change the open source license (MIT license) applicable
 # to the current version of the project delivered to anyone in the future.
 
-import tempfile as _tempfile_
+from tempfile import NamedTemporaryFile
 from pathlib import Path
 from typing import Callable, Generator, Optional
 
 import pytest
-
 
 @pytest.fixture
 def mktemp() -> Generator[Callable[..., Path], None, None]:
     files = []
 
     def core(content: Optional[str] = None):
-        filepath = Path(_tempfile_.mktemp())
-        files.append(filepath)
-        if content:
-            with open(filepath, mode="w") as fh:
+        if content is not None:
+            with NamedTemporaryFile(mode="w", delete=False) as fh:
                 fh.write(content)
+                filepath = Path(fh.name)
+        else:
+            with NamedTemporaryFile(delete=False) as fh:
+                filepath = Path(fh.name)
+        files.append(filepath)
         return filepath
 
     yield core
