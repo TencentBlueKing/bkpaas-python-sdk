@@ -383,7 +383,7 @@ class TestSvcInstanceViewSet:
     def test_idem_prov(self, rf, service, plan, platform_client):
         view = SvcInstanceViewSet.as_view({'post': 'idem_prov'})
 
-        request = rf.post(f"/services/{service.uuid}/insntaces/", data=json.dumps({
+        request = rf.post(f"/services/{service.uuid}/instances/", data=json.dumps({
             "params": {"engine_app_name": "test-1"},
             "plan_id": str(plan.uuid),
         }), content_type="application/json")

@@ -30,12 +30,11 @@ from paas_service.auth.decorator import verified_client_required, verified_clien
 from paas_service.base_vendor import ArgumentInvalidError, InstanceData, OperationFailed, get_provider_cls
 from paas_service.idem_prov import idempotent_provision_instance
 from paas_service.mixins import LoginRequiredMixin
-from paas_service.models import Plan, Service, ServiceInstance, ServiceInstanceConfig
+from paas_service.models import Plan, ProvisionRecord, Service, ServiceInstance, ServiceInstanceConfig
 from paas_service.utils import parse_redirect_params
 from rest_framework import status, viewsets
 from rest_framework.response import Response
 
-from .models import ProvisionRecord
 
 logger = logging.getLogger(__name__)
 
@@ -183,7 +182,7 @@ class SvcInstanceViewSet(viewsets.ViewSet):
             {
                 "plan_id": "f8ad12f2-4dd5-4871-8e31-9a1f9f3795a2",
                 "params": {
-                    "engine_app_name": "bkapp-myapp-stag", # required, defualt provision/idempotent key
+                    "engine_app_name": "bkapp-myapp-stag", # required, default provision/idempotent key
                 }
             }
 
@@ -333,7 +332,7 @@ class SvcInstanceViewSet(viewsets.ViewSet):
             record = ProvisionRecord.objects.get(service_instance=instance)
             record.delete()
         except ProvisionRecord.DoesNotExist:
-            #  兼容线上历史数据无对应 InstanceRecord 的情况
+            #  兼容线上历史数据无对应 ProvisionRecord 的情况
             pass
 
         return Response(status=204)
