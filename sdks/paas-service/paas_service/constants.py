@@ -34,7 +34,7 @@ class ProvisionRecordStatus(StrStructuredEnum):
     # 成功：物理资源已创建
     SUCCESS = EnumField("success", label="分配成功")
 
-    # 异步删除触发，或分配发生错误，都会直接删除 ProvisionRecord，所以对应的状态
+    # 异步删除触发，或分配发生错误，都会直接删除 ProvisionRecord，所以无需对应的状态
 
 
 # Login 服务的重定向链接字段名

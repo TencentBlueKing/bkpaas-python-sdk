@@ -37,9 +37,7 @@ def idempotent_provision_instance(
 ) -> tuple[ServiceInstance | None, bool]:
     """Create or reuse instance by provision key
 
-    Returns:
-        (service_instance, created)
-        `service_instance=None` when provisioning
+    :returns: (service_instance, created) `service_instance=None` when provisioning
     """
 
     try:
