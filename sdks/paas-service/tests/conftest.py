@@ -18,7 +18,8 @@ to the current version of the project delivered to anyone in the future.
 """
 import pytest
 from paas_service.auth.backends import Client
-from paas_service.models import Plan, Service, ServiceInstance, SpecDefinition
+from paas_service.constants import ProvisionRecordStatus
+from paas_service.models import Plan, ProvisionRecord, Service, ServiceInstance, SpecDefinition
 
 
 @pytest.fixture
@@ -68,3 +69,22 @@ def spec_def(service):
 def platform_client():
     """An authenticated client object"""
     return Client('test_client', role='internal_platform')
+
+
+@pytest.fixture
+def provisioning_record(plan):
+    return ProvisionRecord.objects.create(
+        provision_key='key1',
+        plan_id=plan.uuid,
+        status=ProvisionRecordStatus.PROVISIONING,
+    )
+
+
+@pytest.fixture
+def success_record(plan, instance_with_credentials):
+    return ProvisionRecord.objects.create(
+        provision_key='key2',
+        plan_id=plan.uuid,
+        status=ProvisionRecordStatus.SUCCESS,
+        service_instance=instance_with_credentials
+    )

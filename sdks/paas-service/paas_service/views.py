@@ -28,11 +28,13 @@ from paas_service import __version__, serializers
 from paas_service.auth.backends import InstanceAuthBackend, InstanceAuthFailed
 from paas_service.auth.decorator import verified_client_required, verified_client_role_require
 from paas_service.base_vendor import ArgumentInvalidError, InstanceData, OperationFailed, get_provider_cls
+from paas_service.idem_prov import idempotent_provision_instance
 from paas_service.mixins import LoginRequiredMixin
-from paas_service.models import Plan, Service, ServiceInstance, ServiceInstanceConfig
+from paas_service.models import Plan, ProvisionRecord, Service, ServiceInstance, ServiceInstanceConfig
 from paas_service.utils import parse_redirect_params
 from rest_framework import status, viewsets
 from rest_framework.response import Response
+
 
 logger = logging.getLogger(__name__)
 
@@ -170,6 +172,101 @@ class SvcInstanceViewSet(viewsets.ViewSet):
         service_instance.prerender(request)
         return Response(serializers.ServiceInstanceSLZ(service_instance).data, status=201)
 
+    @verified_client_role_require('internal_platform')
+    def idem_prov(self, request, service_id):
+        """
+        Provision a new instance with idempotency, use it when the provisioning process
+        is expected to be slow and caller want to avoid duplicated instance created by retrying
+
+        request example:
+            {
+                "plan_id": "f8ad12f2-4dd5-4871-8e31-9a1f9f3795a2",
+                "params": {
+                    "engine_app_name": "bkapp-myapp-stag", # required, default provision/idempotent key
+                }
+            }
+
+        Response:
+            [http status code]    [description]
+            200                   existing instance is reused
+            201                   instance provisioned successfully
+            202                   instance is still being provisioned, retry later
+            400                   bad request, e.g. missing required params or provision key conflict with plan_id
+            500                   provider operation failed or unknown error occurred
+
+        Flow:
+            Create Req ---> [provision key] ----|
+                                                |---> Record exists && status=SUCCESS
+                                                |       && instance.plan=plan
+                                                |       ---> Reuse existing instance ---> 200
+                                                |
+                                                |---> Input params error or conflict:
+                                                |       ---> Reject due to plan conflict ---> 400
+                                                |
+                                                |---> Record exists && status=PROVISIONING
+                                                |       ---> Another request is still creating
+                                                |             the instance ---> 202
+                                                |             ^
+                                                |             |
+                                                |       if provider create takes too long,
+                                                |       caller may retry Create Req and will
+                                                |       hit this branch until the first request
+                                                |       finishes or fails
+                                                |
+                                                |---> No record
+                                                        ---> Create PROVISIONING record
+                                                        ---> Start provider.create()
+                                                                |---> Success
+                                                                |       ---> Create instance
+                                                                |       ---> Mark record SUCCESS
+                                                                |       ---> 201
+                                                                |
+                                                                |---> Failed
+                                                                        ---> Delete record
+                                                                        ---> 500
+        """
+        plan_id = request.data.get('plan_id')
+        params = request.data.get('params', {})
+        engine_app_name = params.get('engine_app_name')
+        if not (engine_app_name and plan_id):
+            return Response(
+                data={'detail': f"{'engine_app_name' if not engine_app_name else 'plan_id'} is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        service = get_object_or_404(Service, pk=service_id)
+        plan = get_object_or_404(Plan, service=service, pk=plan_id)
+
+        with wrap_provider_action_exc('create instance') as ret:
+            service_instance, created = idempotent_provision_instance(
+                service=service,
+                plan=plan,
+                provision_key=engine_app_name,
+                params=params,
+                provider_cls_getter=get_provider_cls,
+            )
+
+        if ret.has_error:
+            return ret.response
+
+        # 分配中...
+        if service_instance is None:
+            return Response(
+                data={'detail': 'instance is being provisioned, please retry later'},
+                status=status.HTTP_202_ACCEPTED
+            )
+
+        if service_instance.plan.uuid != plan.uuid:
+            return Response(
+                data={'detail': 'an instance with the same provision key already exists but with different plan, unable to provision'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        service_instance.prerender(request)
+        status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        return Response(serializers.ServiceInstanceSLZ(service_instance).data, status=status_code)
+
+
     @m_verified_client_required
     def retrieve(self, request, instance_id):
         """Retrieve an instance"""
@@ -230,6 +327,13 @@ class SvcInstanceViewSet(viewsets.ViewSet):
         except Exception as e:
             logger.exception("mark instance need to delete failed")
             return Response(data={'detail': f'unable to mark instance<{instance_id}> to delete: {e}'})
+
+        try:
+            record = ProvisionRecord.objects.get(service_instance=instance)
+            record.delete()
+        except ProvisionRecord.DoesNotExist:
+            #  兼容线上历史数据无对应 ProvisionRecord 的情况
+            pass
 
         return Response(status=204)
 

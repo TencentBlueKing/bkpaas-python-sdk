@@ -1,4 +1,10 @@
 # 版本历史
+
+## 2.0.4
+- 新增幂等分配实例接口 `POST services/<service_id>/instances/`，默认以 `engine_app_name` 作为幂等键，适用于分配耗时较长、可能超过五分钟的增强服务：
+    a. 同一幂等键仅对应一个增强服务实例，重复请求会复用已分配的实例
+    b. 无需传递路径参数 `<instance_id>`，调用方应使用响应中的实例 UUID
+
 ## 2.0.3
 - service list 接口返回增加 `plan_schema` 字段，以指导服务方案配置 
 

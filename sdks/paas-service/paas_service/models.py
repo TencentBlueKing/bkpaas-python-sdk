@@ -20,6 +20,7 @@ import json
 import uuid
 from typing import Any, Dict, List
 
+from blue_krill.models.fields import EncryptField
 from django.conf import settings
 from django.db import models
 from django.http import HttpRequest
@@ -28,10 +29,8 @@ from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 from jsonfield import JSONField
 from translated_fields import TranslatedField
-from blue_krill.models.fields import EncryptField
 
 from paas_service.fields import tenant_id_field_factory
-
 
 # Base Models start
 
@@ -180,6 +179,30 @@ class ServiceInstance(UuidAuditedModel):
         if not self._prepared_fields_data:
             raise ValueError('no prerendered data found, please call prerender method first')
         return self._prepared_fields_data
+
+
+class ProvisionRecord(UuidAuditedModel):
+    """
+    ProvisionRecord used to make instance creation idempotent
+    provision_key now is `engine_app_name`, which is unique in global(across tenant)
+
+    Lifecycle (define in constants.ProvisionRecordStatus):
+        1. `provisioning`: record exists, `service_instance` is empty
+        2. `success`: instance has been created and bound to this record
+        3. any error or delete/async_delete will directly delete the record
+    """
+    provision_key = models.CharField(unique=True, verbose_name="幂等分配键", max_length=64)
+
+    service_instance = models.OneToOneField(
+        ServiceInstance,
+        verbose_name="实例",
+        on_delete=models.CASCADE,
+        related_name="record",
+        db_constraint=False,
+        null=True,
+    )
+    plan_id = models.UUIDField(verbose_name="方案 ID")
+    status = models.CharField(verbose_name="状态", max_length=16)
 
 
 class ServiceInstanceConfig(UuidAuditedModel):

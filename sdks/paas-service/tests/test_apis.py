@@ -22,7 +22,7 @@ import pytest
 from django.test.utils import override_settings
 
 from paas_service.constants import DEFAULT_TENANT_ID
-from paas_service.models import Plan, Service, ServiceInstanceConfig, SpecDefinition, Specification
+from paas_service.models import ProvisionRecord, Plan, Service, ServiceInstanceConfig, SpecDefinition, Specification
 from paas_service.views import PlanManageViewSet, ServiceManageViewSet, SvcInstanceConfigViewSet, SvcInstanceViewSet
 
 pytestmark = pytest.mark.django_db
@@ -379,3 +379,60 @@ class TestSvcInstanceViewSet:
         response = view(request, instance_id=instance_with_credentials.pk)
         response.render()
         assert response.status_code == 404
+
+    def test_idem_prov(self, rf, service, plan, platform_client):
+        view = SvcInstanceViewSet.as_view({'post': 'idem_prov'})
+
+        request = rf.post(f"/services/{service.uuid}/instances/", data=json.dumps({
+            "params": {"engine_app_name": "test-1"},
+            "plan_id": str(plan.uuid),
+        }), content_type="application/json")
+        request.client = platform_client
+
+        response = view(request, service_id=service.uuid)
+        # 基于 engine_app_name 幂等创建，第一次创建返回 201
+        assert response.status_code == 201
+
+        response.render()
+        
+        request2 = rf.post(f"/services/{service.uuid}/insntaces/", data=json.dumps({
+            "params": {"engine_app_name": "test-1"},
+            "plan_id": str(plan.uuid),
+        }), content_type="application/json")
+        request2.client = platform_client
+        response2 = view(request2, service_id=service.uuid)
+
+        # 第二次并未实际创建资源，返回 200表示复用了之前的资源
+        assert response2.status_code == 200
+
+        assert response.data['uuid'] == response2.data['uuid']
+
+    def test_async_destroy_marks_instance_and_deletes_provision_record(self, rf, success_record, platform_client):
+        """异步删除接口会把 ProvisionRecord 删除掉, 避免错误的复用删除的实例"""
+        async_delete_view = SvcInstanceViewSet.as_view({'delete': 'async_destroy'})
+        
+        record_pk, instance_pk = success_record.uuid, success_record.service_instance.uuid
+        
+        request = rf.delete(f"/instances/{success_record.service_instance.uuid}/async_delete")
+        request.client = platform_client
+
+        response = async_delete_view(request, instance_id=instance_pk)
+        response.render()
+        assert response.status_code == 204
+        
+        assert not ProvisionRecord.objects.filter(pk=record_pk).exists()
+    
+    def test_destroy_instance_and_record(self, rf, success_record, platform_client):
+        """删除 Instance 级联删除 ProvisionRecord"""
+        delete_view = SvcInstanceViewSet.as_view({'delete': 'destroy'})
+        
+        record_pk, instance_pk = success_record.uuid, success_record.service_instance.uuid
+        
+        request = rf.delete(f"/instances/{success_record.service_instance.uuid}")
+        request.client = platform_client
+
+        response = delete_view(request, instance_id=instance_pk)
+        response.render()
+        assert response.status_code == 204
+        
+        assert not ProvisionRecord.objects.filter(pk=record_pk).exists()
