@@ -40,9 +40,14 @@ urlpatterns += [
         name='api.services.instances_creation',
     ),
     re_path(
+        r'^services/(?P<service_id>[0-9a-f-]{32,36})/instances/idem_prov/$',
+        views.SvcInstanceViewSet.as_view({'post': 'idem_prov'}),
+        name='idepotent_provision_instance',
+    ),
+    re_path(
         r'^services/(?P<service_id>[0-9a-f-]{32,36})/instances/$',
-        views.SvcInstanceViewSet.as_view({'get': 'retrieve_by_fields', 'post': 'idem_prov'}),
-        name='api.services.instances_actions',
+        views.SvcInstanceViewSet.as_view({'get': 'retrieve_by_fields'}),
+        name='api.services.instances_retrieve_by_fields',
     ),
     re_path(
         r'^services/(?P<service_id>[0-9a-f-]{32,36})/client-side-instances/(?P<instance_id>[0-9a-f-]{32,36})/$',
