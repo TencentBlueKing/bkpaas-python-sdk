@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = "3.1.3"
+__version__ = "3.2.1"
 
 
 def get_user_by_user_id(user_id: str, username_only: bool = True):

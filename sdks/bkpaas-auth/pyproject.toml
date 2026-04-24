@@ -5,7 +5,7 @@ classifiers = ["License :: OSI Approved :: MIT License"]
 # PEP 621 project metadata
 # See https://www.python.org/dev/peps/pep-0621/
 name = "bkpaas-auth"
-version = "3.2.0"
+version = "3.2.1"
 description = "User authentication django app for blueking internal projects"
 readme = "README.md"
 authors = [{ name = "blueking", email = "blueking@tencent.com" }]
