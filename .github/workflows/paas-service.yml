@@ -1,0 +1,44 @@
+name: CI Check for paas-service
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "sdks/paas-service/**"
+  pull_request:
+    branches: [master]
+    paths:
+      - "sdks/paas-service/**"
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  # TODO: Add check and test steps
+
+  build:
+    runs-on: macos-latest
+    if: github.event.release && contains(github.event.release.tag_name, 'paas-service')
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+      - name: Set up Poetry
+        uses: abatilo/actions-poetry@v2.3.0
+        with:
+          poetry-version: 2.1.1
+      - name: Build paas-service
+        run: |
+          cd sdks/paas-service
+          poetry install
+          poetry build
+          echo "${{ github.event.release.tag_name }} ${{ github.sha }}" > Release.txt
+          cat Release.txt
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            Release.txt
+            sdks/paas-service/dist/*
