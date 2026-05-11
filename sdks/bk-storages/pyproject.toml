@@ -13,7 +13,7 @@ readme = "README.md"
 authors = [{ name = "blueking", email = "blueking@tencent.com" }]
 license = "MIT"
 dynamic = ["classifiers"]
-requires-python = '>=3.8,<3.12'
+requires-python = '>=3.10,<3.12'
 dependencies = ['django (>=4.2,<5.0)', 'requests', 'six', 'boto3 (>=1.4.1)', 'curlify (>=2.2.1)']
 
 [project.urls]
@@ -41,4 +41,3 @@ ignore_missing_imports = true
 show_error_codes = true
 strict_optional = false
 pretty = true
-
