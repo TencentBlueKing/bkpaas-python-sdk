@@ -41,4 +41,3 @@ ignore_missing_imports = true
 show_error_codes = true
 strict_optional = false
 pretty = true
-
