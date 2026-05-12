@@ -4,7 +4,6 @@ import logging
 import time
 from typing import Dict
 
-from django.conf import settings
 from django.contrib import auth
 from django.http import HttpRequest, HttpResponse
 from django.utils import timezone as dj_timezone
