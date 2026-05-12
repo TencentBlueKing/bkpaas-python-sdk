@@ -33,7 +33,6 @@ def pytest_configure():
         USE_TZ=True,
         TIME_ZONE='Asia/Shanghai',
         MIDDLEWARE=middleware,
-        MIDDLEWARE_CLASSES=middleware,
         INSTALLED_APPS=(
             'bkstorages',
             'tests',

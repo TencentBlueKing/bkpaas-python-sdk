@@ -16,7 +16,7 @@ import pytest
 from django.conf import settings
 from django.core.files import File
 from django.core.files.base import ContentFile
-from moto import mock_s3
+from moto import mock_aws
 
 from bkstorages.backends.rgw import RGWBoto3Storage
 
@@ -35,7 +35,7 @@ def make_content_file(content=None):
 
 @pytest.fixture
 def storage():
-    with mock_s3():
+    with mock_aws():
         instance = RGWBoto3Storage()
         instance.endpoint_url = None
         instance._connection = boto3.resource('s3', region_name='us-east-1')
