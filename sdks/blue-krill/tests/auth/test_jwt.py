@@ -22,7 +22,6 @@ import jwt
 import pytest
 import requests
 import requests_mock as requests_mock_mod
-import six
 from django.utils.crypto import get_random_string
 
 from blue_krill.auth.client import VerifiedClientMiddleware
@@ -85,7 +84,7 @@ class TestVerifiedClientMiddleware:
     def test_jwt_using_different_key(self, key, request_client_verified, rf):
         # Prepare JWT token string
         payload = {"iss": _JWT_CLIENT["iss"], "expires_at": time.time() + 3600, "role": "foo_role"}
-        token = six.ensure_str(jwt.encode(payload, key=key, algorithm=_JWT_CLIENT["algorithm"]))
+        token = jwt.encode(payload, key=key, algorithm=_JWT_CLIENT["algorithm"])
 
         # Trigger middleware
         request = rf.get("/", HTTP_AUTHORIZATION=f"Bearer {token}")
