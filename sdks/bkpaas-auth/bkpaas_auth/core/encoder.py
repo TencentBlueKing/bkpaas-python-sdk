@@ -2,8 +2,6 @@
 import binascii
 from typing import Tuple, Union
 
-from six import ensure_binary, ensure_text
-
 from bkpaas_auth.core.constants import ProviderType
 from bkpaas_auth.core.algorithms import ARC4
 
@@ -23,8 +21,8 @@ class BluekingUserIdEncoder:
         """
         id_prefix = ProviderType(provider_type).get_id_prefix()
 
-        encoded = ARC4(ensure_binary(self.secret_key)).encrypt(ensure_binary(username))
-        return id_prefix + ensure_text(binascii.hexlify(encoded))
+        encoded = ARC4(str.encode(self.secret_key)).encrypt(str.encode(username))
+        return id_prefix + bytes.decode(binascii.hexlify(encoded))
 
     def decode(self, user_id: Union[str, bytes]) -> Tuple[int, str]:
         """Decode a given bk_user_id to the combination of (provider_type, username)
@@ -35,8 +33,8 @@ class BluekingUserIdEncoder:
         _provider_type, username = user_id[:2], user_id[2:]
         provider_type = int(_provider_type)
 
-        decoded = ARC4(ensure_binary(self.secret_key)).decrypt(binascii.unhexlify(username))
-        return provider_type, ensure_text(decoded)
+        decoded = ARC4(str.encode(self.secret_key)).decrypt(binascii.unhexlify(username))
+        return provider_type, bytes.decode(decoded)
 
 
 user_id_encoder = BluekingUserIdEncoder()
