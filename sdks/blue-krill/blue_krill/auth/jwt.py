@@ -21,7 +21,6 @@ from dataclasses import dataclass
 from typing import Dict, Optional
 
 import jwt
-import six
 from requests.auth import AuthBase
 
 logger = logging.getLogger(__name__)
@@ -77,6 +76,5 @@ class ClientJWTAuth(AuthBase):
         # Mix extra payload content
         payload.update(extra_payload or {})
 
-        # use `six.ensure_str` to compatible with pyjwt 1.x
-        token = six.ensure_str(jwt.encode(payload, key=self.auth_conf.key, algorithm=self.auth_conf.algorithm))
+        token = jwt.encode(payload, key=self.auth_conf.key, algorithm=self.auth_conf.algorithm)
         return f"{self.prefix} {token}"

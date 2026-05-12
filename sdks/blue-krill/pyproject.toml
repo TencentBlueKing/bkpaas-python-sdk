@@ -7,20 +7,18 @@ classifiers = ["License :: OSI Approved :: MIT License"]
 # See https://www.python.org/dev/peps/pep-0621/
 name = "blue-krill"
 description = "Tools and common packages for blueking PaaS platform."
-requires-python = ">=3.9,<3.12"
+requires-python = ">=3.11, <3.13"
 license = "MIT"
-version = "2.2.0"
+version = "3.0.0"
 # classifieres is dynamic because we want to create Python classifiers automatically
 dynamic = ["classifiers"]
 readme = "README.md"
 authors = [{ name = "blueking", email = "blueking@tencent.com" }]
 dependencies = [
-  'dataclasses (>=0.7) ; python_full_version >= "3.6.2" and python_version < "3.7"',
   'cryptography (>=3.0.0)',
   'django-environ (>=0.8.1)',
-  'pyjwt (>=1.7.1)',
+  'pyjwt (>=2.12.0)',
   'requests',
-  'six',
   'click',
   'pydantic',
   'toml',
@@ -42,7 +40,6 @@ editionctl = "blue_krill.editions.editionctl:main"
 [tool.poetry.group.dev.dependencies]
 redis = "^3.5.3"
 django = "^3.2.0"
-tox = "^3.18.1"
 requests_mock = "^1.8.0"
 requests-mock = "^1.8.0"
 boto3 = "^1.16.45"
@@ -58,10 +55,8 @@ mypy = "^1.19.0"
 typing-extensions = "^4.15.0"
 types-requests = "2.31.0.6"
 types-setuptools = "^57.0.0"
-types-dataclasses = "^0.1.5"
 types-redis = "^3.5.4"
 types-PyMySQL = "^1.0.0"
-types-six = "^0.1.7"
 types-toml = "^0.1.3"
 
 [build-system]

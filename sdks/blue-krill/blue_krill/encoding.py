@@ -32,24 +32,15 @@ def force_text(s, encoding="utf-8", strings_only=False, errors="strict"):
     Similar to django's force_text function
     """
     # Handle the common case first for performance reasons.
-    if issubclass(type(s), six.text_type):
+    if issubclass(type(s), str):
+        return s
+    if strings_only and is_protected_type(s):
         return s
     try:
-        if not issubclass(type(s), six.string_types):
-            if six.PY3:
-                if isinstance(s, bytes):
-                    s = six.text_type(s, encoding, errors)
-                else:
-                    s = six.text_type(s)
-            elif hasattr(s, "__unicode__"):
-                s = six.text_type(s)
-            else:
-                s = six.text_type(bytes(s), encoding, errors)
+        if isinstance(s, bytes):
+            s = str(s, encoding, errors)
         else:
-            # Note: We use .decode() here, instead of six.text_type(s, encoding,
-            # errors), so that if s is a SafeBytes, it ends up being a
-            # SafeText at the end.
-            s = s.decode(encoding, errors)
+            s = str(s)
     except UnicodeDecodeError:  # noqa: TRY203
         raise
     return s

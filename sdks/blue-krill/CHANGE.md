@@ -1,5 +1,10 @@
 ## Change logs
 
+### 3.0.0
+
+- Deprecated: drop support for python 3.8, 3.9, 3.10
+- 支持的 Django 最低要求版本限制为 5.2
+
 ### 2.2.0
 
 - 更新依赖，移除 urllib3，增大 curlify 最大支持版本
@@ -18,6 +23,7 @@
 - Refactor: 删除不再使用的 better_loaddata 命令
 
 ### 2.1.2
+
 - Feature: BKRepoManager 新增参数 tenant_id，传了该参数则添加请求头：X-Bk-Tenant-Id
 - Feature: BKRepoManager.create_project 的参数 project 修改为：project_name
 
@@ -91,9 +97,11 @@
   APIs are easier to use now.
 
 ### 1.1.2
+
 - 移除 HAEndpointPool 拦截 exempt_exceptions 的冗余日志
 
 ### 1.1.1
+
 - Feature: add `MutableURL` to obscure password field in url
 
 ### 1.1.0
@@ -124,6 +132,7 @@
 - `blue_krill.cubing_case` 兼容 python3.6 正则对驼峰命名解析的 bug.
 
 ### 1.0.11
+
 - `blue_krill.storages.blobstore` 增加 `DownloadFailedError` 和 `UploadFailedError` 异常
 
 ### 1.0.10
@@ -181,7 +190,7 @@
 
 - 增加 blobstore 模块
   - 支持 上传/下载/签发分享链接 三个基础功能
-  - 对接 `s3对象存储` 和 `蓝鲸二进制仓库` 两个后端服务 
+  - 对接 `s3对象存储` 和 `蓝鲸二进制仓库` 两个后端服务
 
 ### 0.0.13
 
