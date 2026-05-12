@@ -17,7 +17,6 @@
 
 from decimal import Decimal
 
-import six
 
 _PROTECTED_TYPES = (
     type(None),
