@@ -38,24 +38,24 @@ editionctl = "blue_krill.editions.editionctl:main"
 
 
 [tool.poetry.group.dev.dependencies]
-redis = "^3.5.3"
-django = "^3.2.0"
+redis = "^5.0.0"
+django = "^5.2.0"
 requests_mock = "^1.8.0"
 requests-mock = "^1.8.0"
-boto3 = "^1.16.45"
-moto = "^2.3.2"
+boto3 = "^1.34.0"
+moto = { extras = ["s3"], version = "^5.0.0" }
 django-rest-framework = "^0.1.0"
 celery = "^5.0.5"
 # pytest
-pytest = ">=7,<8"
-pytest-django = "^4.1.0"
+pytest = "^8.0.0"
+pytest-django = "^4.8.0"
 # mypy
 mypy = "^1.19.0"
 # install extension stubs if missing
 typing-extensions = "^4.15.0"
 types-requests = "2.31.0.6"
 types-setuptools = "^57.0.0"
-types-redis = "^3.5.4"
+types-redis = "^4.6.0"
 types-PyMySQL = "^1.0.0"
 types-toml = "^0.1.3"
 

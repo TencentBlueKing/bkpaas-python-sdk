@@ -42,12 +42,7 @@ def tests(session):
     # Prepare pip and poetry
     session.run("python", "-m", "ensurepip", "--upgrade")
     session.install("poetry")
-
-    if session.python == "3.9":
-        # Install the last compatible version of the plugin
-        session.run("poetry", "self", "add", "poetry-plugin-export@1.9.0")
-    else:
-        session.run("poetry", "self", "add", "poetry-plugin-export@latest")
+    session.run("poetry", "self", "add", "poetry-plugin-export@latest")
 
     # Install dev/test dependencies
     session.install("-e", ".[all]")
@@ -83,9 +78,7 @@ def tests(session):
     )
 
     django_versions = [
-        ">=2.2,<3",
-        ">=3.2,<4",
-        ">=4.2,<5",
+        ">=5.2,<6",
     ]
     pyjwt_versions = [
         ">=2.0.0,<3",
