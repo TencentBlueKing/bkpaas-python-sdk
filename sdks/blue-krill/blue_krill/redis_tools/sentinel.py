@@ -67,8 +67,8 @@ class SentinelBackend:
         sentinels: list[tuple[str, int]] = []
         for cp in self.hosts:
             host, port = cp["host"], cp["port"]
-            if not isinstance(host, str) or not isinstance((port, int)):
-                raise ValueError(f"Invalid sentinel endpoint: missing host or port, got host={host!r}, port={port!r}")
+            if not isinstance(host, str) or not isinstance(port, int):
+                raise TypeError(f"Invalid sentinel endpoint: missing host or port, got host={host!r}, port={port!r}")
             sentinels.append((host, port))
 
         sentinel_instance = sentinel.Sentinel(
