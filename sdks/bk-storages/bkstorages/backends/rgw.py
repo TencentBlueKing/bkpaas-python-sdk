@@ -11,7 +11,9 @@
 import mimetypes
 import os
 from gzip import GzipFile
+from io import BytesIO
 from tempfile import SpooledTemporaryFile
+from urllib import parse as urlparse
 
 import botocore.utils
 from boto3 import __version__ as boto3_version
@@ -25,8 +27,6 @@ from django.core.files.storage import Storage
 from django.utils.deconstruct import deconstructible
 from django.utils.encoding import filepath_to_uri, force_bytes, force_str, smart_str
 from django.utils.timezone import is_naive, localtime
-from six import BytesIO, string_types
-from six.moves.urllib import parse as urlparse
 
 from bkstorages.utils import clean_name, get_available_overwrite_name, get_setting, safe_join, setting
 
@@ -45,7 +45,7 @@ def percent_encode(input_str, safe=SAFE_CHARS, encoding=None):
     # handle Non-ascii characters. It respect RGW_FILE_NAME_CHARSET defined in settings
     encoding = encoding or setting('RGW_FILE_NAME_CHARSET', 'utf-8')
 
-    if not isinstance(input_str, string_types):
+    if not isinstance(input_str, str):
         input_str = force_str(input_str, encoding)
     return quote(force_str(input_str, encoding).encode('utf-8'), safe=safe)
 

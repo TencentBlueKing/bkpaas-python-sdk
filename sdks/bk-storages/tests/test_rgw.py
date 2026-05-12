@@ -13,7 +13,6 @@ from tempfile import NamedTemporaryFile
 
 import boto3
 import pytest
-import six
 from django.conf import settings
 from django.core.files import File
 from django.core.files.base import ContentFile
@@ -30,7 +29,7 @@ def make_content_file(content=None):
     """Make a django ContentFile object"""
     if not content:
         content = "written by pytest"
-    content_bytes = six.b(content)
+    content_bytes = content.encode("utf-8")
     return ContentFile(content_bytes)
 
 
@@ -52,7 +51,7 @@ class TestRGWBoto3Storage:
 
     def test_save_file(self, storage):
         with NamedTemporaryFile() as fp:
-            fp.write(six.b("by_test_save"))
+            fp.write(b"by_test_save")
             fp.flush()
 
             f = File(fp)
