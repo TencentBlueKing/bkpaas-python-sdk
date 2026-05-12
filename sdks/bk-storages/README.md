@@ -3,9 +3,12 @@
 bkstorages 帮助你在蓝鲸 Django 应用中轻松使用 ***蓝鲸制品库*** 和 [S3 对象存储](https://docs.ceph.com/en/latest/radosgw/s3/) 以管理用户上传文件
 
 ## 安装
+
 ```bash
-$ pip install bkstorages
+pip install bkstorages
 ```
+
+> 运行环境要求：Python >= 3.11，Django >= 5.2
 
 ## 添加配置
 
@@ -24,21 +27,37 @@ RGW_ENDPOINT_URL = 'http://radosgw.example.com/'
 如果要用蓝鲸对象存储服务来保存所有的用户上传文件，请在配置文件中添加：
 
 ```python
-DEFAULT_FILE_STORAGE = 'bkstorages.backends.rgw.RGWBoto3Storage'
+STORAGES = {
+    "default": {
+        "BACKEND": "bkstorages.backends.rgw.RGWBoto3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 ```
 
 之后项目中所有的 `FileField` 与 `ImageField` 都会将用户文件上传至蓝鲸对象存储服务。
 
 默认情况下，上传新文件会覆盖同名旧文件，你可以通过修改 `RGW_FILE_OVERWRITE` 配置项来关闭。
 
+> Django 4.2 起原先的 `DEFAULT_FILE_STORAGE` / `STATICFILES_STORAGE` 配置项已被新的 `STORAGES` 字典取代，并将在 Django 6.0 移除。本 SDK 仅给出新写法的示例。
+
 关于 Django storage 的更多说明请参考： [Django document: File Storage](https://docs.djangoproject.com/en/3.2/topics/files/#file-storage)
 
 ## 将静态文件托管到蓝鲸对象存储服务
 
-如果要使用蓝鲸对象存储服务托管静态文件，请在配置文件中添加：
+如果要使用蓝鲸对象存储服务托管静态文件，请将上一节的 `STORAGES` 中的 `staticfiles` 项改为 `StaticRGWBoto3Storage`：
 
-```
-STATICFILES_STORAGE = 'bkstorages.backends.rgw.StaticRGWBoto3Storage'
+```python
+STORAGES = {
+    "default": {
+        "BACKEND": "bkstorages.backends.rgw.RGWBoto3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "bkstorages.backends.rgw.StaticRGWBoto3Storage",
+    },
+}
 ```
 
 之后每次执行 `python manage.py collectstatic` 时，django 会自动将所有文件上传到你配置的 bucket 中。
@@ -66,8 +85,15 @@ class MyStaticRGWBoto3Storage(RGWBoto3Storage):
         'CacheControl': 'max-age=86400'
     }
 
-# 修改 settings
-STATICFILES_STORAGE = 'custom_backend.MyStaticRGWBoto3Storage'
+# 在 settings 的 STORAGES 中引用自定义类
+STORAGES = {
+    "default": {
+        "BACKEND": "bkstorages.backends.rgw.RGWBoto3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "custom_backend.MyStaticRGWBoto3Storage",
+    },
+}
 ```
 
 如需使用更丰富的 `object_parameters` 配置参数，请访问 [Boto3 相关文档](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html#S3.Client.put_object) 查阅相关文档。
@@ -87,7 +113,7 @@ STATICFILES_STORAGE = 'custom_backend.MyStaticRGWBoto3Storage'
 
 ```html
 <%!
-    from django.contrib.staticfiles.templatetags.staticfiles import static
+    from django.templatetags.static import static
 %>
 <script type="text/javascript" src="${static('js/settings.js')}"></script>
 ```
@@ -153,8 +179,7 @@ storage.listdir('/test')
 storage.delete('/test/temp_file.txt')
 ```
 
-更多 API 说明请参考：[File storage API - Django documentation](https://docs.djangoproject.com/en/3.2/ref/files/storage/#the-storage-class)
-
+更多 API 说明请参考：[File storage API - Django documentation](https://docs.djangoproject.com/en/5.2/ref/files/storage/#the-storage-class)
 
 ## 文档
 
@@ -167,9 +192,9 @@ storage.delete('/test/temp_file.txt')
 - 执行 `poetry install` 安装所有依赖
 - 使用 `pytest -s .` 执行所有单元测试
 
-### 使用 tox 执行单元测试
+### 使用 nox 执行单元测试
 
-为了测试包在不同 Python 版本下的稳定性，我们使用了 tox 工具。在项目目录下执行 `tox` 即可执行所有的单元测试。
+为了测试包在不同 Python 版本下的稳定性，我们使用了 nox 工具。在项目目录下执行 `nox` 即可执行所有的单元测试。
 
 ### 发布包
 
