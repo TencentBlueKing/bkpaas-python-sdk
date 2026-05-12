@@ -5,7 +5,6 @@ from typing import Tuple, Union
 from bkpaas_auth.core.constants import ProviderType
 from bkpaas_auth.core.algorithms import ARC4
 
-
 class BluekingUserIdEncoder:
     """Generator for blueking user id"""
 

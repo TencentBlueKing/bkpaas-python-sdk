@@ -58,7 +58,6 @@ def pytest_configure():
         USE_TZ=True,
         TIME_ZONE="Asia/Shanghai",
         MIDDLEWARE=[],
-        MIDDLEWARE_CLASSES=[],
         INSTALLED_APPS=(
             "django.contrib.auth",
             "django.contrib.contenttypes",

@@ -27,7 +27,7 @@ class CookieLoginMiddleware(MiddlewareMixin):
             "to be installed. Edit your MIDDLEWARE%s setting to insert "
             "'django.contrib.sessions.middleware.SessionMiddleware' before "
             "'bkpaas_auth.middlewares.CookieLoginMiddleware'."
-        ) % ("_CLASSES" if settings.MIDDLEWARE is None else "")
+        )
 
         backend = UniversalAuthBackend()
         credentials = backend.get_credentials(request)
