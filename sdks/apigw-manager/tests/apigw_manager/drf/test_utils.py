@@ -117,7 +117,7 @@ class TestGetLoggingConfigDict:
         )
 
         assert data["formatters"]["verbose"]["()"] == "pythonjsonlogger.jsonlogger.JsonFormatter"
-        assert data["handlers"]["root"]["filename"] == "/tmp/apigw-manager-logs/beat-ab12-django.log"
+        assert data["handlers"]["root"]["filename"] == os.path.join("/tmp/apigw-manager-logs", "beat-ab12-django.log")
         mocked_exists.assert_called_once_with("/tmp/apigw-manager-logs")
         mocked_makedirs.assert_called_once_with("/tmp/apigw-manager-logs")
         mocked_sample.assert_called_once()
