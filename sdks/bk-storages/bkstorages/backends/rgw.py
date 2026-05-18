@@ -183,7 +183,7 @@ class RGWBoto3StorageFile(File):
             parts = [{'ETag': part.e_tag, 'PartNumber': part.part_number} for part in self._multipart.parts.all()]
             self._multipart.complete(MultipartUpload={'Parts': parts})
         elif self._multipart is not None:
-                self._multipart.abort()
+            self._multipart.abort()
         if self._file is not None:
             self._file.close()
             self._file = None

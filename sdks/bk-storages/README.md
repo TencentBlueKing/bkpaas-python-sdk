@@ -43,7 +43,7 @@ STORAGES = {
 
 > Django 4.2 起原先的 `DEFAULT_FILE_STORAGE` / `STATICFILES_STORAGE` 配置项已被新的 `STORAGES` 字典取代，并将在 Django 6.0 移除。本 SDK 仅给出新写法的示例。
 
-关于 Django storage 的更多说明请参考： [Django document: File Storage](https://docs.djangoproject.com/en/3.2/topics/files/#file-storage)
+关于 Django storage 的更多说明请参考： [Django document: File Storage](https://docs.djangoproject.com/en/5.2/topics/files/#file-storage)
 
 ## 将静态文件托管到蓝鲸对象存储服务
 
