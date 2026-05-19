@@ -25,7 +25,7 @@ try:
     import redis
     from redis import sentinel  # noqa
 except ImportError as _e:
-    raise ImportError("Error loading redis module: %s.\n" "Did you install a suitable version for redis?" % _e) from _e
+    raise ImportError("Error loading redis module: %s.\nDid you install a suitable version for redis?" % _e) from _e
 
 SentinelHost = Dict[str, Optional[Union[str, int]]]
 
@@ -68,7 +68,7 @@ class SentinelBackend:
         for cp in self.hosts:
             host, port = cp["host"], cp["port"]
             if not isinstance(host, str) or not isinstance(port, int):
-                raise TypeError(f"Invalid sentinel endpoint: missing host or port, got host={host!r}, port={port!r}")
+                raise TypeError(f"Invalid sentinel endpoint: got host={host!r}, port={port!r}")
             sentinels.append((host, port))
 
         sentinel_instance = sentinel.Sentinel(

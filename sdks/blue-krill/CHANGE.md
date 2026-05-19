@@ -2,7 +2,7 @@
 
 ### 3.0.0
 
-- Deprecated: drop support for python 3.8, 3.9, 3.10
+- 移除对 Python 3.8/3.9/3.10 的支持 (最低要求 3.11, 支持 3.11/3.12)
 - 支持的 Django 最低要求版本限制为 5.2
 
 ### 2.2.0
@@ -189,14 +189,14 @@
 ### 0.0.14
 
 - 增加 blobstore 模块
-  - 支持 上传/下载/签发分享链接 三个基础功能
-  - 对接 `s3对象存储` 和 `蓝鲸二进制仓库` 两个后端服务
+    - 支持 上传/下载/签发分享链接 三个基础功能
+    - 对接 `s3对象存储` 和 `蓝鲸二进制仓库` 两个后端服务
 
 ### 0.0.13
 
 - 增加 data_types.enum 模块
-  - 增加 FeatureFlag、FeatureFlagField 用于定义功能标记(FeatureFlag)
-  - 增加 StructuredEnum 用于定义带有额外属性的枚举类
+    - 增加 FeatureFlag、FeatureFlagField 用于定义功能标记(FeatureFlag)
+    - 增加 StructuredEnum 用于定义带有额外属性的枚举类
 
 ### 0.0.12
 
