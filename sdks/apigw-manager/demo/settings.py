@@ -19,7 +19,7 @@ try:
 
     pymysql.version_info = (1, 4, 6, "final", 0)  # change mysqlclient version
     pymysql.install_as_MySQLdb()
-except ImportError:
+except (ImportError, OSError):
     pass
 
 # Build paths inside the project like this: BASE_DIR / "subdir".
