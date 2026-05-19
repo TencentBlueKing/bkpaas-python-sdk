@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "apigw-manager"
-version = "4.2.3"
+version = "5.0.0"
 description = "The SDK for managing blueking gateway resource."
 readme = "README.md"
 authors = ["blueking <blueking@tencent.com>"]
@@ -17,7 +17,7 @@ license = "MIT"
 dynamic = ["version", "classifiers", "dependencies"]
 readme = "README.md"
 authors = [{name = "blueking", email = "blueking@tencent.com"}]
-requires-python = '>=3.9,<3.13'
+requires-python = '>=3.11,<3.14'
 
 
 [project.urls]
@@ -32,7 +32,7 @@ demo = ['django-environ (>=0.8.1)', "django", 'PyMySQL (>=1.0.2,<2.0.0)', 'pyjwt
 kubernetes = ['kubernetes']
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.13"
+python = ">=3.11,<3.14"
 setuptools = ">=78.1.1"
 urllib3 = ">=1.25.3"
 pyyaml = ">=5.4.2"

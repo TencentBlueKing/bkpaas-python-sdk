@@ -1,5 +1,9 @@
 ## Change logs
 
+### 5.0.0
+
+- [breaking change] drop support for python 3.8/3.9/3.10, request >=3.11 and < 3.14
+
 ### 4.2.3
 
 - 支持同步网关环境 MCP Server 配置，新增 Django Command `sync_apigw_stage_mcp_servers`
@@ -48,13 +52,17 @@
 ### 3.0.3
 
 - 修复资源版本校验问题
+
 ### 3.0.2
+
 - 更新依赖 future 版本
 
 ### 3.0.1
+
 - 修复指令 fetch_esb_public_key 指令参数问题
 
 ### 3.0.0
+
 - 添加指令 add_related_apps，支持为网关添加关联应用
 - definition.yaml 添加 spec_version 字段，指定配置文件版本号
 - Django Command 中，通过参数 --gateway-name 指定网关
@@ -63,37 +71,42 @@
 - 优化 README.md，提供 examples
 
 Breaking changes:
+
 - 基础镜像 apigw-manager 中，调整指令名称
-  - sync-apigateway 改为 sync-apigateway.sh
-  - apigw-manager 改为 apigw-manager.sh
-  - call_command 改为 call_command_or_warning
-  - call_definition_command 改为 call_definition_command_or_warning
-  - must_call_definition_command 改为 call_definition_command_or_exit
+    - sync-apigateway 改为 sync-apigateway.sh
+    - apigw-manager 改为 apigw-manager.sh
+    - call_command 改为 call_command_or_warning
+    - call_definition_command 改为 call_definition_command_or_warning
+    - must_call_definition_command 改为 call_definition_command_or_exit
 - 以下函数中的参数名 api_name 改为 gateway_name
-  - ApiGatewayJWTUserMiddleware.get_user
-  - UserModelBackend.authenticate
-  - PublicKeyProvider.provide
-  - SettingsPublicKeyProvider.provide
-  - CachePublicKeyProvider.provide
+    - ApiGatewayJWTUserMiddleware.get_user
+    - UserModelBackend.authenticate
+    - PublicKeyProvider.provide
+    - SettingsPublicKeyProvider.provide
+    - CachePublicKeyProvider.provide
 - 以下函数中参数名 default_api_name 改为 default_gateway_name
-  - CachePublicKeyProvider.__init__
-  - DefaultJWTProvider.__init__
-  - DummyEnvPayloadJWTProvider.__init__
-  - JWTProvider.__init__
-  - PublicKeyProvider.__init__
-  - SettingsPublicKeyProvider.__init__
+    - CachePublicKeyProvider.__init__
+    - DefaultJWTProvider.__init__
+    - DummyEnvPayloadJWTProvider.__init__
+    - JWTProvider.__init__
+    - PublicKeyProvider.__init__
+    - SettingsPublicKeyProvider.__init__
 
 如果项目添加了自定义镜像，或自定义 Django 中间件，需要按照新的规则进行调整，或者锁定版本号
+
 - 自定义镜像锁定基础镜像 apigw-manager 版本，版本号 < 3.0.0
 - SDK 锁定版本号 < 3.0.0，如 poetry 可设置 `apigw-manager = "<3.0.0"`
 
 ### 2.0.1
+
 - 修复镜像 sync-apigateway 中，同步任务失败时，脚本退出码为 0 的问题
 
 ### 2.0.0
+
 - 恢复指令 sync_apigw_strategies，但其中仅打印告警日志
 
 ### 1.2.0
+
 - 优化资源版本是否存在的校验
 - 删除指令 sync_apigw_strategies，不再支持同步访问策略
 
