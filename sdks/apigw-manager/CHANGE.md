@@ -3,6 +3,7 @@
 ### 5.0.0
 
 - [breaking change] drop support for python 3.8/3.9/3.10, request >=3.11 and < 3.14
+- [breaking change] drop support for Django 3.x / 4.x, request Django >=5.2,<6.0 (LTS)
 
 ### 4.2.3
 

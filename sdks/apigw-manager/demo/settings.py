@@ -9,7 +9,6 @@
  specific language governing permissions and limitations under the License.
 """
 
-
 import os
 from pathlib import Path
 
@@ -30,7 +29,7 @@ env = environ.Env()
 
 
 # Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
+# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env.str("SECRET_KEY", default="apigw-manager")
@@ -93,7 +92,7 @@ WSGI_APPLICATION = "demo.wsgi.application"
 
 
 # Database
-# https://docs.djangoproject.com/en/3.2/ref/settings/#databases
+# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
     "default": env.db_url("DATABASE_URL", default="sqlite:///" + os.path.join(BASE_DIR, "db.sqlite3")),
@@ -101,7 +100,7 @@ DATABASES = {
 
 
 # Password validation
-# https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
+# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -120,7 +119,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Internationalization
-# https://docs.djangoproject.com/en/3.2/topics/i18n/
+# https://docs.djangoproject.com/en/5.2/topics/i18n/
 
 LANGUAGE_CODE = env.str("LANGUAGE_CODE", default="en-us")
 
@@ -128,25 +127,20 @@ TIME_ZONE = env.str("TIME_ZONE", default="UTC")
 
 USE_I18N = env.bool("USE_I18N", default=True)
 
-USE_L10N = env.bool("USE_L10N", default=True)
-
 USE_TZ = env.bool("USE_TZ", default=True)
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/3.2/howto/static-files/
+# https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "/static/"
 
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
+# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 BK_APP_SECRET = env.str("BK_APP_SECRET", default="")
 BK_APP_CODE = env.str("BK_APP_CODE", default="")
