@@ -94,6 +94,9 @@ stages:
         {% if mcp_server.oauth2_public_client_enabled %}
         oauth2_public_client_enabled: {{ mcp_server.oauth2_public_client_enabled }}
         {% endif %}
+        {% if mcp_server.raw_response_enabled %}
+        raw_response_enabled: {{ mcp_server.raw_response_enabled }}
+        {% endif %}
         {% if mcp_server.category_names %}
         category_names:
           {% for category in mcp_server.category_names %}

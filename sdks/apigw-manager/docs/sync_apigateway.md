@@ -117,13 +117,15 @@ stages:
 #        is_public: true
 #        # MCP 协议类型：sse（默认）、streamable_http
 #        protocol_type: "sse"
-#        # 1: 开启, 0: 停止；默认关闭
+#        # 1: 开启, 0: 停止（必选字段）
 #        status: 1
 #        # 授权的应用
 #        target_app_codes:
 #          - "bk_app_code1"
 #        # 是否开启 OAuth2 公开客户端模式，开启后将对 bk_app_code=public 的应用授权，默认不开启
 #        oauth2_public_client_enabled: false
+#        # 是否返回原始响应，开启后 mcp-proxy 将直接返回 API 响应结果，不添加 request_id 等额外信息，默认不开启
+#        raw_response_enabled: false
 #        # MCP Server 分类名称列表，不传则不更新分类
 #        category_names:
 #          - "Official"
@@ -208,13 +210,15 @@ stages:
     #     is_public: true
     #     # MCP 协议类型：sse（默认）、streamable_http
     #     protocol_type: "sse"
-    #     # 1: 开启, 0: 停止；默认关闭
+    #     # 1: 开启, 0: 停止（必选字段）
     #     status: 1
     #     # 授权的应用
     #     target_app_codes:
     #       - "bk_app_code1"
     #     # 是否开启 OAuth2 公开客户端模式
     #     oauth2_public_client_enabled: false
+    #     # 是否返回原始响应，开启后 mcp-proxy 直接返回 API 响应结果
+    #     raw_response_enabled: false
     #     # MCP Server 分类名称列表
     #     category_names:
     #       - "Official"
@@ -412,10 +416,11 @@ resource_docs:
 | `resource_names` | array[string] | 是 | MCP Server 关联的资源列表，对应 resources.yaml 中定义的资源名称 |
 | `tool_names` | array[string] | 否 | MCP Server 工具名称列表，默认等于 resource_names。如需对资源进行重命名可设置此字段，长度必须与 resource_names 一致，且不能重复 |
 | `is_public` | bool | 否 | 是否公开，默认不公开 |
-| `status` | integer | 否 | 状态：1 表示启用，0 表示关闭（默认关闭） |
+| `status` | integer | 是 | 状态：1 表示启用，0 表示关闭 |
 | `protocol_type` | string | 否 | MCP 协议类型：`sse`（默认）、`streamable_http` |
 | `target_app_codes` | array[string] | 否 | 主动授权的应用列表 |
 | `oauth2_public_client_enabled` | bool | 否 | 是否开启 OAuth2 公开客户端模式，开启后将对 `bk_app_code=public` 的应用进行授权，默认不开启 |
+| `raw_response_enabled` | bool | 否 | 是否返回原始响应，开启后 mcp-proxy 将直接返回 API 响应结果，不添加 request_id 等额外信息，默认不开启 |
 | `category_names` | array[string] | 否 | MCP Server 分类名称列表，不传则不更新分类 |
 
 #### 支持的分类（category_names）
@@ -475,6 +480,7 @@ stages:
           - "bk_nodeman"
           - "bk_sops"
         oauth2_public_client_enabled: false
+        raw_response_enabled: false
         category_names:
           - "Automation"
           - "Official"
