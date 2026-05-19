@@ -88,7 +88,9 @@ title "releasing"
 # 指定参数 --no-pub 则只生成版本，不发布
 call_definition_command_or_exit create_version_and_release_apigw "${definition_file}" --gateway-name=${gateway_name}
 
-# 可选：需要同步 MCP Server 时调用。注意：前提是该 stage 有生效的版本且声明的 mcp tool 在生效版本的资源列表里且确认过请求参数
+# 可选：需要同步 MCP Server 时调用。
+# 注意：前提是该 stage 有生效的版本且声明的 mcp tool 在生效版本的资源列表里且确认过请求参数
+# 支持的配置字段详见 sync_apigateway.md「1.4 MCP Server 配置说明」
 # call_definition_command_or_exit sync_apigw_stage_mcp_servers "${definition_file}" --gateway-name=${gateway_name}
 
 log_info "done"
@@ -319,6 +321,11 @@ call_definition_command_or_exit sync_apigw_stage "${definition_file}" --gateway-
 # 可选，同步资源文档
 call_definition_command_or_exit sync_resource_docs_by_archive "${definition_file}" --gateway-name=${gateway_name} --safe-mode
 
-# 可选：需要同步 MCP Server 时调用。注意：前提是该 stage 有生效的版本且声明的 mcp tool 在生效版本的资源列表里且确认过请求参数
+# 可选：需要同步 MCP Server 时调用。
+# 注意：前提是该 stage 有生效的版本且声明的 mcp tool 在生效版本的资源列表里且确认过请求参数
+# 支持的 mcp_servers 字段: name(必选), title, description(必选), labels, resource_names(必选),
+# tool_names, is_public, status(必选), protocol_type, target_app_codes, oauth2_public_client_enabled,
+# raw_response_enabled, category_names
+# 详见 sync_apigateway.md「1.4 MCP Server 配置说明」
 # call_definition_command_or_exit sync_apigw_stage_mcp_servers "${definition_file}" --gateway-name=${gateway_name}
 ```
