@@ -100,22 +100,33 @@ stages:
           hosts:
             - host: "http://httpbin.org"
               weight: 100
-#  同步 MCP Server 相关配置
+#  同步 MCP Server 相关配置（详细字段说明见下方「1.4 MCP Server 配置说明」）
 #    mcp_servers:
-#      - name: "mcp_server1",
+#      - name: "mcp_server1"
+#        title: "MCP服务1"
 #        description: "mcp-server demo"
-#        labels: 
+#        labels:
 #          - "test"
-#        # 添加的tool对应的资源名称
+#        # 添加的 tool 对应的资源名称
 #        resource_names:
 #          - resource1
-#        # 是否公开
+#        # 工具名称列表，默认等于 resource_names；如需重命名可设置此字段，长度必须与 resource_names 一致且不能重复
+#        tool_names:
+#          - tool1
+#        # 是否公开，默认不公开
 #        is_public: true
-#        # 1: 开启,0: 停止; 默认是开启
+#        # MCP 协议类型：sse（默认）、streamable_http
+#        protocol_type: "sse"
+#        # 1: 开启, 0: 停止；默认关闭
 #        status: 1
 #        # 授权的应用
 #        target_app_codes:
 #          - "bk_app_code1"
+#        # 是否开启 OAuth2 公开客户端模式，开启后将对 bk_app_code=public 的应用授权，默认不开启
+#        oauth2_public_client_enabled: false
+#        # MCP Server 分类名称列表，不传则不更新分类
+#        category_names:
+#          - "Official"
 ```
 
 > 📢 注意：如果之前接入过的，建议将 spec_version 改成 2，并将原先 `stage:{}`改成 `stages: []`
@@ -180,22 +191,33 @@ stages:
         hosts:
           - host: ""
             weight: 100
-    #  同步 MCP Server 相关配置
+    #  同步 MCP Server 相关配置（详细字段说明见下方「1.4 MCP Server 配置说明」）
     # mcp_servers:
-    #  - name: "mcp_server1"
-    #    description: "mcp-server demo"
-    #    labels: 
-    #      - "test"
-    #    # 添加的tool对应的资源名称
-    #    resource_names:
-    #      - resource1
-    #    # 是否公开
-    #    is_public: true
-    #    # 1: 开启,0: 停止；默认是开启
-    #    status: 1
-    #    # 授权的应用
+    #   - name: "mcp_server1"
+    #     title: "MCP服务1"
+    #     description: "mcp-server demo"
+    #     labels:
+    #       - "test"
+    #     # 添加的 tool 对应的资源名称
+    #     resource_names:
+    #       - resource1
+    #     # 工具名称列表，默认等于 resource_names；如需重命名可设置此字段
+    #     tool_names:
+    #       - tool1
+    #     # 是否公开，默认不公开
+    #     is_public: true
+    #     # MCP 协议类型：sse（默认）、streamable_http
+    #     protocol_type: "sse"
+    #     # 1: 开启, 0: 停止；默认关闭
+    #     status: 1
+    #     # 授权的应用
     #     target_app_codes:
     #       - "bk_app_code1"
+    #     # 是否开启 OAuth2 公开客户端模式
+    #     oauth2_public_client_enabled: false
+    #     # MCP Server 分类名称列表
+    #     category_names:
+    #       - "Official"
 
     # 环境插件配置
     # plugin_configs:
@@ -369,9 +391,114 @@ resource_docs:
   basedir: "support-files/apidocs/"
 ```
 
-### 1.4 国际化支持
+### 1.4 MCP Server 配置说明
 
-#### 1.4.1 网关描述国际化
+在 definition.yaml 的 `stages` 配置中，每个 stage 可以配置 `mcp_servers` 来声明该环境的 MCP Server。同步 MCP Server 使用命令 `sync_apigw_stage_mcp_servers`。
+
+> ⚠️ **前提条件：**
+> - 仅支持 `spec_version: 2`
+> - 该 stage 需要有已生效的资源版本（即已发布过）
+> - 声明的 MCP tool（resource_names 中的资源）必须在生效版本的资源列表中
+> - 相关资源的请求参数（body, path, header, query）需已确认；如果资源没有请求参数，需在 resources.yaml 中显式设置 `noneSchema: true`
+
+#### 字段说明
+
+| 参数名称 | 参数类型 | 必选 | 描述 |
+|---------|---------|------|------|
+| `name` | string | 是 | MCP Server 名字，例如 `"mcp1"`（系统会自动转换为 `{gateway_name}-{stage_name}-{name}`） |
+| `title` | string | 否 | MCP Server 中文名/显示名称 |
+| `description` | string | 是 | MCP Server 描述 |
+| `labels` | array[string] | 否 | MCP Server 标签 |
+| `resource_names` | array[string] | 是 | MCP Server 关联的资源列表，对应 resources.yaml 中定义的资源名称 |
+| `tool_names` | array[string] | 否 | MCP Server 工具名称列表，默认等于 resource_names。如需对资源进行重命名可设置此字段，长度必须与 resource_names 一致，且不能重复 |
+| `is_public` | bool | 否 | 是否公开，默认不公开 |
+| `status` | integer | 否 | 状态：1 表示启用，0 表示关闭（默认关闭） |
+| `protocol_type` | string | 否 | MCP 协议类型：`sse`（默认）、`streamable_http` |
+| `target_app_codes` | array[string] | 否 | 主动授权的应用列表 |
+| `oauth2_public_client_enabled` | bool | 否 | 是否开启 OAuth2 公开客户端模式，开启后将对 `bk_app_code=public` 的应用进行授权，默认不开启 |
+| `category_names` | array[string] | 否 | MCP Server 分类名称列表，不传则不更新分类 |
+
+#### 支持的分类（category_names）
+
+| 分类标识 | 描述 |
+|---------|------|
+| `Uncategorized` | 未分类 |
+| `Official` | 官方资源 |
+| `Featured` | 精选推荐 |
+| `Monitoring` | 监控告警 |
+| `ConfigManagement` | 配置管理 |
+| `DevOps` | 持续交付 |
+| `Emergency` | 故障管理 |
+| `Database` | 数据服务 |
+| `Automation` | 运维自动化 |
+| `Observability` | 可观测性 |
+| `Security` | 安全合规 |
+| `ResourceOptimize` | 资源优化 |
+| `ChaosEngineering` | 混沌工程 |
+| `Network` | 网络管理 |
+
+#### 完整配置样例
+
+```yaml
+spec_version: 2
+
+stages:
+  - name: "prod"
+    description: "生产环境"
+    backends:
+      - name: "default"
+        config:
+          timeout: 60
+          loadbalance: "roundrobin"
+          hosts:
+            - host: "http://api.example.com"
+              weight: 100
+    mcp_servers:
+      - name: "my-mcp-server"
+        title: "我的 MCP 服务"
+        description: "提供 XXX 能力的 MCP Server"
+        labels:
+          - "ops"
+          - "automation"
+        resource_names:
+          - "get_hosts"
+          - "search_hosts"
+          - "execute_job"
+        tool_names:
+          - "get_hosts"
+          - "search_hosts"
+          - "run_job"
+        is_public: true
+        protocol_type: "streamable_http"
+        status: 1
+        target_app_codes:
+          - "bk_nodeman"
+          - "bk_sops"
+        oauth2_public_client_enabled: false
+        category_names:
+          - "Automation"
+          - "Official"
+```
+
+#### 同步命令
+
+- **Django Command 方式：**
+
+```bash
+python manage.py sync_apigw_stage_mcp_servers --gateway-name=${gateway_name} --file="${definition_file}"
+```
+
+- **镜像方式（使用 functions.sh）：**
+
+```bash
+call_definition_command_or_exit sync_apigw_stage_mcp_servers "${definition_file}" --gateway-name=${gateway_name}
+```
+
+> 📢 **注意：** 必须在 `create_version_and_release_apigw`（创建版本并发布）之后再执行 `sync_apigw_stage_mcp_servers`，否则可能因无生效版本导致同步失败。
+
+### 1.5 国际化支持
+
+#### 1.5.1 网关描述国际化
 
 在 definition.yaml 中利用字段 description_en 指定英文描述。样例：
 
@@ -384,7 +511,7 @@ apigateway:
     - "admin"
 ```
 
-#### 1.4.2 环境描述国际化
+#### 1.5.2 环境描述国际化
 
 在 definition.yaml 中利用字段 description_en 指定英文描述。样例：
 
@@ -395,7 +522,7 @@ stage:
   description_en: "This is the English description"
 ```
 
-#### 1.4.3 资源描述国际化
+#### 1.5.3 资源描述国际化
 
 可以在 resources.yaml 对应的 `x-bk-apigateway-resource` 的 `descriptionEn` 指定英文描述
 

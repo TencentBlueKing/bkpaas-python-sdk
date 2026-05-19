@@ -46,7 +46,9 @@ python manage.py sync_resource_docs_by_archive --gateway-name=${gateway_name} --
 # 指定参数 --no-pub 则只生成版本，不发布
 python manage.py create_version_and_release_apigw --gateway-name=${gateway_name} --file="${definition_file}"
 
-# 可选：需要同步 MCP Server 时调用。注意：前提是该 stage 有生效的版本且声明的 mcp tool 在生效版本的资源列表里且确认过请求参数
+# 可选：需要同步 MCP Server 时调用。
+# 注意：前提是该 stage 有生效的版本且声明的 mcp tool 在生效版本的资源列表里且确认过请求参数
+# 需在 definition.yaml 的 stages 中配置 mcp_servers 字段，详见 sync_apigateway.md「1.4 MCP Server 配置说明」
 python manage.py sync_apigw_stage_mcp_servers --gateway-name=${gateway_name} --file="${definition_file}"
 
 # 可选，为应用主动授权
@@ -166,7 +168,12 @@ python manage.py apply_apigw_permissions --gateway-name=${gateway_name} --file="
 # 指定参数 --no-pub 则只生成版本，不发布
 python manage.py create_version_and_release_apigw --gateway-name=${gateway_name} --file="${definition_file}"
 
-# 可选：需要同步 MCP Server 时调用。注意：前提是该 stage 有生效的版本且声明的 mcp tool 在生效版本的资源列表里且确认过请求参数
+# 可选：需要同步 MCP Server 时调用。
+# 注意：前提是该 stage 有生效的版本且声明的 mcp tool 在生效版本的资源列表里且确认过请求参数
+# 需在 definition.yaml 的 stages 中配置 mcp_servers 字段
+# 支持字段: name(必选), title, description(必选), labels, resource_names(必选),
+#   tool_names, is_public, status, protocol_type, target_app_codes, oauth2_public_client_enabled, category_names
+# 详见 sync_apigateway.md「1.4 MCP Server 配置说明」
 python manage.py sync_apigw_stage_mcp_servers --gateway-name=${gateway_name} --file="${definition_file}"
 
 # 获取网关公钥
