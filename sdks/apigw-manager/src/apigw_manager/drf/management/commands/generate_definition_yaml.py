@@ -17,7 +17,7 @@ import re
 import shutil
 
 from django.conf import settings
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.template import Template, Context, context
 from django.template.loader import render_to_string
 from drf_spectacular.renderers import OpenApiYamlRenderer
@@ -49,8 +49,24 @@ class Command(BaseCommand):
         self.stdout.write(f"will generate {definition_path} from {source_file}")
         # 如果启用了MCP服务器，则需要生成 mcp_servers 配置
         if hasattr(settings, "BK_APIGW_STAGE_ENABLE_MCP_SERVERS") and settings.BK_APIGW_STAGE_ENABLE_MCP_SERVERS:
+            if not hasattr(settings, "BK_APIGW_STAGE_MCP_SERVERS"):
+                raise CommandError("BK_APIGW_STAGE_MCP_SERVERS must be configured when MCP servers are enabled")
+            if not isinstance(settings.BK_APIGW_STAGE_MCP_SERVERS, list):
+                raise CommandError("BK_APIGW_STAGE_MCP_SERVERS must be a list")
+            if not hasattr(spectacular_settings.POSTPROCESSING_HOOKS, "clear"):
+                raise CommandError("spectacular_settings.POSTPROCESSING_HOOKS must support clear()")
+            if not hasattr(spectacular_settings.POSTPROCESSING_HOOKS, "append"):
+                raise CommandError("spectacular_settings.POSTPROCESSING_HOOKS must support append()")
+            if not callable(spectacular_settings.DEFAULT_GENERATOR_CLASS):
+                raise CommandError("spectacular_settings.DEFAULT_GENERATOR_CLASS must be callable")
+
             for mcp_server in settings.BK_APIGW_STAGE_MCP_SERVERS:
+                if not hasattr(mcp_server, "get") or not hasattr(mcp_server, "__setitem__"):
+                    raise CommandError("BK_APIGW_STAGE_MCP_SERVERS items must be dict-like")
                 mcp_server_tools = mcp_server.get("tools", [])
+                if not isinstance(mcp_server_tools, list):
+                    raise CommandError("BK_APIGW_STAGE_MCP_SERVERS['tools'] must be a list")
+
                 spectacular_settings.POSTPROCESSING_HOOKS.clear()
                 spectacular_settings.POSTPROCESSING_HOOKS.append(
                     post_process_mcp_server_config(mcp_server_tools, delete_mcp_flag=False))

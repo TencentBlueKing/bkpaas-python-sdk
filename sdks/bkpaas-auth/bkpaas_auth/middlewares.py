@@ -4,7 +4,6 @@ import logging
 import time
 from typing import Dict
 
-from django.conf import settings
 from django.contrib import auth
 from django.http import HttpRequest, HttpResponse
 from django.utils import timezone as dj_timezone
@@ -27,7 +26,7 @@ class CookieLoginMiddleware(MiddlewareMixin):
             "to be installed. Edit your MIDDLEWARE%s setting to insert "
             "'django.contrib.sessions.middleware.SessionMiddleware' before "
             "'bkpaas_auth.middlewares.CookieLoginMiddleware'."
-        ) % ("_CLASSES" if settings.MIDDLEWARE is None else "")
+        )
 
         backend = UniversalAuthBackend()
         credentials = backend.get_credentials(request)

@@ -13,11 +13,10 @@ from tempfile import NamedTemporaryFile
 
 import boto3
 import pytest
-import six
 from django.conf import settings
 from django.core.files import File
 from django.core.files.base import ContentFile
-from moto import mock_s3
+from moto import mock_aws
 
 from bkstorages.backends.rgw import RGWBoto3Storage
 
@@ -30,13 +29,13 @@ def make_content_file(content=None):
     """Make a django ContentFile object"""
     if not content:
         content = "written by pytest"
-    content_bytes = six.b(content)
+    content_bytes = content.encode("utf-8")
     return ContentFile(content_bytes)
 
 
 @pytest.fixture
 def storage():
-    with mock_s3():
+    with mock_aws():
         instance = RGWBoto3Storage()
         instance.endpoint_url = None
         instance._connection = boto3.resource('s3', region_name='us-east-1')
@@ -52,7 +51,7 @@ class TestRGWBoto3Storage:
 
     def test_save_file(self, storage):
         with NamedTemporaryFile() as fp:
-            fp.write(six.b("by_test_save"))
+            fp.write(b"by_test_save")
             fp.flush()
 
             f = File(fp)

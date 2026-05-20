@@ -16,7 +16,9 @@
 - 执行 `poetry build` 命令在 dist 目录下生成当前版本的包。然后执行 `twine upload dist/* --repository-url {pypi_address} --username {your_name} --password {your_token}` 将其上传到 pypi 服务器上。
 
 ## 使用指南
+
 1. 更新 settings：
+
 ```python
 INSTALLED_APPS = [
     ...
@@ -50,7 +52,8 @@ BKAUTH_USER_COOKIE_VERIFY_URL = "http://bk-login-web/api/v3/is_login/"
 BKAUTH_DEFAULT_PROVIDER_TYPE = 'RTX'  # 可选值：RTX/UIN/BK，详见 ProviderType
 ```
 
-启用多租户模式时, 需要更新上面的 settings
+启用多租户模式时, 需要更新上面的 settings：
+
 ```python
 # 启用多租户模式
 BKAUTH_ENABLE_MULTI_TENANT_MODE = True
@@ -85,13 +88,14 @@ class MyAppConfig(AppConfig):
         patch_middleware_get_user()
 ```
 
-更新 `__init__.py`，配置 default_app_config
-```
+更新 `__init__.py`，配置 default_app_config：
+
+```python
 default_app_config = 'xxx.apps.MyAppConfig'
 ```
 
 3. 配置日志（可选）
-在 django settings 的 LOGGING 中，为 sdk 配置 logger，如
+在 django settings 的 LOGGING 中，为 sdk 配置 logger，如：
 
 ```python
 LOGGING = {
@@ -118,16 +122,15 @@ bkpaas-auth 内置的基于内存的不依赖于数据库表的用户模型, 如
 如果你有以下诉求, 则应当继承 `DjangoAuthUserCompatibleBackend`, 自行实现具体的业务逻辑:
 
 1. 不希望自动创建基于数据库的用户模型:
+
 ```python
-
-
 class YourDjangoAuthUserCompatibleBackend(DjangoAuthUserCompatibleBackend):
     create_unknown_user = False
 ```
 
 2. 用户模型有与 django `auth.User` 不兼容的字段或其他需要初始化的字段:
-```python
 
+```python
 class YourDjangoAuthUserCompatibleBackend(DjangoAuthUserCompatibleBackend):
     def configure_user(self, db_user, bk_user: User):
         """
@@ -140,7 +143,9 @@ class YourDjangoAuthUserCompatibleBackend(DjangoAuthUserCompatibleBackend):
 > 说明: 启用多租户模式后, user 会增加 tenant_id 和 display_name 两个字段，可以通过 `request.user.tenant_id` 获取租户 ID, 通过 `request.user.display_name` 获取用户展示名。
 
 #### 和 [apigw-manager](../apigw-manager) 集成
+
 该 SDK 可以和 apigw-manager 集成，完成网关 JWT 的校验，在 settings 中配置：
+
 ```python
 INSTALLED_APPS += ["apigw_manager.apigw"]
 AUTHENTICATION_BACKENDS += ["bkpaas_auth.backends.APIGatewayAuthBackend"]

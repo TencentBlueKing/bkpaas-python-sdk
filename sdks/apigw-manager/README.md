@@ -28,6 +28,8 @@ pip install "apigw-manager[cryptography]"
    - [直接使用 Django Command 同步](./docs/sync-apigateway-with-django.md): 此方案适用于 Django 项目
    - [通过镜像方式同步](./docs/sync-apigateway-with-docker.md): 此方案适用于非 Django 项目
 
+- [同步 MCP Server](./docs/sync_apigateway.md#14-mcp-server-配置说明)：支持将 MCP Server 配置同步到网关环境，可在 definition.yaml 的 stages 中声明 mcp_servers 配置，使用 `sync_apigw_stage_mcp_servers` 命令进行同步。
+
 - [解析**JWT**](./docs/jwt-explain.md): 使用 Django 中间件，您可以解析蓝鲸 API 网关的 X-Bkapi-JWT 请求头，确保只有来自 API 网关的请求才能访问您的后端服务，提升系统安全性。
 
 

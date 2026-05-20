@@ -5,6 +5,13 @@
 - [breaking change] drop support for python 3.8/3.9/3.10, request >=3.11 and < 3.14
 - [breaking change] drop support for Django 3.x / 4.x, request Django >=5.2,<6.0 (LTS)
 
+### 4.2.4
+
+- 完善 MCP Server 同步配置文档，新增「1.4 MCP Server 配置说明」章节，包含完整字段说明、分类枚举、配置样例
+- definition.yaml 模板新增 `tool_names`、`oauth2_public_client_enabled`、`category_names` 字段支持
+- 更新 sync-apigateway-with-docker.md 和 sync-apigateway-with-django.md 中的 MCP Server 注释说明
+- README.md 新增 MCP Server 同步功能入口链接
+
 ### 4.2.3
 
 - 支持同步网关环境 MCP Server 配置，新增 Django Command `sync_apigw_stage_mcp_servers`
