@@ -10,11 +10,11 @@
 """
 import os
 import posixpath
+from urllib.parse import urljoin
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured, SuspiciousFileOperation
 from django.utils.encoding import force_str
-from six.moves.urllib.parse import urljoin
 
 
 def setting(name, default=None, strict=False):

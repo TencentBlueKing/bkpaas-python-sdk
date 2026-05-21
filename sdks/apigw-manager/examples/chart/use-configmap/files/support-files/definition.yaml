@@ -40,13 +40,15 @@ stages:
     #       - resource1
     #     # 是否公开
     #     is_public: true
-    #     # 1: 开启, 0: 停止; 默认是开启
+    #     # 1: 开启, 0: 停止（必选字段）
     #     status: 1
     #     # MCP 协议类型: sse（默认）、streamable_http
     #     protocol_type: "sse"
     #     # 授权的应用
     #     target_app_codes:
     #       - "bk_app_code1"
+    #     # 是否返回原始响应，开启后 mcp-proxy 直接返回 API 响应结果，默认不开启
+    #     raw_response_enabled: false
 
     # 环境插件配置
     # plugin_configs:

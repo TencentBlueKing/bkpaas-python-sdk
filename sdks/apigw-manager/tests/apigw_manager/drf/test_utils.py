@@ -10,6 +10,8 @@
 import os
 from unittest import mock
 
+import pytest
+
 from apigw_manager.drf.utils import (
     gen_apigateway_resource_config,
     get_default_database_config_dict,
@@ -50,6 +52,41 @@ class TestGenApigatewayResourceConfig:
             }
         }
 
+    def test_gen_with_mcp_and_disabled_app_verification(self, settings):
+        settings.BK_APIGW_STAGE_ENABLE_MCP_SERVERS = True
+
+        data = gen_apigateway_resource_config(
+            app_verified_required=False,
+            resource_permission_required=True,
+            plugin_configs=[{"name": "test-plugin"}],
+            none_schema=True,
+            enable_mcp=True,
+        )
+
+        assert data == {
+            "x-bk-apigateway-resource": {
+                "isPublic": True,
+                "matchSubpath": False,
+                "backend": {
+                    "name": "default",
+                    "method": "",
+                    "path": "",
+                    "matchSubpath": False,
+                    "timeout": 0,
+                },
+                "pluginConfigs": [{"name": "test-plugin"}],
+                "allowApplyPermission": True,
+                "authConfig": {
+                    "userVerifiedRequired": False,
+                    "appVerifiedRequired": False,
+                    "resourcePermissionRequired": False,
+                },
+                "descriptionEn": "",
+                "noneSchema": True,
+                "enableMcp": True,
+            }
+        }
+
 
 class TestGetLoggingConfigDict:
     def test_get(self):
@@ -67,6 +104,24 @@ class TestGetLoggingConfigDict:
         )
         assert data["formatters"]["verbose"]["format"] == expected_format
 
+    @mock.patch.dict(os.environ, {"BKPAAS_PROCESS_TYPE": "beat"}, clear=False)
+    @mock.patch("apigw_manager.drf.utils.random.sample", return_value=list("ab12"))
+    @mock.patch("apigw_manager.drf.utils.os.path.exists", return_value=False)
+    @mock.patch("apigw_manager.drf.utils.os.makedirs")
+    def test_get_non_local(self, mocked_makedirs, mocked_exists, mocked_sample):
+        data = get_logging_config_dict(
+            log_level="INFO",
+            is_local=False,
+            log_dir="/tmp/apigw-manager-logs",
+            app_code="test",
+        )
+
+        assert data["formatters"]["verbose"]["()"] == "pythonjsonlogger.jsonlogger.JsonFormatter"
+        assert data["handlers"]["root"]["filename"] == os.path.join("/tmp/apigw-manager-logs", "beat-ab12-django.log")
+        mocked_exists.assert_called_once_with("/tmp/apigw-manager-logs")
+        mocked_makedirs.assert_called_once_with("/tmp/apigw-manager-logs")
+        mocked_sample.assert_called_once()
+
 
 class TestGetDefaultDatabaseConfigDict:
     @mock.patch.dict(
@@ -82,6 +137,49 @@ class TestGetDefaultDatabaseConfigDict:
     def test_get(self):
         settings_module = {"DB_PREFIX": "GCS_MYSQL"}
         data = get_default_database_config_dict(settings_module)
+        assert data == {
+            "ENGINE": "django.db.backends.mysql",
+            "NAME": "a",
+            "USER": "b",
+            "PASSWORD": "c",
+            "HOST": "d",
+            "PORT": "e",
+            "OPTIONS": {"isolation_level": "repeatable read"},
+        }
+
+    @mock.patch.dict(
+        os.environ,
+        {
+            "GCS_MYSQL_NAME": "a",
+            "MYSQL_NAME": "b",
+        },
+        clear=True,
+    )
+    def test_get_with_multiple_databases_requires_prefix(self):
+        with pytest.raises(EnvironmentError, match="no DB_PREFIX config"):
+            get_default_database_config_dict({})
+
+    @mock.patch.dict(os.environ, {}, clear=True)
+    def test_get_without_supported_environment_variables(self, capsys):
+        data = get_default_database_config_dict({})
+
+        assert data == {}
+        assert "DB_PREFIX config is not 'GCS_MYSQL' or 'MYSQL_NAME'" in capsys.readouterr().err
+
+    @mock.patch.dict(
+        os.environ,
+        {
+            "MYSQL_NAME": "a",
+            "MYSQL_USER": "b",
+            "MYSQL_PASSWORD": "c",
+            "MYSQL_HOST": "d",
+            "MYSQL_PORT": "e",
+        },
+        clear=True,
+    )
+    def test_get_with_mysql_prefix(self):
+        data = get_default_database_config_dict({})
+
         assert data == {
             "ENGINE": "django.db.backends.mysql",
             "NAME": "a",
