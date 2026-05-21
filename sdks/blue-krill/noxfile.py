@@ -77,18 +77,7 @@ def tests(session):
         *session.posargs,
     )
 
-    django_versions = [
-        ">=5.2,<6",
-    ]
-    pyjwt_versions = [
-        ">=2.0.0,<3",
-    ]
-    # Run Django related tests, test multiple versions
-    for django in django_versions:
-        session.install(f"django{django}")
-        session.run("pytest", *django_test_files)
+    session.run("pytest", *django_test_files)
 
-        # Run django+pyjwt related tests, test multiple versions
-        for pyjwt in pyjwt_versions:
-            session.install(f"pyjwt{pyjwt}")
-            session.run("pytest", "tests/auth")
+    session.install("pyjwt>=2.12.0,<3")
+    session.run("pytest", "tests/auth")
