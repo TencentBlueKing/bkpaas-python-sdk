@@ -18,7 +18,7 @@
 from tempfile import SpooledTemporaryFile
 
 import pytest
-from moto import mock_s3
+from moto import mock_aws
 
 from blue_krill.contextlib import nullcontext as does_not_raise
 from blue_krill.storages.blobstore.exceptions import DownloadFailedError, ObjectAlreadyExists
@@ -28,7 +28,7 @@ from tests.utils import generate_random_string
 
 @pytest.fixture
 def store():
-    with mock_s3():
+    with mock_aws():
         store = S3Store(
             bucket="dummy-bucket",
             aws_access_key_id="dummy",

@@ -96,4 +96,4 @@ class TestEncryptField:
         value = field.get_prep_value(value)
         value = field.get_prep_value(value)
 
-        assert field.from_db_value(value, None, None, None) == test_data, "Value should not be re-encrypted"
+        assert field.from_db_value(value, None, None) == test_data, "Value should not be re-encrypted"

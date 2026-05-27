@@ -15,27 +15,17 @@
 # We undertake not to change the open source license (MIT license) applicable
 # to the current version of the project delivered to anyone in the future.
 
-import sys
-
 from blue_krill.data_types.url import MutableURL
 
 
 def remove_suffix(s: str, suffix: str) -> str:
     """If given string endswith `suffix`, remove the suffix and return the new string"""
-    if sys.version_info >= (3, 9):
-        return s.removesuffix(suffix)
-    if s.endswith(suffix):
-        return s[: -len(suffix)]
-    return s
+    return s.removesuffix(suffix)
 
 
 def remove_prefix(s: str, prefix: str) -> str:
     """If given string startswith `prefix`, remove the prefix and return the new string"""
-    if sys.version_info >= (3, 9):
-        return s.removeprefix(prefix)
-    if s.startswith(prefix):
-        return s[len(prefix) :]
-    return s
+    return s.removeprefix(prefix)
 
 
 def desensitize_url(url: str) -> str:

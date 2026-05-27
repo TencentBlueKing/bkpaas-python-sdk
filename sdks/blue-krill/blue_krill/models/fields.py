@@ -47,7 +47,7 @@ class EncryptField(models.TextField):
     def get_db_prep_value(self, value, connection, prepared=False):
         return self.get_prep_value(value)
 
-    def from_db_value(self, value, expression, connection, context=None):
+    def from_db_value(self, value, expression, connection):
         if value is None:
             return value
         return self.handler.decrypt(value)

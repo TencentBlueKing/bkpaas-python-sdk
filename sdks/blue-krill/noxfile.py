@@ -3,7 +3,7 @@ import tempfile
 
 import nox
 
-ALL_PYTHON = ["3.9", "3.10", "3.11"]
+ALL_PYTHON = ["3.11", "3.12"]
 
 
 # ref: https://stackoverflow.com/questions/59768651/how-to-use-nox-with-poetry
@@ -42,12 +42,7 @@ def tests(session):
     # Prepare pip and poetry
     session.run("python", "-m", "ensurepip", "--upgrade")
     session.install("poetry")
-
-    if session.python == "3.9":
-        # Install the last compatible version of the plugin
-        session.run("poetry", "self", "add", "poetry-plugin-export@1.9.0")
-    else:
-        session.run("poetry", "self", "add", "poetry-plugin-export@latest")
+    session.run("poetry", "self", "add", "poetry-plugin-export@latest")
 
     # Install dev/test dependencies
     session.install("-e", ".[all]")
@@ -82,21 +77,7 @@ def tests(session):
         *session.posargs,
     )
 
-    django_versions = [
-        ">=2.2,<3",
-        ">=3.2,<4",
-        ">=4.2,<5",
-    ]
-    pyjwt_versions = [
-        ">=1.7.0,<2",
-        ">=2.0.0,<3",
-    ]
-    # Run Django related tests, test multiple versions
-    for django in django_versions:
-        session.install(f"django{django}")
-        session.run("pytest", *django_test_files)
+    session.run("pytest", *django_test_files)
 
-        # Run django+pyjwt related tests, test multiple versions
-        for pyjwt in pyjwt_versions:
-            session.install(f"pyjwt{pyjwt}")
-            session.run("pytest", "tests/auth")
+    session.install("pyjwt>=2.12.0,<3")
+    session.run("pytest", "tests/auth")

@@ -28,7 +28,6 @@ def pytest_configure():
         USE_TZ=True,
         TIME_ZONE="Asia/Shanghai",
         MIDDLEWARE=[],
-        MIDDLEWARE_CLASSES=[],
         # If the models of these apps have been updated, remember to remove all migration files so
         # that the migrations could stay minimal because the test suite will create them from scratch.
         INSTALLED_APPS=("tests.models.apps.test_encrypt",),

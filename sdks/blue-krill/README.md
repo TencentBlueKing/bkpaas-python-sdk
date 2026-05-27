@@ -154,6 +154,7 @@ $ editionctl develop
 #### 3.1.1 如何定义 FeatureFlag
 
 就像定义普通的 Python Class 一样, 定义 FeatureFlag 只需要继承 `blue_krill.data_types.enum::FeatureFlag` 即可。
+
 ```python
 from blue_krill.data_types.enum import FeatureFlag, FeatureFlagField
 
@@ -195,6 +196,7 @@ class DiffType(str, StructuredEnum):
 #### 4.1 S3Store
 
 S3 协议的 BlobStore 实现, 使用时需要额外安装 boto3=='^1.4.3', 可参考以下代码进行实例化:
+
 ```python
 from blue_krill.storages.blobstore.s3 import S3Store
 
@@ -439,18 +441,21 @@ MyTaskPoller.start(params, MyHandler)
 通过执行 `TaskPoller` 类的 `start()` 方法，程序会派生出一个名为 `poll_task.check_status_until_finished` 的 `celery` 异步任务，之后触发 `TaskPoller` 的 `query()` 方法，不断开始轮询。
 
 #### 6.2 blue_krill.aysnc_utils.django_utils
+
 这个模块提供了 Django + Celery 相关的一些辅助函数。
 
 #### 6.2.1 apply_async_on_commit
+
 在开启 Django 事务的过程中，可能会立即触发一些 Celery 异步任务，在事务未提交或回滚时，异步任务执行结果是不可预期的。
 这个函数可以封装 Celery 的异步任务调用：
+
 - 如果不在事务之中，会立刻触发异步任务；
 - 如果处于事务之中，则会在事务提交后触发；
 
 因为执行时机不确定，这个函数会强制忽略异步任务的返回值。
 
-
 #### 6.2.2 delay_on_commit
+
 函数 `apply_async_on_commit` 的简化版本，相当于 Celery 中 `apply_async` 和 `delay` 的区别。
 
 ### 7. blue_krill.monitoring.probe
@@ -550,13 +555,17 @@ report = SomeRedisSentinelProbe().report()
 ```
 
 ### 8 blue_krill.cubing_case
+
 `blue_krill.cubing_case` 增加各个方法互相转换的工具库.
 
 #### 8.1 blue_krill.cubing_case.RegexCubingHelper
+
 基于多种正则将多种模式混合的字符串进行拆分，转换并组合成新的字符串的工具类。
 
 #### 8.2 blue_krill.cubing_case.CommonCaseConvertor
+
 在 `blue_krill.cubing_case.RegexCubingHelper` 之上的一个封装实现，将指定的多种模式的字符串转化成常见的方法，包含：
+
 - 驼峰式：`CubingCase`
 - 小写开头的驼峰式：`cubingCase`
 - 小写下划线式：`cubing_case`
@@ -568,12 +577,15 @@ report = SomeRedisSentinelProbe().report()
 - 小写空格分隔式：`cubing case`
 
 #### 8.3 blue_krill.cubing_case.shortcuts
+
 `blue_krill.cubing_case.shortcuts` 是 `blue_krill.cubing_case.CommonCaseConvertor` 的一个快捷方式，内置了其转换目标的所有源模式，可以实现所有模式的正反转换。
 
 ### 9 blue_krill.redis_tools
+
 `blue_krill.redis_tools` 提供了 redis 常用工具
 
 #### 9.1 blue_krill.redis_tools.sentinel
+
 `blue_krill.redis_tools.sentinel` 提供了 redis sentinel 模式下，直接从 url 生成 redis 实例的方法。
 
 ```python
@@ -590,6 +602,7 @@ r.get('foo')
 ```
 
 ### 10 blue_krill.encrypt.handler
+
 `blue_krill.encrypt.handler` 提够 Fernet 和 SM4 两种对称加密算法，并且为了适应存量数据，在解密时会根据`header`选择相应的算法进行解密。
 具体的使用方式如下:
 
@@ -600,7 +613,7 @@ from blue_krill.encrypt.handler import EncryptHandler
 # 第一种方式通过传入 encrypt_cipher_type(加密算法类型) 和 secret_key(密钥)
 # encrypt_cipher_type 现有的就是 "FernetCipher" 和 "SM4CTR"，分别对应 Fernet 和 SM4 对称加密算法
 encrypt_handler = EncryptHandler(encrypt_cipher_type='FernetCipher', secret_key=b'PIMCuSRiVqBg5eSzQqZZrOhGFSUtrlS-8_JlIpjHt0A=')
-# 第二种方式，不传入参数时，即 encrypt_cipher_type 和 secret_key 为 None 
+# 第二种方式，不传入参数时，即 encrypt_cipher_type 和 secret_key 为 None
 # 会分别通过 django setting 中的 ENCRYPT_CIPHER_TYPE 和 BKKRILL_ENCRYPT_SECRET_KEY 字段设置。
 encrypt_handler = EncryptHandler()
 
@@ -616,7 +629,9 @@ decrypted = encrypt_handler.decrypt(encrypted)
 ```
 
 ### 11 blue_krill.models.fields
+
 `blue_krill.models.fields` 基于 `EncryptHandler` 实现了 `EncryptField`，具体使用：
+
 ```python
 from django.db import models
 from blue_krill.models.fields import EncryptField
@@ -626,7 +641,7 @@ class User(models.Model):
     """
     User.password 在存取时会做加解密
     """
-    
+
     name = models.CharField(max_length=30)
     # EncryptField 用法与 EncryptHandler 类似
     # 实例化时，可传入 encrypt_cipher_type 选择加密算法，secret_key 配置密钥
@@ -644,11 +659,11 @@ class User(models.Model):
 - 执行 `poetry install` 安装所有依赖
 - 使用 `poetry run pytest -s .` 执行所有单元测试
 
-在开发时，如果想让某项目安装本地目录里的 blue-krill 模块，首先切换到对应项目虚拟环境，然后在 blue-krill 目录执行 `pip install -e .` 
+在开发时，如果想让某项目安装本地目录里的 blue-krill 模块，首先切换到对应项目虚拟环境，然后在 blue-krill 目录执行 `pip install -e .`
 
-### 使用 tox 执行单元测试
+### 使用 nox 执行单元测试
 
-为了测试包在不同 Python 版本下的稳定性，我们使用了 tox 工具。在项目目录下执行 `tox` 即可执行所有的单元测试。
+为了测试包在不同 Python 版本下的稳定性，我们使用了 nox 工具。在项目目录下执行 `nox` 即可执行所有的单元测试。
 
 ### 发布包
 
