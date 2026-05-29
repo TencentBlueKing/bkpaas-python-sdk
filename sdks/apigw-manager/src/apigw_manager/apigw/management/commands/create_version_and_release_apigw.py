@@ -73,7 +73,7 @@ class Command(DefinitionCommand):
 
         return defined_version
 
-    def _create_resource_version(self, releaser, version, title, comment):
+    def _create_resource_version(self, releaser, version, comment):
         return releaser.create_resource_version(
             version=str(version),
             comment=comment,
