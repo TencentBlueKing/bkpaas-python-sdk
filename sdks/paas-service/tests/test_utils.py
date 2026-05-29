@@ -16,12 +16,13 @@ limitations under the License.
 We undertake not to change the open source license (MIT license) applicable
 to the current version of the project delivered to anyone in the future.
 """
+
 import pytest
 from paas_service.utils import parse_redirect_params
 
 
 @pytest.mark.parametrize(
-    "redirect_url, kwargs, expected",
+    ("redirect_url", "kwargs", "expected"),
     [
         ("foo.bar.baz?a=1", {}, ("foo.bar.baz", {"a": "1"})),
         ("foo.bar.baz?a=1", {"a": "2"}, ("foo.bar.baz", {"a": "2"})),
