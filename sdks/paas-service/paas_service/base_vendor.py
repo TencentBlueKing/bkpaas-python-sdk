@@ -16,28 +16,28 @@ limitations under the License.
 We undertake not to change the open source license (MIT license) applicable
 to the current version of the project delivered to anyone in the future.
 """
+
 from abc import ABCMeta, abstractmethod
 from typing import ClassVar, Dict, Optional
-
-from pydantic import BaseModel, Field
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.module_loading import import_string
+from pydantic import BaseModel, Field
 
 
-def get_provider_cls() -> 'type[BaseProvider]':
+def get_provider_cls() -> "type[BaseProvider]":
     try:
-        SVC_PROVIDER_CLS = settings.PAAS_SERVICE_PROVIDER_CLS
+        svc_provider_cls = settings.PAAS_SERVICE_PROVIDER_CLS
     except AttributeError:
         raise ImproperlyConfigured("PAAS_SERVICE_PROVIDER_CLS is not configured")
 
-    return import_string(SVC_PROVIDER_CLS)
+    return import_string(svc_provider_cls)
 
 
 def get_plan_schema_cls():
     # 尝试从设置中获取类路径
-    plan_schema_cls = getattr(settings, 'PAAS_SERVICE_PLAN_SCHEMA_CLS', None)
+    plan_schema_cls = getattr(settings, "PAAS_SERVICE_PLAN_SCHEMA_CLS", None)
 
     # 若存在有效类路径则导入，否则返回默认类
     return import_string(plan_schema_cls) if plan_schema_cls else EmptyPlanSchema
@@ -47,8 +47,7 @@ def get_plan_schema() -> dict:
     return get_plan_schema_cls().schema()
 
 
-class EmptyPlanSchema(BaseModel):
-    ...
+class EmptyPlanSchema(BaseModel): ...
 
 
 class BaseVendorException(Exception):
@@ -64,7 +63,7 @@ class OperationFailed(BaseVendorException):
 
 
 class InstanceData:
-    __slots__ = ['credentials', 'config']
+    __slots__ = ["credentials", "config"]
 
     def __init__(self, credentials, config=None):
         self.credentials = credentials
@@ -79,30 +78,29 @@ class BaseProvider(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def delete(self, instanceData: InstanceData):
+    def delete(self, instance_data: InstanceData):
         raise NotImplementedError
 
     @abstractmethod
-    def patch(self, instanceData: InstanceData, params: Dict) -> InstanceData:
+    def patch(self, instance_data: InstanceData, params: Dict) -> InstanceData:
         raise NotImplementedError
 
 
 class DummyProvider(BaseProvider):
-    SERVICE_NAME = 'dummy_svc'
+    SERVICE_NAME = "dummy_svc"
 
     def create(self, params: Dict) -> InstanceData:
-        return InstanceData(credentials={'foo': 'bar'}, config={'foo_config': 'bar_value'})
+        return InstanceData(credentials={"foo": "bar"}, config={"foo_config": "bar_value"})
 
-    def delete(self, instanceData: InstanceData):
+    def delete(self, instance_data: InstanceData):
         return
 
-    def patch(self, instanceData: InstanceData, params: Dict) -> InstanceData:
+    def patch(self, instance_data: InstanceData, params: Dict) -> InstanceData:
         raise NotImplementedError
 
 
 # Plan Schema
-class BasePlanSchema(BaseModel):
-    ...
+class BasePlanSchema(BaseModel): ...
 
 
 class DummySchema(BasePlanSchema):

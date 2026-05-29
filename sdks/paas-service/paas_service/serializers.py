@@ -16,27 +16,28 @@ limitations under the License.
 We undertake not to change the open source license (MIT license) applicable
 to the current version of the project delivered to anyone in the future.
 """
+
 from typing import Optional
+
+from rest_framework import serializers
 
 from paas_service.base_vendor import get_plan_schema as get_svc_plan_schema
 from paas_service.models import Plan, Service, ServiceInstance, SpecDefinition, Specification
-from rest_framework import serializers
 
 
 class SpecDefinitionSLZ(serializers.ModelSerializer):
     class Meta(object):
         model = SpecDefinition
-        exclude = ['index', 'uuid', 'created', 'updated']
+        exclude = ["index", "uuid", "created", "updated"]
 
 
 class ServiceSLZ(serializers.ModelSerializer):
-    specifications = serializers.ListField(child=SpecDefinitionSLZ(), source='specifications.all')
+    specifications = serializers.ListField(child=SpecDefinitionSLZ(), source="specifications.all")
     logo = serializers.SerializerMethodField()
     config = serializers.JSONField()
     plan_schema = serializers.SerializerMethodField()
 
-    def get_logo(self, obj):
-        # type: (Service) -> Optional[str]
+    def get_logo(self, obj) -> Optional[str]:
         if obj.logo:
             return obj.logo
         elif obj.logo_url:
@@ -49,21 +50,21 @@ class ServiceSLZ(serializers.ModelSerializer):
 
     class Meta(object):
         model = Service
-        exclude = ['created', 'updated']
+        exclude = ["created", "updated"]
 
 
 class PlanSLZ(serializers.ModelSerializer):
     properties = serializers.JSONField()
     config = serializers.JSONField(source="get_config")
-    specifications = serializers.DictField(source='full_specifications')
+    specifications = serializers.DictField(source="full_specifications")
 
     class Meta(object):
         model = Plan
-        exclude = ['created', 'updated']
+        exclude = ["created", "updated"]
 
 
 class ServiceListSLZ(ServiceSLZ):
-    plans = serializers.ListField(child=PlanSLZ(), source='plans.all')
+    plans = serializers.ListField(child=PlanSLZ(), source="plans.all")
 
 
 class ServiceInstanceSLZ(serializers.ModelSerializer):
@@ -74,7 +75,7 @@ class ServiceInstanceSLZ(serializers.ModelSerializer):
 
     class Meta(object):
         model = ServiceInstance
-        exclude = ['config', 'credentials']
+        exclude = ["config", "credentials"]
 
 
 class ServiceInstanceQuerySLZ(serializers.Serializer):
@@ -93,10 +94,10 @@ class PaaSAppInfoSLZ(serializers.Serializer):
     """
 
     app_id = serializers.CharField(max_length=64)
-    app_code = serializers.CharField(max_length=64, default='')
-    app_name = serializers.CharField(max_length=64, default='')
-    module = serializers.CharField(max_length=64, default='')
-    environment = serializers.CharField(max_length=32, default='unknown')
+    app_code = serializers.CharField(max_length=64, default="")
+    app_name = serializers.CharField(max_length=64, default="")
+    module = serializers.CharField(max_length=64, default="")
+    environment = serializers.CharField(max_length=32, default="unknown")
 
 
 class InstanceConfigSLZ(serializers.Serializer):
@@ -108,7 +109,7 @@ class InstanceConfigSLZ(serializers.Serializer):
 # Serializer for admin api #
 ############################
 class _SpecDefinitionUpsertSLZ(serializers.ModelSerializer):
-    name = serializers.CharField(help_text='名称', max_length=64)
+    name = serializers.CharField(help_text="名称", max_length=64)
 
     def to_internal_value(self, data):
         try:
@@ -121,7 +122,7 @@ class _SpecDefinitionUpsertSLZ(serializers.ModelSerializer):
 
     class Meta(object):
         model = SpecDefinition
-        exclude = ['index', 'uuid', 'created', 'updated']
+        exclude = ["index", "uuid", "created", "updated"]
 
 
 class ServiceUpsertSLZ(serializers.ModelSerializer):
@@ -197,4 +198,4 @@ class PlanUpsertSLZ(serializers.ModelSerializer):
 
     class Meta(object):
         model = Plan
-        exclude = ['created', 'updated']
+        exclude = ["created", "updated"]

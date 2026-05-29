@@ -16,6 +16,7 @@ limitations under the License.
 We undertake not to change the open source license (MIT license) applicable
 to the current version of the project delivered to anyone in the future.
 """
+
 import json
 import logging
 
@@ -42,9 +43,9 @@ def clean_instances():
         plan_config = json.loads(instance.plan.config)
         try:
             provider_cls(**plan_config).delete(instance_data)
-        except Exception as e:
+        except Exception:
             # remain deleting status if provider delete failed
-            logger.exception(f"delete service instance<{instance.uuid}> failed: {e}")
+            logger.exception(f"delete service instance<{instance.uuid}>")
             continue
         else:
             logger.info(f"instance<{instance.uuid}> will be cleaned. ")
