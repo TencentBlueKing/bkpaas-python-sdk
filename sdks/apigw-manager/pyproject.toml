@@ -10,34 +10,13 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
 ]
 
-[project]
-name = "apigw-manager"
-description = "The SDK for managing blueking gateway resource."
-license = "MIT"
-dynamic = ["version", "classifiers", "dependencies"]
-readme = "README.md"
-authors = [{name = "blueking", email = "blueking@tencent.com"}]
-requires-python = '>=3.11,<3.14'
-
-
-[project.urls]
-Homepage = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
-Repository = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
-
-[project.optional-dependencies]
-cryptography = ['cryptography (>=3.1.1)', 'pyjwt (>=2.0.0)']
-drf = ["django", 'cryptography', 'pyjwt', 'djangorestframework (>=3.10.3)', 'drf-spectacular (<=0.27.2)']
-django = ["django", 'pyjwt']
-demo = ['django-environ (>=0.8.1)', "django", 'PyMySQL (>=1.0.2,<2.0.0)', 'pyjwt']
-kubernetes = ['kubernetes']
-
 [tool.poetry.dependencies]
 python = ">=3.11,<3.14"
 setuptools = ">=78.1.1"
 urllib3 = ">=1.25.3"
 pyyaml = ">=5.4.2"
 bkapi-client-core = ">=1.2.0"
-bkapi-bk-apigateway = "^1.2.0"
+bkapi-bk-apigateway = "1.2.0"
 pyjwt = { version = ">=2.12.0", optional = true }
 django-environ = { version = ">=0.8.1", optional = true }
 Django = { version = ">=5.2.0,<6.0.0", optional = true }
@@ -75,10 +54,6 @@ kubernetes = "31.0.0"
 types-PyYAML = "6.0.12.9"
 types-PyMySQL = "1.1.0.1"
 
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
-
 [tool.mypy]
 ignore_missing_imports = true
 follow_imports = "skip"
@@ -94,3 +69,28 @@ ignore_errors = true
 [tool.pytest.ini_options]
 addopts = "-p no:pastebin -p no:nose -p no:doctest -p no:warnings"
 testpaths = ["tests"]
+[project]
+name = "apigw-manager"
+description = "The SDK for managing blueking gateway resource."
+license = "MIT"
+dynamic = ["version", "classifiers", "dependencies"]
+readme = "README.md"
+authors = [{name = "blueking", email = "blueking@tencent.com"}]
+requires-python = '>=3.11,<3.14'
+
+
+[project.urls]
+Homepage = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
+Repository = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"
+
+[project.optional-dependencies]
+cryptography = ['cryptography (>=3.1.1)', 'pyjwt (>=2.0.0)']
+drf = ["django", 'cryptography', 'pyjwt', 'djangorestframework (>=3.10.3)', 'drf-spectacular (<=0.27.2)']
+django = ["django", 'pyjwt']
+demo = ['django-environ (>=0.8.1)', "django", 'PyMySQL (>=1.0.2,<2.0.0)', 'pyjwt']
+kubernetes = ['kubernetes']
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
