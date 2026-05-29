@@ -195,7 +195,6 @@ class TestHandle:
         releaser.release.return_value = {
             "version": fake_resource_version["version"],
             "resource_version_name": fake_resource_version["name"],
-            "resource_version_title": faker.pystr(),
             "stage_names": [stage],
         }
         resource_sync_manager.is_dirty.return_value = False
@@ -205,7 +204,6 @@ class TestHandle:
         releaser.create_resource_version.assert_not_called()
         releaser.release.assert_called_once_with(
             version=fake_resource_version["version"],
-            title=fake_resource_version["title"],
             comment=fake_resource_version["comment"],
             stage_names=stage,
         )
@@ -231,12 +229,10 @@ class TestHandle:
         releaser.release.return_value = {
             "version": str(current_version),
             "resource_version_name": fake_resource_version["name"],
-            "resource_version_title": faker.pystr(),
             "stage_names": [stage],
         }
         releaser.create_resource_version.return_value = {
             "version": str(current_version),
-            "title": fake_resource_version["title"],
             "comment": fake_resource_version["comment"],
         }
         resource_sync_manager.is_dirty.return_value = True
@@ -245,12 +241,10 @@ class TestHandle:
 
         releaser.create_resource_version.assert_any_call(
             version=str(current_version),
-            title=fake_resource_version["title"],
             comment=fake_resource_version["comment"],
         )
         releaser.release.assert_called_once_with(
             version=str(current_version),
-            title=fake_resource_version["title"],
             comment=fake_resource_version["comment"],
             stage_names=stage,
         )
@@ -289,12 +283,10 @@ class TestHandle:
 
         releaser.create_resource_version.assert_any_call(
             version=defined_version,
-            title=fake_resource_version["title"],
             comment=fake_resource_version["comment"],
         )
         releaser.release.assert_any_call(
             version=defined_version,
-            title=fake_resource_version["title"],
             comment=fake_resource_version["comment"],
             stage_names=stage,
         )
@@ -328,13 +320,11 @@ class TestHandle:
         releaser.release.return_value = {
             "version": str(defined_version),
             "resource_version_name": faker.pystr(),
-            "resource_version_title": faker.pystr(),
             "stage_names": [stage],
         }
 
         releaser.create_resource_version.return_value = {
             "version": str(defined_version),
-            "title": fake_resource_version["title"],
             "comment": fake_resource_version["comment"],
         }
 
@@ -343,12 +333,10 @@ class TestHandle:
 
         releaser.create_resource_version.assert_any_call(
             version=str(defined_version),
-            title=fake_resource_version["title"],
             comment=fake_resource_version["comment"],
         )
         releaser.release.assert_called_once_with(
             version=str(defined_version),
-            title=fake_resource_version["title"],
             comment=fake_resource_version["comment"],
             stage_names=stage,
         )
@@ -377,4 +365,4 @@ class TestHandle:
 
         releaser.create_resource_version.assert_not_called()
 
-        releaser.releaser.release.assert_not_called()
+        releaser.release.assert_not_called()

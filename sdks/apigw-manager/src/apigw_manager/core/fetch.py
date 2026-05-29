@@ -17,14 +17,14 @@ class Fetcher(Handler):
 
     def public_key(self, *args, **kwargs):
         """Get the API gateway public key according to the name"""
-        result = self._call_with_cache(self.client.api.get_apigw_public_key, *args, **kwargs)
+        result = self._call_v2_with_cache(self.client.api.v2_sync_get_gateway_public_key_new, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))
 
     def latest_resource_version(self, *args, **kwargs):
         """Get the latest resource version"""
-        result = self._call(self.client.api.get_latest_resource_version, *args, **kwargs)
+        result = self._call_v2(self.client.api.v2_sync_get_latest_resource_version, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))
 
     def list_resource_versions(self, *args, **kwargs):
-        result = self._call(self.client.api.list_resource_versions, *args, **kwargs)
+        result = self._call_v2(self.client.api.v2_sync_list_resource_versions, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))
