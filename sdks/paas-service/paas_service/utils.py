@@ -16,20 +16,17 @@ limitations under the License.
 We undertake not to change the open source license (MIT license) applicable
 to the current version of the project delivered to anyone in the future.
 """
+
 import os
 import random
 import string
 from typing import Dict, List, Optional, Tuple
-from urllib.parse import urlparse
+from urllib.parse import parse_qsl, urlparse
 
 from django.db import transaction
+
 from paas_service.models import ResourceId, ServiceInstance, ServiceInstanceConfig
 from paas_service.serializers import InstanceConfigSLZ
-
-try:
-    from django.http.request import limited_parse_qsl as parse_qsl
-except ImportError:
-    from django.http.request import parse_qsl
 
 
 def gen_unique_id(
@@ -68,7 +65,7 @@ def get_paas_app_info(instance: ServiceInstance) -> Optional[Dict]:
     return slz.data["paas_app_info"]
 
 
-def parse_redirect_params(redirect_url: str = None, **kwargs) -> Tuple[str, dict]:
+def parse_redirect_params(redirect_url: Optional[str] = None, **kwargs) -> Tuple[str, dict]:
     """
     从 redirect_url 构建出重定向指令的参数
     >>> parse_redirect_params(redirect_url="instance.index?a=1&b=1&b=2&c=3")
@@ -177,7 +174,7 @@ class Base36Handler:
             num, rem = divmod(num, base)
             arr.append(alphabet[rem])
         arr.reverse()
-        return ''.join(arr)
+        return "".join(arr)
 
     @classmethod
     def decode(cls, encoded: str, alphabet=BASE36):
@@ -191,10 +188,8 @@ class Base36Handler:
         str_len = len(encoded)
         num = 0
 
-        idx = 0
-        for char in encoded:
+        for idx, char in enumerate(reversed(encoded)):
             power = str_len - (idx + 1)
-            num += alphabet.index(char) * (base ** power)
-            idx += 1
+            num += alphabet.index(char) * (base**power)
 
         return num
