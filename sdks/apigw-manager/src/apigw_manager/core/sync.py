@@ -18,11 +18,11 @@ class Synchronizer(Handler):
     """Synchronous API gateway configuration"""
 
     def sync_basic_config(self, *args, **kwargs):
-        result = self._call(self.client.api.sync_api, *args, **kwargs)
+        result = self._call_v2(self.client.api.v2_sync_gateway, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))
 
     def sync_stage_config(self, *args, **kwargs):
-        result = self._call(self.client.api.sync_stage, *args, **kwargs)
+        result = self._call_v2(self.client.api.v2_sync_stages, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))
 
     def sync_stage_mcp_servers(self, *args, **kwargs):
@@ -31,13 +31,15 @@ class Synchronizer(Handler):
     def sync_resources_config(self, content, *args, **kwargs):
         kwargs["content"] = yaml.dump(dict(content))
 
-        result = self._call(self.client.api.sync_resources, *args, **kwargs)
+        result = self._call_v2(self.client.api.v2_sync_resources, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))
 
     def sync_resource_docs_by_archive(self, *args, **kwargs):
-        result = self._call(self.client.api.import_resource_docs_by_archive, *args, **kwargs)
+        result = self._call_v2(self.client.api.v2_sync_resource_doc, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))
 
     def add_related_apps(self, *args, **kwargs):
-        result = self._call(self.client.api.add_related_apps, *args, **kwargs)
+        # v2 使用 related_app_codes 替代 target_app_codes
+        kwargs["related_app_codes"] = kwargs.pop("target_app_codes", [])
+        result = self._call_v2(self.client.api.v2_sync_add_related_apps, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))

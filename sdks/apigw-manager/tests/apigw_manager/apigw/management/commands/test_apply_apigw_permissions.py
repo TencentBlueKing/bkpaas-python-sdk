@@ -27,14 +27,14 @@ def test_do(mock_manager, command, configuration):
         ],
     )
 
+    # v2 使用 gateway_name 替代 api_name
     mock_manager.apply_permission.assert_any_call(
         target_app_code=configuration.bk_app_code,
-        api_name="test1",
-        grant_dimension="api",
+        gateway_name="test1",
+        grant_dimension="gateway",
     )
     mock_manager.apply_permission.assert_any_call(
         target_app_code=configuration.bk_app_code,
-        api_name="test2",
         gateway_name="test2",
-        grant_dimension="api",
+        grant_dimension="gateway",
     )

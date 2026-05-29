@@ -4,6 +4,14 @@
 
 - [breaking change] drop support for python 3.8/3.9/3.10, request >=3.11 and < 3.14
 - [breaking change] drop support for Django 3.x / 4.x, request Django >=5.2,<6.0 (LTS)
+- [breaking change] 升级所有 bk-apigateway API 从 v1 到 v2 版本
+  - 所有 API 调用改为使用 v2 版本（如 `v2_sync_gateway`、`v2_sync_stages` 等）
+  - 路径参数从 `api_name` 改为 `gateway_name`
+  - 权限维度 `grant_dimension` 默认值从 `api` 改为 `gateway`
+  - 移除 `title` 参数支持（v2 API 不支持）
+  - `add_related_apps` 接口参数从 `target_app_codes` 改为 `related_app_codes`
+  - 新增 `_call_v2` 和 `_call_v2_with_cache` 方法支持 v2 API 调用
+- 更新所有相关测试用例，确保 v2 API 兼容性
 
 ### 4.2.4
 
