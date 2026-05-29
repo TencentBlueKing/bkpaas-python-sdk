@@ -18,47 +18,12 @@ to the current version of the project delivered to anyone in the future.
 """
 
 import pytest
-from paas_service.base_vendor import BaseProvider, InstanceData
+from paas_service.base_vendor import DummyProvider, OperationFailed
 from paas_service.constants import ProvisionRecordStatus
 from paas_service.idem_prov import idempotent_provision_instance, mark_record_success
 from paas_service.models import ProvisionRecord
 
 pytestmark = pytest.mark.django_db
-
-
-class ProvisioningFailed(Exception):
-    """Raised by FailingProvider to simulate provisioning failure in tests."""
-
-
-class DummyProvider(BaseProvider):
-    def __init__(self, **kwargs):
-        pass
-
-    def create(self, params):
-        return InstanceData(
-            credentials={"host": "1.2.3.4", "password": "pass"},
-            config={"endpoint": "http://example.com"},
-        )
-
-    def delete(self, instance_data: InstanceData):
-        return
-
-    def patch(self, instance_data: InstanceData, params) -> InstanceData:
-        raise NotImplementedError
-
-
-class FailingProvider(BaseProvider):
-    def __init__(self, **kwargs):
-        pass
-
-    def create(self, params):
-        raise ProvisioningFailed("Provisioning failed")
-
-    def delete(self, instance_data: InstanceData):
-        return
-
-    def patch(self, instance_data: InstanceData, params) -> InstanceData:
-        raise NotImplementedError
 
 
 class TestIdempotentProvision:
@@ -84,13 +49,17 @@ class TestIdempotentProvision:
         assert instance2 == instance1
 
     def test_idem_prov_failure(self, service, plan):
-        with pytest.raises(ProvisioningFailed, match="Provisioning failed"):
+        class _Failing(DummyProvider):
+            def create(self, params):
+                raise OperationFailed("Provisioning failed")
+
+        with pytest.raises(OperationFailed, match="Provisioning failed"):
             idempotent_provision_instance(
                 provision_key="key2",
                 service=service,
                 plan=plan,
                 params={},
-                provider_cls_getter=lambda: FailingProvider,
+                provider_cls_getter=lambda: _Failing,
             )
 
         assert not ProvisionRecord.objects.filter(provision_key="key2").exists()
