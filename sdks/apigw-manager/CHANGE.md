@@ -9,7 +9,7 @@
   - 路径参数从 `api_name` 改为 `gateway_name`
   - 权限维度 `grant_dimension` 默认值从 `api` 改为 `gateway`
   - 移除 `title` 参数支持（v2 API 不支持）
-  - `add_related_apps` 接口参数从 `target_app_codes` 改为 `related_app_codes`
+  - `add_related_apps` 接口参数从 `target_app_codes` 改为 `related_apps`（SDK 内部调用 v2 API 时自动转换为 `related_app_codes`）
   - 新增 `_call_v2` 和 `_call_v2_with_cache` 方法支持 v2 API 调用
 - 更新所有相关测试用例，确保 v2 API 兼容性
 

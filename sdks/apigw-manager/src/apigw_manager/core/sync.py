@@ -39,5 +39,7 @@ class Synchronizer(Handler):
         return self._parse_result(result, itemgetter("data"))
 
     def add_related_apps(self, *args, **kwargs):
+        kwargs["related_app_codes"] = kwargs.pop("related_apps")
+
         result = self._call_v2(self.client.api.v2_sync_add_related_apps, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))
