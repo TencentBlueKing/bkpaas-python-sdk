@@ -23,7 +23,7 @@ class Command(SyncCommand):
             return
 
         try:
-            manager.add_related_apps(target_app_codes=definition)
+            manager.add_related_apps(related_apps=definition)
         except ApiResponseError as err:
             print("warning!! Add related apps error, %s" % str(err))
             return

@@ -39,7 +39,5 @@ class Synchronizer(Handler):
         return self._parse_result(result, itemgetter("data"))
 
     def add_related_apps(self, *args, **kwargs):
-        # v2 使用 related_apps 替代 target_app_codes
-        kwargs["related_apps"] = kwargs.pop("target_app_codes", [])
         result = self._call_v2(self.client.api.v2_sync_add_related_apps, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))
