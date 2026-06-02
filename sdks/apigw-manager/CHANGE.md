@@ -7,7 +7,7 @@
 - [breaking change] 升级所有 bk-apigateway API 从 v1 到 v2 版本
   - 所有 API 调用改为使用 v2 版本（如 `v2_sync_gateway`、`v2_sync_stages` 等）
   - 路径参数从 `api_name` 改为 `gateway_name`
-  - 权限维度 `grant_dimension` 默认值从 `api` 改为 `gateway`
+  - `grant_apigw_permissions` 与 `apply_apigw_permissions` 权限维度 `grant_dimension` 支持 `gateway` / `resource`，默认值从 `api` 改为 `gateway`，并继续兼容 `api`
   - 移除 `title` 参数支持（v2 API 不支持）
   - `add_related_apps` 接口参数从 `target_app_codes` 改为 `related_apps`（SDK 内部调用 v2 API 时自动转换为 `related_app_codes`）
   - 新增 `_call_v2` 和 `_call_v2_with_cache` 方法支持 v2 API 调用
