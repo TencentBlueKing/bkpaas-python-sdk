@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
-"""
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
+
 import datetime
 import logging
 from os import PathLike
@@ -28,7 +35,7 @@ from requests.auth import HTTPBasicAuth
 from bkstorages.exceptions import DownloadFailedError, ObjectAlreadyExists, RequestError, UploadFailedError
 from bkstorages.utils import clean_name, get_available_overwrite_name, get_setting, safe_join, setting
 
-GMT_FORMAT = '%a, %d %b %Y %H:%M:%S GMT'
+GMT_FORMAT = "%a, %d %b %Y %H:%M:%S GMT"
 MAX_RETRIES = 2
 logger = logging.getLogger(__name__)
 
@@ -91,7 +98,7 @@ class BKGenericRepoClient:
         :param bool allow_overwrite: 是否覆盖已存在文件
         """
         client = self.get_client()
-        url = safe_join(self.endpoint_url, f'generic/{self.project}/{self.bucket}/{key}')
+        url = safe_join(self.endpoint_url, f"generic/{self.project}/{self.bucket}/{key}")
         src = getattr(fh, "name", "<memory>")
         headers = {"X-BKREPO-OVERWRITE": str(allow_overwrite)}
 
@@ -126,7 +133,7 @@ class BKGenericRepoClient:
         :param IO fh: 文件句柄
         """
         client = self.get_client()
-        url = safe_join(self.endpoint_url, f'generic/{self.project}/{self.bucket}/{key}')
+        url = safe_join(self.endpoint_url, f"generic/{self.project}/{self.bucket}/{key}")
         dest = getattr(fh, "name", "<memory>")
         try:
             resp = client.get(url, stream=True, timeout=TIMEOUT_THRESHOLD)
@@ -155,14 +162,14 @@ class BKGenericRepoClient:
         :param str key: 文件完整路径
         """
         client = self.get_client()
-        url = safe_join(self.endpoint_url, f'generic/{self.project}/{self.bucket}/{key}')
+        url = safe_join(self.endpoint_url, f"generic/{self.project}/{self.bucket}/{key}")
         resp = client.delete(url, timeout=TIMEOUT_THRESHOLD)
         self._validate_resp(resp)
 
     def get_file_metadata(self, key: str, *args, **kwargs) -> Dict:
         """具体返回值请看 bk-repo 的文档."""
         client = self.get_client()
-        url = safe_join(self.endpoint_url, f'generic/{self.project}/{self.bucket}/{key}')
+        url = safe_join(self.endpoint_url, f"generic/{self.project}/{self.bucket}/{key}")
         resp = client.head(url, timeout=TIMEOUT_THRESHOLD)
         if resp.status_code == 200:
             return dict(resp.headers)
@@ -177,7 +184,7 @@ class BKGenericRepoClient:
         while key.startswith("/"):
             key = key[1:]
         download = "true" if force_download else "false"
-        url = safe_join(self.endpoint_url, f'generic/{self.project}/{self.bucket}/{key}?download={download}')
+        url = safe_join(self.endpoint_url, f"generic/{self.project}/{self.bucket}/{key}?download={download}")
         return url
 
     def generate_presigned_url(self, key: str, expires_in: int, token_type: str = "DOWNLOAD", *args, **kwargs) -> str:
@@ -188,16 +195,16 @@ class BKGenericRepoClient:
         :param str token_type: token类型。UPLOAD:允许上传, DOWNLOAD: 允许下载, ALL: 同时允许上传和下载。
         """
         client = self.get_client()
-        url = safe_join(self.endpoint_url, 'generic/temporary/url/create')
+        url = safe_join(self.endpoint_url, "generic/temporary/url/create")
 
         resp = client.post(
             url,
             json={
-                'projectId': self.project,
-                'repoName': self.bucket,
-                'fullPathSet': [key],
-                'expireSeconds': expires_in,
-                'type': token_type,
+                "projectId": self.project,
+                "repoName": self.bucket,
+                "fullPathSet": [key],
+                "expireSeconds": expires_in,
+                "type": token_type,
             },
             timeout=TIMEOUT_THRESHOLD,
         )
@@ -206,10 +213,10 @@ class BKGenericRepoClient:
             return data[0]["url"]
         except RequestError as e:
             logger.exception("生成 bkrepo 访问链接时出现异常")
-            if str(e.code) != '250102':
+            if str(e.code) != "250102":
                 raise
             logger.warning("BKREPO中不存在该文件, 避免报错仅拼接 url ")
-            return safe_join(self.endpoint_url, f'generic/temporary/token/download/{self.project}/{self.bucket}/{key}')
+            return safe_join(self.endpoint_url, f"generic/temporary/token/download/{self.project}/{self.bucket}/{key}")
 
     def list_dir(self, key_prefix: str) -> Tuple[List, List]:
         """
@@ -273,7 +280,7 @@ class BKGenericRepoClient:
 
 
 class BKRepoFile(File):
-    def __init__(self, name, storage: 'BKRepoStorage'):
+    def __init__(self, name, storage: "BKRepoStorage"):
         """# type: (str, BKRepoStorage) -> None"""
         self.name = name
         self._storage = storage
@@ -282,7 +289,7 @@ class BKRepoFile(File):
 
     def _get_file(self):
         if self._file is None:
-            self._file = SpooledTemporaryFile() # noqa: SIM115
+            self._file = SpooledTemporaryFile()  # noqa: SIM115
             self._storage.client.download_fileobj(key=self.name, fh=self._file)
             self._file.seek(0)
             self._dirty = False
@@ -326,14 +333,14 @@ class BKRepoFile(File):
 class BKRepoStorage(Storage):
     """bkrepo Storage class for Django pluggable storage system."""
 
-    location = setting('BKREPO_LOCATION', '')
-    file_overwrite = setting('BKREPO_FILE_OVERWRITE', True)
+    location = setting("BKREPO_LOCATION", "")
+    file_overwrite = setting("BKREPO_FILE_OVERWRITE", True)
 
-    endpoint_url = get_setting('BKREPO_ENDPOINT_URL')
-    username = get_setting('BKREPO_USERNAME')
-    password = get_setting('BKREPO_PASSWORD')
-    project_id = get_setting('BKREPO_PROJECT')
-    bucket = get_setting('BKREPO_BUCKET')
+    endpoint_url = get_setting("BKREPO_ENDPOINT_URL")
+    username = get_setting("BKREPO_USERNAME")
+    password = get_setting("BKREPO_PASSWORD")
+    project_id = get_setting("BKREPO_PROJECT")
+    bucket = get_setting("BKREPO_BUCKET")
 
     CHUNK_SIZE = 4 * 1024 * 1024
 
@@ -366,7 +373,7 @@ class BKRepoStorage(Storage):
             cleaned_name = cleaned_name[1:]
         return safe_join(self.root_path, cleaned_name)
 
-    def _open(self, name, mode='rb'):
+    def _open(self, name, mode="rb"):
         return BKRepoFile(self._full_path(name), self)
 
     def _save(self, name, content):
@@ -441,7 +448,7 @@ class BKRepoStorage(Storage):
             raise NotImplementedError
 
         dt = parse_gmt_datetime(gmt)
-        if setting('USE_TZ'):
+        if setting("USE_TZ"):
             return localtime(dt)
         else:
             return dt
