@@ -1,11 +1,19 @@
 # -*- coding: utf-8 -*-
-# TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
-# Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
-# Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at http://opensource.org/licenses/MIT
-# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
-# an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
-# specific language governing permissions and limitations under the License.
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) Tencent. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
 
 """
 this command will generate the resources.yaml from the drf_spectacular config of the apis under project
@@ -83,8 +91,9 @@ def post_process_mcp_server_config(mcp_server_tools: list, delete_mcp_flag: bool
             for method, info in methods.items():
                 name = info.get("operationId")
                 all_resources.add(name)
-                if info.get("x-bk-apigateway-resource", None) and info["x-bk-apigateway-resource"].get("enableMcp",
-                                                                                                       None):
+                if info.get("x-bk-apigateway-resource", None) and info["x-bk-apigateway-resource"].get(
+                    "enableMcp", None
+                ):
                     # 生成 resource.yaml 的时候需要删除 enableMcp ，以防导入校验失败
                     if delete_mcp_flag:
                         del info["x-bk-apigateway-resource"]["enableMcp"]
@@ -99,9 +108,10 @@ def post_process_mcp_server_config(mcp_server_tools: list, delete_mcp_flag: bool
                         else:
                             mcp_can_used_tool.add(name)
                         continue
-                    elif not info.get("noneSchema") and not info["x-bk-apigateway-resource"].get("noneSchema") :
-                        raise Exception(f"mcp server tool:{name} need confirm api schema or if no schema and set "
-                                        f"noneSchema=True")
+                    elif not info.get("noneSchema") and not info["x-bk-apigateway-resource"].get("noneSchema"):
+                        raise Exception(
+                            f"mcp server tool:{name} need confirm api schema or if no schema and set noneSchema=True"
+                        )
                     else:
                         # 如果没有指定直接将符合的api以及开启了mcp的都加入到工具列表里面
                         if not is_specified:
@@ -114,8 +124,9 @@ def post_process_mcp_server_config(mcp_server_tools: list, delete_mcp_flag: bool
                 if tool not in all_resources:
                     raise Exception((f"mcp server tool:{tool} not found in resources.yaml"))
                 if tool not in mcp_can_used_tool:
-                    raise Exception(f"mcp server tool:{tool} "
-                                    f"need confirm api schema or set noneSchema=True and enableMcp=True")
+                    raise Exception(
+                        f"mcp server tool:{tool} need confirm api schema or set noneSchema=True and enableMcp=True"
+                    )
 
         return result
 
@@ -136,8 +147,7 @@ class Command(BaseCommand):
         self.stdout.write(f"will generate {resources_path}")
 
         if hasattr(settings, "BK_APIGW_STAGE_ENABLE_MCP_SERVERS") and settings.BK_APIGW_STAGE_ENABLE_MCP_SERVERS:
-            spectacular_settings.POSTPROCESSING_HOOKS.append(
-                post_process_mcp_server_config([], delete_mcp_flag=True))
+            spectacular_settings.POSTPROCESSING_HOOKS.append(post_process_mcp_server_config([], delete_mcp_flag=True))
         tags = kwargs.get("tag")
         if tags:
             self.stdout.write(f"get tags, will only use the apis with tags: {tags}")
