@@ -13,13 +13,19 @@ this command will generate the resources.yaml from the drf_spectacular config of
 if only want part of the apis:
 1. add the `tags` in `@extend_schema` of each method in the views.py
 2. call this command with tag, e.g. `python manage.py generate_resource_yaml.py --tag=foo --tag=bar`
+
+support manually configured routes via:
+1. --extra-resource-file argument (can specify multiple files)
+2. BK_APIGW_EXTRA_RESOURCE_FILES setting (list of file paths)
 """
 
 from pathlib import Path
-from typing import List
+from typing import Dict, List
+
+import yaml
 
 from django.conf import settings
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from drf_spectacular.management.commands.spectacular import SchemaValidationError
 from drf_spectacular.renderers import OpenApiYamlRenderer
 from drf_spectacular.settings import spectacular_settings
@@ -122,12 +128,74 @@ def post_process_mcp_server_config(mcp_server_tools: list, delete_mcp_flag: bool
     return get_mcp_server_tools
 
 
+def merge_extra_resources(schema: Dict, extra_resources_file: Path) -> Dict:
+    """Load extra resources from a YAML file and merge into the schema.
+
+    The extra resource file should follow the same OpenAPI 3.0 format as resources.yaml.
+    Paths and components from the extra file will be merged into the schema.
+    Raises an error on duplicate path+method combinations.
+    """
+    if not extra_resources_file.exists():
+        raise CommandError(f"Extra resource file not found: {extra_resources_file}")
+
+    with open(extra_resources_file, "r", encoding="utf-8") as f:
+        extra = yaml.safe_load(f)
+
+    if not isinstance(extra, dict):
+        raise CommandError(f"Invalid extra resource file format: {extra_resources_file}")
+
+    # Merge paths
+    extra_paths = extra.get("paths", {})
+    if extra_paths:
+        existing_paths = schema.get("paths", {})
+        for uri, methods in extra_paths.items():
+            if not isinstance(methods, dict):
+                raise CommandError(f"Invalid path definition for {uri} in {extra_resources_file}")
+            if uri in existing_paths:
+                for method in methods:
+                    if method in existing_paths[uri]:
+                        raise CommandError(
+                            f"Duplicate path+method: {uri} {method} in {extra_resources_file}. "
+                            f"This path+method already exists in the generated schema."
+                        )
+                existing_paths[uri].update(methods)
+            else:
+                existing_paths[uri] = methods
+        schema["paths"] = existing_paths
+
+    # Merge components (schemas, securitySchemes, etc.)
+    extra_components = extra.get("components", {})
+    if extra_components:
+        existing_components = schema.get("components", {})
+        for component_type, components in extra_components.items():
+            if component_type not in existing_components:
+                existing_components[component_type] = components
+            else:
+                for name, definition in components.items():
+                    if name in existing_components[component_type]:
+                        raise CommandError(
+                            f"Duplicate component: {component_type}/{name} in {extra_resources_file}. "
+                            f"This component already exists in the generated schema."
+                        )
+                    existing_components[component_type][name] = definition
+        schema["components"] = existing_components
+
+    return schema
+
+
 class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             "--tag",
             nargs="*",
             help="if set only generate the specified tags api to resources.yaml",
+        )
+        parser.add_argument(
+            "--extra-resource-file",
+            action="append",
+            default=[],
+            help="path to extra resource YAML file(s) to merge into generated resources.yaml "
+            "(can specify multiple times)",
         )
 
     def handle(self, *args, **kwargs):
@@ -151,6 +219,20 @@ class Command(BaseCommand):
         generator = spectacular_settings.DEFAULT_GENERATOR_CLASS()
         renderer = OpenApiYamlRenderer()
         schema = generator.get_schema(request=None, public=True)
+
+        # Merge extra resources from command argument and settings
+        extra_resource_files = kwargs.get("extra_resource_file", [])
+        if hasattr(settings, "BK_APIGW_EXTRA_RESOURCE_FILES"):
+            extra_resource_files.extend(settings.BK_APIGW_EXTRA_RESOURCE_FILES)
+
+        for extra_file in extra_resource_files:
+            extra_path = Path(extra_file)
+            # If relative path, resolve against BASE_DIR
+            if not extra_path.is_absolute():
+                extra_path = define_dir / extra_path
+
+            self.stdout.write(f"merging extra resources from {extra_path}")
+            schema = merge_extra_resources(schema, extra_path)
 
         self.stdout.write("validate schema of all apis")
         try:
