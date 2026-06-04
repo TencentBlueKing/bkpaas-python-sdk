@@ -188,7 +188,7 @@ class Base36Handler:
         str_len = len(encoded)
         num = 0
 
-        for idx, char in enumerate(reversed(encoded)):
+        for idx, char in enumerate(encoded):
             power = str_len - (idx + 1)
             num += alphabet.index(char) * (base**power)
 
