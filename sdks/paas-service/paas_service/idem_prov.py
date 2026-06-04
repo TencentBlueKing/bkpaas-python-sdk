@@ -16,6 +16,7 @@ limitations under the License.
 We undertake not to change the open source license (MIT license) applicable
 to the current version of the project delivered to anyone in the future.
 """
+
 import json
 from typing import Callable
 
@@ -52,14 +53,14 @@ def idempotent_provision_instance(
         acquired = False
 
     if not acquired:
-        record = ProvisionRecord.objects.select_related('service_instance').get(
+        record = ProvisionRecord.objects.select_related("service_instance").get(
             provision_key=provision_key,
         )
         if record.status == ProvisionRecordStatus.SUCCESS:
             return record.service_instance, False
         if record.status == ProvisionRecordStatus.PROVISIONING:
             return None, False
-        raise Exception(f"Provision record with key {provision_key} is in unexpected status {record.status}")
+        raise RuntimeError(f"Provision record with key {provision_key} is in unexpected status {record.status}")
 
     provider_cls = provider_cls_getter()
     plan_config = json.loads(plan.config)

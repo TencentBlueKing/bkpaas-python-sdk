@@ -16,38 +16,22 @@ limitations under the License.
 We undertake not to change the open source license (MIT license) applicable
 to the current version of the project delivered to anyone in the future.
 """
-import pytest
 
-from paas_service.idem_prov import idempotent_provision_instance, mark_record_success
+import pytest
+from paas_service.base_vendor import DummyProvider, OperationFailed
 from paas_service.constants import ProvisionRecordStatus
+from paas_service.idem_prov import idempotent_provision_instance, mark_record_success
 from paas_service.models import ProvisionRecord
-from paas_service.base_vendor import InstanceData
 
 pytestmark = pytest.mark.django_db
 
-class DummyProvider:
-    def __init__(self, **kwargs):
-        pass
-
-    def create(self, params):
-        return InstanceData(
-            credentials={"host": "1.2.3.4", "password": "pass"},
-            config={"endpoint": "http://example.com"},
-        )
-
-class FailingProvider:
-    def __init__(self, **kwargs):
-        pass
-
-    def create(self, params):
-        raise Exception("Provisioning failed")
 
 class TestIdempotentProvision:
     def test_idempotent_provision_instance(self, service, plan):
         # 模拟 provider 创建实例成功
         # 第一次调用，应该创建实例
         instance1, created1 = idempotent_provision_instance(
-            provision_key='key1',
+            provision_key="key1",
             service=service,
             plan=plan,
             params={},
@@ -55,31 +39,31 @@ class TestIdempotentProvision:
         )
         assert created1 is True
         assert instance1 is not None
-        assert ProvisionRecord.objects.filter(provision_key='key1', status=ProvisionRecordStatus.SUCCESS).exists()
+        assert ProvisionRecord.objects.filter(provision_key="key1", status=ProvisionRecordStatus.SUCCESS).exists()
 
         # 第二次调用，应该复用实例
         instance2, created2 = idempotent_provision_instance(
-            provision_key='key1',
-            service=service,
-            plan=plan,
-            params={},
-            provider_cls_getter=lambda: DummyProvider
+            provision_key="key1", service=service, plan=plan, params={}, provider_cls_getter=lambda: DummyProvider
         )
         assert created2 is False
         assert instance2 == instance1
-    
+
     def test_idem_prov_failure(self, service, plan):
-        with pytest.raises(Exception, match="Provisioning failed"):
+        class _Failing(DummyProvider):
+            def create(self, params):
+                raise OperationFailed("Provisioning failed")
+
+        with pytest.raises(OperationFailed, match="Provisioning failed"):
             idempotent_provision_instance(
-                provision_key='key2',
+                provision_key="key2",
                 service=service,
                 plan=plan,
                 params={},
-                provider_cls_getter=lambda: FailingProvider,
+                provider_cls_getter=lambda: _Failing,
             )
 
-        assert not ProvisionRecord.objects.filter(provision_key='key2').exists()
-    
+        assert not ProvisionRecord.objects.filter(provision_key="key2").exists()
+
     def test_mark_record_success(self, instance, provisioning_record):
         assert provisioning_record.status == ProvisionRecordStatus.PROVISIONING
         mark_record_success(provisioning_record, instance)
