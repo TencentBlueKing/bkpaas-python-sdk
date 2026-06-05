@@ -7,7 +7,7 @@
   - 新增 `BK_APIGW_EXTRA_RESOURCE_FILES` Django 设置，支持配置默认额外资源文件列表
   - 合并时校验重复的 path+method 组合及组件名称，冲突时直接报错
   - 相对路径基于 `BASE_DIR` 解析
-- [breaking change] drop support for python 3.8/3.9/3.10, request >=3.11 and < 3.14
+- [breaking change] drop support for python 3.8/3.9/3.10, request >=3.11 and < 3.15
 - [breaking change] drop support for Django 3.x / 4.x, request Django >=5.2,<6.0 (LTS)
 - [breaking change] 升级所有 bk-apigateway API 从 v1 到 v2 版本
   - 所有 API 调用改为使用 v2 版本（如 `v2_sync_gateway`、`v2_sync_stages` 等）

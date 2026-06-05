@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
-"""
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
+
 import os
 import posixpath
 from urllib.parse import urljoin
@@ -71,21 +78,21 @@ def safe_join(base, *paths):
     sensitive operation.
     """
     base_path = force_str(base)
-    base_path = base_path.rstrip('/')
+    base_path = base_path.rstrip("/")
     paths = [force_str(p) for p in paths]
 
     final_path = base_path
     for path in paths:
-        final_path = urljoin(final_path.rstrip('/') + "/", path)
+        final_path = urljoin(final_path.rstrip("/") + "/", path)
 
     # Ensure final_path starts with base_path and that the next character after
     # the final path is '/' (or nothing, in which case final_path must be
     # equal to base_path).
     base_path_len = len(base_path)
-    if not final_path.startswith(base_path) or final_path[base_path_len : base_path_len + 1] not in ('', '/'):
-        raise ValueError('the joined path is located outside of the base path' ' component')
+    if not final_path.startswith(base_path) or final_path[base_path_len : base_path_len + 1] not in ("", "/"):
+        raise ValueError("the joined path is located outside of the base path component")
 
-    return final_path.lstrip('/')
+    return final_path.lstrip("/")
 
 
 def clean_name(name):
@@ -93,17 +100,17 @@ def clean_name(name):
     Cleans the name so that Windows style paths work
     """
     # Normalize Windows style paths
-    clean_name = posixpath.normpath(name).replace('\\', '/')
+    clean_name = posixpath.normpath(name).replace("\\", "/")
 
     # posixpath.normpath() can strip trailing slashes so we implement
     # a workaround here.
-    if name.endswith('/') and not clean_name.endswith('/'):
+    if name.endswith("/") and not clean_name.endswith("/"):
         # Add a trailing slash as it was stripped.
-        clean_name = clean_name + '/'
+        clean_name = clean_name + "/"
 
     # Given an empty string, posixpath.normpath() will return ., which we don't want
-    if clean_name == '.' and name != ".":
-        clean_name = ''
+    if clean_name == "." and name != ".":
+        clean_name = ""
 
     return clean_name
 
@@ -141,7 +148,7 @@ def get_available_overwrite_name(name, max_length):
     if not file_root:
         raise SuspiciousFileOperation(
             'Storage can not truncate away entire filename for "%s". '
-            'Please make sure that the corresponding file field '
+            "Please make sure that the corresponding file field "
             'allows sufficient "max_length".' % name
         )
     return os.path.join(dir_name, "{}{}".format(file_root, file_ext))

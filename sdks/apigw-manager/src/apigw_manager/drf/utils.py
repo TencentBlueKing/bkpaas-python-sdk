@@ -1,17 +1,24 @@
 # -*- coding: utf-8 -*-
-# TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 蓝鲸 PaaS 平台 (BlueKing-PaaS) available.
-# Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
-# Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at http://opensource.org/licenses/MIT
-# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
-# an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
-# specific language governing permissions and limitations under the License.
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) Tencent. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
 
 import os
 import random
 import string
 import sys
-
 from typing import Dict, List, Optional
 
 from django.conf import settings
@@ -120,7 +127,7 @@ def get_logging_config_dict(
         logging_format = {
             "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
             "fmt": (
-                "%(levelname)s %(asctime)s %(pathname)s %(lineno)d " "%(funcName)s %(process)d %(thread)d %(message)s"
+                "%(levelname)s %(asctime)s %(pathname)s %(lineno)d %(funcName)s %(process)d %(thread)d %(message)s"
             ),
         }
     if not os.path.exists(log_dir):
@@ -229,7 +236,7 @@ def get_default_database_config_dict(settings_module):
     if os.getenv("GCS_MYSQL_NAME") and os.getenv("MYSQL_NAME"):
         db_prefix = settings_module.get("DB_PREFIX", "")
         if not db_prefix:
-            raise EnvironmentError("no DB_PREFIX config while multiple " "databases found in environment")
+            raise EnvironmentError("no DB_PREFIX config while multiple databases found in environment")
     elif os.getenv("GCS_MYSQL_NAME"):
         db_prefix = "GCS_MYSQL"
     elif os.getenv("MYSQL_NAME"):

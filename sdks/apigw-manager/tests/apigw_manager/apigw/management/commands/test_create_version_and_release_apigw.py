@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
-"""
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) Tencent. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
+
 from datetime import datetime
 
 import pytest
@@ -161,11 +168,11 @@ def test_should_create_resource_version(mocker, command, defined_version, latest
     ],
 )
 def test_get_version_to_be_created(
-        command,
-        datetime_now,
-        defined_version,
-        resource_version_exists,
-        expected,
+    command,
+    datetime_now,
+    defined_version,
+    resource_version_exists,
+    expected,
 ):
     result = command._get_version_to_be_created(
         parse_version(defined_version),
@@ -178,15 +185,15 @@ def test_get_version_to_be_created(
 
 class TestHandle:
     def test_handle_version_not_change(
-            self,
-            command,
-            fetcher,
-            releaser,
-            faker,
-            definition_file,
-            resource_sync_manager,
-            fake_resource_version,
-            default_command_flags,
+        self,
+        command,
+        fetcher,
+        releaser,
+        faker,
+        definition_file,
+        resource_sync_manager,
+        fake_resource_version,
+        default_command_flags,
     ):
         definition_file.write(yaml.dump(fake_resource_version))
         stage = faker.pystr()
@@ -209,15 +216,15 @@ class TestHandle:
         )
 
     def test_handle_version_not_change_but_dirty(
-            self,
-            command,
-            fetcher,
-            releaser,
-            faker,
-            definition_file,
-            resource_sync_manager,
-            fake_resource_version,
-            default_command_flags,
+        self,
+        command,
+        fetcher,
+        releaser,
+        faker,
+        definition_file,
+        resource_sync_manager,
+        fake_resource_version,
+        default_command_flags,
     ):
         definition_file.write(yaml.dump(fake_resource_version))
         stage = faker.pystr()
@@ -250,14 +257,14 @@ class TestHandle:
         )
 
     def test_handle_version_changed(
-            self,
-            command,
-            fetcher,
-            releaser,
-            faker,
-            definition_file,
-            fake_resource_version,
-            default_command_flags,
+        self,
+        command,
+        fetcher,
+        releaser,
+        faker,
+        definition_file,
+        fake_resource_version,
+        default_command_flags,
     ):
         defined_version = "1.0.0-alpha2"
         definition_file.write(
@@ -292,15 +299,15 @@ class TestHandle:
         )
 
     def test_handle_version_not_set(
-            self,
-            command,
-            fetcher,
-            releaser,
-            faker,
-            definition_file,
-            resource_sync_manager,
-            fake_resource_version,
-            default_command_flags,
+        self,
+        command,
+        fetcher,
+        releaser,
+        faker,
+        definition_file,
+        resource_sync_manager,
+        fake_resource_version,
+        default_command_flags,
     ):
         definition_file.write(
             yaml.dump(
@@ -342,15 +349,15 @@ class TestHandle:
         )
 
     def test_handle_without_release(
-            self,
-            command,
-            fetcher,
-            releaser,
-            faker,
-            definition_file,
-            resource_sync_manager,
-            fake_resource_version,
-            default_command_flags,
+        self,
+        command,
+        fetcher,
+        releaser,
+        faker,
+        definition_file,
+        resource_sync_manager,
+        fake_resource_version,
+        default_command_flags,
     ):
         definition_file.write(yaml.dump(fake_resource_version))
         stage = faker.pystr()
