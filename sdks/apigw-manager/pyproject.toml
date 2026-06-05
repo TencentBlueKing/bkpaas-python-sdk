@@ -11,7 +11,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.14"
+python = ">=3.11,<3.15"
 setuptools = ">=78.1.1"
 urllib3 = ">=1.25.3"
 pyyaml = ">=5.4.2"
@@ -22,6 +22,7 @@ django-environ = { version = ">=0.8.1", optional = true }
 Django = { version = ">=5.2.0,<6.0.0", optional = true }
 cryptography = { version = ">=3.1.1", optional = true }
 packaging = { version = ">=20.4" }
+jsonschema = ">=4.23.0"
 PyMySQL = { version = "^1.0.2", optional = true }
 kubernetes = { version = "*", optional = true }
 djangorestframework = { version = ">=3.10.3", optional = true }
@@ -76,7 +77,7 @@ license = "MIT"
 dynamic = ["version", "classifiers", "dependencies"]
 readme = "README.md"
 authors = [{name = "blueking", email = "blueking@tencent.com"}]
-requires-python = '>=3.11,<3.14'
+requires-python = '>=3.11,<3.15'
 
 
 [project.urls]
