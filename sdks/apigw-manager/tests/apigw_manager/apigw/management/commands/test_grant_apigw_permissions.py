@@ -36,9 +36,9 @@ def test_do(mock_manager, command):
 
     mock_manager.grant_permission.assert_any_call(
         target_app_code="test1",
-        grant_dimension="api",
+        grant_dimension="gateway",
     )
     mock_manager.grant_permission.assert_any_call(
         target_app_code="test2",
-        grant_dimension="api",
+        grant_dimension="gateway",
     )

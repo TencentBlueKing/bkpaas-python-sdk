@@ -1,21 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
-TencentBlueKing is pleased to support the open source community by making
-蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
-Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) Tencent. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
 
-    http://opensource.org/licenses/MIT
-
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-
-We undertake not to change the open source license (MIT license) applicable
-to the current version of the project delivered to anyone in the future.
-"""
 import json
 import logging
 from contextlib import contextmanager
@@ -24,6 +23,9 @@ from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, reverse
 from django.utils.decorators import method_decorator
 from django.views import View
+from rest_framework import status, viewsets
+from rest_framework.response import Response
+
 from paas_service import __version__, serializers
 from paas_service.auth.backends import InstanceAuthBackend, InstanceAuthFailed
 from paas_service.auth.decorator import verified_client_required, verified_client_role_require
@@ -32,9 +34,6 @@ from paas_service.idem_prov import idempotent_provision_instance
 from paas_service.mixins import LoginRequiredMixin
 from paas_service.models import Plan, ProvisionRecord, Service, ServiceInstance, ServiceInstanceConfig
 from paas_service.utils import parse_redirect_params
-from rest_framework import status, viewsets
-from rest_framework.response import Response
-
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +49,8 @@ class AuthenticationViewSet(LoginRequiredMixin, View):
         """
         try:
             instance = InstanceAuthBackend().invoke(request)
-        except InstanceAuthFailed as e:
-            logger.error(f'unable to authenticate current request: {e}')
+        except InstanceAuthFailed:
+            logger.exception("unable to authenticate current request")
             raise Http404
 
         view_name, params = parse_redirect_params(
@@ -65,19 +64,19 @@ class SvcBasicViewSet(viewsets.ViewSet):
 
     def get_meta_info(self, request):
         """Return service meta info"""
-        return Response({'version': __version__})
+        return Response({"version": __version__})
 
 
 class ServiceManageViewSet(viewsets.ViewSet):
     """Manage view for services"""
 
-    @verified_client_role_require('internal_platform')
+    @verified_client_role_require("internal_platform")
     def list(self, request):
-        services = Service.objects.filter(is_active=True).prefetch_related('plans')
+        services = Service.objects.filter(is_active=True).prefetch_related("plans")
         slz = serializers.ServiceListSLZ(services, many=True)
         return Response(slz.data)
 
-    @verified_client_role_require('internal_platform')
+    @verified_client_role_require("internal_platform")
     def update(self, request, service_id):
         service = get_object_or_404(Service, pk=service_id)
         slz = serializers.ServiceUpsertSLZ(data=request.data, instance=service, partial=True)
@@ -85,14 +84,14 @@ class ServiceManageViewSet(viewsets.ViewSet):
         slz.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @verified_client_role_require('internal_platform')
+    @verified_client_role_require("internal_platform")
     def create(self, request):
         slz = serializers.ServiceUpsertSLZ(data=request.data)
         slz.is_valid(raise_exception=True)
         slz.save()
         return Response(status=status.HTTP_201_CREATED)
 
-    @verified_client_role_require('internal_platform')
+    @verified_client_role_require("internal_platform")
     def destroy(self, request, service_id):
         service = get_object_or_404(Service, pk=service_id)
         service.delete()
@@ -102,14 +101,14 @@ class ServiceManageViewSet(viewsets.ViewSet):
 class PlanManageViewSet(viewsets.ViewSet):
     """Manage view for Plan"""
 
-    @verified_client_role_require('internal_platform')
+    @verified_client_role_require("internal_platform")
     def create(self, request):
         slz = serializers.PlanUpsertSLZ(data=request.data)
         slz.is_valid(raise_exception=True)
         slz.save()
         return Response(status=status.HTTP_201_CREATED)
 
-    @verified_client_role_require('internal_platform')
+    @verified_client_role_require("internal_platform")
     def update(self, request, plan_id):
         plan = get_object_or_404(Plan, pk=plan_id)
         slz = serializers.PlanUpsertSLZ(data=request.data, instance=plan, partial=True)
@@ -117,7 +116,7 @@ class PlanManageViewSet(viewsets.ViewSet):
         slz.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @verified_client_role_require('internal_platform')
+    @verified_client_role_require("internal_platform")
     def destroy(self, request, plan_id):
         plan = get_object_or_404(Plan, pk=plan_id)
         plan.delete()
@@ -127,7 +126,7 @@ class PlanManageViewSet(viewsets.ViewSet):
 class SvcInstanceViewSet(viewsets.ViewSet):
     """Instance view set"""
 
-    @verified_client_role_require('internal_platform')
+    @verified_client_role_require("internal_platform")
     def provision(self, request, service_id, instance_id):
         """Provision a new instance
 
@@ -143,19 +142,19 @@ class SvcInstanceViewSet(viewsets.ViewSet):
         """
         if ServiceInstance.objects.filter(pk=instance_id):
             # TODO: Replace with standard error code
-            return Response(data={'detail': f'instance {instance_id} already exists'}, status=400)
+            return Response(data={"detail": f"instance {instance_id} already exists"}, status=400)
 
         service = get_object_or_404(Service, pk=service_id)
-        plan_id = request.data.get('plan_id')
+        plan_id = request.data.get("plan_id")
         if not plan_id:
-            return Response(data={'detail': 'plan_id is missing'}, status=400)
+            return Response(data={"detail": "plan_id is missing"}, status=400)
 
         provider_cls = get_provider_cls()
         plan = get_object_or_404(Plan, service=service, pk=plan_id)
 
         plan_config = json.loads(plan.config)
-        params = request.data.get('params', {})
-        with wrap_provider_action_exc('create instance') as ret:
+        params = request.data.get("params", {})
+        with wrap_provider_action_exc("create instance") as ret:
             instance_data = provider_cls(**plan_config).create(params=params)
 
         if ret.has_error:
@@ -172,7 +171,7 @@ class SvcInstanceViewSet(viewsets.ViewSet):
         service_instance.prerender(request)
         return Response(serializers.ServiceInstanceSLZ(service_instance).data, status=201)
 
-    @verified_client_role_require('internal_platform')
+    @verified_client_role_require("internal_platform")
     def idem_prov(self, request, service_id):
         """
         Provision a new instance with idempotency, use it when the provisioning process
@@ -225,19 +224,19 @@ class SvcInstanceViewSet(viewsets.ViewSet):
                                                                         ---> Delete record
                                                                         ---> 500
         """
-        plan_id = request.data.get('plan_id')
-        params = request.data.get('params', {})
-        engine_app_name = params.get('engine_app_name')
+        plan_id = request.data.get("plan_id")
+        params = request.data.get("params", {})
+        engine_app_name = params.get("engine_app_name")
         if not (engine_app_name and plan_id):
             return Response(
-                data={'detail': f"{'engine_app_name' if not engine_app_name else 'plan_id'} is required"},
-                status=status.HTTP_400_BAD_REQUEST
+                data={"detail": f"{'engine_app_name' if not engine_app_name else 'plan_id'} is required"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         service = get_object_or_404(Service, pk=service_id)
         plan = get_object_or_404(Plan, service=service, pk=plan_id)
 
-        with wrap_provider_action_exc('create instance') as ret:
+        with wrap_provider_action_exc("create instance") as ret:
             service_instance, created = idempotent_provision_instance(
                 service=service,
                 plan=plan,
@@ -252,20 +251,20 @@ class SvcInstanceViewSet(viewsets.ViewSet):
         # 分配中...
         if service_instance is None:
             return Response(
-                data={'detail': 'instance is being provisioned, please retry later'},
-                status=status.HTTP_202_ACCEPTED
+                data={"detail": "instance is being provisioned, please retry later"}, status=status.HTTP_202_ACCEPTED
             )
 
         if service_instance.plan.uuid != plan.uuid:
             return Response(
-                data={'detail': 'an instance with the same provision key already exists but with different plan, unable to provision'},
-                status=status.HTTP_400_BAD_REQUEST
+                data={
+                    "detail": "an instance with the same provision key already exists but with different plan, unable to provision"
+                },
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         service_instance.prerender(request)
         status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
         return Response(serializers.ServiceInstanceSLZ(service_instance).data, status=status_code)
-
 
     @m_verified_client_required
     def retrieve(self, request, instance_id):
@@ -287,16 +286,16 @@ class SvcInstanceViewSet(viewsets.ViewSet):
         name = request.GET.get("name")
         for instance in qs:
             credentials = instance.get_credentials()
-            if credentials.get('name') == name:
+            if credentials.get("name") == name:
                 instance.prerender(request)
                 return Response(serializers.ServiceInstanceSLZ(instance).data)
         return Response(status=404)
 
-    @verified_client_role_require('internal_platform')
+    @verified_client_role_require("internal_platform")
     def update(self, request, instance_id):
-        return Response(data={'detail': 'not available'}, status=400)
+        return Response(data={"detail": "not available"}, status=400)
 
-    @verified_client_role_require('internal_platform')
+    @verified_client_role_require("internal_platform")
     def destroy(self, request, instance_id):
         """Destroy an instance"""
         instance = get_object_or_404(ServiceInstance, pk=instance_id)
@@ -307,7 +306,7 @@ class SvcInstanceViewSet(viewsets.ViewSet):
         )
         plan_config = json.loads(instance.plan.config)
 
-        with wrap_provider_action_exc(f'remove instance {instance.uuid}') as ret:
+        with wrap_provider_action_exc(f"remove instance {instance.uuid}") as ret:
             provider_cls(**plan_config).delete(instance_data)
 
         if ret.has_error:
@@ -316,7 +315,7 @@ class SvcInstanceViewSet(viewsets.ViewSet):
         instance.delete()
         return Response(status=204)
 
-    @verified_client_role_require('internal_platform')
+    @verified_client_role_require("internal_platform")
     def async_destroy(self, request, instance_id):
         """Destroy an instance async, record it into db"""
         instance = get_object_or_404(ServiceInstance, pk=instance_id)
@@ -326,7 +325,7 @@ class SvcInstanceViewSet(viewsets.ViewSet):
             instance.save(update_fields=["to_be_deleted"])
         except Exception as e:
             logger.exception("mark instance need to delete failed")
-            return Response(data={'detail': f'unable to mark instance<{instance_id}> to delete: {e}'})
+            return Response(data={"detail": f"unable to mark instance<{instance_id}> to delete: {e}"})
 
         try:
             record = ProvisionRecord.objects.get(service_instance=instance)
@@ -339,7 +338,7 @@ class SvcInstanceViewSet(viewsets.ViewSet):
 
 
 class ClientSideSvcInstanceViewSet(viewsets.ViewSet):
-    @verified_client_role_require('internal_platform')
+    @verified_client_role_require("internal_platform")
     def create(self, request, service_id, instance_id):
         """create service instance with the existing config and credentials.
 
@@ -356,7 +355,7 @@ class ClientSideSvcInstanceViewSet(viewsets.ViewSet):
         """
         if ServiceInstance.objects.filter(pk=instance_id):
             # TODO: Replace with standard error code
-            return Response(data={'detail': f'instance {instance_id} already exists'}, status=400)
+            return Response(data={"detail": f"instance {instance_id} already exists"}, status=400)
 
         slz = serializers.ServiceInstanceBinderSLZ(data=request.data)
         slz.is_valid(raise_exception=True)
@@ -375,12 +374,12 @@ class ClientSideSvcInstanceViewSet(viewsets.ViewSet):
         service_instance.prerender(request)
         return Response(serializers.ServiceInstanceSLZ(service_instance).data, status=201)
 
-    @verified_client_role_require('internal_platform')
+    @verified_client_role_require("internal_platform")
     def destroy(self, request, instance_id):
         """Unbind the instance without reclaiming resources."""
         instance = get_object_or_404(ServiceInstance, pk=instance_id)
         if not instance.from_client_side:
-            return Response(data={'detail': f'instance {instance_id} is not a client-side instance'}, status=400)
+            return Response(data={"detail": f"instance {instance_id} is not a client-side instance"}, status=400)
         instance.delete()
         return Response(status=204)
 
@@ -388,18 +387,18 @@ class ClientSideSvcInstanceViewSet(viewsets.ViewSet):
 class SvcInstanceConfigViewSet(viewsets.ViewSet):
     """InstanceConfig view"""
 
-    @verified_client_role_require('internal_platform')
+    @verified_client_role_require("internal_platform")
     def retrieve(self, request, instance_id):
         """Retrieve an instance's config"""
         instance = get_object_or_404(ServiceInstance, pk=instance_id)
         config, _ = ServiceInstanceConfig.objects.get_or_create(instance=instance, tenant_id=instance.tenant_id)
         if not config.was_initialized():
-            return Response(data={'detail': 'config was not initialized yet'}, status=400)
+            return Response(data={"detail": "config was not initialized yet"}, status=400)
 
         slz = serializers.InstanceConfigSLZ(config)
         return Response(slz.data)
 
-    @verified_client_role_require('internal_platform')
+    @verified_client_role_require("internal_platform")
     def update(self, request, instance_id):
         """Update an instance's config"""
         instance = get_object_or_404(ServiceInstance, pk=instance_id)
@@ -408,8 +407,9 @@ class SvcInstanceConfigViewSet(viewsets.ViewSet):
 
         # Update config
         config, _ = ServiceInstanceConfig.objects.update_or_create(
-            instance=instance, tenant_id=instance.tenant_id,
-            defaults={'paas_app_info': slz.validated_data['paas_app_info']}
+            instance=instance,
+            tenant_id=instance.tenant_id,
+            defaults={"paas_app_info": slz.validated_data["paas_app_info"]},
         )
         resp_slz = serializers.InstanceConfigSLZ(config)
         return Response(resp_slz.data)
@@ -437,13 +437,13 @@ def wrap_provider_action_exc(action_name: str):
     try:
         yield ret
     except ArgumentInvalidError as e:
-        logger.exception(f'argument error when {action_name}')
-        ret.set_fail_with_resp(Response(data={'detail': f'params error: {e}'}, status=400))
+        logger.exception(f"argument error when {action_name}")
+        ret.set_fail_with_resp(Response(data={"detail": f"params error: {e}"}, status=400))
     except OperationFailed as e:
-        logger.exception(f'operation failed while {action_name}')
-        ret.set_fail_with_resp(Response(data={'detail': f'operation failed: {e}'}, status=500))
+        logger.exception(f"operation failed while {action_name}")
+        ret.set_fail_with_resp(Response(data={"detail": f"operation failed: {e}"}, status=500))
     except Exception:
-        logger.exception(f'error while {action_name}')
-        ret.set_fail_with_resp(Response(data={'detail': f'unable to {action_name}'}, status=500))
+        logger.exception(f"error while {action_name}")
+        ret.set_fail_with_resp(Response(data={"detail": f"unable to {action_name}"}, status=500))
     else:
         ret.set_ok()

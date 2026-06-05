@@ -80,10 +80,9 @@ class Command(DefinitionCommand):
 
         return defined_version
 
-    def _create_resource_version(self, releaser, version, title, comment):
+    def _create_resource_version(self, releaser, version, comment):
         return releaser.create_resource_version(
             version=str(version),
-            title=title,
             comment=comment,
         )
 
@@ -120,7 +119,7 @@ class Command(DefinitionCommand):
             resource_version = self._create_resource_version(
                 releaser=releaser,
                 version=self._get_version_to_be_created(fixed_defined_version, exists),
-                title=title or definition.get("title", ""),
+                # v2 API 不支持 title 参数
                 comment=comment or definition.get("comment", ""),
             )
             manager.reset_dirty(gateway_name)
@@ -133,13 +132,12 @@ class Command(DefinitionCommand):
         if not no_pub:
             result = releaser.release(
                 version=resource_version["version"],
-                title=title or resource_version.get("title", ""),
                 comment=comment or resource_version.get("comment", ""),
                 stage_names=stage,
             )
             print(
-                "API gateway released %s, title %s, stages %s"
-                % (result.get("version"), result["resource_version_title"], result["stage_names"])
+                "API gateway released %s, stages %s"
+                % (result.get("version"), result["stage_names"])
             )
 
         # create a sdk when released a new version

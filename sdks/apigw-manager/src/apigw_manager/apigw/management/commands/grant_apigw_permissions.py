@@ -31,8 +31,12 @@ class Command(PermissionCommand):
         for permission in definition:
             permission.setdefault("target_app_code", permission.pop("bk_app_code", None))
 
-            if permission.get("grant_dimension") in [None, "gateway"]:
-                permission["grant_dimension"] = "api"
+            # v2 使用 gateway_name 替代 api_name
+            if "api_name" in permission:
+                permission["gateway_name"] = permission.pop("api_name")
+
+            if permission.get("grant_dimension") in [None, "api"]:
+                permission["grant_dimension"] = "gateway"
 
             manager.grant_permission(**permission)
 

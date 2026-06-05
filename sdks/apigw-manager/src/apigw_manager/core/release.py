@@ -24,18 +24,20 @@ class Releaser(Handler):
 
     def create_resource_version(self, *args, **kwargs):
         """create a version"""
+        kwargs.pop("title", None)
 
-        result = self._call(self.client.api.create_resource_version, *args, **kwargs)
+        result = self._call_v2(self.client.api.v2_sync_create_resource_version, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))
 
     def release(self, *args, **kwargs):
         """release a version"""
+        kwargs.pop("title", None)
 
-        result = self._call(self.client.api.release, *args, **kwargs)
+        result = self._call_v2(self.client.api.v2_sync_release, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))
 
     def generate_sdks(self, *args, **kwargs):
         """generate sdks"""
 
-        result = self._call(self.client.api.generate_sdk, *args, **kwargs)
+        result = self._call_v2(self.client.api.v2_sync_generate_sdk, *args, **kwargs)
         return self._parse_result(result, itemgetter("data"))

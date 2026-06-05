@@ -31,17 +31,18 @@ class Command(PermissionCommand):
         for permission in definition:
             permission.setdefault("target_app_code", manager.config.bk_app_code)
 
-            if permission.get("gateway_name"):
-                permission["api_name"] = permission.get("gateway_name")
+            # v2 使用 gateway_name 替代 api_name
+            if "api_name" in permission:
+                permission["gateway_name"] = permission.pop("api_name")
 
-            if permission.get("grant_dimension") in [None, "gateway"]:
-                permission["grant_dimension"] = "api"
+            if permission.get("grant_dimension") is None:
+                permission["grant_dimension"] = "gateway"
 
             result = manager.apply_permission(**permission)
             print(
                 "Applied permissions for gateway %s, record %s, dimension %s"
                 % (
-                    permission["api_name"],
+                    permission.get("gateway_name", manager.config.gateway_name),
                     result["record_id"],
                     permission["grant_dimension"],
                 )

@@ -26,22 +26,31 @@ def command():
 
 
 def test_do(mock_manager, command, configuration):
+    mock_manager.apply_permission.return_value = {"record_id": 1}
+
     command.do(
         mock_manager,
         [
             {"api_name": "test1"},
-            {"gateway_name": "test2"},
+            {"gateway_name": "test2", "grant_dimension": "resource", "resource_names": ["get_user"]},
+            {"gateway_name": "test3", "grant_dimension": "api"},
         ],
     )
 
+    # v2 使用 gateway_name 替代 api_name，默认按 gateway 维度申请
     mock_manager.apply_permission.assert_any_call(
         target_app_code=configuration.bk_app_code,
-        api_name="test1",
-        grant_dimension="api",
+        gateway_name="test1",
+        grant_dimension="gateway",
     )
     mock_manager.apply_permission.assert_any_call(
         target_app_code=configuration.bk_app_code,
-        api_name="test2",
         gateway_name="test2",
+        grant_dimension="resource",
+        resource_names=["get_user"],
+    )
+    mock_manager.apply_permission.assert_any_call(
+        target_app_code=configuration.bk_app_code,
+        gateway_name="test3",
         grant_dimension="api",
     )

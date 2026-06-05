@@ -1,21 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
-TencentBlueKing is pleased to support the open source community by making
-蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
-Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) Tencent. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
 
-    http://opensource.org/licenses/MIT
-
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-
-We undertake not to change the open source license (MIT license) applicable
-to the current version of the project delivered to anyone in the future.
-"""
 import logging
 import time
 from typing import Dict, Tuple
@@ -25,6 +24,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.core.handlers.wsgi import WSGIRequest
 from jwt.exceptions import DecodeError
+
 from paas_service.models import ServiceInstance
 
 logger = logging.getLogger(__name__)
@@ -52,10 +52,10 @@ class Client:
 
     @classmethod
     def from_jwt_settings(cls, data):
-        for key in ('iss', 'algorithm', 'key'):
+        for key in ("iss", "algorithm", "key"):
             if not data.get(key):
-                raise ValueError(f'error: {key} is required')
-        return cls(name=data['iss'], auth_backend_type='jwt')
+                raise ValueError(f"error: {key} is required")
+        return cls(name=data["iss"], auth_backend_type="jwt")
 
 
 class AuthResult:
@@ -83,10 +83,10 @@ class JWTClientAuthenticator:
         try:
             payload, client = self.parse(token)
         except ValueError as e:
-            logger.warning(f'authentication failed, token is invalid: {e}')
-            raise AuthFailedError('token is invalid')
+            logger.warning(f"authentication failed, token is invalid: {e}")
+            raise AuthFailedError("token is invalid")
         else:
-            logger.info(f'successfully authenticated token issued by {client}')
+            logger.info(f"successfully authenticated token issued by {client}")
             return AuthResult(client=client, extra_payload=payload)
 
     def parse(self, token: str) -> Tuple[Dict, Client]:
@@ -96,26 +96,26 @@ class JWTClientAuthenticator:
         """
         for client in self.jwt_clients:
             try:
-                payload = jwt.decode(token, client['key'], algorithms=[client['algorithm']])
+                payload = jwt.decode(token, client["key"], algorithms=[client["algorithm"]])
             except DecodeError:
-                logger.debug(f'Unable to decode token using {client["iss"]}\'s secret')
+                logger.debug(f"Unable to decode token using {client['iss']}'s secret")
                 continue
 
             if not self._validate_payload(client, payload):
-                logger.debug('payload validation failed')
+                logger.debug("payload validation failed")
                 continue
 
             client_ins = Client.from_jwt_settings(client)
-            client_ins.role = payload.get('role')
+            client_ins.role = payload.get("role")
             return payload, client_ins
-        raise ValueError('token is not a valid JWT token')
+        raise ValueError("token is not a valid JWT token")
 
     @staticmethod
     def _validate_payload(client: Dict, payload: Dict) -> bool:
         """Validates given JWT payload, a valid payload must contain at least 2 fields:
         'iss' and 'expires_at'.
         """
-        expires_at = payload.get('expires_at')
+        expires_at = payload.get("expires_at")
         try:
             expires_at = int(expires_at)  # type: ignore
         except (TypeError, ValueError):
@@ -125,15 +125,15 @@ class JWTClientAuthenticator:
             logger.warning("token has already expired")
             return False
 
-        iss = payload.get('iss')
-        if not (iss and iss == client['iss']):
+        iss = payload.get("iss")
+        if not (iss and iss == client["iss"]):
             logger.warning("issuer name in payload does not match client's config")
             return False
         return True
 
 
 class InstanceAuthBackend:
-    TOKEN_KEY = 'token'
+    TOKEN_KEY = "token"
 
     def __init__(self):
         self.authenticators = [JWTClientAuthenticator()]
@@ -148,7 +148,7 @@ class InstanceAuthBackend:
         """
         token = self.get_token(request)
         if not token:
-            raise InstanceAuthFailed('token parameter is missing')
+            raise InstanceAuthFailed("token parameter is missing")
 
         for auth in self.authenticators:
             try:
@@ -157,23 +157,23 @@ class InstanceAuthBackend:
             except AuthFailedError:
                 continue
         else:
-            raise InstanceAuthFailed('token is invalid, can not be authenticated')
+            raise InstanceAuthFailed("token is invalid, can not be authenticated")
 
-        instance_id = result.extra_payload.get('service_instance_id')
+        instance_id = result.extra_payload.get("service_instance_id")
         if not instance_id:
-            logger.warning('service_instance_id field is missing in token payload')
-            raise InstanceAuthFailed('no service_instance_id field')
+            logger.warning("service_instance_id field is missing in token payload")
+            raise InstanceAuthFailed("no service_instance_id field")
 
         try:
             instance = ServiceInstance.objects.get(pk=str(instance_id))
         except ServiceInstance.DoesNotExist:
-            logger.warning(f'can not find a instance via id: {instance_id}')
-            raise InstanceAuthFailed('service_instance_id is invalid')
+            logger.warning(f"can not find a instance via id: {instance_id}")
+            raise InstanceAuthFailed("service_instance_id is invalid")
 
         # Update session
-        request.session['authorized_instances'] = {
+        request.session["authorized_instances"] = {
             str(instance.uuid): True,
-            **request.session.get('authorized_instances', {}),
+            **request.session.get("authorized_instances", {}),
         }
         return instance
 
@@ -196,9 +196,9 @@ def _sign_token(client_name: str, additional_payload: Dict) -> str:
     :raises: ValueError if given client name is not valid
     """
     for client_data in settings.PAAS_SERVICE_JWT_CLIENTS:
-        if client_name == client_data['iss']:
-            payload = {'iss': client_name, 'expires_at': int(time.time()) + 3600}
+        if client_name == client_data["iss"]:
+            payload = {"iss": client_name, "expires_at": int(time.time()) + 3600}
             payload.update(additional_payload)
-            return jwt.encode(payload, key=client_data['key'], algorithm=client_data['algorithm'])
-    else:
-        raise ValueError(f'client name {client_name} is invalid')
+            return jwt.encode(payload, key=client_data["key"], algorithm=client_data["algorithm"])
+
+    raise ValueError(f"client name {client_name} is invalid")

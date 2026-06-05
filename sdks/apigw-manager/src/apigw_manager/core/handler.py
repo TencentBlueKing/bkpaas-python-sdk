@@ -83,6 +83,24 @@ class Handler(object):
 
         return result
 
+    def _call_v2_with_cache(self, operation, **kwargs):
+        """Call the API instance (v2), allow data to be retrieved from the cache"""
+        cache_key = {
+            "gateway_name": kwargs.get("gateway_name", self.config.gateway_name),
+            "kwargs": kwargs,
+        }
+
+        operation_id = operation.name
+        cached, result = self._get_from_cache(operation_id, cache_key)
+        if cached:
+            return result
+
+        result = self._call_v2(operation, **kwargs)
+
+        self._put_into_cache(operation_id, cache_key, result)
+
+        return result
+
     def _get_tenant_id(self):
         """
         获取应用所属的租户 ID
@@ -131,11 +149,16 @@ class Handler(object):
             raise ApiException(operation_id) from err
 
     def _call_v2(self, operation, files=None, **kwargs):
-        """Call the API instance：
-        - Uses "gateway_name" as the key in `path_params` instead of "api_name".
+        """Call the API instance (v2 version):
+          - Uses "gateway_name" as the key in `path_params` instead of "api_name".
         """
 
-        path_params = {"gateway_name": kwargs.pop("gateway_name", self.config.gateway_name)}
+        # 安全获取 gateway_name，避免意外删除 api_name
+        gateway_name = kwargs.pop("gateway_name", None)
+        if gateway_name is None:
+            gateway_name = kwargs.pop("api_name", self.config.gateway_name)
+
+        path_params = {"gateway_name": gateway_name}
         if "{stage_name}" in operation.path:
             path_params["stage_name"] = kwargs.get("name")
 
