@@ -1,26 +1,24 @@
 # -*- coding: utf-8 -*-
-"""
-TencentBlueKing is pleased to support the open source community by making
-蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
-Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) Tencent. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
 
-    http://opensource.org/licenses/MIT
-
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-
-We undertake not to change the open source license (MIT license) applicable
-to the current version of the project delivered to anyone in the future.
-"""
 import json
 import uuid
 from typing import Any, Dict, List
 
-from blue_krill.models.fields import EncryptField
 from django.conf import settings
 from django.db import models
 from django.http import HttpRequest
@@ -30,6 +28,7 @@ from django.utils.translation import gettext_lazy as _
 from jsonfield import JSONField
 from translated_fields import TranslatedField
 
+from blue_krill.models.fields import EncryptField
 from paas_service.fields import tenant_id_field_factory
 
 # Base Models start
@@ -49,7 +48,7 @@ class UuidAuditedModel(AuditedModel):
     """Add a UUID primary key to an :class:`AuditedModel`."""
 
     uuid = models.UUIDField(
-        'UUID', default=uuid.uuid4, primary_key=True, editable=False, auto_created=True, unique=True
+        "UUID", default=uuid.uuid4, primary_key=True, editable=False, auto_created=True, unique=True
     )
 
     class Meta(object):
@@ -65,15 +64,15 @@ class SpecDefinition(UuidAuditedModel):
     [multi-tenancy] This model is not tenant-aware.
     """
 
-    index = models.IntegerField(verbose_name=_('顺序'), default=0)
-    name = models.CharField(verbose_name=_('名称'), unique=True, max_length=64, null=True)
-    display_name = TranslatedField(models.CharField(verbose_name=_('展示名称'), max_length=128, blank=True))
-    description = models.TextField(verbose_name=_('描述'), blank=True)
-    recommended_value = models.CharField(verbose_name=_('推荐值'), max_length=64, blank=True, null=True)
+    index = models.IntegerField(verbose_name=_("顺序"), default=0)
+    name = models.CharField(verbose_name=_("名称"), unique=True, max_length=64, null=True)
+    display_name = TranslatedField(models.CharField(verbose_name=_("展示名称"), max_length=128, blank=True))
+    description = models.TextField(verbose_name=_("描述"), blank=True)
+    recommended_value = models.CharField(verbose_name=_("推荐值"), max_length=64, blank=True, null=True)
 
     class Meta:
-        verbose_name_plural = verbose_name = _('规格定义')
-        ordering = ['index', 'name']
+        verbose_name_plural = verbose_name = _("规格定义")
+        ordering = ["index", "name"]
 
     def __str__(self):
         return f"{self.display_name}"
@@ -90,13 +89,13 @@ class Specification(UuidAuditedModel):
     [multi-tenancy] This model is not tenant-aware.
     """
 
-    definition = models.ForeignKey(SpecDefinition, verbose_name=_('定义'), on_delete=models.CASCADE)
-    value = models.CharField(verbose_name=_('值'), max_length=64)
-    display_name = TranslatedField(models.CharField(verbose_name=_('展示名称'), max_length=64, blank=True))
+    definition = models.ForeignKey(SpecDefinition, verbose_name=_("定义"), on_delete=models.CASCADE)
+    value = models.CharField(verbose_name=_("值"), max_length=64)
+    display_name = TranslatedField(models.CharField(verbose_name=_("展示名称"), max_length=64, blank=True))
 
     class Meta:
-        verbose_name_plural = verbose_name = _('规格')
-        unique_together = ['definition', 'value']
+        verbose_name_plural = verbose_name = _("规格")
+        unique_together = ["definition", "value"]
 
     def __str__(self):
         return f"{self.definition}:{self.display_name}"
@@ -113,25 +112,25 @@ class Service(UuidAuditedModel):
     [multi-tenancy] This model is not tenant-aware.
     """
 
-    name = models.CharField(verbose_name='服务名称', unique=True, max_length=64)
-    category = models.IntegerField(verbose_name='服务分类')
-    display_name = TranslatedField(models.CharField(verbose_name=_('服务全称'), max_length=128))
-    logo_url = models.URLField(verbose_name='服务 logo 地址', null=True, blank=True)
-    logo = models.TextField(verbose_name='服务 logo base64', null=True, blank=True)
+    name = models.CharField(verbose_name="服务名称", unique=True, max_length=64)
+    category = models.IntegerField(verbose_name="服务分类")
+    display_name = TranslatedField(models.CharField(verbose_name=_("服务全称"), max_length=128))
+    logo_url = models.URLField(verbose_name="服务 logo 地址", null=True, blank=True)
+    logo = models.TextField(verbose_name="服务 logo base64", null=True, blank=True)
 
-    description = TranslatedField(models.CharField(verbose_name=_('简介'), max_length=1024, blank=True))
-    long_description = TranslatedField(models.TextField(verbose_name=_('详细介绍'), blank=True))
-    instance_tutorial = TranslatedField(models.TextField(verbose_name=_('实例内页介绍'), blank=True))
+    description = TranslatedField(models.CharField(verbose_name=_("简介"), max_length=1024, blank=True))
+    long_description = TranslatedField(models.TextField(verbose_name=_("详细介绍"), blank=True))
+    instance_tutorial = TranslatedField(models.TextField(verbose_name=_("实例内页介绍"), blank=True))
 
-    available_languages = models.CharField(verbose_name=_('支持编程语言'), max_length=1024, null=True, blank=True)
+    available_languages = models.CharField(verbose_name=_("支持编程语言"), max_length=1024, null=True, blank=True)
     config = JSONField(default=dict, blank=True)
-    is_active = models.BooleanField(verbose_name='是否可用', default=True)
+    is_active = models.BooleanField(verbose_name="是否可用", default=True)
     is_visible = models.BooleanField(verbose_name="是否可见", default=True)
 
-    specifications = models.ManyToManyField(SpecDefinition, verbose_name='规格定义', blank=True)
+    specifications = models.ManyToManyField(SpecDefinition, verbose_name="规格定义", blank=True)
 
     class Meta:
-        verbose_name_plural = verbose_name = '服务'
+        verbose_name_plural = verbose_name = "服务"
 
     def __str__(self):
         return f"{self.name}"
@@ -142,10 +141,13 @@ class ServiceInstance(UuidAuditedModel):
 
     _prepared_fields_data = None
 
-    service = models.ForeignKey('Service', verbose_name='服务', null=True, on_delete=models.SET_NULL)
+    service = models.ForeignKey("Service", verbose_name="服务", null=True, on_delete=models.SET_NULL)
     plan = models.ForeignKey(
-        'Plan', verbose_name='方案', null=True, help_text="当前仅当迁移的增强服务实例, 会没有 plan",
-        on_delete=models.SET_NULL
+        "Plan",
+        verbose_name="方案",
+        null=True,
+        help_text="当前仅当迁移的增强服务实例, 会没有 plan",
+        on_delete=models.SET_NULL,
     )
     config = JSONField(default=dict, blank=True)
     credentials = EncryptField(default="")
@@ -153,7 +155,7 @@ class ServiceInstance(UuidAuditedModel):
     tenant_id = tenant_id_field_factory()
 
     class Meta:
-        verbose_name_plural = verbose_name = '服务实例'
+        verbose_name_plural = verbose_name = "服务实例"
 
     def __str__(self):
         return f"{self.service}-{self.plan}-{self.uuid}"
@@ -170,14 +172,14 @@ class ServiceInstance(UuidAuditedModel):
         """Prepare for rendering data to client"""
         # Allow other services to override default render logic
         func = import_string(
-            getattr(settings, 'PAAS_SERVICE_SVC_INSTANCE_RENDER_FUNC', 'paas_service.models.render_instance_data')
+            getattr(settings, "PAAS_SERVICE_SVC_INSTANCE_RENDER_FUNC", "paas_service.models.render_instance_data")
         )
         data = func(request, self)
         self._prepared_fields_data = data
 
     def render(self):
         if not self._prepared_fields_data:
-            raise ValueError('no prerendered data found, please call prerender method first')
+            raise ValueError("no prerendered data found, please call prerender method first")
         return self._prepared_fields_data
 
 
@@ -191,6 +193,7 @@ class ProvisionRecord(UuidAuditedModel):
         2. `success`: instance has been created and bound to this record
         3. any error or delete/async_delete will directly delete the record
     """
+
     provision_key = models.CharField(unique=True, verbose_name="幂等分配键", max_length=64)
 
     service_instance = models.OneToOneField(
@@ -208,8 +211,8 @@ class ProvisionRecord(UuidAuditedModel):
 class ServiceInstanceConfig(UuidAuditedModel):
     """Extra config for instance"""
 
-    instance = models.OneToOneField(ServiceInstance, verbose_name='服务实例', on_delete=models.CASCADE)
-    paas_app_info = JSONField(default=dict, blank=True, verbose_name='平台应用信息')
+    instance = models.OneToOneField(ServiceInstance, verbose_name="服务实例", on_delete=models.CASCADE)
+    paas_app_info = JSONField(default=dict, blank=True, verbose_name="平台应用信息")
     tenant_id = tenant_id_field_factory()
 
     def was_initialized(self) -> bool:
@@ -232,15 +235,15 @@ class InstanceDataRepresenter:
 
     def set_hidden_fields(self, hidden_fields: List):
         """Set fields as hidden"""
-        self.meta_config['should_hidden_fields'] = hidden_fields
+        self.meta_config["should_hidden_fields"] = hidden_fields
 
     def set_removed_fields(self, fields: List):
-        self.meta_config['should_remove_fields'] = fields
+        self.meta_config["should_remove_fields"] = fields
 
     def represent(self) -> Dict:
         return {
-            'config': {'__meta__': self.meta_config, **self._config},
-            'credentials': self._credentials,
+            "config": {"__meta__": self.meta_config, **self._config},
+            "credentials": self._credentials,
         }
 
 
@@ -250,7 +253,7 @@ def render_instance_data(request: HttpRequest, instance: ServiceInstance) -> Dic
 
 
 class Plan(UuidAuditedModel):
-    name = models.CharField(verbose_name='方案名称', max_length=64)
+    name = models.CharField(verbose_name="方案名称", max_length=64)
 
     # the "properties" field stores custom properties of a plan object. the property itself is
     # nothing more than a simple annotation. But the service hub which it was registed to may
@@ -259,16 +262,16 @@ class Plan(UuidAuditedModel):
     # Some example properties: {"region": "r1", "as_env_default": "prod" ... ...}
     properties = JSONField(default=dict, blank=True)
 
-    description = models.CharField(verbose_name='方案简介', max_length=1024, blank=True)
-    config = EncryptField(verbose_name='方案配置', default="", blank=True)
-    is_active = models.BooleanField(verbose_name='是否可用', default=True)
-    service = models.ForeignKey('Service', related_name='plans', verbose_name='服务', on_delete=models.CASCADE)
+    description = models.CharField(verbose_name="方案简介", max_length=1024, blank=True)
+    config = EncryptField(verbose_name="方案配置", default="", blank=True)
+    is_active = models.BooleanField(verbose_name="是否可用", default=True)
+    service = models.ForeignKey("Service", related_name="plans", verbose_name="服务", on_delete=models.CASCADE)
 
-    specifications = models.ManyToManyField(Specification, verbose_name='规格', blank=True)
+    specifications = models.ManyToManyField(Specification, verbose_name="规格", blank=True)
     tenant_id = tenant_id_field_factory()
 
     class Meta:
-        verbose_name_plural = verbose_name = '方案'
+        verbose_name_plural = verbose_name = "方案"
         unique_together = ("tenant_id", "service", "name")
 
     def __str__(self):
@@ -283,9 +286,9 @@ class Plan(UuidAuditedModel):
         specifications = dict.fromkeys(d.name for d in self.service.specifications.all())
 
         # 填充真实值
-        for spec in self.specifications.filter(definition__name__in=specifications.keys(),).prefetch_related(
-            "definition"
-        ):  # type: Specification
+        for spec in self.specifications.filter(
+            definition__name__in=specifications.keys(),
+        ).prefetch_related("definition"):  # type: Specification
             specifications[spec.definition.name] = spec.value
 
         return specifications
@@ -301,7 +304,7 @@ class ResourceId(models.Model):
     uid = models.CharField(max_length=64, null=False, unique=True, db_index=True)
 
     class Meta(object):
-        unique_together = ('namespace', 'uid')
+        unique_together = ("namespace", "uid")
 
     def __str__(self):
         return f"{self.namespace}-{self.uid}"
