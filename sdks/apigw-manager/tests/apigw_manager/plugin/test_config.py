@@ -1,37 +1,47 @@
 # -*- coding: utf-8 -*-
-# TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
-# Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
-# Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at http://opensource.org/licenses/MIT
-# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
-# an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
-# specific language governing permissions and limitations under the License.
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) Tencent. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
+
 import json
 
 import pytest
+
 from apigw_manager.plugin.config import (
-    build_bk_cors,
-    build_bk_header_rewrite,
-    build_bk_ip_restriction,
-    build_bk_rate_limit,
-    build_bk_mock,
-    build_api_breaker,
-    build_fault_injection,
-    build_request_validation,
-    build_response_rewrite,
-    build_redirect,
-    build_bk_access_token_source,
-    build_bk_username_required,
-    build_bk_request_body_limit,
-    build_bk_user_restriction,
-    build_bk_legacy_invalid_params,
-    build_proxy_cache,
-    build_stage_plugin_config_for_definition_yaml,
-    UnhealthyConfig,
-    HealthyConfig,
     AbortConfig,
     DelayConfig,
     HeadersConfig,
+    HealthyConfig,
+    UnhealthyConfig,
+    build_api_breaker,
+    build_bk_access_token_source,
+    build_bk_cors,
+    build_bk_header_rewrite,
+    build_bk_ip_restriction,
+    build_bk_legacy_invalid_params,
+    build_bk_mock,
+    build_bk_rate_limit,
+    build_bk_request_body_limit,
+    build_bk_user_restriction,
+    build_bk_username_required,
+    build_fault_injection,
+    build_proxy_cache,
+    build_redirect,
+    build_request_validation,
+    build_response_rewrite,
+    build_stage_plugin_config_for_definition_yaml,
 )
 
 
@@ -369,17 +379,14 @@ class TestBuildPluginConfig:
                 False,
                 {
                     "type": "fault-injection",
-                    "yaml": "abort:\n  body: test\n  http_status: 503\n  percentage: 50\n  vars: ''\n"
+                    "yaml": "abort:\n  body: test\n  http_status: 503\n  percentage: 50\n  vars: ''\n",
                 },
             ),
             (
                 None,
                 DelayConfig(duration=3, percentage=30, vars=""),
                 False,
-                {
-                    "type": "fault-injection",
-                    "yaml": "delay:\n  duration: 3\n  percentage: 30\n  vars: ''\n"
-                },
+                {"type": "fault-injection", "yaml": "delay:\n  duration: 3\n  percentage: 30\n  vars: ''\n"},
             ),
             (
                 AbortConfig(http_status=500, body="", percentage=20, vars=""),
@@ -387,7 +394,7 @@ class TestBuildPluginConfig:
                 False,
                 {
                     "type": "fault-injection",
-                    "yaml": "abort:\n  body: ''\n  http_status: 500\n  percentage: 20\n  vars: ''\ndelay:\n  duration: 2.5\n  percentage: 100\n  vars: ''\n"
+                    "yaml": "abort:\n  body: ''\n  http_status: 500\n  percentage: 20\n  vars: ''\ndelay:\n  duration: 2.5\n  percentage: 100\n  vars: ''\n",
                 },
             ),
             (
@@ -408,12 +415,7 @@ class TestBuildPluginConfig:
                 True,
                 None,
             ),
-            (
-                None,
-                None,
-                True,
-                None
-            ),
+            (None, None, True, None),
         ],
     )
     def test_build_fault_injection_config(self, abort, delay, will_error, expected):
@@ -435,7 +437,7 @@ class TestBuildPluginConfig:
                 False,
                 {
                     "type": "request-validation",
-                    "yaml": 'body_schema: \'{"type": "object"}\'\nrejected_code: 403\nrejected_msg: test\n'
+                    "yaml": 'body_schema: \'{"type": "object"}\'\nrejected_code: 403\nrejected_msg: test\n',
                 },
             ),
             (
@@ -446,7 +448,7 @@ class TestBuildPluginConfig:
                 False,
                 {
                     "type": "request-validation",
-                    "yaml": 'header_schema: \'{"type": "object"}\'\nrejected_code: 403\nrejected_msg: test\n'
+                    "yaml": 'header_schema: \'{"type": "object"}\'\nrejected_code: 403\nrejected_msg: test\n',
                 },
             ),
             (
@@ -457,7 +459,7 @@ class TestBuildPluginConfig:
                 False,
                 {
                     "type": "request-validation",
-                    "yaml": 'body_schema: \'{"type": "object"}\'\nheader_schema: \'{"type": "object"}\'\nrejected_code: 403\nrejected_msg: test\n'
+                    "yaml": 'body_schema: \'{"type": "object"}\'\nheader_schema: \'{"type": "object"}\'\nrejected_code: 403\nrejected_msg: test\n',
                 },
             ),
             (
@@ -476,7 +478,7 @@ class TestBuildPluginConfig:
                 True,
                 None,
             ),
-        ]
+        ],
     )
     def test_build_request_validation(
         self, body_schema, header_schema, rejected_msg, rejected_code, will_error, expected
@@ -505,16 +507,16 @@ class TestBuildPluginConfig:
                 {
                     "type": "response-rewrite",
                     "yaml": "body: ''\n"
-                            "body_base64: false\n"
-                            "headers:\n"
-                            "  add:\n"
-                            "  - key: 'key1: value1'\n"
-                            "  remove:\n"
-                            "  - key: key1\n"
-                            "  set:\n"
-                            "  - key: key1\n    value: value1\n"
-                            "status_code: 200\n"
-                            "vars: ''\n"
+                    "body_base64: false\n"
+                    "headers:\n"
+                    "  add:\n"
+                    "  - key: 'key1: value1'\n"
+                    "  remove:\n"
+                    "  - key: key1\n"
+                    "  set:\n"
+                    "  - key: key1\n    value: value1\n"
+                    "status_code: 200\n"
+                    "vars: ''\n",
                 },
             ),
             (
@@ -569,11 +571,9 @@ class TestBuildPluginConfig:
                 True,
                 None,
             ),
-        ]
+        ],
     )
-    def test_build_response_rewrite(
-        self, status_code, body, vars, body_base64, headers, will_error, expected
-    ):
+    def test_build_response_rewrite(self, status_code, body, vars, body_base64, headers, will_error, expected):
         if will_error:
             with pytest.raises(ValueError):
                 build_response_rewrite(status_code, body, vars, body_base64, headers)
@@ -588,10 +588,7 @@ class TestBuildPluginConfig:
                 "",
                 200,
                 False,
-                {
-                    "type": "redirect",
-                    "yaml": "ret_code: 200\nuri: ''\n"
-                },
+                {"type": "redirect", "yaml": "ret_code: 200\nuri: ''\n"},
             ),
             (
                 "",
@@ -599,11 +596,9 @@ class TestBuildPluginConfig:
                 True,
                 None,
             ),
-        ]
+        ],
     )
-    def test_build_redirect(
-        self, uri, ret_code, will_error, expected
-    ):
+    def test_build_redirect(self, uri, ret_code, will_error, expected):
         if will_error:
             with pytest.raises(ValueError):
                 build_redirect(uri, ret_code)
@@ -617,29 +612,21 @@ class TestBuildPluginConfig:
             (
                 "bearer",
                 False,
-                {
-                    "type": "bk-access-token-source",
-                    "yaml": "source: bearer\n"
-                },
+                {"type": "bk-access-token-source", "yaml": "source: bearer\n"},
             ),
             (
                 "api_key",
                 False,
-                {
-                    "type": "bk-access-token-source",
-                    "yaml": "source: api_key\n"
-                },
+                {"type": "bk-access-token-source", "yaml": "source: api_key\n"},
             ),
             (
                 "test",
                 True,
                 None,
             ),
-        ]
+        ],
     )
-    def test_build_bk_access_token_source(
-        self, source, will_error, expected
-    ):
+    def test_build_bk_access_token_source(self, source, will_error, expected):
         if will_error:
             with pytest.raises(ValueError):
                 build_bk_access_token_source(source)
@@ -650,15 +637,10 @@ class TestBuildPluginConfig:
     @pytest.mark.parametrize(
         "expected",
         [
-            {
-                "type": "bk-username-required",
-                "yaml": ""
-            },
-        ]
+            {"type": "bk-username-required", "yaml": ""},
+        ],
     )
-    def test_build_bk_username_required(
-        self, expected
-    ):
+    def test_build_bk_username_required(self, expected):
         assert build_bk_username_required() == expected
 
     @pytest.mark.parametrize(
@@ -667,21 +649,16 @@ class TestBuildPluginConfig:
             (
                 1024,
                 False,
-                {
-                    "type": "bk-request-body-limit",
-                    "yaml": "max_body_size: 1024\n"
-                },
+                {"type": "bk-request-body-limit", "yaml": "max_body_size: 1024\n"},
             ),
             (
                 33554433,
                 True,
                 None,
             ),
-        ]
+        ],
     )
-    def test_build_bk_request_body_limit(
-        self, max_body_size, will_error, expected
-    ):
+    def test_build_bk_request_body_limit(self, max_body_size, will_error, expected):
         if will_error:
             with pytest.raises(ValueError):
                 build_bk_request_body_limit(max_body_size)
@@ -696,21 +673,13 @@ class TestBuildPluginConfig:
                 ["admin"],
                 [],
                 False,
-                {
-                    "type": "bk-user-restriction",
-                    "yaml": "whitelist:\n"
-                            "- key: admin\n"
-                },
+                {"type": "bk-user-restriction", "yaml": "whitelist:\n- key: admin\n"},
             ),
             (
                 [],
                 ["admin"],
                 False,
-                {
-                    "type": "bk-user-restriction",
-                    "yaml": "blacklist:\n"
-                            "- key: admin\n"
-                },
+                {"type": "bk-user-restriction", "yaml": "blacklist:\n- key: admin\n"},
             ),
             (
                 [],
@@ -724,11 +693,9 @@ class TestBuildPluginConfig:
                 True,
                 None,
             ),
-        ]
+        ],
     )
-    def test_build_bk_user_restriction(
-        self, whitelist, blacklist, will_error, expected
-    ):
+    def test_build_bk_user_restriction(self, whitelist, blacklist, will_error, expected):
         if will_error:
             with pytest.raises(ValueError):
                 build_bk_user_restriction(whitelist, blacklist)
@@ -739,15 +706,10 @@ class TestBuildPluginConfig:
     @pytest.mark.parametrize(
         "expected",
         [
-            {
-                "type": "bk-legacy-invalid-params",
-                "yaml": ""
-            },
-        ]
+            {"type": "bk-legacy-invalid-params", "yaml": ""},
+        ],
     )
-    def test_build_bk_legacy_invalid_params(
-        self, expected
-    ):
+    def test_build_bk_legacy_invalid_params(self, expected):
         assert build_bk_legacy_invalid_params() == expected
 
     @pytest.mark.parametrize(
@@ -759,9 +721,7 @@ class TestBuildPluginConfig:
                 False,
                 {
                     "type": "proxy-cache",
-                    "yaml": "cache_method:\n"
-                            "- key: GET\n"
-                            "cache_ttl: 300\n",
+                    "yaml": "cache_method:\n- key: GET\ncache_ttl: 300\n",
                 },
             ),
             (
@@ -770,9 +730,7 @@ class TestBuildPluginConfig:
                 False,
                 {
                     "type": "proxy-cache",
-                    "yaml": "cache_method:\n"
-                            "- key: HEAD\n"
-                            "cache_ttl: 300\n",
+                    "yaml": "cache_method:\n- key: HEAD\ncache_ttl: 300\n",
                 },
             ),
             (
@@ -787,11 +745,9 @@ class TestBuildPluginConfig:
                 True,
                 None,
             ),
-        ]
+        ],
     )
-    def test_build_proxy_cache(
-        self, cache_method, cache_ttl, will_error, expected
-    ):
+    def test_build_proxy_cache(self, cache_method, cache_ttl, will_error, expected):
         if will_error:
             with pytest.raises(ValueError):
                 build_proxy_cache(cache_method, cache_ttl)

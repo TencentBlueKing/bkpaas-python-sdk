@@ -1,23 +1,30 @@
 # -*- coding: utf-8 -*-
-# TencentBlueKing is pleased to support the open source community by making 蓝鲸智云 - 蓝鲸 PaaS 平台 (BlueKing-PaaS) available.
-# Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
-# Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at http://opensource.org/licenses/MIT
-# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
-# an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
-# specific language governing permissions and limitations under the License.
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) Tencent. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
 
 import ast
-import json
-import jsonschema
 import ipaddress
+import json
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
+import jsonschema
 
 from .constants import Draft7Schema
 from .utils import literal_unicode, yaml_dump, yaml_text_indent
-
 
 VARS_ALLOWED_COMPARISON_SYMBOLS = {"==", "~=", ">", ">=", "<", "<=", "~~", "~*", "in", "has", "!", "ipmatch"}
 
@@ -407,14 +414,8 @@ def build_api_breaker(
                 "break_response_body": break_response_body,
                 "break_response_headers": break_response_header_data,
                 "max_breaker_sec": max_breaker_sec,
-                "unhealthy": {
-                    "http_statuses": unhealthy_http_statuses,
-                    "failures": unhealthy_failures
-                },
-                "healthy": {
-                    "http_statuses": healthy_http_statuses,
-                    "successes": healthy_successes
-                },
+                "unhealthy": {"http_statuses": unhealthy_http_statuses, "failures": unhealthy_failures},
+                "healthy": {"http_statuses": healthy_http_statuses, "successes": healthy_successes},
             }
         ),
     }
@@ -488,7 +489,7 @@ def build_fault_injection(
             "http_status": http_status,
             "body": abort.body,
             "percentage": percentage,
-            "vars": abort_vars
+            "vars": abort_vars,
         }
 
     if delay:
@@ -502,23 +503,16 @@ def build_fault_injection(
         if delay_vars:
             _check_vars(delay_vars, "delay")
 
-        config["delay"] = {
-            "duration": delay.duration,
-            "percentage": percentage,
-            "vars": delay_vars
-        }
+        config["delay"] = {"duration": delay.duration, "percentage": percentage, "vars": delay_vars}
 
-    return {
-        "type": "fault-injection",
-        "yaml": yaml_dump(config)
-    }
+    return {"type": "fault-injection", "yaml": yaml_dump(config)}
 
 
 def build_request_validation(
-        body_schema: str,
-        header_schema: str,
-        rejected_msg: str,
-        rejected_code: int = 400,
+    body_schema: str,
+    header_schema: str,
+    rejected_msg: str,
+    rejected_code: int = 400,
 ) -> Dict[str, str]:
     """generate request-validation plugin config
 
@@ -540,10 +534,7 @@ def build_request_validation(
             "yaml": 'body_schema: \'{"type": "object"}\'\nheader_schema: \'{"type": "object"}\'\nrejected_code: 403\nrejected_msg: test\n'
         }
     """
-    config = {
-        "rejected_code": rejected_code,
-        "rejected_msg": rejected_msg
-    }
+    config = {"rejected_code": rejected_code, "rejected_msg": rejected_msg}
 
     if not (200 <= rejected_code <= 599):
         raise ValueError("rejected_code must be between 200 and 599")
@@ -559,10 +550,7 @@ def build_request_validation(
         _validate_json_schema("header_schema", header_schema)
         config["header_schema"] = header_schema
 
-    return {
-        "type": "request-validation",
-        "yaml": yaml_dump(config)
-    }
+    return {"type": "request-validation", "yaml": yaml_dump(config)}
 
 
 @dataclass
@@ -573,11 +561,11 @@ class HeadersConfig:
 
 
 def build_response_rewrite(
-        status_code: int,
-        body: str,
-        vars: Optional[str],
-        body_base64: bool = False,
-        headers: Optional[HeadersConfig] = None,
+    status_code: int,
+    body: str,
+    vars: Optional[str],
+    body_base64: bool = False,
+    headers: Optional[HeadersConfig] = None,
 ) -> Dict[str, str]:
     """generate response-rewrite plugin config
 
@@ -642,7 +630,7 @@ def build_response_rewrite(
                     "add": add_data,
                     "set": set_data,
                     "remove": remove_data,
-                }
+                },
             }
         ),
     }
