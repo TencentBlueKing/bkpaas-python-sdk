@@ -2,7 +2,7 @@
 
 ### 5.0.0
 
-- [breaking change] drop support for python 3.8/3.9/3.10, request >=3.11 and < 3.14
+- [breaking change] drop support for python 3.8/3.9/3.10, request >=3.11 and < 3.15
 - [breaking change] drop support for Django 3.x / 4.x, request Django >=5.2,<6.0 (LTS)
 - [breaking change] 升级所有 bk-apigateway API 从 v1 到 v2 版本
   - 所有 API 调用改为使用 v2 版本（如 `v2_sync_gateway`、`v2_sync_stages` 等）
