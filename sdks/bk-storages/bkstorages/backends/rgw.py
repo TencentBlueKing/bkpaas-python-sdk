@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
- * TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-蓝鲸 PaaS 平台(BlueKing-PaaS) available.
- * Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
-"""
+# TencentBlueKing is pleased to support the open source community by making
+# 蓝鲸智云 - PaaS 平台 (BlueKing - PaaS System) available.
+# Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#     http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We undertake not to change the open source license (MIT license) applicable
+# to the current version of the project delivered to anyone in the future.
+
 import mimetypes
 import os
 from gzip import GzipFile
@@ -30,7 +37,7 @@ from django.utils.timezone import is_naive, localtime
 
 from bkstorages.utils import clean_name, get_available_overwrite_name, get_setting, safe_join, setting
 
-SAFE_CHARS = '-._~'
+SAFE_CHARS = "-._~"
 
 
 def percent_encode(input_str, safe=SAFE_CHARS, encoding=None):
@@ -43,11 +50,11 @@ def percent_encode(input_str, safe=SAFE_CHARS, encoding=None):
     """
     # The main difference: replace text_type function with smart_unicode which can
     # handle Non-ascii characters. It respect RGW_FILE_NAME_CHARSET defined in settings
-    encoding = encoding or setting('RGW_FILE_NAME_CHARSET', 'utf-8')
+    encoding = encoding or setting("RGW_FILE_NAME_CHARSET", "utf-8")
 
     if not isinstance(input_str, str):
         input_str = force_str(input_str, encoding)
-    return quote(force_str(input_str, encoding).encode('utf-8'), safe=safe)
+    return quote(force_str(input_str, encoding).encode("utf-8"), safe=safe)
 
 
 # Start patch botocore to fix Non-ascii filename exception
@@ -58,17 +65,16 @@ botocore.utils.percent_encode = percent_encode
 # End patch
 
 
-boto3_version_info = tuple([int(i) for i in boto3_version.split('-')[0].split('.')])
+boto3_version_info = tuple([int(i) for i in boto3_version.split("-")[0].split(".")])
 
 if boto3_version_info[:2] < (1, 4):
     raise ImproperlyConfigured(
-        "The installed Boto3 library must be 1.4.0 or " "higher.\nSee https://github.com/boto/boto3"
+        "The installed Boto3 library must be 1.4.0 or higher.\nSee https://github.com/boto/boto3"
     )
 
 
 @deconstructible
 class RGWBoto3StorageFile(File):
-
     """
     The default file object used by the RGWBoto3Storage backend.
 
@@ -89,14 +95,14 @@ class RGWBoto3StorageFile(File):
     # TODO: Read/Write (rw) mode may be a bit undefined at the moment. Needs testing.
     # TODO: When Django drops support for Python 2.5, rewrite to use the
     #       BufferedIO streams in the Python 2.6 io module.
-    buffer_size = setting('RGW_FILE_BUFFER_SIZE', 5242880)
+    buffer_size = setting("RGW_FILE_BUFFER_SIZE", 5242880)
 
     def __init__(self, name, mode, storage, buffer_size=None):
         self._storage = storage
-        self.name = name[len(self._storage.location) :].lstrip('/')
+        self.name = name[len(self._storage.location) :].lstrip("/")
         self._mode = mode
         self.obj = storage.bucket.Object(storage._encode_name(name))
-        if 'w' not in mode:
+        if "w" not in mode:
             # Force early RAII-style exception if object does not exist
             self.obj.load()
         self._is_dirty = False
@@ -116,16 +122,16 @@ class RGWBoto3StorageFile(File):
 
     def _get_file(self):
         if self._file is None:
-            self._file = SpooledTemporaryFile( # noqa: SIM115
+            self._file = SpooledTemporaryFile(  # noqa: SIM115
                 max_size=self._storage.max_memory_size,
                 suffix=".RGWBoto3StorageFile",
                 dir=setting("FILE_UPLOAD_TEMP_DIR", None),
             )
-            if 'r' in self._mode:
+            if "r" in self._mode:
                 self._is_dirty = False
-                self._file.write(self.obj.get()['Body'].read())
+                self._file.write(self.obj.get()["Body"].read())
                 self._file.seek(0)
-            if self._storage.gzip and self.obj.content_encoding == 'gzip':
+            if self._storage.gzip and self.obj.content_encoding == "gzip":
                 self._file = GzipFile(mode=self._mode, fileobj=self._file, mtime=0.0)
         return self._file
 
@@ -135,22 +141,22 @@ class RGWBoto3StorageFile(File):
     file = property(_get_file, _set_file)
 
     def read(self, *args, **kwargs):
-        if 'r' not in self._mode:
+        if "r" not in self._mode:
             raise AttributeError("File was not opened in read mode.")
         return super(RGWBoto3StorageFile, self).read(*args, **kwargs)
 
     def write(self, content):
-        if 'w' not in self._mode:
+        if "w" not in self._mode:
             raise AttributeError("File was not opened in write mode.")
         self._is_dirty = True
         if self._multipart is None:
             parameters = self._storage.object_parameters.copy()
-            parameters['ACL'] = self._storage.default_acl
-            parameters['ContentType'] = mimetypes.guess_type(self.obj.key)[0] or self._storage.default_content_type
+            parameters["ACL"] = self._storage.default_acl
+            parameters["ContentType"] = mimetypes.guess_type(self.obj.key)[0] or self._storage.default_content_type
             if self._storage.reduced_redundancy:
-                parameters['StorageClass'] = 'REDUCED_REDUNDANCY'
+                parameters["StorageClass"] = "REDUCED_REDUNDANCY"
             if self._storage.encryption:
-                parameters['ServerSideEncryption'] = 'AES256'
+                parameters["ServerSideEncryption"] = "AES256"
             self._multipart = self.obj.initiate_multipart_upload(**parameters)
         if self.buffer_size <= self._buffer_file_size:
             self._flush_write_buffer()
@@ -180,8 +186,8 @@ class RGWBoto3StorageFile(File):
             # TODO: Possibly cache the part ids as they're being uploaded
             # instead of requesting parts from server. For now, emulating
             # s3boto's behavior.
-            parts = [{'ETag': part.e_tag, 'PartNumber': part.part_number} for part in self._multipart.parts.all()]
-            self._multipart.complete(MultipartUpload={'Parts': parts})
+            parts = [{"ETag": part.e_tag, "PartNumber": part.part_number} for part in self._multipart.parts.all()]
+            self._multipart.complete(MultipartUpload={"Parts": parts})
         elif self._multipart is not None:
             self._multipart.abort()
         if self._file is not None:
@@ -200,8 +206,8 @@ class RGWBoto3Storage(Storage):
     """
 
     connection_class = staticmethod(resource)
-    connection_service_name = 's3'
-    default_content_type = 'application/octet-stream'
+    connection_service_name = "s3"
+    default_content_type = "application/octet-stream"
     connection_response_error = ClientError
     file_class = RGWBoto3StorageFile
     # If config provided in init, signature_version and addressing_style settings/args are ignored.
@@ -209,52 +215,52 @@ class RGWBoto3Storage(Storage):
 
     # used for looking up the access and secret key from env vars
     access_key_names = [
-        'RGW_ACCESS_KEY_ID',
+        "RGW_ACCESS_KEY_ID",
     ]
     secret_key_names = [
-        'RGW_SECRET_ACCESS_KEY',
+        "RGW_SECRET_ACCESS_KEY",
     ]
 
-    access_key = get_setting('RGW_ACCESS_KEY_ID')
-    secret_key = get_setting('RGW_SECRET_ACCESS_KEY')
-    bucket_name = get_setting('RGW_STORAGE_BUCKET_NAME')
-    endpoint_url = get_setting('RGW_ENDPOINT_URL')
+    access_key = get_setting("RGW_ACCESS_KEY_ID")
+    secret_key = get_setting("RGW_SECRET_ACCESS_KEY")
+    bucket_name = get_setting("RGW_STORAGE_BUCKET_NAME")
+    endpoint_url = get_setting("RGW_ENDPOINT_URL")
 
-    file_overwrite = setting('RGW_FILE_OVERWRITE', True)
-    object_parameters = setting('RGW_OBJECT_PARAMETERS', {})
-    auto_create_bucket = setting('RGW_AUTO_CREATE_BUCKET', False)
-    default_acl = setting('RGW_DEFAULT_ACL', 'public-read')
-    bucket_acl = setting('RGW_BUCKET_ACL', default_acl)
+    file_overwrite = setting("RGW_FILE_OVERWRITE", True)
+    object_parameters = setting("RGW_OBJECT_PARAMETERS", {})
+    auto_create_bucket = setting("RGW_AUTO_CREATE_BUCKET", False)
+    default_acl = setting("RGW_DEFAULT_ACL", "public-read")
+    bucket_acl = setting("RGW_BUCKET_ACL", default_acl)
     # querystring_auth = setting('RGW_QUERYSTRING_AUTH', True)
-    querystring_auth = setting('RGW_QUERYSTRING_AUTH', False)
-    querystring_expire = setting('RGW_QUERYSTRING_EXPIRE', 3600)
-    signature_version = setting('RGW_SIGNATURE_VERSION')
-    reduced_redundancy = setting('RGW_REDUCED_REDUNDANCY', False)
-    location = setting('RGW_LOCATION', '')
-    encryption = setting('RGW_ENCRYPTION', False)
-    custom_domain = setting('RGW_CUSTOM_DOMAIN')
-    addressing_style = setting('RGW_ADDRESSING_STYLE')
-    url_protocol = setting('RGW_URL_PROTOCOL', 'http:')
-    secure_urls = setting('RGW_SECURE_URLS', False)
-    file_name_charset = setting('RGW_FILE_NAME_CHARSET', 'utf-8')
-    gzip = setting('RGW_IS_GZIPPED', False)
-    preload_metadata = setting('RGW_PRELOAD_METADATA', False)
+    querystring_auth = setting("RGW_QUERYSTRING_AUTH", False)
+    querystring_expire = setting("RGW_QUERYSTRING_EXPIRE", 3600)
+    signature_version = setting("RGW_SIGNATURE_VERSION")
+    reduced_redundancy = setting("RGW_REDUCED_REDUNDANCY", False)
+    location = setting("RGW_LOCATION", "")
+    encryption = setting("RGW_ENCRYPTION", False)
+    custom_domain = setting("RGW_CUSTOM_DOMAIN")
+    addressing_style = setting("RGW_ADDRESSING_STYLE")
+    url_protocol = setting("RGW_URL_PROTOCOL", "http:")
+    secure_urls = setting("RGW_SECURE_URLS", False)
+    file_name_charset = setting("RGW_FILE_NAME_CHARSET", "utf-8")
+    gzip = setting("RGW_IS_GZIPPED", False)
+    preload_metadata = setting("RGW_PRELOAD_METADATA", False)
     gzip_content_types = setting(
-        'GZIP_CONTENT_TYPES',
+        "GZIP_CONTENT_TYPES",
         (
-            'text/css',
-            'text/javascript',
-            'application/javascript',
-            'application/x-javascript',
-            'image/svg+xml',
+            "text/css",
+            "text/javascript",
+            "application/javascript",
+            "application/x-javascript",
+            "image/svg+xml",
         ),
     )
-    region_name = setting('RGW_REGION_NAME', None)
-    use_ssl = setting('RGW_USE_SSL', True)
+    region_name = setting("RGW_REGION_NAME", None)
+    use_ssl = setting("RGW_USE_SSL", True)
 
     # The max amount of memory a returned file can take up before being
     # rolled over into a temporary file on disk. Default is 0: Do not roll over.
-    max_memory_size = setting('RGW_MAX_MEMORY_SIZE', 0)
+    max_memory_size = setting("RGW_MAX_MEMORY_SIZE", 0)
 
     def __init__(self, acl=None, bucket=None, **settings):
         # check if some of the settings we've provided as class attributes
@@ -269,12 +275,12 @@ class RGWBoto3Storage(Storage):
         if bucket is not None:
             self.bucket_name = bucket
 
-        self.location = (self.location or '').lstrip('/')
+        self.location = (self.location or "").lstrip("/")
         # Backward-compatibility: given the anteriority of the SECURE_URL setting
         # we fall back to https if specified in order to avoid the construction
         # of unsecure urls.
         if self.secure_urls:
-            self.url_protocol = 'https:'
+            self.url_protocol = "https:"
 
         self._entries = {}
         self._bucket = None
@@ -285,11 +291,11 @@ class RGWBoto3Storage(Storage):
 
         if not self.config:
             self.config = Config(
-                s3={'addressing_style': self.addressing_style}, signature_version=self.signature_version
+                s3={"addressing_style": self.addressing_style}, signature_version=self.signature_version
             )
 
         if not self.endpoint_url:
-            raise ImproperlyConfigured("Must specify RGW_ENDPOINT_URL in settings to " "use this backend!")
+            raise ImproperlyConfigured("Must specify RGW_ENDPOINT_URL in settings to use this backend!")
 
     @property
     def connection(self):
@@ -359,7 +365,7 @@ class RGWBoto3Storage(Storage):
                 # fails on wrong region, while bucket.load() does not.
                 bucket.meta.client.head_bucket(Bucket=name)
             except self.connection_response_error as err:
-                if err.response['ResponseMetadata']['HTTPStatusCode'] == 301:
+                if err.response["ResponseMetadata"]["HTTPStatusCode"] == 301:
                     raise ImproperlyConfigured(
                         "Bucket %s exists, but in a different "
                         "region than we are connecting to. Set "
@@ -377,12 +383,12 @@ class RGWBoto3Storage(Storage):
                     #
                     # Also note that Amazon specifically disallows "us-east-1" when passing bucket
                     # region names; LocationConstraint *must* be blank to create in US Standard.
-                    bucket_params = {'ACL': self.bucket_acl}
+                    bucket_params = {"ACL": self.bucket_acl}
                     region_name = self.connection.meta.client.meta.region_name
-                    if region_name != 'us-east-1':
-                        bucket_params['CreateBucketConfiguration'] = {'LocationConstraint': region_name}
+                    if region_name != "us-east-1":
+                        bucket_params["CreateBucketConfiguration"] = {"LocationConstraint": region_name}
                     bucket.create(ACL=self.bucket_acl)
-                elif err.response['ResponseMetadata']['HTTPStatusCode'] == 404:
+                elif err.response["ResponseMetadata"]["HTTPStatusCode"] == 404:
                     bucket.create(ACL=self.bucket_acl)
                 else:
                     raise ImproperlyConfigured(
@@ -413,7 +419,7 @@ class RGWBoto3Storage(Storage):
     def _compress_content(self, content):
         """Gzip a given string content."""
         zbuf = BytesIO()
-        zfile = GzipFile(mode='wb', compresslevel=6, fileobj=zbuf)
+        zfile = GzipFile(mode="wb", compresslevel=6, fileobj=zbuf)
         try:
             zfile.write(force_bytes(content.read()))
         finally:
@@ -424,13 +430,13 @@ class RGWBoto3Storage(Storage):
         # so just returning the BytesIO directly
         return zbuf
 
-    def _open(self, name, mode='rb'):
+    def _open(self, name, mode="rb"):
         name = self._normalize_name(clean_name(name))
         try:
             f = self.file_class(name, mode, self)
         except self.connection_response_error as err:
-            if err.response['ResponseMetadata']['HTTPStatusCode'] == 404:
-                raise IOError('File does not exist: %s' % name)
+            if err.response["ResponseMetadata"]["HTTPStatusCode"] == 404:
+                raise IOError("File does not exist: %s" % name)
             raise  # Let it bubble up if it was some other error
         return f
 
@@ -438,14 +444,14 @@ class RGWBoto3Storage(Storage):
         cleaned_name = clean_name(name)
         name = self._normalize_name(cleaned_name)
         parameters = self.object_parameters.copy()
-        content_type = getattr(content, 'content_type', mimetypes.guess_type(name)[0] or self.default_content_type)
+        content_type = getattr(content, "content_type", mimetypes.guess_type(name)[0] or self.default_content_type)
 
         # setting the content_type in the key object is not enough.
-        parameters.update({'ContentType': content_type})
+        parameters.update({"ContentType": content_type})
 
         if self.gzip and content_type in self.gzip_content_types:
             content = self._compress_content(content)
-            parameters.update({'ContentEncoding': 'gzip'})
+            parameters.update({"ContentEncoding": "gzip"})
 
         encoded_name = self._encode_name(name)
         obj = self.bucket.Object(encoded_name)
@@ -461,11 +467,11 @@ class RGWBoto3Storage(Storage):
         # only pass backwards incompatible arguments if they vary from the default
         put_parameters = parameters.copy() if parameters else {}
         if self.encryption:
-            put_parameters['ServerSideEncryption'] = 'AES256'
+            put_parameters["ServerSideEncryption"] = "AES256"
         if self.reduced_redundancy:
-            put_parameters['StorageClass'] = 'REDUCED_REDUNDANCY'
+            put_parameters["StorageClass"] = "REDUCED_REDUNDANCY"
         if self.default_acl:
-            put_parameters['ACL'] = self.default_acl
+            put_parameters["ACL"] = self.default_acl
         content.seek(0, os.SEEK_SET)
         obj.upload_fileobj(content, ExtraArgs=put_parameters)
 
@@ -496,8 +502,8 @@ class RGWBoto3Storage(Storage):
         name = self._normalize_name(clean_name(name))
         # for the bucket.objects.filter and logic below name needs to end in /
         # But for the root path "" we leave it as an empty string
-        if name and not name.endswith('/'):
-            name += '/'
+        if name and not name.endswith("/"):
+            name += "/"
 
         files = []
         dirs = set()
@@ -533,7 +539,7 @@ class RGWBoto3Storage(Storage):
         # in the preloaded metadata.
         if entry is None:
             entry = self.bucket.Object(self._encode_name(name))
-        if setting('USE_TZ'):
+        if setting("USE_TZ"):
             # boto3 returns TZ aware timestamps
             return entry.last_modified
         else:
@@ -557,22 +563,22 @@ class RGWBoto3Storage(Storage):
         split_url = urlparse.urlsplit(url)
         qs = urlparse.parse_qsl(split_url.query, keep_blank_values=True)
         blacklist = {
-            'x-amz-algorithm',
-            'x-amz-credential',
-            'x-amz-date',
-            'x-amz-expires',
-            'x-amz-signedheaders',
-            'x-amz-signature',
-            'x-amz-security-token',
-            'awsaccesskeyid',
-            'expires',
-            'signature',
+            "x-amz-algorithm",
+            "x-amz-credential",
+            "x-amz-date",
+            "x-amz-expires",
+            "x-amz-signedheaders",
+            "x-amz-signature",
+            "x-amz-security-token",
+            "awsaccesskeyid",
+            "expires",
+            "signature",
         }
 
         filtered_qs = ((key, val) for key, val in qs if key.lower() not in blacklist)
         # Note: Parameters that did not have a value in the original query string will have
         # an '=' sign appended to it, e.g ?foo&bar becomes ?foo=&bar=
-        joined_qs = ('='.join(keyval) for keyval in filtered_qs)
+        joined_qs = ("=".join(keyval) for keyval in filtered_qs)
         split_url = split_url._replace(query="&".join(joined_qs))
         return split_url.geturl()
 
@@ -586,9 +592,9 @@ class RGWBoto3Storage(Storage):
             expire = self.querystring_expire
 
         params = parameters.copy() if parameters else {}
-        params['Bucket'] = self.bucket.name
-        params['Key'] = self._encode_name(name)
-        url = self.bucket.meta.client.generate_presigned_url('get_object', Params=params, ExpiresIn=expire)
+        params["Bucket"] = self.bucket.name
+        params["Key"] = self._encode_name(name)
+        url = self.bucket.meta.client.generate_presigned_url("get_object", Params=params, ExpiresIn=expire)
         if self.querystring_auth:
             return url
         return self._strip_signing_parameters(url)
@@ -604,5 +610,5 @@ class RGWBoto3Storage(Storage):
 class StaticRGWBoto3Storage(RGWBoto3Storage):
     """Storage class for storing static files"""
 
-    location = setting('RGW_STATIC_LOCATION', '/static')
-    object_parameters = setting('RGW_STATIC_OBJECT_PARAMETERS', {'CacheControl': 'max-age=86400'})
+    location = setting("RGW_STATIC_LOCATION", "/static")
+    object_parameters = setting("RGW_STATIC_OBJECT_PARAMETERS", {"CacheControl": "max-age=86400"})
