@@ -318,6 +318,7 @@ x-bk-apigateway-resource:
   matchSubpath: false # 匹配所有子路径
   noneSchema: true # 是否有请求参数：对于需要添加的 MCP Server 的资源如果没有请求参数(body,path,header,query)一定要显示配置才行
   backend:
+    name: default # 关联后端服务名称，不配置时默认为 default
     type: HTTP
     method: get
     path: /anything
