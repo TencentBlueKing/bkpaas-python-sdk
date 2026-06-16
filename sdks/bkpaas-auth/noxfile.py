@@ -4,7 +4,7 @@ import tempfile
 import nox
 from nox.command import CommandFailed
 
-ALL_PYTHON = ["3.11", "3.12", "3.13"]
+ALL_PYTHON = ["3.11", "3.12", "3.13", "3.14"]
 
 
 # ref: https://stackoverflow.com/questions/59768651/how-to-use-nox-with-poetry
