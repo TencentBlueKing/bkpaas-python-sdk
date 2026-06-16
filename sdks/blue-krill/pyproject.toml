@@ -7,16 +7,16 @@ classifiers = ["License :: OSI Approved :: MIT License"]
 # See https://www.python.org/dev/peps/pep-0621/
 name = "blue-krill"
 description = "Tools and common packages for blueking PaaS platform."
-requires-python = ">=3.11, <3.13"
+requires-python = ">=3.11, <3.15"
 license = "MIT"
-version = "3.0.0"
+version = "3.1.0"
 # classifieres is dynamic because we want to create Python classifiers automatically
 dynamic = ["classifiers"]
 readme = "README.md"
 authors = [{ name = "blueking", email = "blueking@tencent.com" }]
 dependencies = [
   'cryptography (>=3.0.0)',
-  'django-environ (>=0.8.1)',
+  'django-environ (>=0.8.1,<=0.12.0)',
   'pyjwt (>=2.12.0,<3)',
   'requests',
   'click',
@@ -25,7 +25,7 @@ dependencies = [
   'python-editor (>=1.0.4,<2.0.0)',
   'watchdog',
   'curlify (>=2.2.1,<4.0.0)',
-  'bk-crypto-python-sdk (>=2.0.0,<3.0.0)',
+  'bk-crypto-python-sdk (>=3.0.0)',
 ]
 
 [project.urls]
