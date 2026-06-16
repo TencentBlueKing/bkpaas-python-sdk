@@ -16,7 +16,7 @@ readme = "README.md"
 authors = [{ name = "blueking", email = "blueking@tencent.com" }]
 dependencies = [
   'cryptography (>=3.0.0)',
-  'django-environ (>=0.8.1,<=0.12.0)',
+  'django-environ (>=0.8.1,<0.13.0)',
   'pyjwt (>=2.12.0,<3)',
   'requests',
   'click',

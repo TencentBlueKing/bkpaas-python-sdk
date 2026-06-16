@@ -56,8 +56,11 @@ class SecureEnv(Env):
 
     def set_secure_key(self, key: bytes):
         """Set a different key for decryption"""
-        self.ENVIRON = self.ENVIRON_CLS(key=key)
+        # Using type(self).ENVIRON_CLS instead of self.ENVIRON_CLS to avoid
+        # the descriptor protocol on functools.partial in Python 3.14+,
+        # which would bind self as the first argument.
+        self.ENVIRON = type(self).ENVIRON_CLS(key=key)
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.ENVIRON = self.ENVIRON_CLS()
+        self.ENVIRON = type(self).ENVIRON_CLS()
