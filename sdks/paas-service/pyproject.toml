@@ -8,14 +8,14 @@ classifiers = [
 # PEP 621 project metadata
 # See https://www.python.org/dev/peps/pep-0621/
 name = "paas_service"
-version = "3.0.0"
+version = "3.1.0"
 description = "A Django application for developing BK-PaaS add-on services."
 readme = "README.md"
 authors = [{ name = "blueking", email = "blueking@tencent.com" }]
 license = "MIT"
 # classifiers is dynamic because we want to create Python classifiers automatically
 dynamic = ["classifiers"]
-requires-python = ">=3.11,<3.13"
+requires-python = ">=3.11,<3.15"
 dependencies = [
     "jsonfield",
     "pyjwt (>=2.12.0,<3.0.0)",
