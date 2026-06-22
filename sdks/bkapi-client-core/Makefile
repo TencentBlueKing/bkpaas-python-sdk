@@ -6,10 +6,10 @@ PKG_DIR := ${SRC_DIR}/bkapi_client_core
 TEST_DIR := ${SRC_DIR}/tests
 
 .PHONY: ALL
-ALL: poetry.lock version requirements_tox.txt requirements_dev.txt requirements.txt
+ALL: poetry.lock version requirements.txt
 
 poetry.lock: pyproject.toml
-	poetry lock --no-update
+	poetry lock
 	touch poetry.lock
 
 bkapi_client_core/__init__.py: pyproject.toml
@@ -21,8 +21,6 @@ version: bkapi_client_core/__init__.py
 .PHONY: requirements
 requirements: poetry.lock
 	poetry export -f requirements.txt --without-hashes | grep -v "index-url" > requirements.txt
-	poetry export -f requirements.txt --without-hashes --with dev | grep -v "index-url" > requirements_dev.txt
-	poetry export -f requirements.txt --without-hashes --with dev | grep -v "index-url" > requirements_tox.txt
 
 .PHONY: isort
 isort:
@@ -70,6 +68,3 @@ publish: build
 .PHONY: nox
 nox:
 	nox
-
-.PHONY: tox
-tox: nox

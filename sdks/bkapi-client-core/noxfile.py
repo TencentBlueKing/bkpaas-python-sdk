@@ -5,8 +5,7 @@ import nox
 nox.options.default_venv_backend = "venv"
 
 ROOT = Path(__file__).parent.resolve()
-ALL_PYTHON = ["3.6", "3.7"]
-REQUESTS_VERSIONS = ["2.20", "2.26"]
+ALL_PYTHON = ["3.11", "3.12", "3.13", "3.14"]
 REQUIREMENTS_PATH = ROOT / "requirements.txt"
 
 
@@ -31,7 +30,6 @@ def install_with_constraints(session, *args: str, **kwargs) -> None:
     requirements = _ensure_requirements_exported(session)
     session.install(
         f"--constraint={requirements}",
-        "--use-deprecated=legacy-resolver",
         *args,
         **kwargs,
     )
@@ -60,7 +58,7 @@ def export_deps(session):
 @nox.parametrize("python", ALL_PYTHON)
 def tests(session):
     session.run("python", "-m", "ensurepip", "--upgrade")
-    session.run("python", "-m", "pip", "install", "--upgrade", "pip<24", "setuptools<68", "wheel")
+    session.run("python", "-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel")
     # Install main dependencies
     install_with_constraints(
         session,
@@ -68,7 +66,6 @@ def tests(session):
         "requests",
         "curlify",
         "typing-extensions",
-        "six",
     )
     # Install test dependencies
     install_with_constraints(
@@ -82,6 +79,4 @@ def tests(session):
         "prometheus-client",
     )
 
-    for version in REQUESTS_VERSIONS:
-        session.install(f"requests=={version}")
-        session.run("pytest", "tests", *session.posargs)
+    session.run("pytest", "tests", *session.posargs)

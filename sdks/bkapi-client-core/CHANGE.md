@@ -1,5 +1,8 @@
 ## Change logs
 
+## 2.0.0
+- 破坏性变更: 不再支持旧版本 pyhon, 仅支持 python 3.11/3.12/3.13/3.14
+
 ## 1.2.1
 - BK_API_URL_TMPL 支持变量名 gateway_name，如 http://{gateway_name}.example.com
 - APIGatewayClient 支持使用 _gateway_name 表示网关名

@@ -28,7 +28,7 @@ from requests.exceptions import (
     RequestException,
     Timeout,
 )
-from six.moves.urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse, urlunparse
 
 from .utils import CurlRequest
 
@@ -91,7 +91,7 @@ class ResponseError(RequestException, BKAPIError):
     @property
     def request_method(self):
         # type: (...) -> Optional[str]
-        return self.request and self.request.method
+        return self.request.method if self.request is not None else None
 
     @property
     def request_url(self):

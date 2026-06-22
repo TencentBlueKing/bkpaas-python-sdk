@@ -22,27 +22,27 @@ from bkapi_client_core.config import SettingKeys
 from bkapi_client_core.exceptions import UserNotAuthenticated
 
 
-@pytest.fixture()
+@pytest.fixture
 def django_settings(settings):
     return settings
 
 
-@pytest.fixture()
+@pytest.fixture
 def client_cls(mocker):
     return mocker.MagicMock()
 
 
-@pytest.fixture()
+@pytest.fixture
 def django_request(mocker):
     return mocker.MagicMock()
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_get_client_by_settings(mocker):
     return mocker.patch.object(django_helper, "_get_client_by_settings")
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_validate_user_authenticated(mocker):
     return mocker.patch.object(django_helper, "_validate_user_authenticated")
 
@@ -67,16 +67,14 @@ def test_get_client_by_settings(
     app_code_in_settings,
     app_secret_in_settings,
 ):
-    django_settings.APP_CODE = faker.pystr() if app_code_in_settings else None
-    django_settings.SECRET_KEY = faker.pystr() if app_secret_in_settings else None
-    django_settings.BK_APP_CODE = django_settings.APP_CODE
-    django_settings.BK_APP_SECRET = django_settings.SECRET_KEY
+    django_settings.BK_APP_CODE = faker.pystr() if app_code_in_settings else None
+    django_settings.BK_APP_SECRET = faker.pystr() if app_secret_in_settings else None
 
     bk_app_code = faker.pystr() if app_code_passed else ""
     bk_app_secret = faker.pystr() if app_secret_passed else ""
 
-    excepted_app_code = bk_app_code or django_settings.APP_CODE
-    excepted_app_secret = bk_app_secret or django_settings.SECRET_KEY
+    excepted_app_code = bk_app_code or django_settings.BK_APP_CODE
+    excepted_app_secret = bk_app_secret or django_settings.BK_APP_SECRET
 
     endpoint = faker.pystr()
 
