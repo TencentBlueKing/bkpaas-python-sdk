@@ -15,37 +15,26 @@
 # We undertake not to change the open source license (MIT license) applicable
 # to the current version of the project delivered to anyone in the future.
 
-from typing import Any, Dict, Optional  # noqa
+from typing import Any, Dict, Optional
 
-from requests import Response  # noqa
+from requests import Response
 from typing_extensions import Protocol
 
 
 class ClientProtocol(Protocol):
     """ClientProtocol represents a protocol required to implement a client that handles HTTP requests"""
 
-    def handle_request(
-        self,
-        operation,  # type: Operation
-        context,  # type: Dict[str, Any]
-    ):
-        # type: (...) -> Optional[Response]
+    def handle_request(self, operation: "Operation", context: Dict[str, Any]) -> Optional[Response]:
         raise NotImplementedError
 
-    def parse_response(
-        self,
-        operation,  # type: Operation
-        response,  # type: Optional[Response]
-    ):
-        # type: (...) -> Any
+    def parse_response(self, operation: "Operation", response: Optional[Response]) -> Any:
         raise NotImplementedError
 
 
 class ManagerProtocol(Protocol):
     """ManagerProtocol is a protocol that the classes required to manage resources."""
 
-    def get_client(self):
-        # type: (...) -> ClientProtocol
+    def get_client(self) -> ClientProtocol:
         """Return a client for the Operation requesting"""
         raise NotImplementedError
 
@@ -53,11 +42,7 @@ class ManagerProtocol(Protocol):
 class OperationResource(object):
     """OperationResource represents a single Operation or an OperationGroup"""
 
-    def __init__(
-        self,
-        name="",  # type: str
-        manager=None,  # type: Optional[ManagerProtocol]
-    ):
+    def __init__(self, name: str = "", manager: Optional[ManagerProtocol] = None):
         self.name = name
         self._manager = manager
 
@@ -77,11 +62,7 @@ class OperationResource(object):
         manager = self._get_manager()
         return manager.get_client()
 
-    def bind(
-        self,
-        name,  # type: str
-        manager,  # type: ManagerProtocol
-    ):
+    def bind(self, name: str, manager: ManagerProtocol):
         """
         Bind to Manger using a given name
 
@@ -103,12 +84,12 @@ class Operation(OperationResource):
 
     def __init__(
         self,
-        name="",  # type: str
-        manager=None,  # type: Optional[ManagerProtocol]
-        method="",  # type: str
-        path="",  # type: str
-        bkapi_config=None,  # type: Optional[Dict[str, Any]]
-        **properties,  # type: Dict[str, Any]
+        name: str = "",
+        manager: Optional[ManagerProtocol] = None,
+        method: str = "",
+        path: str = "",
+        bkapi_config: Optional[Dict[str, Any]] = None,
+        **properties: Dict[str, Any],
     ):
         self.method = method
         self.path = path
@@ -116,8 +97,7 @@ class Operation(OperationResource):
         self._properties = properties
         super(Operation, self).__init__(name, manager)
 
-    def _get_context(self, **kwargs):
-        # type: (...) -> Dict[str, Any]
+    def _get_context(self, **kwargs) -> Dict[str, Any]:
         context = {
             "method": self.method,
             "path": self.path,
@@ -128,13 +108,13 @@ class Operation(OperationResource):
 
     def __call__(
         self,
-        data=None,  # type: Optional[Any]
-        path_params=None,  # type: Optional[Dict[str, Any]]
-        params=None,  # type: Optional[Dict[str, Any]]
-        headers=None,  # type: Optional[Dict[str, Any]]
-        timeout=None,  # type: Optional[float]
-        proxies=None,  # type: Optional[Dict[str, Any]]
-        verify=None,  # type: Optional[bool]
+        data: Optional[Any] = None,
+        path_params: Optional[Dict[str, Any]] = None,
+        params: Optional[Dict[str, Any]] = None,
+        headers: Optional[Dict[str, Any]] = None,
+        timeout: Optional[float] = None,
+        proxies: Optional[Dict[str, Any]] = None,
+        verify: Optional[bool] = None,
         **kwargs,
     ):
         """
@@ -168,16 +148,15 @@ class Operation(OperationResource):
 
     def request(
         self,
-        data=None,  # type: Optional[Any]
-        path_params=None,  # type: Optional[Dict[str, Any]]
-        params=None,  # type: Optional[Dict[str, Any]]
-        headers=None,  # type: Optional[Dict[str, Any]]
-        timeout=None,  # type: Optional[float]
-        proxies=None,  # type: Optional[Dict[str, Any]]
-        verify=None,  # type: Optional[bool]
+        data: Optional[Any] = None,
+        path_params: Optional[Dict[str, Any]] = None,
+        params: Optional[Dict[str, Any]] = None,
+        headers: Optional[Dict[str, Any]] = None,
+        timeout: Optional[float] = None,
+        proxies: Optional[Dict[str, Any]] = None,
+        verify: Optional[bool] = None,
         **kwargs,
-    ):
-        # type: (...) -> Optional[Response]
+    ) -> Optional[Response]:
         """
         Request to the api and return the Response directly.
 
@@ -221,11 +200,7 @@ class OperationGroup(OperationResource):
         """
         return self._get_client()
 
-    def register(
-        self,
-        name,  # type: str
-        operation,  # type: Operation
-    ):
+    def register(self, name: str, operation: Operation):
         """
         Register the operation using the specified name.
 
@@ -245,11 +220,7 @@ class OperationGroup(OperationResource):
         operation.bind(name, self)
         setattr(self, name, operation)
 
-    def __getattr__(
-        self,
-        name,  # type: str
-    ):
-        # type: (...) -> Operation
+    def __getattr__(self, name: str) -> Operation:
         """
         This is a trick to provide intelligence completion for dynamic registered operations.
 

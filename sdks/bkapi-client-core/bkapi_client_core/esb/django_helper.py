@@ -41,12 +41,12 @@ def _get_default_language():
 
 
 def get_client_by_request(
-    client_cls,  # type: Type[BaseClient]
+    client_cls: Type[BaseClient],
     request,
-    endpoint=None,  # type: Optional[str]
-    bk_app_code=None,  # type: Optional[str]
-    bk_app_secret=None,  # type: Optional[str]
-    accept_language=None,  # type: Optional[str]
+    endpoint: Optional[str] = None,
+    bk_app_code: Optional[str] = None,
+    bk_app_secret: Optional[str] = None,
+    accept_language: Optional[str] = None,
 ):
     """Returns a client according to the current django request
 
@@ -70,12 +70,12 @@ def get_client_by_request(
 
 
 def get_client_by_username(
-    client_cls,  # type: Type[BaseClient]
+    client_cls: Type[BaseClient],
     username,
-    endpoint=None,  # type: Optional[str]
-    bk_app_code=None,  # type: Optional[str]
-    bk_app_secret=None,  # type: Optional[str]
-    accept_language=None,  # type: Optional[str]
+    endpoint: Optional[str] = None,
+    bk_app_code: Optional[str] = None,
+    bk_app_secret: Optional[str] = None,
+    accept_language: Optional[str] = None,
 ):
     """Returns a client according to the current username
 
@@ -99,12 +99,12 @@ def get_client_by_username(
 
 
 def get_client_by_user(
-    client_cls,  # type: Type[BaseClient]
+    client_cls: Type[BaseClient],
     user,
-    endpoint=None,  # type: Optional[str]
-    bk_app_code=None,  # type: Optional[str]
-    bk_app_secret=None,  # type: Optional[str]
-    accept_language=None,  # type: Optional[str]
+    endpoint: Optional[str] = None,
+    bk_app_code: Optional[str] = None,
+    bk_app_secret: Optional[str] = None,
+    accept_language: Optional[str] = None,
 ):
     """Returns a client according to the current user
 

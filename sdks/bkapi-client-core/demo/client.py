@@ -18,11 +18,11 @@
 from bkapi_client_core.apigateway import APIGatewayClient, Operation, OperationGroup, bind_property
 
 
-class Group(OperationGroup):
+class Group(OperationGroup):  # type: ignore
     test = bind_property(Operation, name="test", method="GET", path="test")
 
 
-class Client(APIGatewayClient):
+class Client(APIGatewayClient):  # type: ignore
     _gateway_name = "test"
 
     api = bind_property(Group)

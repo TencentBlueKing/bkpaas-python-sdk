@@ -15,7 +15,8 @@
 # We undertake not to change the open source license (MIT license) applicable
 # to the current version of the project delivered to anyone in the future.
 
-from typing import Optional  # noqa
+from typing import Optional
+from urllib.parse import urlparse, urlunparse
 
 from requests.exceptions import (
     ChunkedEncodingError,
@@ -28,7 +29,6 @@ from requests.exceptions import (
     RequestException,
     Timeout,
 )
-from urllib.parse import urlparse, urlunparse
 
 from .utils import CurlRequest
 
@@ -70,18 +70,15 @@ class ResponseError(RequestException, BKAPIError):
         super(ResponseError, self).__init__(*args, **kwargs)
 
     @property
-    def error_code(self):
-        # type: (...) -> Optional[str]
+    def error_code(self) -> Optional[str]:
         return self._response_headers_representer and self._response_headers_representer.error_code
 
     @property
-    def error_message(self):
-        # type: (...) -> Optional[str]
+    def error_message(self) -> Optional[str]:
         return self._response_headers_representer and self._response_headers_representer.error_message
 
     @property
-    def request_id(self):
-        # type: (...) -> Optional[str]
+    def request_id(self) -> Optional[str]:
         return self._response_headers_representer and self._response_headers_representer.request_id
 
     @property
@@ -89,13 +86,11 @@ class ResponseError(RequestException, BKAPIError):
         return CurlRequest(self.request).to_curl()
 
     @property
-    def request_method(self):
-        # type: (...) -> Optional[str]
+    def request_method(self) -> Optional[str]:
         return self.request.method if self.request is not None else None
 
     @property
-    def request_url(self):
-        # type: (...) -> str
+    def request_url(self) -> str:
         url = self.request and self.request.url
         if not url:
             return ""
@@ -104,14 +99,12 @@ class ResponseError(RequestException, BKAPIError):
         return urlunparse((parsed_url.scheme, parsed_url.netloc, parsed_url.path, "", "", ""))
 
     @property
-    def response_status_code(self):
-        # type: (...) -> Optional[int]
+    def response_status_code(self) -> Optional[int]:
         # bool(response) is equal to response.ok
         return self.response.status_code if self.response is not None else None
 
     @property
-    def response_text(self):
-        # type: (...) -> Optional[str]
+    def response_text(self) -> Optional[str]:
         return self.response.text if self.response is not None else None
 
     def response_json(self):

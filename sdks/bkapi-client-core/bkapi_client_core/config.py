@@ -16,10 +16,10 @@
 # to the current version of the project delivered to anyone in the future.
 
 import os
-from typing import Any, Dict, List, Optional  # noqa
+from typing import Any, Dict, List, Optional
 
 try:
-    from django.conf import settings as django_settings  # noqa
+    from django.conf import settings as django_settings
 except ImportError:
     django_settings = None
 
@@ -56,22 +56,17 @@ class SettingKeys:
 class Settings(object):
     def __init__(
         self,
-        env=None,  # type: Optional[Dict[str, Any]]
-        settings=None,  # type: Any
-        aliases=None,  # type: Optional[Dict[str, List[str]]]
+        env: Optional[Dict[str, Any]] = None,
+        settings: Any = None,
+        aliases: Optional[Dict[str, List[str]]] = None,
     ):
-        self._aliases = aliases or {}  # type: Dict[str, List[str]]
+        self._aliases: Dict[str, List[str]] = aliases or {}
         self._env = os.environ if env is None else env
         self._settings = django_settings if settings is None else settings
-        self._defaults = {}  # type: Dict[str, Any]
-        self._resolved = {}  # type: Dict[str, Any]
+        self._defaults: Dict[str, Any] = {}
+        self._resolved: Dict[str, Any] = {}
 
-    def get(
-        self,
-        key,  # type: str
-        default=None,  # type: Any
-    ):
-        # type: (...) -> Any
+    def get(self, key: str, default: Any = None) -> Any:
         """
         Returns the specified value, if not found, return to the default value
         """
@@ -116,11 +111,7 @@ class Settings(object):
 
         self._resolved.clear()
 
-    def declare_aliases(
-        self,
-        key,  # type: str
-        aliases,  # type: List[str]
-    ):
+    def declare_aliases(self, key: str, aliases: List[str]):
         """
         Declare an alias of a Key
         """

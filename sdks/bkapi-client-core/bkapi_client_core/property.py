@@ -15,7 +15,7 @@
 # We undertake not to change the open source license (MIT license) applicable
 # to the current version of the project delivered to anyone in the future.
 
-from typing import Any, Type, TypeVar  # noqa
+from typing import Any, Type, TypeVar
 
 from typing_extensions import Protocol
 
@@ -23,11 +23,7 @@ from typing_extensions import Protocol
 class BindableProtocol(Protocol):
     """BindableProtocol is a protocol for lazy initialization and binding to a manager"""
 
-    def bind(
-        self,
-        name,  # type: str
-        manager,  # type: Any
-    ):
+    def bind(self, name: str, manager: Any):
         """Bind to manager with the specified name"""
         raise NotImplementedError
 
@@ -39,12 +35,7 @@ class BindProperty(object):
     use the bind_property function instead of the class.
     """
 
-    def __init__(
-        self,
-        cls,  # type: Type[BindableProtocol]
-        *args,  # type: Any
-        **kwargs,  # type: Any
-    ):
+    def __init__(self, cls: Type[BindableProtocol], *args: Any, **kwargs: Any):
         self._name = ""
         self._property_id = "_bind_property_id_%s" % id(self)
         self._cls = cls
@@ -77,8 +68,7 @@ class BindProperty(object):
 T = TypeVar("T", bound=BindableProtocol)
 
 
-def bind_property(cls, *args, **kwargs):
-    # type: (Type[T], *Any, **Any) -> T
+def bind_property(cls: Type[T], *args: Any, **kwargs: Any) -> T:
     """The generic function wrapper for BindProperty"""
 
     return BindProperty(cls, *args, **kwargs)  # type: ignore

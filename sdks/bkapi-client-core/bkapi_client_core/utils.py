@@ -18,14 +18,13 @@
 import copy
 import json
 from functools import wraps
-from typing import Callable, Optional, Type, TypeVar  # noqa
+from typing import Callable, Optional, Type, TypeVar
 
 import curlify
-import requests  # noqa
+import requests
 
 
-def urljoin(base_url, path):
-    # type: (str, str) -> str
+def urljoin(base_url: str, path: str) -> str:
     if not base_url:
         return path
 
@@ -86,14 +85,10 @@ class _WrappedRequest:
 
 
 class CurlRequest:
-    def __init__(
-        self,
-        request,  # type: Optional[requests.PreparedRequest]
-    ):
+    def __init__(self, request: Optional[requests.PreparedRequest]):
         self.request = request
 
-    def to_curl(self):
-        # type: () -> str
+    def to_curl(self) -> str:
         if self.request is None:
             return ""
 
@@ -111,16 +106,14 @@ class CurlRequest:
         return self.to_curl()
 
 
-def to_curl(request):
-    # type: (Optional[requests.PreparedRequest]) -> str
+def to_curl(request: Optional[requests.PreparedRequest]) -> str:
     return CurlRequest(request).to_curl()
 
 
 T = TypeVar("T")
 
 
-def generic_type_partial(cls, fn):
-    # type: (Type[T], Callable) -> Callable[..., T]
+def generic_type_partial(cls: Type[T], fn: Callable) -> Callable[..., T]:
     """A tool for wraps function with generic type"""
 
     @wraps(fn)
@@ -130,8 +123,7 @@ def generic_type_partial(cls, fn):
     return f
 
 
-def allow_fail(fn):
-    # type: (Callable) -> Callable
+def allow_fail(fn: Callable) -> Callable:
     """A tool for wraps function with allow failure"""
 
     @wraps(fn)

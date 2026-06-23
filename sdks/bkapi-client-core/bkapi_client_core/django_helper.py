@@ -16,9 +16,9 @@
 # to the current version of the project delivered to anyone in the future.
 
 import logging
-from typing import Optional, Type  # noqa
+from typing import Optional, Type
 
-from bkapi_client_core.client import BaseClient  # noqa
+from bkapi_client_core.client import BaseClient
 from bkapi_client_core.config import SettingKeys, settings
 from bkapi_client_core.exceptions import UserNotAuthenticated
 
@@ -31,10 +31,10 @@ logger = logging.getLogger(__name__)
 
 
 def _get_client_by_settings(
-    client_cls,  # type: Type[BaseClient]
-    bk_app_code=None,  # type: Optional[str]
-    bk_app_secret=None,  # type: Optional[str]
-    accept_language=None,  # type: Optional[str]
+    client_cls: Type[BaseClient],
+    bk_app_code: Optional[str] = None,
+    bk_app_secret: Optional[str] = None,
+    accept_language: Optional[str] = None,
     **kwargs,
 ):
     """Returns a client according to the django settings"""
@@ -70,11 +70,7 @@ def _get_authorization_from_cookies(request, cookie_name_to_key):
     }
 
 
-def get_client_by_request(
-    client_cls,  # type: Type[BaseClient]
-    request,
-    **kwargs,
-):
+def get_client_by_request(client_cls: Type[BaseClient], request, **kwargs):
     """Returns a client according to the current request"""
 
     def get_access_token():
@@ -82,9 +78,10 @@ def get_client_by_request(
             return None
         try:
             token = bkoauth.get_access_token(request)
-            return token.access_token
         except Exception:
             logger.warning("get access_token by request failed")
+        else:
+            return token.access_token
 
     _validate_user_authenticated(request.user)
 
@@ -102,11 +99,7 @@ def get_client_by_request(
     return client
 
 
-def get_client_by_username(
-    client_cls,  # type: Type[BaseClient]
-    username,  # type: str
-    **kwargs,
-):
+def get_client_by_username(client_cls: Type[BaseClient], username: str, **kwargs):
     """Returns a client according to the username"""
 
     def get_access_token():
@@ -114,9 +107,10 @@ def get_client_by_username(
             return None
         try:
             token = bkoauth.get_access_token_by_user(username)
-            return token.access_token
         except Exception:
             logger.warning("get access_token by request failed")
+        else:
+            return token.access_token
 
     client = _get_client_by_settings(client_cls, **kwargs)
     client.update_bkapi_authorization(access_token=get_access_token(), bk_username=username)

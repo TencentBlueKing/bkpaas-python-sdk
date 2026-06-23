@@ -16,9 +16,9 @@
 # to the current version of the project delivered to anyone in the future.
 
 import string
-from typing import Any, Dict, List, Optional  # noqa
+from typing import Any, Dict, List, Optional
 
-from requests import Request  # noqa
+from requests import Request
 from requests import Session as RequestSession
 from requests.hooks import dispatch_hook
 from requests.models import RequestHooksMixin
@@ -62,7 +62,7 @@ class _UrlRender(string.Formatter):
         return kwargs[field_name], field_name
 
 
-_SESSION_HOOKS = {}  # type: Dict[str, List[Any]]
+_SESSION_HOOKS: Dict[str, List[Any]] = {}
 
 
 def register_global_hook(event, hook):
@@ -78,9 +78,10 @@ def deregister_global_hook(event, hook):
     """Deregister a session hook for the given event."""
     try:
         _SESSION_HOOKS[event].remove(hook)
-        return True
     except ValueError:
         return False
+    else:
+        return True
 
 
 class Session(RequestSession, RequestHooksMixin):
@@ -95,8 +96,8 @@ class Session(RequestSession, RequestHooksMixin):
 
     def __init__(self, **kwargs):
         super(Session, self).__init__()
-        self.path_params = {}  # type: Dict[str, Any]
-        self.timeout = None  # type: Optional[float]
+        self.path_params: Dict[str, Any] = {}
+        self.timeout: Optional[float] = None
         self.set_user_agent(self.default_user_agent)
 
         for k, v in kwargs.items():
@@ -104,19 +105,16 @@ class Session(RequestSession, RequestHooksMixin):
 
     def handle(
         self,
-        url,  # type: str
-        path_params=None,  # type: Optional[Dict[str, Any]]
-        timeout=None,  # type: Optional[float]
-        **kwargs,  # type: Any
+        url: str,
+        path_params: Optional[Dict[str, Any]] = None,
+        timeout: Optional[float] = None,
+        **kwargs: Any,
     ):
         render = _UrlRender(url, self.path_params)
         rendered_url = render.render(path_params)
         return self.request(url=rendered_url, timeout=timeout or self.timeout, **kwargs)
 
-    def set_user_agent(
-        self,
-        user_agent,  # type: str
-    ):
+    def set_user_agent(self, user_agent: str):
         """
         Set User-Agent header
 
@@ -125,10 +123,7 @@ class Session(RequestSession, RequestHooksMixin):
         """
         self.headers["User-Agent"] = user_agent
 
-    def set_accept_language(
-        self,
-        language,  # type: Optional[str]
-    ):
+    def set_accept_language(self, language: Optional[str]):
         """
         Set Accept-Language header, if language is blank or None, will delete the header.
 
@@ -140,27 +135,15 @@ class Session(RequestSession, RequestHooksMixin):
         else:
             self.headers.pop("Accept-Language", None)
 
-    def prepare_request(
-        self,
-        request,  # type: Request
-    ):
+    def prepare_request(self, request: Request):
         request = self.dispatch_hook(HookEvent.REQUEST, request)
         return super(Session, self).prepare_request(request)
 
-    def dispatch_hook(
-        self,
-        event,  # str
-        data,  # Any
-        **extras,  # type: Any
-    ):
+    def dispatch_hook(self, event: str, data: Any, **extras: Any):
         data = dispatch_hook(event, _SESSION_HOOKS, data, **extras)
         return dispatch_hook(event, self.hooks, data, **extras)
 
-    def register_hook(
-        self,
-        event,  # type:str
-        hook,  # type: Any
-    ):
+    def register_hook(self, event: str, hook: Any):
         if event not in self.hooks:
             self.hooks[event] = []
 

@@ -15,13 +15,13 @@
 # to the current version of the project delivered to anyone in the future.
 
 from functools import partial
-from typing import Any, Dict, List, Optional  # noqa
+from typing import Any, Dict, List, Optional
 
-from prometheus_client import REGISTRY, CollectorRegistry, Counter, Histogram  # noqa
-from requests import Response  # noqa
+from prometheus_client import REGISTRY, CollectorRegistry, Counter, Histogram
+from requests import Response
 
 from bkapi_client_core import session
-from bkapi_client_core.base import Operation  # noqa
+from bkapi_client_core.base import Operation
 from bkapi_client_core.config import HookEvent
 from bkapi_client_core.utils import allow_fail
 
@@ -71,11 +71,11 @@ default_duration_buckets = [
 class HookCollector:
     def __init__(
         self,
-        registry,  # type: CollectorRegistry
-        namespace,  # type: str
-        subsystem,  # type: str
-        duration_buckets,  # type: List[float]
-        bytes_buckets,  # type: List[float]
+        registry: CollectorRegistry,
+        namespace: str,
+        subsystem: str,
+        duration_buckets: List[float],
+        bytes_buckets: List[float],
     ):
         self.metric_requests_duration_seconds = Histogram(
             "bkapi_requests_duration_seconds",
@@ -126,12 +126,7 @@ class HookCollector:
         )
 
     @allow_fail
-    def response_hook(
-        self,
-        response,  # type: Response
-        bkapi_operation,  # type: Operation
-        **kwargs,  # type: Any
-    ):
+    def response_hook(self, response: Response, bkapi_operation: Operation, **kwargs: Any):
         name = str(bkapi_operation)
         method = response.request.method
 
@@ -163,11 +158,7 @@ class HookCollector:
             ).observe(int(response_content_length))
 
     @allow_fail
-    def request_hook(
-        self,
-        context,  # type: Dict[str, Any]
-        operation,  # type: Operation
-    ):
+    def request_hook(self, context: Dict[str, Any], operation: Operation):
         hooks = context.setdefault("hooks", {})
         response_hooks = hooks.setdefault(HookEvent.RESPONSE, [])
         response_hooks.append(
@@ -180,11 +171,7 @@ class HookCollector:
         return context
 
     @allow_fail
-    def error_hook(
-        self,
-        error,  # type: Exception
-        operation,  # type: Operation
-    ):
+    def error_hook(self, error: Exception, operation: Operation):
         self.metric_failures_total.labels(
             operation=str(operation),
             method=operation.method,
@@ -196,7 +183,7 @@ class HookCollector:
         session.register_global_hook(HookEvent.OPERATION_ERROR, self.error_hook)
 
 
-_GLOBAL_COLLECTOR = None  # type: Optional[HookCollector]
+_GLOBAL_COLLECTOR: Optional[HookCollector] = None
 
 
 def enable(
@@ -209,7 +196,7 @@ def enable(
     """
     Enable bkapi prometheus collector
     """
-    global _GLOBAL_COLLECTOR  # noqa
+    global _GLOBAL_COLLECTOR
 
     if _GLOBAL_COLLECTOR:
         return False

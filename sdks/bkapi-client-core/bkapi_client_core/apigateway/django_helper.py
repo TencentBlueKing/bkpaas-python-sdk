@@ -15,9 +15,9 @@
 # We undertake not to change the open source license (MIT license) applicable
 # to the current version of the project delivered to anyone in the future.
 
-from typing import Optional, Type  # noqa
+from typing import Optional, Type
 
-from bkapi_client_core.client import BaseClient  # noqa
+from bkapi_client_core.client import BaseClient
 from bkapi_client_core.config import SettingKeys, settings
 from bkapi_client_core.django_helper import get_client_by_request as _get_client_by_request
 from bkapi_client_core.django_helper import get_client_by_username as _get_client_by_username
@@ -31,13 +31,13 @@ def _get_endpoint(endpoint=None):
 
 
 def get_client_by_request(
-    client_cls,  # type: Type[BaseClient]
+    client_cls: Type[BaseClient],
     request,
-    endpoint=None,  # type: Optional[str]
-    stage=None,  # type: Optional[str]
-    bk_app_code=None,  # type: Optional[str]
-    bk_app_secret=None,  # type: Optional[str]
-    accept_language=None,  # type: Optional[str]
+    endpoint: Optional[str] = None,
+    stage: Optional[str] = None,
+    bk_app_code: Optional[str] = None,
+    bk_app_secret: Optional[str] = None,
+    accept_language: Optional[str] = None,
 ):
     """Returns a client according to the current django request
 
@@ -61,13 +61,13 @@ def get_client_by_request(
 
 
 def get_client_by_username(
-    client_cls,  # type: Type[BaseClient]
+    client_cls: Type[BaseClient],
     username,
-    endpoint=None,  # type: Optional[str]
-    stage=None,  # type: Optional[str]
-    bk_app_code=None,  # type: Optional[str]
-    bk_app_secret=None,  # type: Optional[str]
-    accept_language=None,  # type: Optional[str]
+    endpoint: Optional[str] = None,
+    stage: Optional[str] = None,
+    bk_app_code: Optional[str] = None,
+    bk_app_secret: Optional[str] = None,
+    accept_language: Optional[str] = None,
 ):
     """Returns a client according to the current username
 

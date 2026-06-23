@@ -26,11 +26,11 @@ class ESBClient(BaseClient):
 
     def __init__(
         self,
-        endpoint="",  # type: str
-        session=None,  # type: Optional[Session]
-        bk_api_ver="",  # type: str
-        use_test_env=False,  # type: bool
-        language=None,  # type: Optional[str]
+        endpoint: str = "",
+        session: Optional[Session] = None,
+        bk_api_ver: str = "",
+        use_test_env: bool = False,
+        language: Optional[str] = None,
     ):
         super(ESBClient, self).__init__(endpoint, session)
 
@@ -40,7 +40,7 @@ class ESBClient(BaseClient):
 
     def set_use_test_env(
         self,
-        use_test_env,  # type: bool
+        use_test_env: bool,
     ):
         key = "X-Use-Test-Env"
 
@@ -51,7 +51,7 @@ class ESBClient(BaseClient):
 
     def set_language(
         self,
-        language,  # type: Optional[str]
+        language: Optional[str],
     ):
         self.session.set_accept_language(language)
 
@@ -64,7 +64,7 @@ class ESBClient(BaseClient):
 
     def set_bk_api_ver(
         self,
-        bk_api_ver,  # type: str
+        bk_api_ver: str,
     ):
         # `bk_api_ver` may be empty, in order to simplify the path rendering, update it to a sub-path,
         # path containing bk_api_ver should be set like this: `/api/c/compapi{bk_api_ver}/demo/test/`
@@ -72,14 +72,14 @@ class ESBClient(BaseClient):
 
     def _set_header(
         self,
-        key,  # type: str
-        value,  # type: str
+        key: str,
+        value: str,
     ):
         self.session.headers[key] = value
 
     def _delete_header(
         self,
-        key,  # type: str
+        key: str,
     ):
         if key in self.session.headers:
             del self.session.headers[key]

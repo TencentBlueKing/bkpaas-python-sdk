@@ -15,11 +15,11 @@
 # We undertake not to change the open source license (MIT license) applicable
 # to the current version of the project delivered to anyone in the future.
 
-from typing import Optional  # noqa
+from typing import Optional
 
 from bkapi_client_core.client import BaseClient
 from bkapi_client_core.config import SettingKeys, settings
-from bkapi_client_core.session import Session  # noqa
+from bkapi_client_core.session import Session
 from bkapi_client_core.utils import urljoin
 
 
@@ -32,9 +32,9 @@ class APIGatewayClient(BaseClient):
 
     def __init__(
         self,
-        stage=None,  # type: Optional[str]
-        endpoint="",  # type: str
-        session=None,  # type: Optional[Session]
+        stage: Optional[str] = None,
+        endpoint: str = "",
+        session: Optional[Session] = None,
     ):
         # Stage is allowed to be an empty string, because the endpoint may already contain stage
         if stage is not None:
@@ -53,15 +53,12 @@ class APIGatewayClient(BaseClient):
             name=self._get_gateway_name(),
         )
 
-    def _get_endpoint(self):
-        # type: (...) -> str
-
+    def _get_endpoint(self) -> str:
         # In order to prevent `gateway_name`, `api_name`, `stage_name` from conflicting with other path variables,
         # render the endpoint first.
         gateway_name = self._get_gateway_name()
         # 兼容 endpoint 中包含 gateway_name，api_name
         return self._endpoint.format(gateway_name=gateway_name, api_name=gateway_name, stage_name=self._stage)
 
-    def _get_gateway_name(self):
-        # type: (...) -> str
+    def _get_gateway_name(self) -> str:
         return self._gateway_name or self._api_name

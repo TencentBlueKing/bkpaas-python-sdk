@@ -16,28 +16,20 @@
 # to the current version of the project delivered to anyone in the future.
 
 import json
-from typing import Dict, Optional  # noqa
+from typing import Dict, Optional
 
 from requests.auth import AuthBase
-from requests.models import PreparedRequest  # noqa
+from requests.models import PreparedRequest
 
 
 class BKApiAuthorization(AuthBase):
     def __init__(self, **auth):
-        self.auth = auth  # type: Dict[str, Optional[str]]
+        self.auth: Dict[str, Optional[str]] = auth
 
-    def update(
-        self,
-        auth,  # type: Dict[str, Optional[str]]
-    ):
+    def update(self, auth: Dict[str, Optional[str]]):
         self.auth.update(auth)
 
-    def __call__(
-        self,
-        request,  # type: PreparedRequest
-    ):
-        # type: (...) -> PreparedRequest
-
+    def __call__(self, request: PreparedRequest) -> PreparedRequest:
         # `access_token` can represent app and user,
         # if access_token exists, other authorization parameters are not needed,
         # `jwt` can authenticate user and needs to be used with `access_token`
