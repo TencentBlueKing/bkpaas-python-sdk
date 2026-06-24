@@ -7,7 +7,7 @@ classifiers = [
 
 [project]
 name = "bkstorages"
-version = "3.0.0"
+version = "3.1.0"
 description = "File storage backends for blueking PaaS platform"
 readme = "README.md"
 authors = [{ name = "blueking", email = "blueking@tencent.com" }]
