@@ -4,7 +4,7 @@ import tempfile
 
 import nox
 
-ALL_PYTHON = ["3.11", "3.12", "3.13"]
+ALL_PYTHON = ["3.11", "3.12", "3.13", "3.14"]
 
 
 # ref: https://stackoverflow.com/questions/59768651/how-to-use-nox-with-poetry
@@ -48,13 +48,6 @@ def tests(session):
     # Install dev/test dependencies
     session.install("-e", ".[all]")
     install_with_constraints(
-        session,
-        "pytest",
-        "django",
-        "pytest-django",
-        "pytest-mock",
-        "moto[s3]",
-        "requests-mock",
-        "boto3"
+        session, "pytest", "django", "pytest-django", "pytest-mock", "moto[s3]", "requests-mock", "boto3"
     )
     session.run("pytest", *session.posargs)
