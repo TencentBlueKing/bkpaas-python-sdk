@@ -12,10 +12,12 @@ on:
   workflow_dispatch:
   release:
     types: [published]
+
 jobs:
   check:
     runs-on: macos-latest
     continue-on-error: true
+    if: ${{ github.event_name != 'release' || contains(github.event.release.tag_name, 'blue-krill') }}
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
@@ -32,6 +34,7 @@ jobs:
       - name: Lint with mypy
         working-directory: sdks/blue-krill
         run: poetry install && poetry run mypy . --config-file=./pyproject.toml
+
   test:
     strategy:
       fail-fast: false
@@ -39,6 +42,7 @@ jobs:
         python-version: ["3.11", "3.12", "3.13", "3.14"]
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
+    if: ${{ github.event_name != 'release' || contains(github.event.release.tag_name, 'blue-krill') }}
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
@@ -61,6 +65,7 @@ jobs:
       - name: Run tests on ${{ matrix.os }}
         working-directory: sdks/blue-krill
         run: nox --non-interactive --error-on-missing-interpreters --session "tests(python='${{ matrix.python-version }}')" -- --full-trace
+
   build:
     runs-on: macos-latest
     if: github.event.release && contains(github.event.release.tag_name, 'blue-krill')

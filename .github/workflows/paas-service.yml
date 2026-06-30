@@ -17,6 +17,7 @@ jobs:
   check:
     runs-on: macos-latest
     continue-on-error: true
+    if: ${{ github.event_name != 'release' || contains(github.event.release.tag_name, 'paas-service') }}
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
@@ -41,6 +42,7 @@ jobs:
         python-version: ["3.11", "3.12"]
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
+    if: ${{ github.event_name != 'release' || contains(github.event.release.tag_name, 'paas-service') }}
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
