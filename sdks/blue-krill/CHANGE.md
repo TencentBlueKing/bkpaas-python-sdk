@@ -1,5 +1,9 @@
 ## Change logs
 
+### 3.1.1
+
+- 放宽 django-environ 的版本限制
+
 ### 3.1.0
 
 - 支持 python 3.13/3.14
