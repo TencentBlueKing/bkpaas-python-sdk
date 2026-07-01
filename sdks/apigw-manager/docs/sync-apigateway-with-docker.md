@@ -31,7 +31,7 @@
 - `GRANT_APIGW_PERMISSIONS_ARGS`: 用于命令 `grant_apigw_permissions`，授权网关权限
 - `SYNC_APIGW_RESOURCES_ARGS`: 默认值："--delete"，用于命令 `sync_apigw_resources`，同步网关资源
 - `SYNC_RESOURCE_DOCS_BY_ARCHIVE_ARGS`: 默认值： "--safe-mode"，用于命令 `sync_resource_docs_by_archive`，同步网关文档
-- `CREATE_VERSION_AND_RELEASE_APIGW_ARGS`: 默认值："--generate-sdks"，用于命令 `create_version_and_release_apigw`,创建资源版本并发布
+- `CREATE_VERSION_AND_RELEASE_APIGW_ARGS`: 默认值为空，用于命令 `create_version_and_release_apigw`，创建资源版本并发布；如需同时生成资源版本对应的网关 SDK，请显式设置为 `"--generate-sdks"`
 - `ENABLE_SYNC_MCP_SERVERS`: 用于命令 `sync_apigw_stage_mcp_servers`, 是否开启同步环境 MCP Server
 - `SYNC_APIGW_STAGE_MCP_SERVERS_ARGS`: 用于命令 `sync_apigw_stage_mcp_servers`，同步环境 MCP Server 的额外参数
 

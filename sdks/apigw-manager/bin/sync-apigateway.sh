@@ -22,7 +22,7 @@ title "fetch esb public key"
 call_command_or_warning fetch_esb_public_key ${FETCH_ESB_PUBLIC_KEY_ARGS}
 
 title "releasing"
-call_definition_command_or_exit create_version_and_release_apigw "${definition_file}" ${CREATE_VERSION_AND_RELEASE_APIGW_ARGS:-"--generate-sdks"}
+call_definition_command_or_exit create_version_and_release_apigw "${definition_file}" ${CREATE_VERSION_AND_RELEASE_APIGW_ARGS}
 
 
 if [[ "${ENABLE_SYNC_MCP_SERVERS}" = "true" ]]; then
