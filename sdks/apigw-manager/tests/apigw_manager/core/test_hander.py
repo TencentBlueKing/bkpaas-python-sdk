@@ -18,7 +18,7 @@
 import pytest
 from faker import Faker
 
-from apigw_manager.core.exceptions import ApiResponseError
+from apigw_manager.core.exceptions import ApiResponseError, ApiResultError
 from apigw_manager.core.handler import Handler
 from bkapi_client_core.exceptions import HTTPResponseError
 
@@ -74,58 +74,76 @@ class TestHandler:
 
         assert handler._put_into_cache(operation_id, api_data, {})
 
-    def test_call_with_cache(self, handler: Handler, operation, operation_id, faker, mocker):
-        result = faker.pydict()
-        operation.return_value = result
-        mock_get_from_cache = mocker.patch.object(Handler, "_get_from_cache", return_value=(False, None))
-        mock_put_into_cache = mocker.patch.object(Handler, "_put_into_cache", return_value=None)
-
-        gateway_name = faker.pystr()
-        kwargs = {
-            "gateway_name": gateway_name,
-            "foo": "bar",
-        }
-
-        handler._call_with_cache(operation, **kwargs)
-
-        cache_key = {
-            "gateway_name": gateway_name,
-            "kwargs": {"gateway_name": gateway_name, "foo": "bar"},
-        }
-        mock_get_from_cache.assert_called_once_with(operation_id, cache_key)
-        mock_put_into_cache.assert_called_once_with(operation_id, cache_key, result)
-
-    def test_call_connect_error(self, handler: Handler, operation):
-        operation.side_effect = HTTPResponseError()
-        with pytest.raises(ApiResponseError):
-            handler._call(operation)
-
-    def test_call_server_error(self, handler: Handler, operation, mocker):
-        operation.side_effect = HTTPResponseError(response=mocker.MagicMock(status_code=500))
-        with pytest.raises(ApiResponseError):
-            handler._call(operation)
-
-    def test_call_request_error(self, handler: Handler, operation, mocker):
+    def test_call_v2_request_error_parse_error_body(self, handler: Handler, operation, mocker):
+        operation.path = "/api/v2/sync/gateways/{gateway_name}/"
         operation.side_effect = HTTPResponseError(
             response=mocker.MagicMock(
                 status_code=400,
-                json=mocker.MagicMock(return_value={"code": "400", "message": "request error"}),
+                json=mocker.MagicMock(
+                    return_value={
+                        "error": {
+                            "code": "AuthFailure",
+                            "message": "The provided credentials could not be validated.",
+                            "system": "bkiam",
+                            "details": [
+                                {
+                                    "code": "SignatureFailure",
+                                    "message": "",
+                                    "module": "auth",
+                                    "links": "",
+                                    "doc": "",
+                                }
+                            ],
+                            "data": {},
+                        }
+                    }
+                ),
             )
         )
 
-        with pytest.raises(ApiResponseError):
-            handler._call(operation)
+        with pytest.raises(ApiResultError) as err:
+            handler._call_v2(operation)
 
-    def test_call_request_error_with_no_json(self, handler: Handler, operation, mocker):
+        assert err.value.code == "AuthFailure"
+        assert err.value.message == "The provided credentials could not be validated."
+
+    def test_call_v2_request_error_with_no_json(self, handler: Handler, operation, mocker):
+        operation.path = "/api/v2/sync/gateways/{gateway_name}/"
         operation.side_effect = HTTPResponseError(
             response=mocker.MagicMock(
-                status_code=400,
+                status_code=500,
+                text="server error",
                 json=mocker.MagicMock(side_effect=ValueError()),
             )
         )
 
-        with pytest.raises(ApiResponseError):
-            handler._call(operation)
+        with pytest.raises(ApiResultError) as err:
+            handler._call_v2(operation)
+
+        assert err.value.code == 500
+        assert err.value.message == "server error"
+
+    def test_call_v2_connect_error(self, handler: Handler, operation):
+        operation.path = "/api/v2/sync/gateways/{gateway_name}/"
+        operation.side_effect = HTTPResponseError()
+
+        with pytest.raises(ApiResponseError) as err:
+            handler._call_v2(operation)
+
+        assert not isinstance(err.value, ApiResultError)
+
+    @pytest.mark.parametrize(
+        "data",
+        [
+            {},
+            [],
+            {"id": 1, "name": "gateway"},
+        ],
+    )
+    def test_parse_v2_result_returns_data_for_success_response(self, handler: Handler, data):
+        result = {"data": data}
+
+        assert handler._parse_v2_result(result) == data
 
     def test_get_tenant_id_from_config(self, handler: Handler, mocker):
         handler.config.bk_app_tenant_id = "123"

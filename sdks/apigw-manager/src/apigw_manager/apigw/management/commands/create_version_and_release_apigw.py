@@ -88,7 +88,7 @@ class Command(DefinitionCommand):
 
     def _check_resource_version_exists(self, fetcher, version):
         resource_versions = fetcher.list_resource_versions(version=str(version))
-        return resource_versions["count"] != 0
+        return bool(resource_versions)
 
     def _generate_sdks(self, releaser, version, *args, **kwargs):
         try:
@@ -132,7 +132,7 @@ class Command(DefinitionCommand):
         if not no_pub:
             result = releaser.release(
                 version=resource_version["version"],
-                comment=comment or resource_version.get("comment", ""),
+                comment=comment or "",
                 stage_names=stage,
             )
             print(

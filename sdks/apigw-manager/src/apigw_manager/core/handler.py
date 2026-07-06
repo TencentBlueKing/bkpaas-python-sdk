@@ -65,24 +65,6 @@ class Handler(object):
 
         return False
 
-    def _call_with_cache(self, operation, **kwargs):
-        """Call the API instance, allow data to be retrieved from the cache"""
-        cache_key = {
-            "gateway_name": kwargs.get("gateway_name", self.config.gateway_name),
-            "kwargs": kwargs,
-        }
-
-        operation_id = operation.name
-        cached, result = self._get_from_cache(operation_id, cache_key)
-        if cached:
-            return result
-
-        result = self._call(operation, **kwargs)
-
-        self._put_into_cache(operation_id, cache_key, result)
-
-        return result
-
     def _call_v2_with_cache(self, operation, **kwargs):
         """Call the API instance (v2), allow data to be retrieved from the cache"""
         cache_key = {
@@ -123,31 +105,6 @@ class Handler(object):
         )
         return bk_app_tenant_id
 
-    def _call(self, operation, files=None, **kwargs):
-        """Call the API instance"""
-        data = {
-            "path_params": {"api_name": kwargs.pop("gateway_name", self.config.gateway_name)},
-            "data": kwargs,
-            "headers": {
-                "X-Bkapi-Authorization": kwargs.pop("x_bkapi_authorization", self._get_bkapi_authorization()),
-                # the header is required by the API gateway plugin bk-tenant-validate, for global tenant app!
-                # so we set it to system, it would not be used in the gateway
-                "X-Bk-Tenant-Id": self._get_tenant_id(),
-            },
-            "files": files,
-        }
-
-        operation_id = operation.name
-        logger.debug("call api %s, data: %s", operation_id, data)
-
-        try:
-            return operation(**data)
-        except ResponseError as err:
-            message = "%s\n%s\nResponse: %s" % (err, err.curl_command, err.response_text)
-            raise ApiResponseError(message)
-        except Exception as err:
-            raise ApiException(operation_id) from err
-
     def _call_v2(self, operation, files=None, **kwargs):
         """Call the API instance (v2 version):
           - Uses "gateway_name" as the key in `path_params` instead of "api_name".
@@ -180,18 +137,33 @@ class Handler(object):
         try:
             return operation(**data)
         except ResponseError as err:
+            if err.response_status_code is not None and not self._is_success_status_code(err.response_status_code):
+                self._raise_v2_result_error(self._get_response_json(err), err.response_status_code, err.response_text)
+
             message = "%s\n%s\nResponse: %s" % (err, err.curl_command, err.response_text)
             raise ApiResponseError(message)
         except Exception as err:
             raise ApiException(operation_id) from err
 
-    def _parse_result(self, result, convertor, code=0):
-        """Check the code and convert the result"""
-        logger.debug("code %s, message: %s", result.get("code"), result.get("message"))
-        if result.get("code") != code:
+    def _parse_v2_result(self, result):
+        """Convert the v2 API response body."""
+        return result.get("data")
+
+    def _raise_v2_result_error(self, result, status_code, response_text):
+        if isinstance(result, dict) and result.get("error"):
+            error = result["error"]
             raise ApiResultError(
-                result.get("code"),
-                result.get("message"),
+                error.get("code"),
+                error.get("message"),
             )
 
-        return convertor(result)
+        raise ApiResultError(status_code, response_text)
+
+    def _get_response_json(self, err):
+        try:
+            return err.response_json()
+        except (TypeError, ValueError):
+            return None
+
+    def _is_success_status_code(self, status_code):
+        return status_code is not None and 200 <= status_code < 300

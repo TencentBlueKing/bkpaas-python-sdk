@@ -16,7 +16,6 @@
 # to the current version of the project delivered to anyone in the future.
 
 from apigw_manager.core.handler import Handler
-from apigw_manager.core.utils import itemgetter
 
 
 class Manager(Handler):
@@ -25,9 +24,9 @@ class Manager(Handler):
     def apply_permission(self, *args, **kwargs):
         """Apply for API Gateway Permissions"""
         result = self._call_v2(self.client.api.v2_open_apply_gateway_permission, *args, **kwargs)
-        return self._parse_result(result, itemgetter("data"))
+        return self._parse_v2_result(result)
 
     def grant_permission(self, *args, **kwargs):
         """Grant API gateway permissions for applications"""
         result = self._call_v2(self.client.api.v2_sync_grant_permission, *args, **kwargs)
-        return self._parse_result(result, itemgetter("data"))
+        return self._parse_v2_result(result)

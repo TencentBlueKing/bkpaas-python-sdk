@@ -34,7 +34,7 @@ class Command(SyncCommand):
     def do(self, manager, definition, *args, **kwargs):
         for stage_definition in definition:
             result = manager.sync_stage_mcp_servers(**stage_definition)
-            for mcp_sync_result in result.get("data", []):
+            for mcp_sync_result in result:
                 print(
                     "API gateway stage mcp servers synchronization completed [ id:%s,name:%s,action:%s ]"
                     % (mcp_sync_result["id"], mcp_sync_result["name"], mcp_sync_result["action"])

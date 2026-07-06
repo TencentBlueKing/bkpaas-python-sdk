@@ -17,7 +17,7 @@
 
 import pytest
 
-from apigw_manager.core.utils import get_item, itemgetter
+from apigw_manager.core.utils import get_item
 
 
 @pytest.fixture()
@@ -41,9 +41,3 @@ class TestGetItem:
 
         with pytest.raises(KeyError):
             get_item(test_data, ["a", "nothing"])
-
-
-class TestItemGetter:
-    def test_usage(self, test_data):
-        getter = itemgetter("a", "color")
-        assert getter(test_data) == test_data["a"]["color"]
