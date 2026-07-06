@@ -1,5 +1,12 @@
 ## Change logs
 
+### 5.0.1
+
+- [fix] 修复 v2 API 响应解析逻辑，20x 响应直接返回 `data`，非 20x 响应从 `error` 中解析错误信息
+- [fix] 适配 v2 资源版本接口返回结构，资源版本列表使用数组判断是否存在，发布时不再依赖资源版本响应中的 `comment`
+- [fix] 修复同步环境 MCP Server 时重复读取 `data` 导致同步结果无法输出的问题
+- [fix] `apply_apigw_permissions` 申请权限时补充 v2 接口必填的 `applicant` 字段
+
 ### 5.0.0
 
 - [feat] generate_resources_yaml 命令支持合并手动配置的额外资源文件

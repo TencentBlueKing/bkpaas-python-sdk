@@ -16,7 +16,6 @@
 # to the current version of the project delivered to anyone in the future.
 
 from apigw_manager.core.handler import Handler
-from apigw_manager.core.utils import itemgetter
 
 
 class Releaser(Handler):
@@ -27,17 +26,17 @@ class Releaser(Handler):
         kwargs.pop("title", None)
 
         result = self._call_v2(self.client.api.v2_sync_create_resource_version, *args, **kwargs)
-        return self._parse_result(result, itemgetter("data"))
+        return self._parse_v2_result(result)
 
     def release(self, *args, **kwargs):
         """release a version"""
         kwargs.pop("title", None)
 
         result = self._call_v2(self.client.api.v2_sync_release, *args, **kwargs)
-        return self._parse_result(result, itemgetter("data"))
+        return self._parse_v2_result(result)
 
     def generate_sdks(self, *args, **kwargs):
         """generate sdks"""
 
         result = self._call_v2(self.client.api.v2_sync_generate_sdk, *args, **kwargs)
-        return self._parse_result(result, itemgetter("data"))
+        return self._parse_v2_result(result)

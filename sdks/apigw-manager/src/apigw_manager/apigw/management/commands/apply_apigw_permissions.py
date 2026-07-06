@@ -30,6 +30,7 @@ class Command(PermissionCommand):
 
         for permission in definition:
             permission.setdefault("target_app_code", manager.config.bk_app_code)
+            permission.setdefault("applicant", permission["target_app_code"])
 
             # v2 使用 gateway_name 替代 api_name
             if "api_name" in permission:

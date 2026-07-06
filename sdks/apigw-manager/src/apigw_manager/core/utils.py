@@ -19,15 +19,6 @@ from functools import reduce
 from operator import getitem
 
 
-def itemgetter(*keys):
-    """Chaining value getter of dict"""
-
-    def getter(r):
-        return get_item(r, keys)
-
-    return getter
-
-
 def get_item(r, keys):
     """Get the value according to the keys"""
     return reduce(getitem, keys, r)

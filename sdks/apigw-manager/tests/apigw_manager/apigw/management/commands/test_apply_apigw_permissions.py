@@ -33,24 +33,27 @@ def test_do(mock_manager, command, configuration):
         [
             {"api_name": "test1"},
             {"gateway_name": "test2", "grant_dimension": "resource", "resource_names": ["get_user"]},
-            {"gateway_name": "test3", "grant_dimension": "api"},
+            {"gateway_name": "test3", "grant_dimension": "api", "applicant": "admin"},
         ],
     )
 
     # v2 使用 gateway_name 替代 api_name，默认按 gateway 维度申请
     mock_manager.apply_permission.assert_any_call(
         target_app_code=configuration.bk_app_code,
+        applicant=configuration.bk_app_code,
         gateway_name="test1",
         grant_dimension="gateway",
     )
     mock_manager.apply_permission.assert_any_call(
         target_app_code=configuration.bk_app_code,
+        applicant=configuration.bk_app_code,
         gateway_name="test2",
         grant_dimension="resource",
         resource_names=["get_user"],
     )
     mock_manager.apply_permission.assert_any_call(
         target_app_code=configuration.bk_app_code,
+        applicant="admin",
         gateway_name="test3",
         grant_dimension="api",
     )

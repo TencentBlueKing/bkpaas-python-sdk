@@ -18,7 +18,6 @@
 import yaml
 
 from apigw_manager.core.handler import Handler
-from apigw_manager.core.utils import itemgetter
 
 
 class Synchronizer(Handler):
@@ -26,27 +25,28 @@ class Synchronizer(Handler):
 
     def sync_basic_config(self, *args, **kwargs):
         result = self._call_v2(self.client.api.v2_sync_gateway, *args, **kwargs)
-        return self._parse_result(result, itemgetter("data"))
+        return self._parse_v2_result(result)
 
     def sync_stage_config(self, *args, **kwargs):
         result = self._call_v2(self.client.api.v2_sync_stages, *args, **kwargs)
-        return self._parse_result(result, itemgetter("data"))
+        return self._parse_v2_result(result)
 
     def sync_stage_mcp_servers(self, *args, **kwargs):
-        return self._call_v2(self.client.api.v2_sync_stage_mcp_servers, *args, **kwargs)
+        result = self._call_v2(self.client.api.v2_sync_stage_mcp_servers, *args, **kwargs)
+        return self._parse_v2_result(result)
 
     def sync_resources_config(self, content, *args, **kwargs):
         kwargs["content"] = yaml.dump(dict(content))
 
         result = self._call_v2(self.client.api.v2_sync_resources, *args, **kwargs)
-        return self._parse_result(result, itemgetter("data"))
+        return self._parse_v2_result(result)
 
     def sync_resource_docs_by_archive(self, *args, **kwargs):
         result = self._call_v2(self.client.api.v2_sync_resource_doc, *args, **kwargs)
-        return self._parse_result(result, itemgetter("data"))
+        return self._parse_v2_result(result)
 
     def add_related_apps(self, *args, **kwargs):
         kwargs["related_app_codes"] = kwargs.pop("related_apps")
 
         result = self._call_v2(self.client.api.v2_sync_add_related_apps, *args, **kwargs)
-        return self._parse_result(result, itemgetter("data"))
+        return self._parse_v2_result(result)
