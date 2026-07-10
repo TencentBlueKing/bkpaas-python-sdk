@@ -184,6 +184,7 @@ class DjangoAuthUserCompatibleBackend(UniversalAuthBackend):
             db_user.token = user.token
             db_user.display_name = getattr(user, "display_name", user.username)
             db_user.tenant_id = getattr(user, "tenant_id", None)
+            db_user.time_zone = getattr(user, "time_zone", None)
 
         return db_user
 
