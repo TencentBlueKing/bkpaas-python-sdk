@@ -188,6 +188,32 @@ class TestCookieLoginMiddlewareWithDjangoUser:
         assert not isinstance(user, User)
         assert isinstance(user.pk, int)
 
+    @override_settings(
+        AUTHENTICATION_BACKENDS=["bkpaas_auth.backends.DjangoAuthUserCompatibleBackend"],
+        TIME_ZONE="UTC",
+    )
+    def test_time_zone_propagated_to_django_user(self, db, bk_token, dj_request):
+        """time_zone should survive connect_to_django_user."""
+        middleware = CookieLoginMiddleware(MagicMock())
+        dj_request.COOKIES["bk_token"] = bk_token
+
+        # Create a bkpaas_auth User with time_zone
+        user = create_uin_user(bk_token)
+        user.time_zone = "Asia/Shanghai"
+
+        with patch("bkpaas_auth.backends.UniversalAuthBackend.authenticate") as mocked_authenticate:
+            mocked_authenticate.return_value = user
+            middleware(dj_request)
+
+        # time_zone should be propagated from bkpaas_auth.User to Django AuthUser
+        assert getattr(dj_request.user, "time_zone", None) == "Asia/Shanghai"
+
+        # UserTimezoneMiddleware should activate the timezone
+        tz_middleware = UserTimezoneMiddleware(MagicMock())
+        dj_timezone.deactivate()
+        tz_middleware.process_request(dj_request)
+        assert dj_timezone.get_current_timezone_name() == "Asia/Shanghai"
+
 
 class TestUserTimezoneMiddleware:
     """Test cases for UserTimezoneMiddleware"""
