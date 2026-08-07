@@ -5,6 +5,10 @@ import nox
 from nox.command import CommandFailed
 
 ALL_PYTHON = ["3.11", "3.12", "3.13", "3.14"]
+DJANGO_CONSTRAINTS = {
+    "5.2": "django>=5.2,<6",
+    "6.x": "django>=6,<7",
+}
 
 
 # ref: https://stackoverflow.com/questions/59768651/how-to-use-nox-with-poetry
@@ -60,9 +64,11 @@ def tests(session):
     except CommandFailed:
         print("pysqlite3-binary installation failed, continuing...")
 
-    django_versions = [
-        ">=5.2,<6",
-    ]
-    for django in django_versions:
-        session.install(f"django{django}")
+    for django, constraint in DJANGO_CONSTRAINTS.items():
+        # Django 6.x requires Python 3.12 or newer, while Django 5.2 remains
+        # supported on Python 3.11.
+        if django == "6.x" and session.python == "3.11":
+            continue
+
+        session.install(constraint)
         session.run("pytest", *session.posargs)

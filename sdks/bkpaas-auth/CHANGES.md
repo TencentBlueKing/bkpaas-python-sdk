@@ -1,5 +1,9 @@
 # 版本历史
 
+## 4.2.0
+
+- 增加对 Django 6.x 的支持
+
 ## 4.1.1
 
 - fix: 修复 DjangoAuthUserCompatibleBackend 未传递 time_zone 字段的问题
