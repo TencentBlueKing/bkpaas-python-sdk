@@ -294,6 +294,28 @@ resource_docs:
   basedir: "{{ settings.BK_APIGW_RESOURCE_DOCS_BASE_DIR }}" # 环境变量方式："{{ environ.BK_APIGW_RESOURCE_DOCS_BASE_DIR }}"
 ```
 
+#### AI 网关自动化同步
+
+自动化同步创建 AI 网关时，在 `definition.yaml` 的 `apigateway` 配置中指定 `kind: "ai"`：
+
+```yaml
+apigateway:
+  description: "AI 网关"
+  description_en: "AI Gateway"
+  is_public: true
+  kind: "ai"
+  maintainers:
+    - "admin"
+```
+
+新建 AI 网关时，通过同步命令传入的网关名称须满足以下任一规则：
+
+- 以 `bkai-` 开头，例如 `bkai-chat`
+- 等于 `bkaidev`
+- 以 `bkaidev-` 开头，例如 `bkaidev-chat`
+
+`bkaidevx`、`bkaidevfoo` 等名称不属于 `bkaidev-*` 规则。非 AI 网关不能使用 `bkai-` 前缀；以上名称与类型约束仅在新建网关时生效，更新已有网关不受影响。
+
 **注意：**
 
 - 同步资源或者环境相关配置后，需要创建版本并发布才能生效，发布数据定义于 definition.yaml `release`
