@@ -22,7 +22,7 @@ def use_bk_token_settings(settings):
 
 
 class TestMisc:
-    @mock.patch("requests.Session.request")
+    @mock.patch("httpx2.Client.request")
     def test_get_user_by_user_id(self, mocked_request):
         mocked_request.return_value = mock_json_response(
             {
@@ -47,7 +47,7 @@ class TestMisc:
 
 
 class TestUser:
-    @mock.patch("requests.Session.request")
+    @mock.patch("httpx2.Client.request")
     def test_user_info(self, mocked_request):
         token = LoginToken("token", expires_in=86400)
         mocked_request.return_value = mock_json_response(
@@ -76,7 +76,7 @@ class TestUser:
 
 
 class TestToken:
-    @mock.patch("requests.Session.request")
+    @mock.patch("httpx2.Client.request")
     def test_create_user_from_token(self, mocked_request):
         token = LoginToken("token3", expires_in=3600)
 

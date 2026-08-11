@@ -66,6 +66,8 @@ def pytest_configure():
         ),
         # bkauth settings
         BKAUTH_BACKEND_TYPE="bk_token",
+        BKAUTH_USER_COOKIE_VERIFY_URL="https://example.com/user-cookie-verify",
+        BKAUTH_TOKEN_USER_INFO_ENDPOINT="https://example.com/token-user-info",
         BKAUTH_TOKEN_APP_CODE="mock_app_code",
         BKAUTH_TOKEN_SECRET_KEY="mock_app_key",
         BKAUTH_TOKEN_GRANT_ENDPOINT="",

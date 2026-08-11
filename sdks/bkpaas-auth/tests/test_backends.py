@@ -5,16 +5,16 @@ from unittest import mock
 import pytest
 from django.test.utils import override_settings
 
-from bkpaas_auth.backends import APIGatewayAuthBackend, UniversalAuthBackend
+from bkpaas_auth.backends import APIGatewayAuthBackend, DjangoAuthUserCompatibleBackend, UniversalAuthBackend
 from bkpaas_auth.core.constants import ProviderType
-from bkpaas_auth.core.token import LoginToken
+from bkpaas_auth.core.token import LoginToken, UserAccount
 from bkpaas_auth.core.user_info import UserInfo
 from tests.utils import generate_random_string, mock_json_response, mock_raw_response
 
 
 class TestUniversalAuthBackend:
     @override_settings(BKAUTH_ENABLE_MULTI_TENANT_MODE=False, BKAUTH_BACKEND_TYPE="bk_ticket")
-    @mock.patch("requests.Session.request")
+    @mock.patch("httpx2.Client.request")
     def test_authenticate_bk_ticket(self, mock_request, mocker):
         mock_request.return_value = mock_json_response({"msg": "", "data": {"username": "foo"}, "ret": 0})
 
@@ -29,7 +29,7 @@ class TestUniversalAuthBackend:
         assert getattr(user, "display_name") == "foo"
 
     @override_settings(BKAUTH_ENABLE_MULTI_TENANT_MODE=False, BKAUTH_BACKEND_TYPE="bk_token")
-    @mock.patch("requests.Session.request")
+    @mock.patch("httpx2.Client.request")
     def test_authenticate_bk_token(self, mock_request, mocker):
         mock_request.return_value = mock_json_response(
             {"result": True, "code": 0, "message": "", "data": {"bk_username": "bar"}}
@@ -45,12 +45,35 @@ class TestUniversalAuthBackend:
         assert user.username == "bar"
         assert getattr(user, "display_name") == "bar"
 
+    @pytest.mark.asyncio
+    @override_settings(BKAUTH_ENABLE_MULTI_TENANT_MODE=False, BKAUTH_BACKEND_TYPE="bk_token")
+    async def test_async_authenticate_uses_async_request_backend(self, mocker):
+        backend = UniversalAuthBackend()
+        sync_request = mocker.patch.object(
+            backend.request_backend,
+            "request_user_account",
+            side_effect=AssertionError("sync request backend must not be used"),
+        )
+        async_request = mocker.patch.object(
+            backend.request_backend,
+            "async_request_user_account",
+            new=mocker.AsyncMock(return_value=UserAccount(bk_username="async-user", display_name="Async User")),
+        )
+
+        user = await backend.aauthenticate(request=mocker.MagicMock(), auth_credentials={"bk_token": "token"})
+
+        assert user is not None
+        assert user.username == "async-user"
+        assert user.display_name == "Async User"
+        async_request.assert_awaited_once_with(bk_token="token")
+        sync_request.assert_not_called()
+
     @override_settings(
         BKAUTH_ENABLE_MULTI_TENANT_MODE=True,
         BKAUTH_BACKEND_TYPE="bk_token",
         BKAUTH_USER_INFO_APIGW_URL="fake_url",
     )
-    @mock.patch("requests.Session.request")
+    @mock.patch("httpx2.Client.request")
     def test_authenticate_bk_token_for_tenant_mode(self, mock_request, mocker):
         """Test basic fields validation for tenant mode authentication"""
         mock_request.return_value = mock_raw_response(
@@ -91,7 +114,7 @@ class TestUniversalAuthBackend:
             (None, None),
         ],
     )
-    @mock.patch("requests.Session.request")
+    @mock.patch("httpx2.Client.request")
     def test_authenticate_bk_token_for_tenant_mode_time_zone(
         self, mock_request, mocker, api_time_zone, expected_time_zone
     ):
@@ -150,6 +173,42 @@ class TestUniversalAuthBackend:
         request.session = {"user_token": pickle.dumps(token).decode("latin1")}
 
         assert UniversalAuthBackend().get_token_from_session(request) is None
+
+    @pytest.mark.asyncio
+    @override_settings(BKAUTH_BACKEND_TYPE="bk_token")
+    async def test_async_get_token_from_session(self):
+        token = LoginToken("session-token", expires_in=86400)
+        token.user_info = UserInfo(username="session-user", display_name="Session User")
+        token.user_info.provider_type = ProviderType.BK
+        request = mock.MagicMock()
+        request.session.aget = mock.AsyncMock(return_value=token.dump_json())
+
+        restored = await UniversalAuthBackend().async_get_token_from_session(request)
+
+        assert restored is not None
+        assert restored.login_token == token.login_token
+        request.session.aget.assert_awaited_once_with("user_token")
+
+
+class TestDjangoAuthUserCompatibleBackend:
+    @pytest.mark.asyncio
+    @override_settings(BKAUTH_ENABLE_MULTI_TENANT_MODE=False, BKAUTH_BACKEND_TYPE="bk_token")
+    async def test_async_authenticate_uses_async_orm(self, db, mocker):
+        backend = DjangoAuthUserCompatibleBackend()
+        mocker.patch.object(
+            backend.request_backend,
+            "async_request_user_account",
+            new=mocker.AsyncMock(
+                return_value=UserAccount(bk_username="django-async-user", display_name="Django Async User")
+            ),
+        )
+
+        user = await backend.aauthenticate(request=mocker.MagicMock(), auth_credentials={"bk_token": "token"})
+
+        assert user is not None
+        assert user.username == "django-async-user"
+        assert user.display_name == "Django Async User"
+        assert user.is_authenticated
 
 
 class TestAPIGatewayAuthBackend:

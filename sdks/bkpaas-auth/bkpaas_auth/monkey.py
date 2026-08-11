@@ -22,13 +22,37 @@ def middleware_get_user(request):
     return request._cached_user
 
 
+def _load_request_backend(request, backend_path):
+    backend = auth.load_backend(backend_path)
+    backend.request = request
+    return backend
+
+
 def get_user(request):
     try:
         user_id = request.session[auth.SESSION_KEY]
         backend_path = request.session[auth.BACKEND_SESSION_KEY]
-        backend = auth.load_backend(backend_path)
-        backend.request = request
+        backend = _load_request_backend(request, backend_path)
         user = backend.get_user(user_id) or models.AnonymousUser()
+    except KeyError:
+        user = models.AnonymousUser()
+    except ImportError as e:
+        logger.exception(f"get an anonymous user, error: {e}")  # noqa: TRY401
+        user = models.AnonymousUser()
+    return user
+
+
+async def aget_user(request):
+    """Asynchronous counterpart of the patched :func:`get_user`."""
+    try:
+        user_id = await request.session.aget(auth.SESSION_KEY)
+        backend_path = await request.session.aget(auth.BACKEND_SESSION_KEY)
+        # SessionBase.aget() returns None for a missing key, while the synchronous
+        # subscription above raises KeyError. Normalize both paths to the same behavior.
+        if user_id is None or backend_path is None:
+            return models.AnonymousUser()
+        backend = _load_request_backend(request, backend_path)
+        user = await backend.aget_user(user_id) or models.AnonymousUser()
     except KeyError:
         user = models.AnonymousUser()
     except ImportError as e:
@@ -40,3 +64,4 @@ def get_user(request):
 def patch_middleware_get_user():
     middleware.get_user = middleware_get_user
     auth.get_user = get_user
+    auth.aget_user = aget_user

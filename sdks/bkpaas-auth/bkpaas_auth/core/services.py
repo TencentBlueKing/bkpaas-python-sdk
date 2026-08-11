@@ -8,7 +8,7 @@ from django.core.exceptions import ImproperlyConfigured
 
 from bkpaas_auth.conf import bkauth_settings as conf
 from bkpaas_auth.core.exceptions import HttpRequestError, ServiceError
-from bkpaas_auth.core.http import http_get, resp_to_json
+from bkpaas_auth.core.http import async_http_get, http_get, resp_to_json
 from bkpaas_auth.core.user_info import BkUserInfo, RtxUserInfo
 from bkpaas_auth.utils import scrub_data
 
@@ -22,34 +22,54 @@ def get_app_credentials() -> Dict[str, str]:
     raise ImproperlyConfigured("BKAUTH_TOKEN_APP_CODE and BKAUTH_TOKEN_SECRET_KEY not set")
 
 
-def _get_and_cache_user_info(cache_key, user_params, response_ok_checker):
-    """Get user info from cache, or fetch from api and cache
+def get_rtx_user_info(username):
+    """Get RTX user info by given RTX username. For better performance, this function
+    will try to cache the result for 86400 seconds(1 day).
 
-    :param dict user_params: username param key to username map, it may be different in different systems
-    :param callable response_ok_checker: determine get user is successful
+    :param str username: RTX username
     """
-    try:
-        cached_result = cache.get(cache_key)
-    except Exception as e:
-        # Cache is not usable due to some reason including different pickle protocols
-        # between different Python versions.
-        logger.warning(f"unable to get user info from cache: {e}")
-        cached_result = None
 
-    if cached_result:
-        return cached_result
+    cache_key = f"bkauth::rests::get_rtx_user_info::{username}"
+    result = _get_and_cache_user_info(cache_key, {"login_name": username}, _rtx_response_ok)
+    return _make_user_info(result, _rtx_response_ok, RtxUserInfo)
 
-    try:
-        resp = http_get(
-            conf.TOKEN_USER_INFO_ENDPOINT,
-            headers={
-                "X-Bkapi-Authorization": json.dumps(dict(user_params, **get_app_credentials())),
-            },
-            params=user_params,
-        )
-    except HttpRequestError:
-        raise ServiceError("Unable to get user info")
 
+async def async_get_rtx_user_info(username):
+    """Asynchronously get RTX user info, using the asynchronous cache and HTTP clients."""
+    cache_key = f"bkauth::rests::get_rtx_user_info::{username}"
+    result = await _async_get_and_cache_user_info(cache_key, {"login_name": username}, _rtx_response_ok)
+    return _make_user_info(result, _rtx_response_ok, RtxUserInfo)
+
+
+def get_bk_user_info(username):
+    """Get BK user info by given BK username. For better performance, this function
+    will try to cache the result for 86400 seconds(1 day).
+
+    :param str username: BK username
+    """
+
+    cache_key = f"bkauth::rests::get_bk_user_info::{username}"
+    result = _get_and_cache_user_info(cache_key, {"bk_username": username}, _bk_response_ok)
+    return _make_user_info(result, _bk_response_ok, BkUserInfo)
+
+
+async def async_get_bk_user_info(username):
+    """Asynchronously get BK user info, using the asynchronous cache and HTTP clients."""
+    cache_key = f"bkauth::rests::get_bk_user_info::{username}"
+    result = await _async_get_and_cache_user_info(cache_key, {"bk_username": username}, _bk_response_ok)
+    return _make_user_info(result, _bk_response_ok, BkUserInfo)
+
+
+def _get_user_info_request_params(user_params):
+    return {
+        "headers": {
+            "X-Bkapi-Authorization": json.dumps(dict(user_params, **get_app_credentials())),
+        },
+        "params": user_params,
+    }
+
+
+def _parse_user_info_response(resp, user_params, response_ok_checker):
     result = resp_to_json(resp)
 
     if not isinstance(result, dict):
@@ -61,46 +81,85 @@ def _get_and_cache_user_info(cache_key, user_params, response_ok_checker):
             f", response: {result}",
         )
         return None
-
-    # 获取用户信息成后才缓存数据
-    cache.set(cache_key, result, timeout=86400)
-
     return result
 
 
-def get_rtx_user_info(username):
-    """Get RTX user info by given RTX username. For better performance, this function
-    will try to cache the result for 86400 seconds(1 day).
+def _get_cached_user_info(cache_key):
+    try:
+        return cache.get(cache_key)
+    except Exception as e:
+        # Cache is not usable due to some reason including different pickle protocols
+        # between different Python versions.
+        logger.warning(f"unable to get user info from cache: {e}")
+        return None
 
-    :param str username: RTX username
+
+async def _async_get_cached_user_info(cache_key):
+    try:
+        return await cache.aget(cache_key)
+    except Exception as e:
+        logger.warning(f"unable to get user info from cache: {e}")
+        return None
+
+
+def _fetch_user_info(user_params, response_ok_checker):
+    try:
+        resp = http_get(conf.TOKEN_USER_INFO_ENDPOINT, **_get_user_info_request_params(user_params))
+    except HttpRequestError:
+        raise ServiceError("Unable to get user info") from None
+    return _parse_user_info_response(resp, user_params, response_ok_checker)
+
+
+async def _async_fetch_user_info(user_params, response_ok_checker):
+    try:
+        resp = await async_http_get(conf.TOKEN_USER_INFO_ENDPOINT, **_get_user_info_request_params(user_params))
+    except HttpRequestError:
+        raise ServiceError("Unable to get user info") from None
+    return _parse_user_info_response(resp, user_params, response_ok_checker)
+
+
+def _get_and_cache_user_info(cache_key, user_params, response_ok_checker):
+    """Get user info from cache, or fetch from API and cache.
+
+    :param dict user_params: username param key to username map, it may be different in different systems
+    :param callable response_ok_checker: determine get user is successful
     """
+    cached_result = _get_cached_user_info(cache_key)
+    if cached_result:
+        return cached_result
 
-    def response_ok_checker(result):
-        return result["result"]
+    result = _fetch_user_info(user_params, response_ok_checker)
+    if result is None:
+        return None
 
-    cache_key = f"bkauth::rests::get_rtx_user_info::{username}"
-    result = _get_and_cache_user_info(cache_key, {"login_name": username}, response_ok_checker)
+    # 获取用户信息成后才缓存数据
+    cache.set(cache_key, result, timeout=86400)
+    return result
 
+
+async def _async_get_and_cache_user_info(cache_key, user_params, response_ok_checker):
+    """Asynchronous version of :func:`_get_and_cache_user_info`."""
+    cached_result = await _async_get_cached_user_info(cache_key)
+    if cached_result:
+        return cached_result
+
+    result = await _async_fetch_user_info(user_params, response_ok_checker)
+    if result is None:
+        return None
+
+    await cache.aset(cache_key, result, timeout=86400)
+    return result
+
+
+def _rtx_response_ok(result):
+    return result["result"]
+
+
+def _bk_response_ok(result):
+    return result["code"] == 0
+
+
+def _make_user_info(result, response_ok_checker, user_info_class):
     if result and response_ok_checker(result):
-        return RtxUserInfo(**result["data"])
-
-    return None
-
-
-def get_bk_user_info(username):
-    """Get BK user info by given BK username. For better performance, this function
-    will try to cache the result for 86400 seconds(1 day).
-
-    :param str username: BK username
-    """
-
-    def response_ok_checker(result):
-        return result["code"] == 0
-
-    cache_key = f"bkauth::rests::get_bk_user_info::{username}"
-    result = _get_and_cache_user_info(cache_key, {"bk_username": username}, response_ok_checker)
-
-    if result and response_ok_checker(result):
-        return BkUserInfo(**result["data"])
-
+        return user_info_class(**result["data"])
     return None

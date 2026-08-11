@@ -8,12 +8,18 @@ from django.test.utils import override_settings
 
 from bkpaas_auth.conf import bkauth_settings
 from bkpaas_auth.core.constants import ProviderType
-from bkpaas_auth.core.token import LoginToken, create_user_from_token, mocked_create_user_from_token
+from bkpaas_auth.core.token import (
+    LoginToken,
+    RequestBackend,
+    TokenRequestBackend,
+    create_user_from_token,
+    mocked_create_user_from_token,
+)
 from bkpaas_auth.core.user_info import BkUserInfo, RtxUserInfo, UserInfo
 
 
 class TestToken:
-    @mock.patch("requests.Session.request")
+    @mock.patch("httpx2.Client.request")
     def test_create_user_from_token(self, mocked_request, get_rtx_user_info_response):
         with override_settings(BKAUTH_BACKEND_TYPE="bk_ticket"):
             token = LoginToken("token3", expires_in=3600)
@@ -104,3 +110,64 @@ class TestToken:
                     }
                 )
             )
+
+
+class TestRequestBackend:
+    @pytest.mark.asyncio
+    @override_settings(BKAUTH_USER_INFO_APIGW_URL="")
+    @mock.patch("bkpaas_auth.core.token.http_get", side_effect=AssertionError("sync HTTP must not be used"))
+    @mock.patch("bkpaas_auth.core.token.async_http_get", new_callable=mock.AsyncMock)
+    async def test_async_request_bk_token_user_account(self, async_http_get, http_get):
+        async_http_get.return_value = mock.Mock(
+            status_code=200,
+            json=mock.Mock(return_value={"result": True, "code": 0, "message": "", "data": {"bk_username": "bar"}}),
+        )
+
+        account = await TokenRequestBackend().async_request_user_account(bk_token="token")
+
+        assert account.bk_username == "bar"
+        assert account.display_name == "bar"
+        async_http_get.assert_awaited_once()
+        http_get.assert_not_called()
+
+    @pytest.mark.asyncio
+    @override_settings(BKAUTH_USER_INFO_APIGW_URL="")
+    @mock.patch("bkpaas_auth.core.token.http_get", side_effect=AssertionError("sync HTTP must not be used"))
+    @mock.patch("bkpaas_auth.core.token.async_http_get", new_callable=mock.AsyncMock)
+    async def test_async_request_bk_ticket_user_account(self, async_http_get, http_get):
+        async_http_get.return_value = mock.Mock(
+            status_code=200,
+            json=mock.Mock(return_value={"msg": "", "data": {"username": "foo"}, "ret": 0}),
+        )
+
+        account = await RequestBackend().async_request_user_account(bk_ticket="ticket")
+
+        assert account.bk_username == "foo"
+        assert account.display_name == "foo"
+        async_http_get.assert_awaited_once()
+        http_get.assert_not_called()
+
+    @pytest.mark.asyncio
+    @override_settings(BKAUTH_USER_INFO_APIGW_URL="https://example.com/user-info")
+    @mock.patch("bkpaas_auth.core.token.async_http_get", new_callable=mock.AsyncMock)
+    async def test_async_request_apigw_user_account(self, async_http_get):
+        async_http_get.return_value = mock.Mock(
+            status_code=200,
+            json=mock.Mock(
+                return_value={
+                    "data": {
+                        "bk_username": "tenant-user",
+                        "display_name": "Tenant User",
+                        "tenant_id": "system",
+                        "time_zone": "Asia/Shanghai",
+                    }
+                }
+            ),
+        )
+
+        account = await TokenRequestBackend().async_request_user_account(bk_token="token")
+
+        assert account.bk_username == "tenant-user"
+        assert account.display_name == "Tenant User"
+        assert account.tenant_id == "system"
+        assert account.time_zone == "Asia/Shanghai"

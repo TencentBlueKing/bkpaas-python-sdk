@@ -30,7 +30,7 @@ class TestUser:
 
     def test_user_info(self, get_rtx_user_info_response):
         """Test base user info fields mapping from RTX user info"""
-        with mock.patch("requests.Session.request") as mocked_request:
+        with mock.patch("httpx2.Client.request") as mocked_request:
             mocked_request.return_value = mock_json_response(get_rtx_user_info_response)
 
             token = LoginToken("token", expires_in=86400)
@@ -61,7 +61,7 @@ class TestUser:
         self, mock_cache_get, mock_cache_set, get_rtx_user_info_response, api_time_zone, expected_time_zone
     ):
         """Test time_zone field handling with various values"""
-        with mock.patch("requests.Session.request") as mocked_request:
+        with mock.patch("httpx2.Client.request") as mocked_request:
             response_data = copy.deepcopy(get_rtx_user_info_response)
             if api_time_zone is None:
                 response_data["data"].pop("time_zone", None)
