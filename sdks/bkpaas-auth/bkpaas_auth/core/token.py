@@ -80,21 +80,25 @@ class AbstractRequestBackend:
     @abstractmethod
     def _request_apigw(**credentials):
         """get user account by apigw"""
+        raise NotImplementedError
 
     @staticmethod
     @abstractmethod
     def _request_esb(**credentials):
         """get user account by esb"""
+        raise NotImplementedError
 
     @staticmethod
     @abstractmethod
     async def _async_request_apigw(**credentials):
         """Asynchronously get user account by APIGW."""
+        raise NotImplementedError
 
     @staticmethod
     @abstractmethod
     async def _async_request_esb(**credentials):
         """Asynchronously get user account by ESB."""
+        raise NotImplementedError
 
 
 class TokenRequestBackend(AbstractRequestBackend):

@@ -238,7 +238,14 @@ class DjangoAuthUserCompatibleBackend(UniversalAuthBackend):
         return self._apply_compatible_attributes(db_user, user)
 
     async def async_connect_to_django_user(self, user: User):
-        """Asynchronously connect bkpaas_auth.User to the configured UserModel."""
+        """Asynchronously connect bkpaas_auth.User to the configured UserModel.
+
+        NOTE: 本方法用 `aget()` 按 USERNAME_FIELD 查询，与同步版本使用的
+        `get_by_natural_key()` 并不完全等价。`get_by_natural_key()` 是 Django 提供给项目
+        重写的钩子，部分项目会在其中做大小写不敏感查询（username__iexact）或附加过滤条件，
+        这些定制在异步路径下不会生效。如果项目重写了 `get_by_natural_key()` 且需要跑 ASGI
+        异步请求链，应当同时重写本方法。
+        """
         UserModel = get_user_model()  # noqa: N806
         lookup = {UserModel.USERNAME_FIELD: user.username}
         if self.create_unknown_user:

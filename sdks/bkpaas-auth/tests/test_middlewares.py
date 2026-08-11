@@ -14,6 +14,7 @@ from django.contrib.sessions.middleware import SessionMiddleware
 from django.http import HttpRequest, HttpResponse
 from django.test.utils import override_settings
 from django.utils import timezone as dj_timezone
+from django.utils.functional import SimpleLazyObject
 
 from bkpaas_auth.backends import UniversalAuthBackend
 from bkpaas_auth.core.constants import ACCESS_PERMISSION_DENIED_CODE, ProviderType
@@ -411,3 +412,29 @@ class TestUserTimezoneMiddleware:
 
         request.auser.assert_awaited_once_with()
         assert timezone_during_request == "America/New_York"
+
+    @pytest.mark.asyncio
+    async def test_async_prefers_explicitly_set_user_over_auser(self, rf, middleware, authenticated_user):
+        """其他认证中间件（如 apigw-manager）直接写入的 request.user 不应被 auser() 的结果顶掉"""
+        request = rf.get("/")
+        authenticated_user.time_zone = "America/New_York"
+        request.user = authenticated_user
+        request.auser = AsyncMock(return_value=MagicMock(is_authenticated=True, time_zone="Europe/London"))
+
+        await middleware.async_process_request(request)
+
+        assert dj_timezone.get_current_timezone_name() == "America/New_York"
+        request.auser.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_async_falls_back_to_auser_for_unevaluated_lazy_user(self, rf, middleware, authenticated_user):
+        """AuthenticationMiddleware 写入的惰性 user 在异步链中求值会报错，必须回退到 auser()"""
+        request = rf.get("/")
+        request.user = SimpleLazyObject(lambda: pytest.fail("lazy user must not be evaluated in the async chain"))
+        authenticated_user.time_zone = "America/New_York"
+        request.auser = AsyncMock(return_value=authenticated_user)
+
+        await middleware.async_process_request(request)
+
+        assert dj_timezone.get_current_timezone_name() == "America/New_York"
+        request.auser.assert_awaited_once_with()

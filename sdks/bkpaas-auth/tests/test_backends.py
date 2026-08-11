@@ -3,6 +3,7 @@ import pickle
 from unittest import mock
 
 import pytest
+from django.contrib.auth import get_user_model
 from django.test.utils import override_settings
 
 from bkpaas_auth.backends import APIGatewayAuthBackend, DjangoAuthUserCompatibleBackend, UniversalAuthBackend
@@ -189,11 +190,35 @@ class TestUniversalAuthBackend:
         assert restored.login_token == token.login_token
         request.session.aget.assert_awaited_once_with("user_token")
 
-
-class TestDjangoAuthUserCompatibleBackend:
     @pytest.mark.asyncio
-    @override_settings(BKAUTH_ENABLE_MULTI_TENANT_MODE=False, BKAUTH_BACKEND_TYPE="bk_token")
-    async def test_async_authenticate_uses_async_orm(self, db, mocker):
+    @override_settings(BKAUTH_BACKEND_TYPE="bk_token")
+    async def test_aget_user_restores_user_from_session(self):
+        token = LoginToken("session-token", expires_in=86400)
+        token.user_info = UserInfo(username="session-user", display_name="Session User")
+        token.user_info.provider_type = ProviderType.BK
+
+        backend = UniversalAuthBackend()
+        backend.request = mock.MagicMock()
+        backend.request.session.aget = mock.AsyncMock(return_value=token.dump_json())
+
+        user = await backend.aget_user("any-user-id")
+
+        assert user is not None
+        assert user.username == "session-user"
+
+    @pytest.mark.asyncio
+    @override_settings(BKAUTH_BACKEND_TYPE="bk_token")
+    async def test_aget_user_without_request(self):
+        """未经 monkey patch 注入 request 时，无法从 session 还原用户"""
+        assert await UniversalAuthBackend().aget_user("any-user-id") is None
+
+
+# NOTE: 必须用 transaction=True。异步 ORM 通过 asgiref 的线程池执行，用的是另一条数据库连接，
+# 不受普通 `db` fixture 的 atomic 块约束，写入的数据会真正提交并污染后续用例。
+@pytest.mark.django_db(transaction=True)
+class TestDjangoAuthUserCompatibleBackend:
+    @pytest.fixture
+    def backend(self, mocker):
         backend = DjangoAuthUserCompatibleBackend()
         mocker.patch.object(
             backend.request_backend,
@@ -202,13 +227,65 @@ class TestDjangoAuthUserCompatibleBackend:
                 return_value=UserAccount(bk_username="django-async-user", display_name="Django Async User")
             ),
         )
+        return backend
 
+    @pytest.mark.asyncio
+    @override_settings(BKAUTH_ENABLE_MULTI_TENANT_MODE=False, BKAUTH_BACKEND_TYPE="bk_token")
+    async def test_async_authenticate_uses_async_orm(self, backend, mocker):
         user = await backend.aauthenticate(request=mocker.MagicMock(), auth_credentials={"bk_token": "token"})
 
         assert user is not None
         assert user.username == "django-async-user"
         assert user.display_name == "Django Async User"
         assert user.is_authenticated
+
+    @pytest.mark.asyncio
+    @override_settings(BKAUTH_ENABLE_MULTI_TENANT_MODE=False, BKAUTH_BACKEND_TYPE="bk_token")
+    async def test_async_authenticate_calls_async_configure_user_on_creation(self, backend, mocker):
+        configure_user = mocker.patch.object(
+            backend, "async_configure_user", new=mocker.AsyncMock(side_effect=lambda db_user, bk_user: db_user)
+        )
+
+        await backend.aauthenticate(request=mocker.MagicMock(), auth_credentials={"bk_token": "token"})
+
+        configure_user.assert_awaited_once()
+        assert configure_user.await_args.kwargs["db_user"].username == "django-async-user"
+
+    @pytest.mark.asyncio
+    @override_settings(BKAUTH_ENABLE_MULTI_TENANT_MODE=False, BKAUTH_BACKEND_TYPE="bk_token")
+    async def test_async_connect_returns_none_when_user_absent(self, backend, mocker):
+        mocker.patch.object(backend, "create_unknown_user", False)
+
+        assert await backend.aauthenticate(request=mocker.MagicMock(), auth_credentials={"bk_token": "token"}) is None
+
+    @pytest.mark.asyncio
+    @override_settings(BKAUTH_ENABLE_MULTI_TENANT_MODE=False, BKAUTH_BACKEND_TYPE="bk_token")
+    async def test_async_connect_finds_existing_user(self, backend, mocker):
+        mocker.patch.object(backend, "create_unknown_user", False)
+        await get_user_model()._default_manager.acreate(username="django-async-user")
+
+        user = await backend.aauthenticate(request=mocker.MagicMock(), auth_credentials={"bk_token": "token"})
+
+        assert user is not None
+        assert user.username == "django-async-user"
+        # 兼容属性应当被写回到 Django 用户对象上
+        assert user.display_name == "Django Async User"
+        assert user.token is not None
+
+    @pytest.mark.asyncio
+    @override_settings(BKAUTH_ENABLE_MULTI_TENANT_MODE=False, BKAUTH_BACKEND_TYPE="bk_token")
+    async def test_aget_user_connects_to_django_user(self, backend, mocker):
+        token = LoginToken("session-token", expires_in=86400)
+        token.user_info = UserInfo(username="django-async-user", display_name="Django Async User")
+        token.user_info.provider_type = ProviderType.BK
+        backend.request = mocker.MagicMock()
+        backend.request.session.aget = mocker.AsyncMock(return_value=token.dump_json())
+
+        user = await backend.aget_user("any-user-id")
+
+        assert user is not None
+        assert isinstance(user, get_user_model())
+        assert user.username == "django-async-user"
 
 
 class TestAPIGatewayAuthBackend:

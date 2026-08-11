@@ -2,12 +2,14 @@
 import json
 import logging
 import time
+from enum import Enum
 from typing import Dict
 
 from asgiref.sync import iscoroutinefunction, markcoroutinefunction
 from django.contrib import auth
 from django.http import HttpRequest, HttpResponse
 from django.utils import timezone as dj_timezone
+from django.utils.functional import SimpleLazyObject, empty
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from bkpaas_auth.backends import UniversalAuthBackend
@@ -15,6 +17,17 @@ from bkpaas_auth.core.constants import ACCESS_PERMISSION_DENIED_CODE
 from bkpaas_auth.core.exceptions import AccessPermissionDenied
 
 logger = logging.getLogger(__name__)
+
+
+class AuthenticationResult(Enum):
+    """`CookieLoginMiddleware` 对认证结果的分类"""
+
+    # 认证通过，且由 UniversalAuthBackend 完成，需要继续后续的登录流程
+    VALID = "valid"
+    # 认证失败，需要登出
+    INVALID = "invalid"
+    # 认证通过，但由其他 backend 完成，本中间件不介入
+    UNSUPPORTED = "unsupported"
 
 
 class CookieLoginMiddleware:
@@ -63,20 +76,16 @@ class CookieLoginMiddleware:
         return response
 
     @staticmethod
-    def _should_authenticate(credentials, stored_credentials, token):
-        return credentials != stored_credentials or token is None
-
-    @staticmethod
-    def _validate_authenticated_user(user):
+    def _validate_authenticated_user(user) -> AuthenticationResult:
         if user is None or not user.is_authenticated:
             logger.info("Authentication failed, logout.")
-            return "invalid"
+            return AuthenticationResult.INVALID
 
         backend = auth.load_backend(user.backend)
         if not isinstance(backend, UniversalAuthBackend):
             logger.info("User is not validate by UniversalAuthBackend, skip login processes.")
-            return "unsupported"
-        return "valid"
+            return AuthenticationResult.UNSUPPORTED
+        return AuthenticationResult.VALID
 
     @staticmethod
     def _get_session_data(user, credentials):
@@ -135,16 +144,21 @@ class CookieLoginMiddleware:
     ) -> bool:
         """Decide whether to re-authenticate current credentials or not"""
         # Force re-login if credentials is different from last time
-        token = backend.get_token_from_session(request)
-        return self._should_authenticate(credentials, request.session.get("auth_credentials", {}), token)
+        if credentials != request.session.get("auth_credentials", {}):
+            return True
+
+        # Force re-login if token is empty or obsolete
+        return backend.get_token_from_session(request) is None
 
     async def async_should_authenticate(
         self, request: HttpRequest, backend: UniversalAuthBackend, credentials: Dict[str, str]
     ) -> bool:
         """Asynchronously decide whether the credentials need authentication."""
-        stored_credentials = await request.session.aget("auth_credentials", {})
+        if credentials != await request.session.aget("auth_credentials", {}):
+            return True
+
         token = await backend.async_get_token_from_session(request)
-        return self._should_authenticate(credentials, stored_credentials, token)
+        return token is None
 
     def authenticate_and_login(self, request: HttpRequest, credentials: Dict[str, str]):
         """Authenticate given credentials and do login(or logout if credentials is invalid)
@@ -155,40 +169,48 @@ class CookieLoginMiddleware:
         logger.debug("Authenticating credentials...")
         user = auth.authenticate(request=request, auth_credentials=credentials)
         authentication_result = self._validate_authenticated_user(user)
-        if authentication_result == "invalid":
+        if authentication_result == AuthenticationResult.INVALID:
             auth.logout(request)
             return
-        if authentication_result == "unsupported":
+        if authentication_result == AuthenticationResult.UNSUPPORTED:
             return
 
         logger.debug("Authentication finished, username: %s", user.username)
-        request.session.update(self._get_session_data(user, credentials))
 
         # Calling `auth.login` will rotate CSRF token and modify user session, only do this when the authenticated
         # user was different with the user stored in session. Otherwise CSRF token validation may fail due to the
         # rotation.
+        #
+        # NOTE: 必须先登录再写入 session 数据。当 session 中已存在其他用户时，`auth.login()`
+        # 内部会调用 `session.flush()` 清空整个 session，若先写数据就会被一并清掉，导致
+        # user_token / auth_credentials 丢失、每个请求都要重新认证。
         if getattr(request, "user", None) != user:
             auth.login(request, user)
+
+        request.session.update(self._get_session_data(user, credentials))
 
     async def async_authenticate_and_login(self, request: HttpRequest, credentials: Dict[str, str]):
         """Asynchronously authenticate credentials and log the user in or out."""
         logger.debug("Authenticating credentials...")
         user = await auth.aauthenticate(request=request, auth_credentials=credentials)
         authentication_result = self._validate_authenticated_user(user)
-        if authentication_result == "invalid":
+        if authentication_result == AuthenticationResult.INVALID:
             await auth.alogout(request)
             self._clear_async_user_cache(request)
             return
-        if authentication_result == "unsupported":
+        if authentication_result == AuthenticationResult.UNSUPPORTED:
             return
 
         logger.debug("Authentication finished, username: %s", user.username)
-        await request.session.aupdate(self._get_session_data(user, credentials))
 
+        # NOTE: 与同步版本一样，必须先登录再写入 session 数据，避免 `auth.alogin()` 内部的
+        # `session.aflush()` 把刚写入的数据清掉。
         current_user = await request.auser() if hasattr(request, "auser") else getattr(request, "user", None)
         if current_user != user:
             await auth.alogin(request, user)
             request._acached_user = user
+
+        await request.session.aupdate(self._get_session_data(user, credentials))
 
 
 class UserTimezoneMiddleware:
@@ -259,12 +281,30 @@ class UserTimezoneMiddleware:
         self._activate_user_timezone(getattr(request, "user", None))
 
     async def async_process_request(self, request):
-        """Resolve the current user without evaluating Django's sync lazy user."""
+        self._activate_user_timezone(await self._aresolve_user(request))
+
+    @staticmethod
+    async def _aresolve_user(request):
+        """Resolve the current user for the async request chain.
+
+        本中间件要求放在所有认证中间件之后，因此 `request.user` 才是认证链的最终结果，应当
+        优先采用——有些认证中间件（如 apigw-manager 的 ApiGatewayJWTUserMiddleware）只写
+        `request.user` 而不写 session，此时 `request.auser()` 从 session 还原出的用户是错的。
+
+        但 `AuthenticationMiddleware` 写入的 `request.user` 是一个惰性对象，在异步链中直接读取
+        会触发同步的 session / ORM 访问并抛出 SynchronousOnlyOperation，所以仅当它尚未求值时
+        才改用 `request.auser()`（二者数据来源相同，都是 session）。
+
+        已知限制: 若某个认证中间件写入的是尚未求值的惰性 `request.user`，这里仍会回退到
+        `request.auser()`，取到的可能不是该中间件认证出的用户。
+        """
+        user = getattr(request, "user", None)
+        if user is not None and not (isinstance(user, SimpleLazyObject) and user._wrapped is empty):
+            return user
+
         if hasattr(request, "auser"):
-            user = await request.auser()
-        else:
-            user = getattr(request, "user", None)
-        self._activate_user_timezone(user)
+            return await request.auser()
+        return user
 
     def process_response(self, request, response):
         """重置时区"""
