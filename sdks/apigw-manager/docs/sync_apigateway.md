@@ -308,13 +308,7 @@ apigateway:
     - "admin"
 ```
 
-新建 AI 网关时，通过同步命令传入的网关名称须满足以下任一规则：
-
-- 以 `bkai-` 开头，例如 `bkai-chat`
-- 等于 `bkaidev`
-- 以 `bkaidev-` 开头，例如 `bkaidev-chat`
-
-`bkaidevx`、`bkaidevfoo` 等名称不属于 `bkaidev-*` 规则。非 AI 网关不能使用 `bkai-` 前缀；以上名称与类型约束仅在新建网关时生效，更新已有网关不受影响。
+新建 AI 网关时，通过同步命令传入的网关名称须以 `bkai-` 开头，例如 `bkai-chat`。非 AI 网关不能使用 `bkai-` 前缀；以上名称与类型约束仅在新建网关时生效，更新已有网关不受影响。
 
 **注意：**
 
