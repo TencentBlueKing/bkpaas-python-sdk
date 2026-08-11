@@ -55,6 +55,7 @@ def tests(session):
         session,
         "pytest",
         "pytest-django",
+        "pytest-asyncio",
         "pytest-mock",
     )
     # Install the SQLite driver manually because some environment's sqlite3 version is too old
