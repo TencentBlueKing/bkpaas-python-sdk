@@ -314,7 +314,7 @@ resource_docs:
 ```yaml
 x-bk-apigateway-resource:
   isPublic: true   # 是否公开，公开，则用户可查看资源文档、申请资源权限；不公开，则资源对用户隐藏
-  allowApplyPermission: false # 是否允许用户申请资源权限，允许，则任何蓝鲸应用可在蓝鲸开发者中心申请资源的访问权限；否则，只能通过网关管理员主动授权为某应用添加权限
+  allowApplyPermission: false # 是否允许用户申请资源权限(前提：开启应用认证接口)，允许，则任何蓝鲸应用可在蓝鲸开发者中心申请资源的访问权限；否则，只能通过网关管理员主动授权为某应用添加权限
   matchSubpath: false # 匹配所有子路径
   noneSchema: true # 是否有请求参数：对于需要添加的 MCP Server 的资源如果没有请求参数(body,path,header,query)一定要显示配置才行
   backend:
@@ -324,8 +324,6 @@ x-bk-apigateway-resource:
     path: /anything
     matchSubpath: false
     timeout: 0
-    upstreams: {}
-    transformHeaders: {}
   pluginConfigs: [] # 插件配置
   authConfig:
     appVerifiedRequired: true  # 是否开启应用认证，开启后请求方需提供蓝鲸应用身份信息
