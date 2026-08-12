@@ -3,7 +3,9 @@ import pickle
 from unittest import mock
 
 import pytest
+from django.contrib import auth
 from django.contrib.auth import get_user_model
+from django.contrib.auth.backends import BaseBackend
 from django.test.utils import override_settings
 
 from bkpaas_auth.backends import APIGatewayAuthBackend, DjangoAuthUserCompatibleBackend, UniversalAuthBackend
@@ -292,6 +294,21 @@ class TestAPIGatewayAuthBackend:
     @pytest.fixture
     def backend(self):
         return APIGatewayAuthBackend()
+
+    @pytest.mark.asyncio
+    @override_settings(AUTHENTICATION_BACKENDS=["bkpaas_auth.backends.APIGatewayAuthBackend"])
+    async def test_django_async_authenticate(self, mocker):
+        user = await auth.aauthenticate(
+            request=mocker.MagicMock(),
+            gateway_name="test",
+            bk_username="async-admin",
+            verified=True,
+        )
+
+        assert user is not None
+        assert user.is_authenticated
+        assert user.username == "async-admin"
+        assert user.backend == "bkpaas_auth.backends.APIGatewayAuthBackend"
 
     @override_settings(BKAUTH_DEFAULT_PROVIDER_TYPE="RTX")
     def test_get_provider_type_default_value(self, backend):

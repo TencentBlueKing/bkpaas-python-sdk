@@ -288,7 +288,7 @@ class DjangoAuthUserCompatibleBackend(UniversalAuthBackend):
         return db_user
 
 
-class APIGatewayAuthBackend:
+class APIGatewayAuthBackend(BaseBackend):
     """Authentication backend for API Gateway JWT validation.
 
     This backend works with `ApiGatewayJWTUserMiddleware` from the
