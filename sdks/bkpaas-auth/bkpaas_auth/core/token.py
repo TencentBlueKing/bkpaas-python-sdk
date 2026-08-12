@@ -19,7 +19,7 @@ from bkpaas_auth.core.exceptions import (
     ResponseError,
     ServiceError,
 )
-from bkpaas_auth.core.http import http_get, resp_to_json
+from bkpaas_auth.core.http import async_http_get, http_get, resp_to_json
 from bkpaas_auth.core.services import get_app_credentials
 from bkpaas_auth.core.user_info import BkUserInfo, RtxUserInfo, UserInfo
 from bkpaas_auth.models import User
@@ -69,37 +69,56 @@ class AbstractRequestBackend:
 
         return self._request_esb(**credentials)
 
+    async def async_request_user_account(self, **credentials) -> UserAccount:
+        """Asynchronous version of :meth:`request_user_account`."""
+        if bkauth_settings.USER_INFO_APIGW_URL:
+            return await self._async_request_apigw(**credentials)
+
+        return await self._async_request_esb(**credentials)
+
     @staticmethod
     @abstractmethod
     def _request_apigw(**credentials):
         """get user account by apigw"""
+        raise NotImplementedError
 
     @staticmethod
     @abstractmethod
     def _request_esb(**credentials):
         """get user account by esb"""
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    async def _async_request_apigw(**credentials):
+        """Asynchronously get user account by APIGW."""
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    async def _async_request_esb(**credentials):
+        """Asynchronously get user account by ESB."""
+        raise NotImplementedError
 
 
 class TokenRequestBackend(AbstractRequestBackend):
     provider_type = ProviderType.BK
 
     @staticmethod
-    def _request_apigw(**credentials) -> UserAccount:
-        try:
-            resp = http_get(
-                bkauth_settings.USER_INFO_APIGW_URL,
-                timeout=10,
-                headers={
-                    "blueking-language": get_language(),
-                    "X-Bkapi-Authorization": json.dumps(get_app_credentials()),
-                    # 全租户应用，调用全租户网关时，网关会强制要求传递 X-Bk-Tenant-Id, 但不会实际校验值的有效性, 统一传 default
-                    "X-Bk-Tenant-Id": "default",
-                },
-                params=credentials,
-            )
-        except HttpRequestError:
-            raise ServiceError("Unable to request services")
+    def _get_apigw_request_params(credentials):
+        return bkauth_settings.USER_INFO_APIGW_URL, {
+            "timeout": 10,
+            "headers": {
+                "blueking-language": get_language(),
+                "X-Bkapi-Authorization": json.dumps(get_app_credentials()),
+                # 全租户应用，调用全租户网关时，网关会强制要求传递 X-Bk-Tenant-Id, 但不会实际校验值的有效性, 统一传 default
+                "X-Bk-Tenant-Id": "default",
+            },
+            "params": credentials,
+        }
 
+    @staticmethod
+    def _parse_apigw_response(resp) -> UserAccount:
         resp_json = resp_to_json(resp)
 
         if not isinstance(resp_json, dict):
@@ -120,20 +139,38 @@ class TokenRequestBackend(AbstractRequestBackend):
         raise ResponseError(resp_json["error"]["message"])
 
     @staticmethod
-    def _request_esb(**credentials) -> UserAccount:
+    def _request_apigw(**credentials) -> UserAccount:
+        url, request_kwargs = TokenRequestBackend._get_apigw_request_params(credentials)
         try:
-            resp = http_get(
-                bkauth_settings.USER_COOKIE_VERIFY_URL,
-                timeout=10,
-                headers={
-                    "blueking-language": get_language(),
-                    "X-Bkapi-Authorization": json.dumps(dict(credentials, **get_app_credentials())),
-                },
-                params=credentials,
-            )
+            resp = http_get(url, **request_kwargs)
         except HttpRequestError:
-            raise ServiceError("unable to fetch token services")
+            raise ServiceError("Unable to request services") from None
 
+        return TokenRequestBackend._parse_apigw_response(resp)
+
+    @staticmethod
+    async def _async_request_apigw(**credentials) -> UserAccount:
+        url, request_kwargs = TokenRequestBackend._get_apigw_request_params(credentials)
+        try:
+            resp = await async_http_get(url, **request_kwargs)
+        except HttpRequestError:
+            raise ServiceError("Unable to request services") from None
+
+        return TokenRequestBackend._parse_apigw_response(resp)
+
+    @staticmethod
+    def _get_esb_request_params(credentials):
+        return bkauth_settings.USER_COOKIE_VERIFY_URL, {
+            "timeout": 10,
+            "headers": {
+                "blueking-language": get_language(),
+                "X-Bkapi-Authorization": json.dumps(dict(credentials, **get_app_credentials())),
+            },
+            "params": credentials,
+        }
+
+    @staticmethod
+    def _parse_esb_response(resp, credentials) -> UserAccount:
         resp_json = resp_to_json(resp)
 
         if not isinstance(resp_json, dict):
@@ -156,17 +193,36 @@ class TokenRequestBackend(AbstractRequestBackend):
 
         raise InvalidTokenCredentialsError("Invalid credentials given")
 
+    @staticmethod
+    def _request_esb(**credentials) -> UserAccount:
+        url, request_kwargs = TokenRequestBackend._get_esb_request_params(credentials)
+        try:
+            resp = http_get(url, **request_kwargs)
+        except HttpRequestError:
+            raise ServiceError("unable to fetch token services") from None
+
+        return TokenRequestBackend._parse_esb_response(resp, credentials)
+
+    @staticmethod
+    async def _async_request_esb(**credentials) -> UserAccount:
+        url, request_kwargs = TokenRequestBackend._get_esb_request_params(credentials)
+        try:
+            resp = await async_http_get(url, **request_kwargs)
+        except HttpRequestError:
+            raise ServiceError("unable to fetch token services") from None
+
+        return TokenRequestBackend._parse_esb_response(resp, credentials)
+
 
 class RequestBackend(AbstractRequestBackend):
     provider_type = ProviderType.RTX
 
     @staticmethod
-    def _request_esb(**credentials) -> UserAccount:
-        try:
-            resp = http_get(bkauth_settings.USER_COOKIE_VERIFY_URL, params=credentials, timeout=10)
-        except HttpRequestError:
-            raise ServiceError("unable to fetch token services")
+    def _get_esb_request_params(credentials):
+        return bkauth_settings.USER_COOKIE_VERIFY_URL, {"params": credentials, "timeout": 10}
 
+    @staticmethod
+    def _parse_esb_response(resp, credentials) -> UserAccount:
         resp_json = resp_to_json(resp)
 
         if not isinstance(resp_json, dict):
@@ -184,7 +240,31 @@ class RequestBackend(AbstractRequestBackend):
         return UserAccount(bk_username=username, display_name=username)
 
     @staticmethod
+    def _request_esb(**credentials) -> UserAccount:
+        url, request_kwargs = RequestBackend._get_esb_request_params(credentials)
+        try:
+            resp = http_get(url, **request_kwargs)
+        except HttpRequestError:
+            raise ServiceError("unable to fetch token services") from None
+
+        return RequestBackend._parse_esb_response(resp, credentials)
+
+    @staticmethod
+    async def _async_request_esb(**credentials) -> UserAccount:
+        url, request_kwargs = RequestBackend._get_esb_request_params(credentials)
+        try:
+            resp = await async_http_get(url, **request_kwargs)
+        except HttpRequestError:
+            raise ServiceError("unable to fetch token services") from None
+
+        return RequestBackend._parse_esb_response(resp, credentials)
+
+    @staticmethod
     def _request_apigw(**credentials):
+        raise NotImplementedError("No APIGW for RTX Backend")
+
+    @staticmethod
+    async def _async_request_apigw(**credentials):
         raise NotImplementedError("No APIGW for RTX Backend")
 
 

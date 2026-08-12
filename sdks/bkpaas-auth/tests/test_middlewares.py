@@ -3,16 +3,18 @@ import json
 import string
 from contextlib import contextmanager
 from typing import Dict
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from asgiref.sync import iscoroutinefunction
 from django.contrib.auth import SESSION_KEY, get_user_model
 from django.contrib.auth.middleware import AuthenticationMiddleware
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.sessions.middleware import SessionMiddleware
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponse
 from django.test.utils import override_settings
 from django.utils import timezone as dj_timezone
+from django.utils.functional import SimpleLazyObject
 
 from bkpaas_auth.backends import UniversalAuthBackend
 from bkpaas_auth.core.constants import ACCESS_PERMISSION_DENIED_CODE, ProviderType
@@ -61,6 +63,25 @@ class FakeCookieLoginMiddleware(CookieLoginMiddleware):
 
     def authenticate_and_login(self, request: HttpRequest, credentials: Dict[str, str]):
         raise AccessPermissionDenied("authenticated user has no access permissions")
+
+    async def async_should_authenticate(
+        self, request: HttpRequest, backend: UniversalAuthBackend, credentials: Dict[str, str]
+    ) -> bool:
+        return True
+
+    async def async_authenticate_and_login(self, request: HttpRequest, credentials: Dict[str, str]):
+        raise AccessPermissionDenied("authenticated user has no access permissions")
+
+
+@pytest.mark.parametrize("middleware_class", [CookieLoginMiddleware, UserTimezoneMiddleware])
+def test_middleware_supports_sync_and_async(middleware_class):
+    assert middleware_class.sync_capable is True
+    assert middleware_class.async_capable is True
+
+    async def get_response(request):
+        return HttpResponse("OK")
+
+    assert iscoroutinefunction(middleware_class(get_response))
 
 
 class TestCookieLoginMiddleware:
@@ -122,7 +143,8 @@ class TestCookieLoginMiddleware:
 
         # Change credentials
         dj_request.COOKIES["bk_token"] = "changed_skey_1"
-        CookieLoginMiddleware(MagicMock())(dj_request)
+        with patch.object(auth, "authenticate", return_value=None):
+            CookieLoginMiddleware(MagicMock())(dj_request)
 
         # Make sure logout succeeded
         assert dj_request.session.get(SESSION_KEY) is None
@@ -167,6 +189,62 @@ class TestCookieLoginMiddleware:
             middleware(dj_request)
 
             assert mocked_auth_login.called
+
+    @pytest.mark.asyncio
+    async def test_async_get_response_is_awaited(self, rf):
+        request = rf.get("/")
+        request.session = {}
+        expected_response = HttpResponse("OK")
+
+        async def get_response(request):
+            return expected_response
+
+        middleware = CookieLoginMiddleware(get_response)
+
+        with patch.object(auth, "alogout", new_callable=AsyncMock):
+            response = await middleware(request)
+
+        assert response is expected_response
+
+    @pytest.mark.asyncio
+    @pytest.mark.django_db(transaction=True)
+    @override_settings(BKAUTH_ENABLE_MULTI_TENANT_MODE=False, BKAUTH_BACKEND_TYPE="bk_token")
+    async def test_async_authentication_uses_native_async_http(self, dj_request, bk_token):
+        async def get_response(request):
+            return HttpResponse("OK")
+
+        response = MagicMock(
+            status_code=200,
+            json=MagicMock(return_value={"result": True, "code": 0, "message": "", "data": {"bk_username": bk_token}}),
+        )
+        with patch("bkpaas_auth.core.token.http_get", side_effect=AssertionError("sync HTTP must not be used")), patch(
+            "bkpaas_auth.core.token.async_http_get", new_callable=AsyncMock, return_value=response
+        ) as async_http_get:
+            result = await CookieLoginMiddleware(get_response)(dj_request)
+
+        assert result.status_code == 200
+        assert await dj_request.session.aget(SESSION_KEY) is not None
+        assert (await dj_request.auser()).username == bk_token
+        async_http_get.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_async_access_denied_short_circuits_get_response(self, rf):
+        request = rf.get("/")
+        request.session = {}
+
+        async def get_response(request):
+            pytest.fail("get_response should not be called")
+
+        middleware = FakeCookieLoginMiddleware(get_response)
+        with patch.object(
+            UniversalAuthBackend,
+            "get_credentials",
+            return_value={"bk_token": "token"},
+        ):
+            response = await middleware(request)
+
+        assert response.status_code == 403
+        assert json.loads(response.content)["code"] == ACCESS_PERMISSION_DENIED_CODE
 
 
 class TestCookieLoginMiddlewareWithDjangoUser:
@@ -257,6 +335,24 @@ class TestUserTimezoneMiddleware:
         middleware.process_request(request)
         assert dj_timezone.get_current_timezone_name() == "America/New_York"
 
+    def test_sync_get_response_uses_user_timezone_and_resets_it(self, rf, authenticated_user):
+        request = rf.get("/")
+        authenticated_user.time_zone = "America/New_York"
+        request.user = authenticated_user
+        expected_response = HttpResponse("OK")
+        timezone_during_request = None
+
+        def get_response(request):
+            nonlocal timezone_during_request
+            timezone_during_request = dj_timezone.get_current_timezone_name()
+            return expected_response
+
+        response = UserTimezoneMiddleware(get_response)(request)
+
+        assert response is expected_response
+        assert timezone_during_request == "America/New_York"
+        assert dj_timezone.get_current_timezone_name() == "UTC"
+
     @pytest.mark.parametrize(
         ("time_zone_value", "has_attr"),
         [
@@ -279,3 +375,66 @@ class TestUserTimezoneMiddleware:
         request.user = authenticated_user
         middleware.process_request(request)
         assert dj_timezone.get_current_timezone_name() == "Asia/Shanghai"
+
+    @pytest.mark.asyncio
+    async def test_async_get_response_uses_user_timezone_and_resets_it(self, rf, authenticated_user):
+        request = rf.get("/")
+        authenticated_user.time_zone = "America/New_York"
+        request.user = authenticated_user
+        expected_response = HttpResponse("OK")
+        timezone_during_request = None
+
+        async def get_response(request):
+            nonlocal timezone_during_request
+            timezone_during_request = dj_timezone.get_current_timezone_name()
+            return expected_response
+
+        middleware = UserTimezoneMiddleware(get_response)
+        response = await middleware(request)
+
+        assert response is expected_response
+        assert timezone_during_request == "America/New_York"
+        assert dj_timezone.get_current_timezone_name() == "UTC"
+
+    @pytest.mark.asyncio
+    async def test_async_get_response_resolves_user_with_auser(self, rf, authenticated_user):
+        request = rf.get("/")
+        authenticated_user.time_zone = "America/New_York"
+        request.auser = AsyncMock(return_value=authenticated_user)
+        timezone_during_request = None
+
+        async def get_response(request):
+            nonlocal timezone_during_request
+            timezone_during_request = dj_timezone.get_current_timezone_name()
+            return HttpResponse("OK")
+
+        await UserTimezoneMiddleware(get_response)(request)
+
+        request.auser.assert_awaited_once_with()
+        assert timezone_during_request == "America/New_York"
+
+    @pytest.mark.asyncio
+    async def test_async_prefers_explicitly_set_user_over_auser(self, rf, middleware, authenticated_user):
+        """其他认证中间件（如 apigw-manager）直接写入的 request.user 不应被 auser() 的结果顶掉"""
+        request = rf.get("/")
+        authenticated_user.time_zone = "America/New_York"
+        request.user = authenticated_user
+        request.auser = AsyncMock(return_value=MagicMock(is_authenticated=True, time_zone="Europe/London"))
+
+        await middleware.async_process_request(request)
+
+        assert dj_timezone.get_current_timezone_name() == "America/New_York"
+        request.auser.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_async_falls_back_to_auser_for_unevaluated_lazy_user(self, rf, middleware, authenticated_user):
+        """AuthenticationMiddleware 写入的惰性 user 在异步链中求值会报错，必须回退到 auser()"""
+        request = rf.get("/")
+        request.user = SimpleLazyObject(lambda: pytest.fail("lazy user must not be evaluated in the async chain"))
+        authenticated_user.time_zone = "America/New_York"
+        request.auser = AsyncMock(return_value=authenticated_user)
+
+        await middleware.async_process_request(request)
+
+        assert dj_timezone.get_current_timezone_name() == "America/New_York"
+        request.auser.assert_awaited_once_with()

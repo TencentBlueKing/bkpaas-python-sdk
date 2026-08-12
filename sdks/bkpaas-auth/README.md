@@ -114,6 +114,15 @@ LOGGING = {
 }
 ```
 
+### 异步模式
+
+本库已经支持 Django 的 async 异步模式。这体现在：
+
+- middleware 中的所有中间件可以同时支持 sync/async 两种启动模式；
+- 部分对外 API 也提供同步/异步两套，比如 `get_user_by_user_id()` / `async_get_user_by_user_id()`
+- 网络请求部分的异步，基于 httpx2 库的 AsyncClient 实现；
+- 其他操作的异步比如 session 读取、ORM 访问，均基于 Django 标准 API（如 `request.session.aget()`） 实现；
+
 ### 关于 AUTH_USER_MODEL
 
 bkpaas-auth 内置的基于内存的不依赖于数据库表的用户模型, 如果需要复用原有的用户模型, 则需要使用 `DjangoAuthUserCompatibleBackend` 作为用户校验后端.
@@ -138,7 +147,16 @@ class YourDjangoAuthUserCompatibleBackend(DjangoAuthUserCompatibleBackend):
         """
         ...
         return db_user
+
+    async def async_configure_user(self, db_user, bk_user: User):
+        """异步请求链创建用户时的配置入口。"""
+        ...
+        await db_user.asave()
+        return db_user
 ```
+
+如果项目覆盖了 `configure_user()`，并且会运行 ASGI 异步请求链，也应覆盖对应的
+`async_configure_user()`，其中数据库写入应使用 Django 异步 ORM。
 
 > 说明: 启用多租户模式后, user 会增加 tenant_id 和 display_name 两个字段，可以通过 `request.user.tenant_id` 获取租户 ID, 通过 `request.user.display_name` 获取用户展示名。
 
@@ -164,6 +182,7 @@ MIDDLEWARE += [
 
 #### 功能特性
 
+- 同时支持 Django 的同步与异步请求链
 - 自动从用户对象的 `time_zone` 属性读取时区配置
 - 时区配置无效时自动回退到默认时区 `settings.TIME_ZONE`
 - 响应返回时自动重置时区，避免线程复用导致的时区污染

@@ -5,6 +5,7 @@ from typing import Dict, Optional, Union
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.backends import BaseBackend
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ImproperlyConfigured
 from django.http import HttpRequest
@@ -28,7 +29,7 @@ from bkpaas_auth.models import User
 logger = logging.getLogger(__name__)
 
 
-class UniversalAuthBackend:
+class UniversalAuthBackend(BaseBackend):
     """An universal cookie auth backend.
 
     This backend is to be used in conjunction with the ``CookieLoginMiddleware``
@@ -50,39 +51,54 @@ class UniversalAuthBackend:
         else:
             raise ImproperlyConfigured("BKAUTH_BACKEND_TYPE not set")
 
+    @staticmethod
+    def _log_authentication_error(exc):
+        if isinstance(exc, ResponseError):
+            logger.warning("authenticate error: %s", exc)
+        elif isinstance(exc, InvalidTokenCredentialsError):
+            logger.warning("authenticate error: invalid credentials given")
+        else:
+            logger.warning("authenticate error: unable to request backend services")
+
+    def _create_user_from_account(self, user_account: UserAccount) -> User:
+        if bkauth_settings.ENABLE_MULTI_TENANT_MODE and not user_account.tenant_id:
+            raise ImproperlyConfigured(
+                "No tenant information found. You may check whether BKAUTH_USER_INFO_APIGW_URL is set to "
+                "correct gateway url that can retrieve the user's tenant information"
+            )
+
+        token = LoginToken(
+            login_token=generate_random_token(),
+            expires_in=bkauth_settings.LOGIN_TOKEN_EXPIRE_IN,
+        )
+        token.user_info = UserInfo(
+            username=user_account.bk_username,
+            display_name=user_account.display_name,
+            time_zone=user_account.time_zone,
+            tenant_id=user_account.tenant_id,
+        )
+        logger.debug("New login token exchanged by credentials")
+        return self.get_user_by_token(token)
+
     def authenticate(self, request: HttpRequest, auth_credentials: Dict) -> Optional[Union[User, AnonymousUser]]:
         try:
             user_account: UserAccount = self.request_backend.request_user_account(**auth_credentials)
-
-            if bkauth_settings.ENABLE_MULTI_TENANT_MODE and not user_account.tenant_id:
-                raise ImproperlyConfigured(
-                    "No tenant information found. You may check whether BKAUTH_USER_INFO_APIGW_URL is set to "
-                    "correct gateway url that can retrieve the user's tenant information"
-                )
-
-            login_token = generate_random_token()
-            token = LoginToken(
-                login_token=login_token,
-                expires_in=bkauth_settings.LOGIN_TOKEN_EXPIRE_IN,
-            )
-            token.user_info = UserInfo(
-                username=user_account.bk_username,
-                display_name=user_account.display_name,
-                time_zone=user_account.time_zone,
-                tenant_id=user_account.tenant_id,
-            )
-            logger.debug("New login token exchanged by credentials")
-        except ResponseError as e:
-            logger.warning(f"authenticate error: {e}")
-            return None
-        except InvalidTokenCredentialsError:
-            logger.warning("authenticate error: invalid credentials given")
-            return None
-        except ServiceError:
-            logger.warning("authenticate error: unable to request backend services")
+        except (ResponseError, InvalidTokenCredentialsError, ServiceError) as exc:
+            self._log_authentication_error(exc)
             return None
 
-        return self.get_user_by_token(token)
+        return self._create_user_from_account(user_account)
+
+    async def aauthenticate(
+        self, request: HttpRequest, auth_credentials: Dict
+    ) -> Optional[Union[User, AnonymousUser]]:
+        try:
+            user_account = await self.request_backend.async_request_user_account(**auth_credentials)
+        except (ResponseError, InvalidTokenCredentialsError, ServiceError) as exc:
+            self._log_authentication_error(exc)
+            return None
+
+        return self._create_user_from_account(user_account)
 
     def get_user(self, user_id):
         """Get user from current session"""
@@ -98,17 +114,33 @@ class UniversalAuthBackend:
             return create_user_from_token(token)
         return None
 
+    async def aget_user(self, user_id):
+        """Asynchronously restore a user from the current request's session."""
+        if not hasattr(self, "request"):
+            return None
+
+        token = await self.async_get_token_from_session(self.request)
+        if token:
+            return create_user_from_token(token)
+        return None
+
     def get_credentials(self, *args, **kwargs):
         return self.plugin.get_credentials(*args, **kwargs)
 
     def get_token_from_session(self, request: HttpRequest) -> Optional[LoginToken]:
         """Try getting token object from session"""
-        if "user_token" not in request.session:
-            return None
+        raw_user_token = request.session.get("user_token")
+        return self._parse_session_token(raw_user_token)
 
-        raw_user_token = request.session["user_token"]
+    async def async_get_token_from_session(self, request: HttpRequest) -> Optional[LoginToken]:
+        """Asynchronously get a token object from the session."""
+        raw_user_token = await request.session.aget("user_token")
+        return self._parse_session_token(raw_user_token)
+
+    def _parse_session_token(self, raw_user_token) -> Optional[LoginToken]:
         if not isinstance(raw_user_token, str) or not raw_user_token.startswith("{"):
-            logger.warning("ignore legacy or invalid session user_token payload")
+            if raw_user_token is not None:
+                logger.warning("ignore legacy or invalid session user_token payload")
             return None
 
         try:
@@ -156,11 +188,37 @@ class DjangoAuthUserCompatibleBackend(UniversalAuthBackend):
             user = self.connect_to_django_user(user)
         return user
 
+    async def aauthenticate(
+        self, request: HttpRequest, auth_credentials: Dict
+    ) -> Optional[Union[User, AnonymousUser]]:
+        user = await super().aauthenticate(request, auth_credentials)
+        if user:
+            user = await self.async_connect_to_django_user(user)
+        return user
+
     def get_user(self, user_id):
         user = super().get_user(user_id)
         if user:
             user = self.connect_to_django_user(user)
         return user
+
+    async def aget_user(self, user_id):
+        user = await super().aget_user(user_id)
+        if user:
+            user = await self.async_connect_to_django_user(user)
+        return user
+
+    @staticmethod
+    def _apply_compatible_attributes(db_user, user: User):
+        if db_user:
+            # Set those attribute to make db_user compatible with CookieLoginMiddleware
+            db_user.provider_type = user.provider_type
+            db_user.bkpaas_user_id = user.bkpaas_user_id
+            db_user.token = user.token
+            db_user.display_name = getattr(user, "display_name", user.username)
+            db_user.tenant_id = getattr(user, "tenant_id", None)
+            db_user.time_zone = getattr(user, "time_zone", None)
+        return db_user
 
     def connect_to_django_user(self, user: User):
         """Connect bkpaas_auth.User to the UserModel in the database."""
@@ -177,21 +235,35 @@ class DjangoAuthUserCompatibleBackend(UniversalAuthBackend):
                 logger.warning("User named %s not found!", user.username)
                 db_user = None
 
-        if db_user:
-            # Set those attribute to make db_user compatible with CookieLoginMiddleware
-            db_user.provider_type = user.provider_type
-            db_user.bkpaas_user_id = user.bkpaas_user_id
-            db_user.token = user.token
-            db_user.display_name = getattr(user, "display_name", user.username)
-            db_user.tenant_id = getattr(user, "tenant_id", None)
-            db_user.time_zone = getattr(user, "time_zone", None)
+        return self._apply_compatible_attributes(db_user, user)
 
-        return db_user
+    async def async_connect_to_django_user(self, user: User):
+        """Asynchronously connect bkpaas_auth.User to the configured UserModel.
 
-    def configure_user(self, db_user, bk_user: User):
+        NOTE: 本方法用 `aget()` 按 USERNAME_FIELD 查询，与同步版本使用的
+        `get_by_natural_key()` 并不完全等价。`get_by_natural_key()` 是 Django 提供给项目
+        重写的钩子，部分项目会在其中做大小写不敏感查询（username__iexact）或附加过滤条件，
+        这些定制在异步路径下不会生效。如果项目重写了 `get_by_natural_key()` 且需要跑 ASGI
+        异步请求链，应当同时重写本方法。
         """
-        Configure a user after creation and return the updated user.
-        """
+        UserModel = get_user_model()  # noqa: N806
+        lookup = {UserModel.USERNAME_FIELD: user.username}
+        if self.create_unknown_user:
+            db_user, created = await UserModel._default_manager.aget_or_create(**lookup)
+            if created:
+                logger.info("User named %s is created!", user.username)
+                db_user = await self.async_configure_user(db_user=db_user, bk_user=user)
+        else:
+            try:
+                db_user = await UserModel._default_manager.aget(**lookup)
+            except UserModel.DoesNotExist:
+                logger.warning("User named %s not found!", user.username)
+                db_user = None
+
+        return self._apply_compatible_attributes(db_user, user)
+
+    @staticmethod
+    def _configure_user_fields(db_user, bk_user: User):
         default_admin_superusers = getattr(settings, "DEFAULT_ADMIN_SUPERUSERS", [])
         if db_user.username in default_admin_superusers:
             db_user.is_active = True
@@ -199,11 +271,24 @@ class DjangoAuthUserCompatibleBackend(UniversalAuthBackend):
             db_user.is_superuser = True
 
         db_user.email = bk_user.email or ""
-        db_user.save(update_fields=["is_active", "is_staff", "is_superuser", "email"])
+        return ["is_active", "is_staff", "is_superuser", "email"]
+
+    def configure_user(self, db_user, bk_user: User):
+        """
+        Configure a user after creation and return the updated user.
+        """
+        update_fields = self._configure_user_fields(db_user, bk_user)
+        db_user.save(update_fields=update_fields)
+        return db_user
+
+    async def async_configure_user(self, db_user, bk_user: User):
+        """Asynchronously configure a newly created Django user."""
+        update_fields = self._configure_user_fields(db_user, bk_user)
+        await db_user.asave(update_fields=update_fields)
         return db_user
 
 
-class APIGatewayAuthBackend:
+class APIGatewayAuthBackend(BaseBackend):
     """Authentication backend for API Gateway JWT validation.
 
     This backend works with `ApiGatewayJWTUserMiddleware` from the

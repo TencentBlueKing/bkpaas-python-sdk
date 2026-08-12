@@ -1,5 +1,10 @@
 # 版本历史
 
+## 4.3.0
+
+- 支持 Django 原生异步：middleware、认证 backend、用户信息请求等支持原生 async 调用链
+- 底层 HTTP 请求库由 requests 替换为 httpx2（同步异步支持）
+
 ## 4.2.0
 
 - 增加对 Django 6.x 的支持
