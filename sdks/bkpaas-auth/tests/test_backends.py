@@ -5,7 +5,6 @@ from unittest import mock
 import pytest
 from django.contrib import auth
 from django.contrib.auth import get_user_model
-from django.contrib.auth.backends import BaseBackend
 from django.test.utils import override_settings
 
 from bkpaas_auth.backends import APIGatewayAuthBackend, DjangoAuthUserCompatibleBackend, UniversalAuthBackend
