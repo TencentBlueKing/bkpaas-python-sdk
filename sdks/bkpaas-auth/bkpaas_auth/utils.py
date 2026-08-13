@@ -1,5 +1,7 @@
 import datetime
-from typing import Any
+from typing import Any, TypeVar, overload
+
+_ScrubDataT = TypeVar("_ScrubDataT")
 
 DEFAULT_SCRUBBED_FIELDS = (
     "password",
@@ -15,10 +17,18 @@ DEFAULT_SCRUBBED_FIELDS = (
 )
 
 
-def scrub_data(data: dict[str, Any]) -> dict[str, Any]:
+@overload
+def scrub_data(data: dict[str, Any]) -> dict[str, Any]: ...
+
+
+@overload
+def scrub_data(data: _ScrubDataT) -> _ScrubDataT: ...
+
+
+def scrub_data(data: Any) -> Any:
     """Scrub the data, mask all sensitive data fields.
 
-    :return: A new dict, with sensitive data masked as "******".
+    Return a new masked dict, or preserve a non-dict input unchanged.
     """
     # 防御性分支：调用方多为日志拼装代码，传入非 dict 时不应因脱敏而中断日志
     if not isinstance(data, dict):

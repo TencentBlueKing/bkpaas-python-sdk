@@ -14,7 +14,7 @@ import json
 import logging
 import threading
 import weakref
-from typing import Any
+from typing import Any, TypeAlias
 
 import httpx2
 from django.test.signals import setting_changed
@@ -24,6 +24,8 @@ from bkpaas_auth.core.exceptions import HttpRequestError, ServiceError
 from bkpaas_auth.utils import scrub_data
 
 logger = logging.getLogger(__name__)
+
+JSONValue: TypeAlias = dict[str, Any] | list[Any] | str | int | float | bool | None
 
 _HTTP_CLIENT_LIMITS = httpx2.Limits(max_connections=20, max_keepalive_connections=20)
 # 单次请求总耗时最多 30 秒，其中建立连接最多 5 秒。认证请求处于 Web 请求的关键路径上，
@@ -183,7 +185,7 @@ async def _async_http_request(method: str, url: str | httpx2.URL, **kwargs) -> h
     return resp
 
 
-def resp_to_json(resp: httpx2.Response) -> dict[str, Any] | list[Any]:
+def resp_to_json(resp: httpx2.Response) -> JSONValue:
     try:
         return resp.json()
     except json.decoder.JSONDecodeError:

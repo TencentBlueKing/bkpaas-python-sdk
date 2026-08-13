@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, Self
 
 from bkpaas_auth.core.constants import ProviderType
 from bkpaas_auth.core.encoder import user_id_encoder
@@ -51,7 +51,7 @@ class UserInfo:
         return json.dumps(payload)
 
     @classmethod
-    def parse_json(cls, payload: str | dict[str, Any]) -> UserInfo:
+    def parse_json(cls, payload: str | dict[str, Any]) -> Self:
         data = cls._parse_json_payload(payload)
         user_info = cls.__new__(cls)
         for field in cls._json_fields:

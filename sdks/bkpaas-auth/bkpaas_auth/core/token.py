@@ -12,7 +12,7 @@ from typing import Any, ClassVar, NamedTuple
 from django.utils.timezone import now
 from django.utils.translation import get_language
 
-from bkpaas_auth.conf import bkauth_settings
+from bkpaas_auth.conf import bkauth_settings, require_setting
 from bkpaas_auth.core.constants import ACCESS_PERMISSION_DENIED_CODE, ProviderType
 from bkpaas_auth.core.exceptions import (
     AccessPermissionDenied,
@@ -108,7 +108,8 @@ class TokenRequestBackend(AbstractRequestBackend):
 
     @staticmethod
     def _get_apigw_request_params(credentials: dict[str, Any]) -> tuple[str, dict[str, Any]]:
-        return bkauth_settings.USER_INFO_APIGW_URL, {
+        url = require_setting(bkauth_settings.USER_INFO_APIGW_URL, "BKAUTH_USER_INFO_APIGW_URL")
+        return url, {
             "timeout": 10,
             "headers": {
                 "blueking-language": get_language(),
@@ -162,7 +163,8 @@ class TokenRequestBackend(AbstractRequestBackend):
 
     @staticmethod
     def _get_esb_request_params(credentials: dict[str, Any]) -> tuple[str, dict[str, Any]]:
-        return bkauth_settings.USER_COOKIE_VERIFY_URL, {
+        url = require_setting(bkauth_settings.USER_COOKIE_VERIFY_URL, "BKAUTH_USER_COOKIE_VERIFY_URL")
+        return url, {
             "timeout": 10,
             "headers": {
                 "blueking-language": get_language(),
@@ -221,7 +223,8 @@ class RequestBackend(AbstractRequestBackend):
 
     @staticmethod
     def _get_esb_request_params(credentials: dict[str, Any]) -> tuple[str, dict[str, Any]]:
-        return bkauth_settings.USER_COOKIE_VERIFY_URL, {"params": credentials, "timeout": 10}
+        url = require_setting(bkauth_settings.USER_COOKIE_VERIFY_URL, "BKAUTH_USER_COOKIE_VERIFY_URL")
+        return url, {"params": credentials, "timeout": 10}
 
     @staticmethod
     def _parse_esb_response(resp: Any, credentials: dict[str, Any]) -> UserAccount:

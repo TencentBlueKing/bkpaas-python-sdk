@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import inspect
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, overload
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -335,8 +335,19 @@ class APIGatewayAuthBackend(BaseBackend):
 
     if TYPE_CHECKING:
         # `authenticate` 在运行时会被绑定到 v1 或 v3 两种签名的实现之一（见下方 else 分支），
-        # 无法用单个赋值语句表达。这里为类型检查声明 v3（当前 apigw_manager 版本）的真实签名，
+        # 无法用单个赋值语句表达。这里通过 overload 描述软件包同时支持的两种调用契约，
         # 避免退化成 `Callable[..., Any]` 而让下游继承本类时失去参数校验。
+        @overload
+        def authenticate(
+            self,
+            request: HttpRequest,
+            api_name: str,
+            bk_username: str,
+            verified: bool,
+            **credentials: Any,
+        ) -> User | AnonymousUser: ...
+
+        @overload
         def authenticate(
             self,
             request: HttpRequest,
@@ -346,6 +357,8 @@ class APIGatewayAuthBackend(BaseBackend):
             verified: bool = False,
             **credentials: Any,
         ) -> User | AnonymousUser: ...
+
+        def authenticate(self, *args: Any, **kwargs: Any) -> User | AnonymousUser: ...
 
     else:
         try:

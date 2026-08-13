@@ -10,6 +10,7 @@ from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
 
 from bkpaas_auth.conf import bkauth_settings as conf
+from bkpaas_auth.conf import require_setting
 from bkpaas_auth.core.exceptions import HttpRequestError, ServiceError
 from bkpaas_auth.core.http import async_http_get, http_get, resp_to_json
 from bkpaas_auth.core.user_info import BkUserInfo, RtxUserInfo, UserInfo
@@ -112,7 +113,8 @@ async def _async_get_cached_user_info(cache_key: str) -> Any:
 
 def _fetch_user_info(user_params: dict[str, str], response_ok_checker: ResponseOkChecker) -> dict[str, Any] | None:
     try:
-        resp = http_get(conf.TOKEN_USER_INFO_ENDPOINT, **_get_user_info_request_params(user_params))
+        endpoint = require_setting(conf.TOKEN_USER_INFO_ENDPOINT, "BKAUTH_TOKEN_USER_INFO_ENDPOINT")
+        resp = http_get(endpoint, **_get_user_info_request_params(user_params))
     except HttpRequestError:
         raise ServiceError("Unable to get user info") from None
     return _parse_user_info_response(resp, user_params, response_ok_checker)
@@ -122,7 +124,8 @@ async def _async_fetch_user_info(
     user_params: dict[str, str], response_ok_checker: ResponseOkChecker
 ) -> dict[str, Any] | None:
     try:
-        resp = await async_http_get(conf.TOKEN_USER_INFO_ENDPOINT, **_get_user_info_request_params(user_params))
+        endpoint = require_setting(conf.TOKEN_USER_INFO_ENDPOINT, "BKAUTH_TOKEN_USER_INFO_ENDPOINT")
+        resp = await async_http_get(endpoint, **_get_user_info_request_params(user_params))
     except HttpRequestError:
         raise ServiceError("Unable to get user info") from None
     return _parse_user_info_response(resp, user_params, response_ok_checker)
