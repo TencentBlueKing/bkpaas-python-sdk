@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from bkpaas_auth.core.user_info import UserInfo
     from bkpaas_auth.models import User
 
-__version__ = "4.3.0"
+__version__ = "4.4.0"
 
 
 def _prepare_user_lookup(user_id: str, username_only: bool) -> tuple[ProviderType, str, User, bool]:
