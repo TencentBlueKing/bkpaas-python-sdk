@@ -1,5 +1,5 @@
 import datetime
-from typing import Any, Dict
+from typing import Any
 
 DEFAULT_SCRUBBED_FIELDS = (
     "password",
@@ -15,10 +15,10 @@ DEFAULT_SCRUBBED_FIELDS = (
 )
 
 
-def scrub_data(data: Dict[str, Any]) -> Dict[str, Any]:
+def scrub_data(data: Any) -> Any:
     """Scrub the data, mask all sensitive data fields.
 
-    :return: A new dict, with sensitive data masked as "******".
+    :return: A new dict, with sensitive data masked as "******". Non-dict input is returned as-is.
     """
     if not isinstance(data, dict):
         return data
@@ -27,10 +27,10 @@ def scrub_data(data: Dict[str, Any]) -> Dict[str, Any]:
         """Check if given key is sensitive."""
         return any(field in key.lower() for field in DEFAULT_SCRUBBED_FIELDS)
 
-    result: Dict[str, Any] = {}
+    result: dict[str, Any] = {}
 
     # Use a stack to avoid recursion
-    stack = [(data, result)]
+    stack: list[tuple[dict[str, Any], dict[str, Any]]] = [(data, result)]
     while stack:
         current_data, current_result = stack.pop()
 
@@ -41,7 +41,7 @@ def scrub_data(data: Dict[str, Any]) -> Dict[str, Any]:
 
             # Process nested data by push it to the stack
             if isinstance(value, dict):
-                new_dict: Dict[str, Any] = {}
+                new_dict: dict[str, Any] = {}
                 current_result[key] = new_dict
                 stack.append((value, new_dict))
             else:

@@ -1,22 +1,25 @@
 # -*- coding: utf-8 -*-
 import binascii
 
-from bkpaas_auth.core.constants import ProviderType
 from bkpaas_auth.core.algorithms import ARC4
+from bkpaas_auth.core.constants import ProviderType
+
 
 def _ensure_binary(s: str | bytes) -> bytes:
     return s.encode("utf-8") if isinstance(s, str) else s
 
+
 def _ensure_text(s: str | bytes) -> str:
     return s.decode("utf-8") if isinstance(s, bytes) else s
+
 
 class BluekingUserIdEncoder:
     """Generator for blueking user id"""
 
     # It is not a real secret key, just for encoding the username
-    secret_key = 'jdvoqu3o4'
+    secret_key = "jdvoqu3o4"
 
-    def encode(self, provider_type: int | ProviderType, username: str | bytes):
+    def encode(self, provider_type: int | ProviderType, username: str | bytes) -> str:
         """Generate a hex string used as blueking user id
 
         :param provider_type: See constants.ProviderType
@@ -34,10 +37,11 @@ class BluekingUserIdEncoder:
         :param str user_id: Blueking user id
         :returns: (provider_type, username)
         """
-        _provider_type, username = user_id[:2], user_id[2:]
-        provider_type = int(_provider_type)
+        text_id = _ensure_text(user_id)
+        provider_type = int(text_id[:2])
+        encoded_username = text_id[2:]
 
-        decoded = ARC4(_ensure_binary(self.secret_key)).decrypt(binascii.unhexlify(username))
+        decoded = ARC4(_ensure_binary(self.secret_key)).decrypt(binascii.unhexlify(encoded_username))
         return provider_type, _ensure_text(decoded)
 
 

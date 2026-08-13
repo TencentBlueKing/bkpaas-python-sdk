@@ -14,7 +14,7 @@ import json
 import logging
 import threading
 import weakref
-from typing import Any, Union
+from typing import Any
 
 import httpx2
 from django.test.signals import setting_changed
@@ -126,7 +126,14 @@ def _close_http_client_at_exit() -> None:
         client.close()
 
 
-def build_req_details_str(method, url, params, data, headers=None, **kwargs) -> str:
+def build_req_details_str(
+    method: str,
+    url: str | httpx2.URL,
+    params: Any,
+    data: Any,
+    headers: dict[str, Any] | None = None,
+    **kwargs: Any,
+) -> str:
     """Build the request details string for logging purpose."""
     msg = f"{method} {url}"
     if params:
@@ -139,7 +146,7 @@ def build_req_details_str(method, url, params, data, headers=None, **kwargs) -> 
     return msg
 
 
-def _prepare_request(method: str, url: str | httpx2.URL, kwargs: dict) -> tuple[Any, Any, str]:
+def _prepare_request(method: str, url: str | httpx2.URL, kwargs: dict[str, Any]) -> tuple[Any, Any, str]:
     params = kwargs.pop("params", None)
     data = kwargs.pop("data", None)
 
@@ -176,7 +183,7 @@ async def _async_http_request(method: str, url: str | httpx2.URL, **kwargs) -> h
     return resp
 
 
-def resp_to_json(resp: httpx2.Response) -> Union[dict, list]:
+def resp_to_json(resp: httpx2.Response) -> dict[str, Any] | list[Any]:
     try:
         return resp.json()
     except json.decoder.JSONDecodeError:

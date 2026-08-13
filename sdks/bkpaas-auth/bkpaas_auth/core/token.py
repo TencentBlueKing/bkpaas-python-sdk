@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """Access token for blueking"""
 
+from __future__ import annotations
+
 import datetime
 import json
 import logging
 from abc import abstractmethod
-from typing import Any, ClassVar, NamedTuple, Optional, Tuple
+from typing import Any, ClassVar, NamedTuple
 
 from django.utils.timezone import now
 from django.utils.translation import get_language
@@ -51,12 +53,12 @@ class UserAccount(NamedTuple):
 
     bk_username: str
     display_name: str
-    time_zone: Optional[str] = None
-    tenant_id: Optional[str] = None
+    time_zone: str | None = None
+    tenant_id: str | None = None
 
 
 class AbstractRequestBackend:
-    def request_user_account(self, **credentials) -> UserAccount:
+    def request_user_account(self, **credentials: Any) -> UserAccount:
         """Get user account through credentials
 
         :raises ServiceError: When the backend service is not available.
@@ -69,7 +71,7 @@ class AbstractRequestBackend:
 
         return self._request_esb(**credentials)
 
-    async def async_request_user_account(self, **credentials) -> UserAccount:
+    async def async_request_user_account(self, **credentials: Any) -> UserAccount:
         """Asynchronous version of :meth:`request_user_account`."""
         if bkauth_settings.USER_INFO_APIGW_URL:
             return await self._async_request_apigw(**credentials)
@@ -78,25 +80,25 @@ class AbstractRequestBackend:
 
     @staticmethod
     @abstractmethod
-    def _request_apigw(**credentials):
+    def _request_apigw(**credentials: Any) -> UserAccount:
         """get user account by apigw"""
         raise NotImplementedError
 
     @staticmethod
     @abstractmethod
-    def _request_esb(**credentials):
+    def _request_esb(**credentials: Any) -> UserAccount:
         """get user account by esb"""
         raise NotImplementedError
 
     @staticmethod
     @abstractmethod
-    async def _async_request_apigw(**credentials):
+    async def _async_request_apigw(**credentials: Any) -> UserAccount:
         """Asynchronously get user account by APIGW."""
         raise NotImplementedError
 
     @staticmethod
     @abstractmethod
-    async def _async_request_esb(**credentials):
+    async def _async_request_esb(**credentials: Any) -> UserAccount:
         """Asynchronously get user account by ESB."""
         raise NotImplementedError
 
@@ -105,7 +107,7 @@ class TokenRequestBackend(AbstractRequestBackend):
     provider_type = ProviderType.BK
 
     @staticmethod
-    def _get_apigw_request_params(credentials):
+    def _get_apigw_request_params(credentials: dict[str, Any]) -> tuple[str, dict[str, Any]]:
         return bkauth_settings.USER_INFO_APIGW_URL, {
             "timeout": 10,
             "headers": {
@@ -118,7 +120,7 @@ class TokenRequestBackend(AbstractRequestBackend):
         }
 
     @staticmethod
-    def _parse_apigw_response(resp) -> UserAccount:
+    def _parse_apigw_response(resp: Any) -> UserAccount:
         resp_json = resp_to_json(resp)
 
         if not isinstance(resp_json, dict):
@@ -139,7 +141,7 @@ class TokenRequestBackend(AbstractRequestBackend):
         raise ResponseError(resp_json["error"]["message"])
 
     @staticmethod
-    def _request_apigw(**credentials) -> UserAccount:
+    def _request_apigw(**credentials: Any) -> UserAccount:
         url, request_kwargs = TokenRequestBackend._get_apigw_request_params(credentials)
         try:
             resp = http_get(url, **request_kwargs)
@@ -149,7 +151,7 @@ class TokenRequestBackend(AbstractRequestBackend):
         return TokenRequestBackend._parse_apigw_response(resp)
 
     @staticmethod
-    async def _async_request_apigw(**credentials) -> UserAccount:
+    async def _async_request_apigw(**credentials: Any) -> UserAccount:
         url, request_kwargs = TokenRequestBackend._get_apigw_request_params(credentials)
         try:
             resp = await async_http_get(url, **request_kwargs)
@@ -159,7 +161,7 @@ class TokenRequestBackend(AbstractRequestBackend):
         return TokenRequestBackend._parse_apigw_response(resp)
 
     @staticmethod
-    def _get_esb_request_params(credentials):
+    def _get_esb_request_params(credentials: dict[str, Any]) -> tuple[str, dict[str, Any]]:
         return bkauth_settings.USER_COOKIE_VERIFY_URL, {
             "timeout": 10,
             "headers": {
@@ -170,7 +172,7 @@ class TokenRequestBackend(AbstractRequestBackend):
         }
 
     @staticmethod
-    def _parse_esb_response(resp, credentials) -> UserAccount:
+    def _parse_esb_response(resp: Any, credentials: dict[str, Any]) -> UserAccount:
         resp_json = resp_to_json(resp)
 
         if not isinstance(resp_json, dict):
@@ -194,7 +196,7 @@ class TokenRequestBackend(AbstractRequestBackend):
         raise InvalidTokenCredentialsError("Invalid credentials given")
 
     @staticmethod
-    def _request_esb(**credentials) -> UserAccount:
+    def _request_esb(**credentials: Any) -> UserAccount:
         url, request_kwargs = TokenRequestBackend._get_esb_request_params(credentials)
         try:
             resp = http_get(url, **request_kwargs)
@@ -204,7 +206,7 @@ class TokenRequestBackend(AbstractRequestBackend):
         return TokenRequestBackend._parse_esb_response(resp, credentials)
 
     @staticmethod
-    async def _async_request_esb(**credentials) -> UserAccount:
+    async def _async_request_esb(**credentials: Any) -> UserAccount:
         url, request_kwargs = TokenRequestBackend._get_esb_request_params(credentials)
         try:
             resp = await async_http_get(url, **request_kwargs)
@@ -218,11 +220,11 @@ class RequestBackend(AbstractRequestBackend):
     provider_type = ProviderType.RTX
 
     @staticmethod
-    def _get_esb_request_params(credentials):
+    def _get_esb_request_params(credentials: dict[str, Any]) -> tuple[str, dict[str, Any]]:
         return bkauth_settings.USER_COOKIE_VERIFY_URL, {"params": credentials, "timeout": 10}
 
     @staticmethod
-    def _parse_esb_response(resp, credentials) -> UserAccount:
+    def _parse_esb_response(resp: Any, credentials: dict[str, Any]) -> UserAccount:
         resp_json = resp_to_json(resp)
 
         if not isinstance(resp_json, dict):
@@ -240,7 +242,7 @@ class RequestBackend(AbstractRequestBackend):
         return UserAccount(bk_username=username, display_name=username)
 
     @staticmethod
-    def _request_esb(**credentials) -> UserAccount:
+    def _request_esb(**credentials: Any) -> UserAccount:
         url, request_kwargs = RequestBackend._get_esb_request_params(credentials)
         try:
             resp = http_get(url, **request_kwargs)
@@ -250,7 +252,7 @@ class RequestBackend(AbstractRequestBackend):
         return RequestBackend._parse_esb_response(resp, credentials)
 
     @staticmethod
-    async def _async_request_esb(**credentials) -> UserAccount:
+    async def _async_request_esb(**credentials: Any) -> UserAccount:
         url, request_kwargs = RequestBackend._get_esb_request_params(credentials)
         try:
             resp = await async_http_get(url, **request_kwargs)
@@ -260,11 +262,11 @@ class RequestBackend(AbstractRequestBackend):
         return RequestBackend._parse_esb_response(resp, credentials)
 
     @staticmethod
-    def _request_apigw(**credentials):
+    def _request_apigw(**credentials: Any) -> UserAccount:
         raise NotImplementedError("No APIGW for RTX Backend")
 
     @staticmethod
-    async def _async_request_apigw(**credentials):
+    async def _async_request_apigw(**credentials: Any) -> UserAccount:
         raise NotImplementedError("No APIGW for RTX Backend")
 
 
@@ -272,14 +274,19 @@ class LoginToken:
     """Access token object"""
 
     token_timeout_margin = 300
-    _json_fields: ClassVar[Tuple[str, ...]] = (
+    _json_fields: ClassVar[tuple[str, ...]] = (
         "login_token",
         "expires_at",
         "issued_at",
         "user_info",
     )
 
-    def __init__(self, login_token=None, expires_in=None):
+    login_token: str
+    expires_at: datetime.datetime
+    issued_at: datetime.datetime
+    user_info: UserInfo
+
+    def __init__(self, login_token: str, expires_in: int) -> None:
         assert login_token, "Must provide token string"
         assert expires_in, "Must provide expires_in seconds"
         self.login_token = login_token
@@ -287,14 +294,14 @@ class LoginToken:
         self.issued_at = now()
         self.user_info = UserInfo(username="AnonymousUser")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "token: {} expires_at: {}".format(self.login_token, self.expires_at)
 
-    def expired(self):
+    def expired(self) -> bool:
         return self.expires_at < now()
 
-    def make_user(self, provider_type):
-        self.user_info.provider_type = provider_type
+    def make_user(self, provider_type: ProviderType | int) -> User:
+        self.user_info.provider_type = ProviderType(provider_type)
         return create_user_from_token(self)
 
     def dump_json(self) -> str:
@@ -303,7 +310,7 @@ class LoginToken:
         if user_info_type not in _USER_INFO_TYPES:
             raise TypeError(f"unsupported user info type: {user_info_type}")
 
-        payload = {}
+        payload: dict[str, Any] = {}
         for field in self._json_fields:
             value = getattr(self, field)
             match field:
@@ -317,7 +324,7 @@ class LoginToken:
         return json.dumps(payload)
 
     @classmethod
-    def parse_json(cls, payload: str | dict[str, Any]) -> "LoginToken":
+    def parse_json(cls, payload: str | dict[str, Any]) -> LoginToken:
         """Parse the token from JSON string or dict."""
         if isinstance(payload, str):
             payload = json.loads(payload)
@@ -342,7 +349,9 @@ class LoginToken:
 
 
 def mocked_create_user_from_token(
-    token: LoginToken, provider_type: int = ProviderType.RTX, username: str = bkauth_settings.MOCKED_USER_NAME
+    token: LoginToken,
+    provider_type: ProviderType | int = ProviderType.RTX,
+    username: str = bkauth_settings.MOCKED_USER_NAME,
 ) -> User:
     """Mocked create_user function, only for temporary use"""
     if provider_type == ProviderType.RTX:

@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 import json
-from typing import TYPE_CHECKING, Any, ClassVar, Tuple
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from bkpaas_auth.core.constants import ProviderType
 from bkpaas_auth.core.encoder import user_id_encoder
 
 if TYPE_CHECKING:
-    from bkpaas_auth.models import User  # noqa
+    from bkpaas_auth.models import User
 
 
 class UserInfo:
     """Base class for UserInfo"""
 
-    provider_type: ProviderType
-    _json_fields: ClassVar[Tuple[str, ...]] = (
+    provider_type: ProviderType | None = None
+    _json_fields: ClassVar[tuple[str, ...]] = (
         "provider_type",
         "username",
         "display_name",
@@ -21,22 +23,24 @@ class UserInfo:
         "tenant_id",
     )
 
-    def __init__(self, username, **kwargs):
+    def __init__(self, username: str, **kwargs: Any) -> None:
         self.username = username
         self.display_name = kwargs.get("display_name") or username
         self.time_zone = kwargs.get("time_zone")
         self.tenant_id = kwargs.get("tenant_id")
 
-    def provide(self, user: "User"):
+    def provide(self, user: User) -> User:
         user.provider_type = self.provider_type
         user.username = self.username
+        if self.provider_type is None:
+            raise ValueError("provider_type is required to provide user")
         user.bkpaas_user_id = user_id_encoder.encode(self.provider_type, self.username)
 
         user.update_user_info(self.__dict__)
         return user
 
     def dump_json(self) -> str:
-        payload = {}
+        payload: dict[str, Any] = {}
         for field in self._json_fields:
             value = getattr(self, field, None)
             if field == "provider_type" and value is not None:
@@ -45,7 +49,7 @@ class UserInfo:
         return json.dumps(payload)
 
     @classmethod
-    def parse_json(cls, payload: str | dict[str, Any]) -> "UserInfo":
+    def parse_json(cls, payload: str | dict[str, Any]) -> UserInfo:
         data = cls._parse_json_payload(payload)
         user_info = cls.__new__(cls)
         for field in cls._json_fields:
@@ -55,7 +59,7 @@ class UserInfo:
             setattr(user_info, field, value)
         return user_info
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, UserInfo):
             return False
         return self.username == other.username
@@ -84,7 +88,7 @@ class RtxUserInfo(UserInfo):
         "avatar_url",
     )
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         super().__init__(kwargs["LoginName"], **kwargs)
         self.nickname = kwargs["ChineseName"]
         self.chinese_name = kwargs["ChineseName"]
@@ -93,7 +97,7 @@ class RtxUserInfo(UserInfo):
         self.phone = kwargs.get("MobilePhoneNumber", "")
         self.avatar_url = ""
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, RtxUserInfo):
             return False
         return (self.username, self.nickname, self.chinese_name, self.email, self.phone) == (
@@ -117,7 +121,7 @@ class BkUserInfo(UserInfo):
         "avatar_url",
     )
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         # bk_username 用户英文ID
         super().__init__(kwargs["bk_username"], **kwargs)
         # chname 用户中文名
@@ -127,7 +131,7 @@ class BkUserInfo(UserInfo):
         self.phone = kwargs["phone"]
         self.avatar_url = ""
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, BkUserInfo):
             return False
         return (self.username, self.nickname, self.chinese_name, self.email, self.phone) == (

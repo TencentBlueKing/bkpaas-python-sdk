@@ -8,8 +8,8 @@ class ProviderType(IntEnum):
     BK = 3
     DATABASE = 9
 
-    def get_id_prefix(self):
-        return '{0:02d}'.format(self.value)
+    def get_id_prefix(self) -> str:
+        return "{0:02d}".format(self.value)
 
 
 # 蓝鲸统一登录约定的错误码, 表示用户认证成功，但用户无应用访问权限

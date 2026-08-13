@@ -1,5 +1,9 @@
 # 版本历史
 
+## Unreleased
+
+- 增加 PEP 561 `py.typed` 标记并补全类型注解
+
 ## 4.3.0
 
 - 支持 Django 原生异步：middleware、认证 backend、用户信息请求等支持原生 async 调用链

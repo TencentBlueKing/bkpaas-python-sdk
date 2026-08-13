@@ -1,23 +1,27 @@
 # -*- coding: utf-8 -*-
-from dataclasses import dataclass, field, fields
+from collections.abc import Callable
+from dataclasses import MISSING, dataclass, field, fields
+from typing import Any
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.test.signals import setting_changed
 
 
-def get_settings(name, prefix='BKAUTH_', raise_if_missing=False, default=None):
+def get_settings(
+    name: str, prefix: str = "BKAUTH_", raise_if_missing: bool = False, default: Any = None
+) -> Callable[[], Any]:
     """Get a settings value, first in django settings, then find in ConfFixture
 
     :param str prefix: prefix string using by key in django settings
     :param bool raise_if_missing: raise exception if settings was not set
     """
 
-    def factory():
+    def factory() -> Any:
         name_in_settings = prefix + name
         value = getattr(settings, name_in_settings, default)
         if raise_if_missing and value is None:
-            raise ImproperlyConfigured('You must set {} in order to use bkpaas_auth'.format(name_in_settings))
+            raise ImproperlyConfigured("You must set {} in order to use bkpaas_auth".format(name_in_settings))
         return value
 
     return factory
@@ -25,11 +29,10 @@ def get_settings(name, prefix='BKAUTH_', raise_if_missing=False, default=None):
 
 @dataclass
 class Settings:
-
     # 用户登录态认证类型，如 bk_token
-    BACKEND_TYPE: str = field(default_factory=get_settings('BACKEND_TYPE'))
+    BACKEND_TYPE: str = field(default_factory=get_settings("BACKEND_TYPE"))
     # 验证用户登录态的 API，如 蓝鲸统一登录校验登录态的 API
-    USER_COOKIE_VERIFY_URL: str = field(default_factory=get_settings('USER_COOKIE_VERIFY_URL'))
+    USER_COOKIE_VERIFY_URL: str = field(default_factory=get_settings("USER_COOKIE_VERIFY_URL"))
 
     # 是否使用多租户模式
     ENABLE_MULTI_TENANT_MODE: bool = field(default_factory=get_settings("ENABLE_MULTI_TENANT_MODE", default=False))
@@ -37,25 +40,25 @@ class Settings:
     USER_INFO_APIGW_URL: str = field(default_factory=get_settings("USER_INFO_APIGW_URL"))
 
     # 获取用户详情的 API，如中文名、邮箱等，且必须提供应用鉴权信息
-    TOKEN_USER_INFO_ENDPOINT: str = field(default_factory=get_settings('TOKEN_USER_INFO_ENDPOINT'))
-    TOKEN_APP_CODE: str = field(default_factory=get_settings('TOKEN_APP_CODE'))
-    TOKEN_SECRET_KEY: str = field(default_factory=get_settings('TOKEN_SECRET_KEY'))
+    TOKEN_USER_INFO_ENDPOINT: str = field(default_factory=get_settings("TOKEN_USER_INFO_ENDPOINT"))
+    TOKEN_APP_CODE: str = field(default_factory=get_settings("TOKEN_APP_CODE"))
+    TOKEN_SECRET_KEY: str = field(default_factory=get_settings("TOKEN_SECRET_KEY"))
 
-    LOGIN_TOKEN_EXPIRE_IN: int = field(default_factory=get_settings('LOGIN_TOKEN_EXPIRE_IN', default=24 * 60 * 60))
-    SESSION_TIMEOUT: int = field(default_factory=get_settings('SESSION_TIMEOUT', default=5 * 60))
+    LOGIN_TOKEN_EXPIRE_IN: int = field(default_factory=get_settings("LOGIN_TOKEN_EXPIRE_IN", default=24 * 60 * 60))
+    SESSION_TIMEOUT: int = field(default_factory=get_settings("SESSION_TIMEOUT", default=5 * 60))
 
     # 请求第三方 API 设置
-    REQUESTS_VERIFY: bool = field(default_factory=get_settings('REQUESTS_VERIFY', default=False))
-    REQUESTS_CERT: str = field(default_factory=get_settings('REQUESTS_CERT'))
+    REQUESTS_VERIFY: bool = field(default_factory=get_settings("REQUESTS_VERIFY", default=False))
+    REQUESTS_CERT: str = field(default_factory=get_settings("REQUESTS_CERT"))
 
     # Test data, optional
-    USE_MOCKED_USER_INFO: bool = field(default_factory=get_settings('USE_MOCKED_USER_INFO', default=False))
-    MOCKED_USER_NAME: str = field(default_factory=get_settings('MOCKED_USER_NAME', default=''))
+    USE_MOCKED_USER_INFO: bool = field(default_factory=get_settings("USE_MOCKED_USER_INFO", default=False))
+    MOCKED_USER_NAME: str = field(default_factory=get_settings("MOCKED_USER_NAME", default=""))
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.validate()
 
-    def validate(self):
+    def validate(self) -> None:
         if self.ENABLE_MULTI_TENANT_MODE:
             if self.BACKEND_TYPE == "bk_ticket":
                 raise ImproperlyConfigured(
@@ -66,17 +69,19 @@ class Settings:
                     "BKAUTH_USER_INFO_APIGW_URL must be set correctly when BKAUTH_ENABLE_MULTI_TENANT_MODE is True"
                 )
 
-    def reload(self):
+    def reload(self) -> None:
         for f in fields(self):
-            setattr(self, f.name, f.default_factory())  # type: ignore
+            factory = f.default_factory
+            if factory is not MISSING and callable(factory):
+                setattr(self, f.name, factory())
 
 
 bkauth_settings = Settings()
 
 
-def reload_settings(*args, **kwargs):
-    setting: str = kwargs['setting']
-    if setting.startswith("BKAUTH_"):
+def reload_settings(*args: Any, **kwargs: Any) -> None:
+    setting = kwargs["setting"]
+    if isinstance(setting, str) and setting.startswith("BKAUTH_"):
         bkauth_settings.reload()
         bkauth_settings.validate()
 
