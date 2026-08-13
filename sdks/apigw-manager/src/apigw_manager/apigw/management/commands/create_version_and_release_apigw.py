@@ -88,6 +88,8 @@ class Command(DefinitionCommand):
 
     def _check_resource_version_exists(self, fetcher, version):
         resource_versions = fetcher.list_resource_versions(version=str(version))
+        if isinstance(resource_versions, dict):
+            return resource_versions["count"] != 0
         return bool(resource_versions)
 
     def _generate_sdks(self, releaser, version, *args, **kwargs):
