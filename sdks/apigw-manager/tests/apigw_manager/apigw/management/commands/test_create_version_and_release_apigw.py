@@ -183,6 +183,28 @@ def test_get_version_to_be_created(
     assert str(result) == expected.format(build_metadata=build_metadata)
 
 
+@pytest.mark.parametrize(
+    ("response_data", "expected"),
+    [
+        ([], False),
+        ([{"version": "1.0.0"}], True),
+        ({"count": 0, "results": []}, False),
+        ({"count": 1, "results": [{"version": "1.0.0"}]}, True),
+    ],
+)
+def test_check_resource_version_exists_supports_list_and_paginated_responses(
+    command,
+    fetcher,
+    response_data,
+    expected,
+):
+    fetcher.list_resource_versions.return_value = response_data
+
+    result = command._check_resource_version_exists(fetcher, parse_version("1.0.0"))
+
+    assert result is expected
+
+
 class TestHandle:
     def test_handle_version_not_change(
         self,
