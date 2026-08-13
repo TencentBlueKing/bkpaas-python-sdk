@@ -33,7 +33,8 @@ jobs:
         run: poetry install && poetry run ruff check ./sdks/bkpaas-auth --config ./pyproject.toml
       - name: Lint with mypy
         working-directory: sdks/bkpaas-auth
-        run: poetry install && poetry run mypy . --config-file=./pyproject.toml
+        # 不传路径参数，检查范围由 pyproject.toml 的 [tool.mypy] files 决定
+        run: poetry install && poetry run mypy --config-file=./pyproject.toml
 
   test:
     strategy:

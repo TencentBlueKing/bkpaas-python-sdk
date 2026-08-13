@@ -13,6 +13,17 @@ from tests.utils import mock_json_response
 
 
 class TestUser:
+    def test_integer_provider_type(self):
+        user = User(token=None, provider_type=ProviderType.RTX.value, username="alice")
+
+        assert user.provider_type is ProviderType.RTX
+        assert user.bkpaas_user_id == "0235c4e39699"
+
+    @pytest.mark.parametrize("provider_type", [0, 999])
+    def test_invalid_integer_provider_type(self, provider_type):
+        with pytest.raises(ValueError, match="Invalid provider_type given!"):
+            User(token=None, provider_type=provider_type, username="alice")
+
     def test_user_authenticated(self):
         user = User(token=None, provider_type=ProviderType.UIN, username="12345")
         assert user.is_authenticated is False

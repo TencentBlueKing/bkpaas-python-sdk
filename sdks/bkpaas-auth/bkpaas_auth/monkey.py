@@ -9,26 +9,28 @@ file takes care of hooking it in appropriately.
 """
 
 import logging
+from typing import Any
 
 from django.contrib import auth
 from django.contrib.auth import middleware, models
+from django.http import HttpRequest
 
 logger = logging.getLogger(__name__)
 
 
-def middleware_get_user(request):
+def middleware_get_user(request: HttpRequest) -> Any:
     if not hasattr(request, "_cached_user"):
         request._cached_user = get_user(request)
     return request._cached_user
 
 
-def _load_request_backend(request, backend_path):
+def _load_request_backend(request: HttpRequest, backend_path: str) -> Any:
     backend = auth.load_backend(backend_path)
     backend.request = request
     return backend
 
 
-def get_user(request):
+def get_user(request: HttpRequest) -> Any:
     try:
         user_id = request.session[auth.SESSION_KEY]
         backend_path = request.session[auth.BACKEND_SESSION_KEY]
@@ -42,7 +44,7 @@ def get_user(request):
     return user
 
 
-async def aget_user(request):
+async def aget_user(request: HttpRequest) -> Any:
     """Asynchronous counterpart of the patched :func:`get_user`."""
     try:
         user_id = await request.session.aget(auth.SESSION_KEY)
@@ -61,7 +63,7 @@ async def aget_user(request):
     return user
 
 
-def patch_middleware_get_user():
+def patch_middleware_get_user() -> None:
     middleware.get_user = middleware_get_user
     auth.get_user = get_user
     auth.aget_user = aget_user

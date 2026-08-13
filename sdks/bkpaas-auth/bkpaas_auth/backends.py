@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import inspect
 import logging
-from typing import Dict, Optional, Union
+from typing import TYPE_CHECKING, Any, overload
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -37,10 +37,10 @@ class UniversalAuthBackend(BaseBackend):
     """
 
     request: HttpRequest
-    plugin: Union[BkTicketPlugin, BkTokenPlugin]
-    request_backend: Union[RequestBackend, TokenRequestBackend]
+    plugin: BkTicketPlugin | BkTokenPlugin
+    request_backend: RequestBackend | TokenRequestBackend
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.backend_type = bkauth_settings.BACKEND_TYPE
         if self.backend_type == "bk_ticket":
             self.plugin = BkTicketPlugin()
@@ -52,7 +52,7 @@ class UniversalAuthBackend(BaseBackend):
             raise ImproperlyConfigured("BKAUTH_BACKEND_TYPE not set")
 
     @staticmethod
-    def _log_authentication_error(exc):
+    def _log_authentication_error(exc: BaseException) -> None:
         if isinstance(exc, ResponseError):
             logger.warning("authenticate error: %s", exc)
         elif isinstance(exc, InvalidTokenCredentialsError):
@@ -80,7 +80,7 @@ class UniversalAuthBackend(BaseBackend):
         logger.debug("New login token exchanged by credentials")
         return self.get_user_by_token(token)
 
-    def authenticate(self, request: HttpRequest, auth_credentials: Dict) -> Optional[Union[User, AnonymousUser]]:
+    def authenticate(self, request: HttpRequest, auth_credentials: dict[str, Any]) -> User | None:
         try:
             user_account: UserAccount = self.request_backend.request_user_account(**auth_credentials)
         except (ResponseError, InvalidTokenCredentialsError, ServiceError) as exc:
@@ -89,9 +89,7 @@ class UniversalAuthBackend(BaseBackend):
 
         return self._create_user_from_account(user_account)
 
-    async def aauthenticate(
-        self, request: HttpRequest, auth_credentials: Dict
-    ) -> Optional[Union[User, AnonymousUser]]:
+    async def aauthenticate(self, request: HttpRequest, auth_credentials: dict[str, Any]) -> User | None:
         try:
             user_account = await self.request_backend.async_request_user_account(**auth_credentials)
         except (ResponseError, InvalidTokenCredentialsError, ServiceError) as exc:
@@ -100,7 +98,7 @@ class UniversalAuthBackend(BaseBackend):
 
         return self._create_user_from_account(user_account)
 
-    def get_user(self, user_id):
+    def get_user(self, user_id: Any) -> User | None:
         """Get user from current session"""
         if not hasattr(self, "request"):
             return None
@@ -114,7 +112,7 @@ class UniversalAuthBackend(BaseBackend):
             return create_user_from_token(token)
         return None
 
-    async def aget_user(self, user_id):
+    async def aget_user(self, user_id: Any) -> User | None:
         """Asynchronously restore a user from the current request's session."""
         if not hasattr(self, "request"):
             return None
@@ -124,20 +122,20 @@ class UniversalAuthBackend(BaseBackend):
             return create_user_from_token(token)
         return None
 
-    def get_credentials(self, *args, **kwargs):
+    def get_credentials(self, *args: Any, **kwargs: Any) -> dict[str, str] | None:
         return self.plugin.get_credentials(*args, **kwargs)
 
-    def get_token_from_session(self, request: HttpRequest) -> Optional[LoginToken]:
+    def get_token_from_session(self, request: HttpRequest) -> LoginToken | None:
         """Try getting token object from session"""
         raw_user_token = request.session.get("user_token")
         return self._parse_session_token(raw_user_token)
 
-    async def async_get_token_from_session(self, request: HttpRequest) -> Optional[LoginToken]:
+    async def async_get_token_from_session(self, request: HttpRequest) -> LoginToken | None:
         """Asynchronously get a token object from the session."""
         raw_user_token = await request.session.aget("user_token")
         return self._parse_session_token(raw_user_token)
 
-    def _parse_session_token(self, raw_user_token) -> Optional[LoginToken]:
+    def _parse_session_token(self, raw_user_token: Any) -> LoginToken | None:
         if not isinstance(raw_user_token, str) or not raw_user_token.startswith("{"):
             if raw_user_token is not None:
                 logger.warning("ignore legacy or invalid session user_token payload")
@@ -182,34 +180,32 @@ class DjangoAuthUserCompatibleBackend(UniversalAuthBackend):
     # Create a User object if not already in the database?
     create_unknown_user = True
 
-    def authenticate(self, request: HttpRequest, auth_credentials: Dict) -> Optional[Union[User, AnonymousUser]]:
+    def authenticate(self, request: HttpRequest, auth_credentials: dict[str, Any]) -> Any:
         user = super().authenticate(request, auth_credentials)
         if user:
             user = self.connect_to_django_user(user)
         return user
 
-    async def aauthenticate(
-        self, request: HttpRequest, auth_credentials: Dict
-    ) -> Optional[Union[User, AnonymousUser]]:
+    async def aauthenticate(self, request: HttpRequest, auth_credentials: dict[str, Any]) -> Any:
         user = await super().aauthenticate(request, auth_credentials)
         if user:
             user = await self.async_connect_to_django_user(user)
         return user
 
-    def get_user(self, user_id):
+    def get_user(self, user_id: Any) -> Any:
         user = super().get_user(user_id)
         if user:
             user = self.connect_to_django_user(user)
         return user
 
-    async def aget_user(self, user_id):
+    async def aget_user(self, user_id: Any) -> Any:
         user = await super().aget_user(user_id)
         if user:
             user = await self.async_connect_to_django_user(user)
         return user
 
     @staticmethod
-    def _apply_compatible_attributes(db_user, user: User):
+    def _apply_compatible_attributes(db_user: Any, user: User) -> Any:
         if db_user:
             # Set those attribute to make db_user compatible with CookieLoginMiddleware
             db_user.provider_type = user.provider_type
@@ -220,7 +216,7 @@ class DjangoAuthUserCompatibleBackend(UniversalAuthBackend):
             db_user.time_zone = getattr(user, "time_zone", None)
         return db_user
 
-    def connect_to_django_user(self, user: User):
+    def connect_to_django_user(self, user: User) -> Any:
         """Connect bkpaas_auth.User to the UserModel in the database."""
         UserModel = get_user_model()  # noqa: N806
         if self.create_unknown_user:
@@ -237,7 +233,7 @@ class DjangoAuthUserCompatibleBackend(UniversalAuthBackend):
 
         return self._apply_compatible_attributes(db_user, user)
 
-    async def async_connect_to_django_user(self, user: User):
+    async def async_connect_to_django_user(self, user: User) -> Any:
         """Asynchronously connect bkpaas_auth.User to the configured UserModel.
 
         NOTE: 本方法用 `aget()` 按 USERNAME_FIELD 查询，与同步版本使用的
@@ -263,7 +259,7 @@ class DjangoAuthUserCompatibleBackend(UniversalAuthBackend):
         return self._apply_compatible_attributes(db_user, user)
 
     @staticmethod
-    def _configure_user_fields(db_user, bk_user: User):
+    def _configure_user_fields(db_user: Any, bk_user: User) -> list[str]:
         default_admin_superusers = getattr(settings, "DEFAULT_ADMIN_SUPERUSERS", [])
         if db_user.username in default_admin_superusers:
             db_user.is_active = True
@@ -273,7 +269,7 @@ class DjangoAuthUserCompatibleBackend(UniversalAuthBackend):
         db_user.email = bk_user.email or ""
         return ["is_active", "is_staff", "is_superuser", "email"]
 
-    def configure_user(self, db_user, bk_user: User):
+    def configure_user(self, db_user: Any, bk_user: User) -> Any:
         """
         Configure a user after creation and return the updated user.
         """
@@ -281,7 +277,7 @@ class DjangoAuthUserCompatibleBackend(UniversalAuthBackend):
         db_user.save(update_fields=update_fields)
         return db_user
 
-    async def async_configure_user(self, db_user, bk_user: User):
+    async def async_configure_user(self, db_user: Any, bk_user: User) -> Any:
         """Asynchronously configure a newly created Django user."""
         update_fields = self._configure_user_fields(db_user, bk_user)
         await db_user.asave(update_fields=update_fields)
@@ -298,7 +294,7 @@ class APIGatewayAuthBackend(BaseBackend):
     _TOKEN_EXPIRE_TIME = 86400  # 24 hours in seconds
 
     def _create_authenticated_user(
-        self, username: str, provider_type: ProviderType, tenant_id: Optional[str] = None
+        self, username: str, provider_type: ProviderType, tenant_id: str | None = None
     ) -> User:
         """Create a user object for authenticated requests."""
         return User(
@@ -309,8 +305,8 @@ class APIGatewayAuthBackend(BaseBackend):
         )
 
     def _authenticate_common(
-        self, verified: bool, username: Optional[str] = None, tenant_id: Optional[str] = None
-    ) -> Union[User, AnonymousUser]:
+        self, verified: bool, username: str | None = None, tenant_id: str | None = None
+    ) -> User | AnonymousUser:
         """Common authentication logic for all versions."""
         if not verified or not username:
             return self.make_anonymous_user(username)
@@ -324,45 +320,73 @@ class APIGatewayAuthBackend(BaseBackend):
         request: HttpRequest,
         gateway_name: str,
         bk_username: str,
-        tenant_id: Optional[str] = None,
+        tenant_id: str | None = None,
         verified: bool = False,
-        **credentials: Dict,
-    ) -> Union[User, AnonymousUser]:
+        **credentials: Any,
+    ) -> User | AnonymousUser:
         """authenticate function with signature required by ApiGatewayJWTUserMiddleware in apigw_manager == '^3.0.0'"""
         return self._authenticate_common(verified, bk_username, tenant_id)
 
     def authenticate_with_signature_v1(
-        self, request: HttpRequest, api_name: str, bk_username: str, verified: bool, **credentials: Dict
-    ) -> Union[User, AnonymousUser]:
+        self, request: HttpRequest, api_name: str, bk_username: str, verified: bool, **credentials: Any
+    ) -> User | AnonymousUser:
         """authenticate function with signature required by ApiGatewayJWTUserMiddleware in apigw_manager == '^1.0.0'"""
         return self._authenticate_common(verified, bk_username)
 
-    try:
-        from apigw_manager.apigw.authentication import ApiGatewayJWTUserMiddleware
+    if TYPE_CHECKING:
+        # `authenticate` 在运行时会被绑定到 v1 或 v3 两种签名的实现之一（见下方 else 分支），
+        # 无法用单个赋值语句表达。这里通过 overload 描述软件包同时支持的两种调用契约，
+        # 避免退化成 `Callable[..., Any]` 而让下游继承本类时失去参数校验。
+        @overload
+        def authenticate(
+            self,
+            request: HttpRequest,
+            api_name: str,
+            bk_username: str,
+            verified: bool,
+            **credentials: Any,
+        ) -> User | AnonymousUser: ...
 
-        get_user_parameters = inspect.signature(ApiGatewayJWTUserMiddleware.get_user).parameters.keys()
-        # django 的 authenticate 方法会保证向后兼容参数，调用方新增参数不会影响用户认证（认证只用到了 verified、bk_username 这 2 个参数）
-        # apigw_manager 的 3.0.0 版本开始 将 api_name 修改为了 gateway_name，导致无法保证向后兼容，所以需要单独处理
-        # https://github.com/django/django/blob/stable/4.2.x/django/contrib/auth/__init__.py#L69
-        if "api_name" in get_user_parameters and "gateway_name" not in get_user_parameters:
-            authenticate = authenticate_with_signature_v1  # type: ignore
-        else:
-            authenticate = authenticate_with_signature_v3  # type: ignore
-        del get_user_parameters
-    except ImportError:
-        authenticate = authenticate_with_signature_v3  # type: ignore
+        @overload
+        def authenticate(
+            self,
+            request: HttpRequest,
+            gateway_name: str,
+            bk_username: str,
+            tenant_id: str | None = None,
+            verified: bool = False,
+            **credentials: Any,
+        ) -> User | AnonymousUser: ...
 
-    def get_user(self, user_id):
+        def authenticate(self, *args: Any, **kwargs: Any) -> User | AnonymousUser: ...
+
+    else:
+        try:
+            from apigw_manager.apigw.authentication import ApiGatewayJWTUserMiddleware
+
+            get_user_parameters = inspect.signature(ApiGatewayJWTUserMiddleware.get_user).parameters.keys()
+            # django 的 authenticate 方法会保证向后兼容参数，调用方新增参数不会影响用户认证（认证只用到了 verified、bk_username 这 2 个参数）
+            # apigw_manager 的 3.0.0 版本开始 将 api_name 修改为了 gateway_name，导致无法保证向后兼容，所以需要单独处理
+            # https://github.com/django/django/blob/stable/4.2.x/django/contrib/auth/__init__.py#L69
+            if "api_name" in get_user_parameters and "gateway_name" not in get_user_parameters:
+                authenticate = authenticate_with_signature_v1
+            else:
+                authenticate = authenticate_with_signature_v3
+            del get_user_parameters
+        except ImportError:
+            authenticate = authenticate_with_signature_v3
+
+    def get_user(self, user_id: Any) -> User:
         raise NotImplementedError(
             "ApiGatewayJWTUserMiddleware should be overwrite request.user, "
             "so that APIGatewayAuthBackend.get_user will never be called."
         )
 
-    def get_provider_type(self):
+    def get_provider_type(self) -> ProviderType:
         name = getattr(settings, "BKAUTH_DEFAULT_PROVIDER_TYPE", "RTX")
         return getattr(ProviderType, name)
 
-    def make_anonymous_user(self, bk_username=None):
+    def make_anonymous_user(self, bk_username: str | None = None) -> AnonymousUser:
         user = AnonymousUser()
         user.username = bk_username
         return user

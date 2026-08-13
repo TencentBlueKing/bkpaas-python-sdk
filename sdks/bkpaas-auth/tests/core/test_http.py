@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import gc
+import json
 import weakref
 from unittest import mock
 
@@ -190,8 +191,22 @@ def test_build_req_details_str_scrubs_sensitive_headers():
     assert "blueking-language" in msg
 
 
-def test_resp_to_json():
-    assert resp_to_json(httpx2.Response(200, json={"result": True})) == {"result": True}
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"result": True},
+        ["result", True],
+        "result",
+        1,
+        1.5,
+        True,
+        None,
+    ],
+)
+def test_resp_to_json(payload):
+    response = httpx2.Response(200, content=json.dumps(payload).encode())
+
+    assert resp_to_json(response) == payload
 
 
 def test_resp_to_json_rejects_invalid_json():

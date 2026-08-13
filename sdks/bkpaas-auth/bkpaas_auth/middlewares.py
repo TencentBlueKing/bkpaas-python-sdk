@@ -2,21 +2,25 @@
 import json
 import logging
 import time
+from collections.abc import Awaitable, Callable
 from enum import Enum
-from typing import Dict
+from typing import Any, cast
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from asgiref.sync import iscoroutinefunction, markcoroutinefunction
 from django.contrib import auth
 from django.http import HttpRequest, HttpResponse
 from django.utils import timezone as dj_timezone
 from django.utils.functional import SimpleLazyObject, empty
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from bkpaas_auth.backends import UniversalAuthBackend
 from bkpaas_auth.core.constants import ACCESS_PERMISSION_DENIED_CODE
 from bkpaas_auth.core.exceptions import AccessPermissionDenied
 
 logger = logging.getLogger(__name__)
+
+# Django 传入的下一层调用：同步链路直接返回响应，异步链路返回响应的 awaitable
+GetResponse = Callable[[HttpRequest], HttpResponse | Awaitable[HttpResponse]]
 
 
 class AuthenticationResult(Enum):
@@ -36,13 +40,13 @@ class CookieLoginMiddleware:
     sync_capable = True
     async_capable = True
 
-    def __init__(self, get_response):
+    def __init__(self, get_response: GetResponse) -> None:
         self.get_response = get_response
         self.async_mode = iscoroutinefunction(get_response)
         if self.async_mode:
             markcoroutinefunction(self)
 
-    def __call__(self, request):
+    def __call__(self, request: HttpRequest) -> Any:
         if self.async_mode:
             return self.__acall__(request)
 
@@ -51,14 +55,15 @@ class CookieLoginMiddleware:
             return response
         return self.get_response(request)
 
-    async def __acall__(self, request):
+    async def __acall__(self, request: HttpRequest) -> Any:
         response = await self.async_process_request(request)
         if response is not None:
             return response
-        return await self.get_response(request)
+        # 只有 async_mode 为真时才会走到这里，此时 get_response 必然是协程函数
+        return await cast("Awaitable[HttpResponse]", self.get_response(request))
 
     @staticmethod
-    def _assert_session_middleware(request):
+    def _assert_session_middleware(request: HttpRequest) -> None:
         assert hasattr(request, "session"), (
             "The CookieLoginMiddleware requires session middleware "
             "to be installed. Edit your MIDDLEWARE%s setting to insert "
@@ -67,7 +72,7 @@ class CookieLoginMiddleware:
         )
 
     @staticmethod
-    def _access_denied_response(exc):
+    def _access_denied_response(exc: BaseException) -> HttpResponse:
         response = HttpResponse(
             json.dumps({"code": ACCESS_PERMISSION_DENIED_CODE, "detail": str(exc)}),
             content_type="application/json",
@@ -76,7 +81,7 @@ class CookieLoginMiddleware:
         return response
 
     @staticmethod
-    def _validate_authenticated_user(user) -> AuthenticationResult:
+    def _validate_authenticated_user(user: Any) -> AuthenticationResult:
         if user is None or not user.is_authenticated:
             logger.info("Authentication failed, logout.")
             return AuthenticationResult.INVALID
@@ -88,7 +93,7 @@ class CookieLoginMiddleware:
         return AuthenticationResult.VALID
 
     @staticmethod
-    def _get_session_data(user, credentials):
+    def _get_session_data(user: Any, credentials: dict[str, str]) -> dict[str, Any]:
         return {
             "provider_type": user.provider_type.value,
             "bkpaas_user_id": user.bkpaas_user_id,
@@ -98,11 +103,11 @@ class CookieLoginMiddleware:
         }
 
     @staticmethod
-    def _clear_async_user_cache(request):
+    def _clear_async_user_cache(request: HttpRequest) -> None:
         if hasattr(request, "_acached_user"):
             del request._acached_user
 
-    def process_request(self, request):
+    def process_request(self, request: HttpRequest) -> HttpResponse | None:
         self._assert_session_middleware(request)
 
         backend = UniversalAuthBackend()
@@ -121,7 +126,7 @@ class CookieLoginMiddleware:
 
         return None
 
-    async def async_process_request(self, request):
+    async def async_process_request(self, request: HttpRequest) -> HttpResponse | None:
         """Asynchronous counterpart of :meth:`process_request`."""
         self._assert_session_middleware(request)
 
@@ -140,7 +145,7 @@ class CookieLoginMiddleware:
         return None
 
     def should_authenticate(
-        self, request: HttpRequest, backend: UniversalAuthBackend, credentials: Dict[str, str]
+        self, request: HttpRequest, backend: UniversalAuthBackend, credentials: dict[str, str]
     ) -> bool:
         """Decide whether to re-authenticate current credentials or not"""
         # Force re-login if credentials is different from last time
@@ -151,7 +156,7 @@ class CookieLoginMiddleware:
         return backend.get_token_from_session(request) is None
 
     async def async_should_authenticate(
-        self, request: HttpRequest, backend: UniversalAuthBackend, credentials: Dict[str, str]
+        self, request: HttpRequest, backend: UniversalAuthBackend, credentials: dict[str, str]
     ) -> bool:
         """Asynchronously decide whether the credentials need authentication."""
         if credentials != await request.session.aget("auth_credentials", {}):
@@ -160,7 +165,7 @@ class CookieLoginMiddleware:
         token = await backend.async_get_token_from_session(request)
         return token is None
 
-    def authenticate_and_login(self, request: HttpRequest, credentials: Dict[str, str]):
+    def authenticate_and_login(self, request: HttpRequest, credentials: dict[str, str]) -> None:
         """Authenticate given credentials and do login(or logout if credentials is invalid)
 
         :params request: Current request object
@@ -189,7 +194,7 @@ class CookieLoginMiddleware:
 
         request.session.update(self._get_session_data(user, credentials))
 
-    async def async_authenticate_and_login(self, request: HttpRequest, credentials: Dict[str, str]):
+    async def async_authenticate_and_login(self, request: HttpRequest, credentials: dict[str, str]) -> None:
         """Asynchronously authenticate credentials and log the user in or out."""
         logger.debug("Authenticating credentials...")
         user = await auth.aauthenticate(request=request, auth_credentials=credentials)
@@ -231,13 +236,13 @@ class UserTimezoneMiddleware:
     sync_capable = True
     async_capable = True
 
-    def __init__(self, get_response):
+    def __init__(self, get_response: GetResponse) -> None:
         self.get_response = get_response
         self.async_mode = iscoroutinefunction(get_response)
         if self.async_mode:
             markcoroutinefunction(self)
 
-    def __call__(self, request):
+    def __call__(self, request: HttpRequest) -> Any:
         if self.async_mode:
             return self.__acall__(request)
 
@@ -245,13 +250,14 @@ class UserTimezoneMiddleware:
         response = self.get_response(request)
         return self.process_response(request, response)
 
-    async def __acall__(self, request):
+    async def __acall__(self, request: HttpRequest) -> Any:
         await self.async_process_request(request)
-        response = await self.get_response(request)
+        # 只有 async_mode 为真时才会走到这里，此时 get_response 必然是协程函数
+        response = await cast("Awaitable[HttpResponse]", self.get_response(request))
         return self.process_response(request, response)
 
     @staticmethod
-    def _activate_user_timezone(user):
+    def _activate_user_timezone(user: Any) -> None:
         if user is None or not user.is_authenticated:
             return
 
@@ -276,15 +282,15 @@ class UserTimezoneMiddleware:
         # Fallback to default timezone when time_zone is empty or invalid
         dj_timezone.activate(dj_timezone.get_default_timezone())
 
-    def process_request(self, request):
+    def process_request(self, request: HttpRequest) -> None:
         # Ignore request without user attribute or anonymous user
         self._activate_user_timezone(getattr(request, "user", None))
 
-    async def async_process_request(self, request):
+    async def async_process_request(self, request: HttpRequest) -> None:
         self._activate_user_timezone(await self._aresolve_user(request))
 
     @staticmethod
-    async def _aresolve_user(request):
+    async def _aresolve_user(request: HttpRequest) -> Any:
         """Resolve the current user for the async request chain.
 
         本中间件要求放在所有认证中间件之后，因此 `request.user` 才是认证链的最终结果，应当
@@ -306,7 +312,7 @@ class UserTimezoneMiddleware:
             return await request.auser()
         return user
 
-    def process_response(self, request, response):
+    def process_response(self, request: HttpRequest, response: Any) -> Any:
         """重置时区"""
         dj_timezone.deactivate()
         return response
