@@ -22,9 +22,22 @@ def test_get_user_by_user_id(get_rtx_user_info_response):
 
 
 def test_get_user_by_user_id_without_user_info():
-    with mock.patch("bkpaas_auth.core.services.get_rtx_user_info", return_value=None):
-        with pytest.raises(ValueError, match="Unable to get user info"):
-            get_user_by_user_id(settings.USER_ID, username_only=False)
+    with (
+        mock.patch("bkpaas_auth.core.services.get_rtx_user_info", return_value=None),
+        pytest.raises(ValueError, match="Unable to get user info"),
+    ):
+        get_user_by_user_id(settings.USER_ID, username_only=False)
+
+
+@pytest.mark.asyncio
+async def test_async_get_user_by_user_id_without_user_info():
+    with (
+        mock.patch(
+            "bkpaas_auth.core.services.async_get_rtx_user_info", new_callable=mock.AsyncMock, return_value=None
+        ),
+        pytest.raises(ValueError, match="Unable to get user info"),
+    ):
+        await async_get_user_by_user_id(settings.USER_ID, username_only=False)
 
 
 @pytest.mark.asyncio

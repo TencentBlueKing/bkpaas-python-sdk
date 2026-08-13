@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from collections.abc import Callable
-from dataclasses import MISSING, dataclass, field, fields
+from dataclasses import dataclass, field, fields
 from typing import Any
 
 from django.conf import settings
@@ -71,9 +71,7 @@ class Settings:
 
     def reload(self) -> None:
         for f in fields(self):
-            factory = f.default_factory
-            if factory is not MISSING and callable(factory):
-                setattr(self, f.name, factory())
+            setattr(self, f.name, f.default_factory())  # type: ignore
 
 
 bkauth_settings = Settings()

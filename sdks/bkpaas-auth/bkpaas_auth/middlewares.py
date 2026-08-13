@@ -4,7 +4,7 @@ import logging
 import time
 from collections.abc import Awaitable, Callable
 from enum import Enum
-from typing import Any
+from typing import Any, cast
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from asgiref.sync import iscoroutinefunction, markcoroutinefunction
@@ -19,7 +19,8 @@ from bkpaas_auth.core.exceptions import AccessPermissionDenied
 
 logger = logging.getLogger(__name__)
 
-GetResponse = Callable[[HttpRequest], Any | Awaitable[Any]]
+# Django 传入的下一层调用：同步链路直接返回响应，异步链路返回响应的 awaitable
+GetResponse = Callable[[HttpRequest], HttpResponse | Awaitable[HttpResponse]]
 
 
 class AuthenticationResult(Enum):
@@ -58,7 +59,8 @@ class CookieLoginMiddleware:
         response = await self.async_process_request(request)
         if response is not None:
             return response
-        return await self.get_response(request)
+        # 只有 async_mode 为真时才会走到这里，此时 get_response 必然是协程函数
+        return await cast("Awaitable[HttpResponse]", self.get_response(request))
 
     @staticmethod
     def _assert_session_middleware(request: HttpRequest) -> None:
@@ -250,7 +252,8 @@ class UserTimezoneMiddleware:
 
     async def __acall__(self, request: HttpRequest) -> Any:
         await self.async_process_request(request)
-        response = await self.get_response(request)
+        # 只有 async_mode 为真时才会走到这里，此时 get_response 必然是协程函数
+        response = await cast("Awaitable[HttpResponse]", self.get_response(request))
         return self.process_response(request, response)
 
     @staticmethod

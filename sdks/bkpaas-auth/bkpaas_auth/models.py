@@ -45,8 +45,12 @@ class AbstractUserWithProvider(models.AbstractBaseUser, models.AnonymousUser):
             self.bkpaas_user_id = "-1"
         elif provider_type not in ProviderType:
             raise ValueError("Invalid provider_type given!")
+        elif not username:
+            # bkpaas_user_id 由 provider_type 与 username 编码而来，空 username 会让不同用户
+            # 编码出同一个 id（仅剩 provider 前缀），而该字段是主键，因此必须显式拒绝。
+            raise ValueError("username is required when provider_type is given!")
         else:
-            self.bkpaas_user_id = user_id_encoder.encode(provider_type, username or "")
+            self.bkpaas_user_id = user_id_encoder.encode(provider_type, username)
 
         self.provider_type = ProviderType(provider_type) if provider_type else None
         self.username = username

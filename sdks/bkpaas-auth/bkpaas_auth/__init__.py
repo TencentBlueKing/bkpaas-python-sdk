@@ -45,14 +45,15 @@ def get_user_by_user_id(user_id: str, username_only: bool = True) -> User:
         return user
 
     # Request third party service to get info other than username
-    user_info: UserInfo | None = None
+    user_info: UserInfo | None
     if provider_type == ProviderType.RTX:
         user_info = get_rtx_user_info(username)
     elif provider_type == ProviderType.BK:
         user_info = get_bk_user_info(username)
     else:
         raise ValueError("ProviderType is not supported yet!")
-    assert user_info is not None
+    if user_info is None:
+        raise ValueError(f"Unable to get user info, username: {username}")
     return _provide_user_info(user, user_info)
 
 
@@ -65,12 +66,13 @@ async def async_get_user_by_user_id(user_id: str, username_only: bool = True) ->
     if not should_fetch_user_info:
         return user
 
-    user_info: UserInfo | None = None
+    user_info: UserInfo | None
     if provider_type == ProviderType.RTX:
         user_info = await async_get_rtx_user_info(username)
     elif provider_type == ProviderType.BK:
         user_info = await async_get_bk_user_info(username)
     else:
         raise ValueError("ProviderType is not supported yet!")
-    assert user_info is not None
+    if user_info is None:
+        raise ValueError(f"Unable to get user info, username: {username}")
     return _provide_user_info(user, user_info)

@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 import inspect
 import logging
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -293,7 +292,6 @@ class APIGatewayAuthBackend(BaseBackend):
     """
 
     _TOKEN_EXPIRE_TIME = 86400  # 24 hours in seconds
-    authenticate: Callable[..., User | AnonymousUser]
 
     def _create_authenticated_user(
         self, username: str, provider_type: ProviderType, tenant_id: str | None = None
@@ -335,20 +333,35 @@ class APIGatewayAuthBackend(BaseBackend):
         """authenticate function with signature required by ApiGatewayJWTUserMiddleware in apigw_manager == '^1.0.0'"""
         return self._authenticate_common(verified, bk_username)
 
-    try:
-        from apigw_manager.apigw.authentication import ApiGatewayJWTUserMiddleware
+    if TYPE_CHECKING:
+        # `authenticate` 在运行时会被绑定到 v1 或 v3 两种签名的实现之一（见下方 else 分支），
+        # 无法用单个赋值语句表达。这里为类型检查声明 v3（当前 apigw_manager 版本）的真实签名，
+        # 避免退化成 `Callable[..., Any]` 而让下游继承本类时失去参数校验。
+        def authenticate(
+            self,
+            request: HttpRequest,
+            gateway_name: str,
+            bk_username: str,
+            tenant_id: str | None = None,
+            verified: bool = False,
+            **credentials: Any,
+        ) -> User | AnonymousUser: ...
 
-        get_user_parameters = inspect.signature(ApiGatewayJWTUserMiddleware.get_user).parameters.keys()
-        # django 的 authenticate 方法会保证向后兼容参数，调用方新增参数不会影响用户认证（认证只用到了 verified、bk_username 这 2 个参数）
-        # apigw_manager 的 3.0.0 版本开始 将 api_name 修改为了 gateway_name，导致无法保证向后兼容，所以需要单独处理
-        # https://github.com/django/django/blob/stable/4.2.x/django/contrib/auth/__init__.py#L69
-        if "api_name" in get_user_parameters and "gateway_name" not in get_user_parameters:
-            authenticate = authenticate_with_signature_v1
-        else:
+    else:
+        try:
+            from apigw_manager.apigw.authentication import ApiGatewayJWTUserMiddleware
+
+            get_user_parameters = inspect.signature(ApiGatewayJWTUserMiddleware.get_user).parameters.keys()
+            # django 的 authenticate 方法会保证向后兼容参数，调用方新增参数不会影响用户认证（认证只用到了 verified、bk_username 这 2 个参数）
+            # apigw_manager 的 3.0.0 版本开始 将 api_name 修改为了 gateway_name，导致无法保证向后兼容，所以需要单独处理
+            # https://github.com/django/django/blob/stable/4.2.x/django/contrib/auth/__init__.py#L69
+            if "api_name" in get_user_parameters and "gateway_name" not in get_user_parameters:
+                authenticate = authenticate_with_signature_v1
+            else:
+                authenticate = authenticate_with_signature_v3
+            del get_user_parameters
+        except ImportError:
             authenticate = authenticate_with_signature_v3
-        del get_user_parameters
-    except ImportError:
-        authenticate = authenticate_with_signature_v3
 
     def get_user(self, user_id: Any) -> User:
         raise NotImplementedError(

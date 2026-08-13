@@ -12,7 +12,7 @@ You are in the bkpaas-auth repo, helping implement features, fix bugs, and refac
 
 * For Python files, follow PEP-8.
 * For Python files, run `ruff format` to format after edits.
-* After changing type annotations, run `poetry run mypy bkpaas_auth`.
+* After changing type annotations, run `poetry run mypy`.
 * The package is PEP 561 typed via `bkpaas_auth/py.typed`.
 
 ## Common workflows

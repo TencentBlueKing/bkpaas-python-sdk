@@ -15,11 +15,12 @@ DEFAULT_SCRUBBED_FIELDS = (
 )
 
 
-def scrub_data(data: Any) -> Any:
+def scrub_data(data: dict[str, Any]) -> dict[str, Any]:
     """Scrub the data, mask all sensitive data fields.
 
-    :return: A new dict, with sensitive data masked as "******". Non-dict input is returned as-is.
+    :return: A new dict, with sensitive data masked as "******".
     """
+    # 防御性分支：调用方多为日志拼装代码，传入非 dict 时不应因脱敏而中断日志
     if not isinstance(data, dict):
         return data
 

@@ -30,10 +30,12 @@ class UserInfo:
         self.tenant_id = kwargs.get("tenant_id")
 
     def provide(self, user: User) -> User:
-        user.provider_type = self.provider_type
-        user.username = self.username
+        # 先校验再写入，避免中途抛出异常时留下一个被改坏了一半的 user 对象
         if self.provider_type is None:
             raise ValueError("provider_type is required to provide user")
+
+        user.provider_type = self.provider_type
+        user.username = self.username
         user.bkpaas_user_id = user_id_encoder.encode(self.provider_type, self.username)
 
         user.update_user_info(self.__dict__)
