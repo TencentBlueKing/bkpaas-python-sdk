@@ -32,6 +32,16 @@ pip install "apigw-manager[cryptography]"
 
 - [解析**JWT**](./docs/jwt-explain.md): 使用 Django 中间件，您可以解析蓝鲸 API 网关的 X-Bkapi-JWT 请求头，确保只有来自 API 网关的请求才能访问您的后端服务，提升系统安全性。
 
+## 网关版本兼容性
+
+OAuth2 客户端配置依赖目标 API 网关版本：
+
+| 使用场景 | 配置项 | 最低网关版本 |
+| --- | --- | --- |
+| MCP Server | `oauth2_public_client_enabled` | 1.22.1 |
+| MCP Server | `oauth2_personal_client_enabled` | 1.23.2 |
+| API 资源 | `oauth2PersonalClientEnabled` | 1.23.2 |
+
 
 ## FAQ
 

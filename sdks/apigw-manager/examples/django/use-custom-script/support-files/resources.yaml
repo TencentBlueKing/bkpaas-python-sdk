@@ -32,4 +32,5 @@ paths:
           appVerifiedRequired: true
           userVerifiedRequired: false
           resourcePermissionRequired: false
+          oauth2PersonalClientEnabled: false # 开启时必须同时设置 userVerifiedRequired: true
         descriptionEn:

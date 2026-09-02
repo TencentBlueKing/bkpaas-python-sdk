@@ -32,6 +32,7 @@ paths:
           appVerifiedRequired: true
           userVerifiedRequired: false
           resourcePermissionRequired: false
+          oauth2PersonalClientEnabled: false # 开启时必须同时设置 userVerifiedRequired: true
         descriptionEn:
         # 资源插件配置
         # pluginConfigs:

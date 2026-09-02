@@ -55,10 +55,21 @@ class TestGenApigatewayResourceConfig:
                     "userVerifiedRequired": True,
                     "appVerifiedRequired": True,
                     "resourcePermissionRequired": True,
+                    "oauth2PersonalClientEnabled": False,
                 },
                 "descriptionEn": "this is a test",
             }
         }
+
+    def test_gen_with_oauth2_personal_client_enabled(self):
+        data = gen_apigateway_resource_config(
+            user_verified_required=True,
+            oauth2_personal_client_enabled=True,
+        )
+
+        auth_config = data["x-bk-apigateway-resource"]["authConfig"]
+        assert auth_config["oauth2PersonalClientEnabled"] is True
+        assert "oauth2PublicClientEnabled" not in auth_config
 
     def test_gen_with_mcp_and_disabled_app_verification(self, settings):
         settings.BK_APIGW_STAGE_ENABLE_MCP_SERVERS = True
@@ -88,6 +99,7 @@ class TestGenApigatewayResourceConfig:
                     "userVerifiedRequired": False,
                     "appVerifiedRequired": False,
                     "resourcePermissionRequired": False,
+                    "oauth2PersonalClientEnabled": False,
                 },
                 "descriptionEn": "",
                 "noneSchema": True,

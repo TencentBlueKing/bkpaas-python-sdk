@@ -35,6 +35,7 @@ def gen_apigateway_resource_config(
     match_subpath: bool = False,
     none_schema: bool = False,
     enable_mcp: bool = False,
+    oauth2_personal_client_enabled: bool = False,
 ) -> Dict[str, Dict[str, any]]:
     """用于辅助生成 bk-apigateway 的资源配置
     Args:
@@ -48,6 +49,8 @@ def gen_apigateway_resource_config(
         match_subpath (bool, optional): 匹配所有子路径，默认为 False. 默认 False
         none_schema (bool, optional): 是否有请求参数. 默认 False，如果需要添加到 mcp server 中使用，没有参数一定要设置为 True
         enable_mcp (bool, optional): 是否启用 MCP 功能. 默认 False
+        oauth2_personal_client_enabled (bool, optional): 是否开启 OAuth2 个人客户端模式(个人 token)，启用时必须同时设置
+            user_verified_required=True。默认 False
     Returns:
         Dict[str, Dict[str, any]]: _description_
     """
@@ -78,6 +81,7 @@ def gen_apigateway_resource_config(
                 "userVerifiedRequired": user_verified_required,
                 "appVerifiedRequired": app_verified_required,
                 "resourcePermissionRequired": resource_permission_required,
+                "oauth2PersonalClientEnabled": oauth2_personal_client_enabled,
             },
             "descriptionEn": description_en,
         }

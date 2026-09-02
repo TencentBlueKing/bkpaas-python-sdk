@@ -47,6 +47,8 @@ stages:
     #     # 授权的应用
     #     target_app_codes:
     #       - "bk_app_code1"
+    #     # 是否开启 OAuth2 个人客户端模式(个人 token)，默认不开启
+    #     oauth2_personal_client_enabled: false
     #     # 是否返回原始响应，开启后 mcp-proxy 直接返回 API 响应结果，默认不开启
     #     raw_response_enabled: false
 

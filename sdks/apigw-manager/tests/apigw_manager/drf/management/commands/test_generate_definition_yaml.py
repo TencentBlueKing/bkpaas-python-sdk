@@ -15,11 +15,13 @@
 # We undertake not to change the open source license (MIT license) applicable
 # to the current version of the project delivered to anyone in the future.
 
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, mock_open, patch
 
 import pytest
 from django.core.management.base import CommandError
+from django.template import Context, Template
 
 from apigw_manager.drf.management.commands.generate_definition_yaml import Command
 
@@ -33,6 +35,36 @@ class AppendOnlyHooks:
 
 
 class TestCommand:
+    def test_definition_template_renders_oauth2_client_settings(self):
+        template_path = (
+            Path(__file__).resolve().parents[5] / "src/apigw_manager/drf/management/commands/data/definition.yaml"
+        )
+        mcp_server = SimpleNamespace(
+            name="demo",
+            title="Demo",
+            description="demo",
+            labels=[],
+            tools=["get_demo"],
+            tool_names=[],
+            is_public=False,
+            protocol_type="sse",
+            status=1,
+            target_app_codes=[],
+            oauth2_public_client_enabled=True,
+            oauth2_personal_client_enabled=True,
+            raw_response_enabled=False,
+            category_names=[],
+        )
+        patched_settings = SimpleNamespace(
+            BK_APIGW_STAGE_ENABLE_MCP_SERVERS=True,
+            BK_APIGW_STAGE_MCP_SERVERS=[mcp_server],
+        )
+
+        rendered = Template(template_path.read_text()).render(Context({"settings": patched_settings}))
+
+        assert "oauth2_public_client_enabled: True" in rendered
+        assert "oauth2_personal_client_enabled: True" in rendered
+
     @patch("apigw_manager.drf.management.commands.generate_definition_yaml.shutil.copyfile")
     def test_handle_copies_template_without_render(self, mocked_copyfile, tmp_path):
         patched_settings = SimpleNamespace(
