@@ -110,6 +110,10 @@ BK_APP_SECRET = "my-app-secret"
 # 待同步网关配置的网关名（如果需同步多个网关，可在同步命令中指定）
 BK_APIGW_NAME = "my-gateway-name"
 
+# 使用 generate_definition_yaml --render 渲染 SDK 内置模板时，使用 Python 布尔值配置是否为官方网关
+# 生成的 definition.yaml 中对应 is_official: true/false
+BK_APIGW_IS_OFFICIAL = False
+
 # 需将 bkapi.example.com 替换为真实的云 API 域名；
 # 在 PaaS 3.0 部署的应用，可从环境变量中获取 BK_API_URL_TMPL，不需要额外配置；
 # 实际上，SDK 将调用网关 bk-apigateway 接口将数据同步到 API 网关

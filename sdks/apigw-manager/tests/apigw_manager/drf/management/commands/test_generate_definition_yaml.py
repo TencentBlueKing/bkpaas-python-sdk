@@ -36,6 +36,7 @@ class AppendOnlyHooks:
 
 
 class TestCommand:
+    # Existing Django settings use 1/10; new settings use True/False.
     @pytest.mark.parametrize(
         ("configured_value", "expected"),
         [(1, True), (10, False), (True, True), (False, False)],
