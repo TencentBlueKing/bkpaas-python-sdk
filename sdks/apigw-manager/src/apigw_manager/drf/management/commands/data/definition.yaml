@@ -10,7 +10,7 @@ apigateway:
   description: "{{ settings.BK_APIGW_DESCRIPTION }}"
   description_en: "{{ settings.BK_APIGW_DESCRIPTION_EN }}"
   is_public: {{ settings.BK_APIGW_IS_PUBLIC }}
-  is_official: {% if settings.BK_APIGW_IS_OFFICIAL == 1 %}true{% else %}false{% endif %}
+  is_official: {% if settings.BK_APIGW_IS_OFFICIAL is True or settings.BK_APIGW_IS_OFFICIAL == 1 %}true{% else %}false{% endif %}
   maintainers:
   {% if settings.BK_APIGW_MAINTAINERS %}
     {% for maintainer in settings.BK_APIGW_MAINTAINERS %}
