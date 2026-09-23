@@ -158,7 +158,7 @@ apigateway:
   # 是否公开；公开，则用户可查看资源文档、申请资源权限；不公开，则网关对用户隐藏
   is_public: true
   # 标记网关为官方网关，网关名需以 `bk-` 开头，可选；非官方网关，去除此配置
-  api_type: 1
+  is_official: true
   # 网关维护人员，仅维护人员有管理网关的权限
   maintainers:
     - "admin"
