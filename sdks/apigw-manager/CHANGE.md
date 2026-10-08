@@ -1,5 +1,21 @@
 ## Change logs
 
+### 5.0.2
+
+#### Improvements
+
+- [feat] 支持 OAuth2 个人客户端（个人 token）配置同步：DRF 资源配置生成新增 `oauth2_personal_client_enabled` 参数，生成 API 资源的 `oauth2PersonalClientEnabled` 配置；MCP Server 定义模板新增 `oauth2_personal_client_enabled` 配置
+- [docs] 补充 AI 网关自动化同步说明：新建 AI 网关需设置 `kind: "ai"`，并使用 `bkai-` 前缀的网关名称
+- [docs] 明确资源配置 `allowApplyPermission` 允许申请权限的前提是开启应用认证
+
+#### Fixes
+
+- [fix] 资源版本存在性检查兼容分页响应，使用 `count` 判断是否存在，避免将 `count: 0` 的非空响应误判为已有版本；继续兼容数组响应
+
+#### Upgrade Guide
+
+- OAuth2 个人客户端配置要求 API 网关版本 >= 1.23.2；API 资源开启 `oauth2PersonalClientEnabled` 时，必须同时设置 `userVerifiedRequired: true`
+
 ### 5.0.1
 
 - [fix] 修复 v2 API 响应解析逻辑，20x 响应直接返回 `data`，非 20x 响应从 `error` 中解析错误信息
