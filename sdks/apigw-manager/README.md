@@ -53,10 +53,10 @@ OAuth2 客户端配置依赖目标 API 网关版本：
 
 网关URL `BK_API_URL_TMPL` 漏配或者配错了(自定义脚本中存在错误)。举例说明: BK_API_URL_TMPL: http://bkapi.example.com/api/{api_name}"l, 注意 {api_name}是占位符需要保留
 
-### 3.同步过程中报错: `校验失败: api_type: api_type 为 1 时，网关名 name 需以 bk- 开头。
+### 3.同步网关时提示网关名需要以 `bk-` 开头
 
-这个是因为 `definition.yaml` 定义的 apigateway.api_type为 1，标记网关为官方网关，网关名需以 `bk-` 开头，可选；非官方网关，可去除此配置
-当设置为 1 时,则 `sync-apigateway.sh`里面的 `gateway_name` 参数需要以 bk- 开头
+这是因为 `definition.yaml` 中的 `apigateway.is_official` 为 `true`，标记网关为官方网关，网关名需以 `bk-` 开头；非官方网关可设置为 `false` 或去除此配置。
+设置为 `true` 时，`sync-apigateway.sh` 中的 `gateway_name` 参数需要以 `bk-` 开头。
 
 ### 4.definition.yaml 指定了一个环境，为啥发布时却将其他环境也进行了发布？
 
