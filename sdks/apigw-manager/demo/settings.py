@@ -19,6 +19,8 @@ from pathlib import Path
 
 import environ
 
+from demo.kms import load_app_credentials
+
 try:
     import pymysql
 
@@ -147,8 +149,16 @@ STATIC_URL = "/static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-BK_APP_SECRET = env.str("BK_APP_SECRET", default="")
-BK_APP_CODE = env.str("BK_APP_CODE", default="")
+_app_credentials = load_app_credentials()
+if _app_credentials is None:
+    BK_APP_SECRET = env.str("BK_APP_SECRET", default="")
+    BK_APP_CODE = env.str("BK_APP_CODE", default="")
+else:
+    # Assign literal credentials without django-environ's '$' proxy expansion.
+    BK_APP_CODE, BK_APP_SECRET = _app_credentials
+    # Existing definition templates can read either settings or os.environ.
+    os.environ.update(BK_APP_CODE=BK_APP_CODE, BK_APP_SECRET=BK_APP_SECRET)
+
 BK_APIGW_NAME = env.str("BK_APIGW_NAME", default="")
 BK_APIGW_MANAGERS = env.list("BK_APIGW_MANAGERS", default=[])
 BK_API_STAGE_HOSTS = env.list("BK_API_STAGE_HOSTS", default=[])
