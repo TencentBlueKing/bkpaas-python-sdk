@@ -9,7 +9,7 @@
 - */data/apidocs*：文档目录，可通过网关导出后解压；
 - */data/bin/sync-apigateway.sh*：自定义同步脚本;
 
-镜像执行同步时，需要额外的环境变量支持：
+镜像默认使用以下环境变量执行同步；开启 KMS 后，应用凭据改由信封读取，见 [KMS 配置说明](#kms-配置说明)：
 
 - `BK_APIGW_NAME`：网关名称；
 - `BK_API_URL_TMPL`：云网关 API 地址模板，例如：网关 host 是：`bkapi.example.com`，则对应的值为：http://bkapi.example.com/api/{api_name} 注意：{api_name} 这个是占位符。
@@ -48,6 +48,91 @@ functions.sh 中的 bash 函数：
 - `log_info`: 打印 info 日志
 - `log_warn`: 打印 warning 日志
 - `log_error`: 打印 error 日志
+
+## KMS 配置说明
+
+从 **5.0.3** 开始，基础镜像支持在自带 Django 项目初始化时解密应用凭据。镜像已安装 `bk-kms-sdk` 及国密后端，支持 SDK 的 RSA/SM2、AES/SM4 信封。解密在容器内本地完成，不请求远程 KMS 服务。部署方负责准备配套的私钥、加密信封及 Kubernetes Secret，并完成环境变量注入和文件挂载。
+
+`ENABLE_KMS` 未设置或值为 `false` 时，继续使用原有 `BK_APP_CODE` / `BK_APP_SECRET`，不导入 KMS SDK、不读取信封文件。开关仅接受字面值 `true` 或 `True` 开启，其余值均关闭。
+
+开启 KMS 时，配置以下环境变量，原有 `BK_APIGW_NAME`、`BK_API_URL_TMPL` 等非凭据配置仍然需要提供：
+
+| 环境变量 | 说明 | 默认值 |
+| --- | --- | --- |
+| `ENABLE_KMS` | 是否开启 KMS 应用凭据解密 | 关闭 |
+| `BK_APIGW_MANAGER_KMS_PRIVATE_KEY` | Base64 编码的 PEM 私钥内容，不是私钥文件路径；开启时必填 | 无 |
+| `BK_APIGW_MANAGER_KMS_ENVELOPE_PATH` | 挂载的信封文件路径；文件内容为 UTF-8 编码的 Base64 信封，开启时必填 | 无 |
+| `BK_APIGW_MANAGER_KMS_APP_NAME` | 选择 `bkapp_id_secret` 下的应用条目名称，与条目中的 `app_code` 值可以不同 | `default` |
+
+以下是**待加密的 JSON 明文结构**，不是挂载文件的最终内容。只要求所选条目的 `app_code`、`app_secret` 为非空字符串，其他条目和字段可以省略：
+
+```json
+{
+  "bkapp_id_secret": {
+    "default": {
+      "app_code": "<应用代码>",
+      "app_secret": "<应用密钥>"
+    },
+    "bk_apigw_test": {
+      "app_code": "<另一应用代码>",
+      "app_secret": "<另一应用密钥>"
+    }
+  }
+}
+```
+
+例如，`BK_APIGW_MANAGER_KMS_APP_NAME=bk_apigw_test` 会读取 `bkapp_id_secret.bk_apigw_test.app_code` 和 `bkapp_id_secret.bk_apigw_test.app_secret`。开启 KMS 后，信封凭据优先于原有 `BK_APP_CODE` / `BK_APP_SECRET`；私钥或文件不可用、解密失败、JSON 无效、所选条目或字段缺失时，管理命令启动失败，不回退到旧凭据。错误信息不输出私钥、信封或明文。
+
+Kubernetes Job 配置示例（部署方已创建 `my-app-kms` Secret，包含 `privateKey` 和 `envelope` 两个字段）：
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sync-apigateway
+spec:
+  template:
+    spec:
+      containers:
+        - name: sync-apigateway
+          image: hub.bktencent.com/blueking/apigw-manager:5.0.3
+          env:
+            - name: BK_APIGW_NAME
+              value: "bk-demo"
+            - name: BK_API_URL_TMPL
+              value: "http://bkapi.example.com/api/{api_name}"
+            - name: ENABLE_KMS
+              value: "true"
+            - name: BK_APIGW_MANAGER_KMS_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: my-app-kms
+                  key: privateKey
+            - name: BK_APIGW_MANAGER_KMS_ENVELOPE_PATH
+              value: "/etc/secrets/apigw-manager-kms"
+            - name: BK_APIGW_MANAGER_KMS_APP_NAME
+              value: "default"
+          volumeMounts:
+            - name: kms-envelope
+              mountPath: /etc/secrets/apigw-manager-kms
+              subPath: envelope
+              readOnly: true
+            # 另行挂载网关定义、资源及文档到 /data，见下文的同步方式。
+      volumes:
+        - name: kms-envelope
+          secret:
+            secretName: my-app-kms
+            items:
+              - key: envelope
+                path: envelope
+      restartPolicy: Never
+```
+
+Secret 中 `privateKey` 的业务内容是 SDK 要求的 Base64 编码 PEM。若使用 Secret 的 `stringData`，直接填写该内容；若使用 `data`，还需要 Kubernetes Secret 自身的一层 Base64 编码。
+
+默认同步脚本和通过 `apigw-manager.sh` 执行管理命令的自定义同步脚本共用镜像自带的 `demo.settings` 配置入口，每个管理命令进程解密一次。解密后直接赋值给 Django settings，并同步到**当前 Python 进程**的 `os.environ`，保留凭据中的 `$`、引号和空白等字符，因此已有 `settings.BK_APP_CODE`、`environ.BK_APP_CODE` 等模板写法继续生效。不会回写 Secret 或凭据文件，也不会反向修改父 Bash 进程的环境变量；Bash 自身读取凭据仍读取部署注入的值。使用业务项目自己的 Django settings 时，应由业务项目接入 KMS。
+
+私钥通过环境变量注入、信封通过 `subPath` 挂载时，更新 Secret 不会刷新正在运行的容器。轮换后应重新创建同步 Job / Pod。
 
 ## 准备工作
 

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "apigw-manager"
-version = "5.0.2"
+version = "5.0.3"
 description = "The SDK for managing blueking gateway resource."
 readme = "README.md"
 authors = ["blueking <blueking@tencent.com>"]
@@ -28,6 +28,7 @@ kubernetes = { version = "*", optional = true }
 djangorestframework = { version = ">=3.10.3", optional = true }
 drf-spectacular = { version = "<=0.27.2", optional = true }
 docutils = "0.20.1"
+bk-kms-sdk = { version = "1.0.0", extras = ["gm"], optional = true }
 
 [tool.poetry.extras]
 cryptography = ["cryptography", "pyjwt"]
@@ -35,6 +36,7 @@ drf = ["django", "cryptography", "pyjwt", "djangorestframework", "drf-spectacula
 django = ["django", "pyjwt"]
 demo = ["django-environ", "django", "PyMySQL", "pyjwt"]
 kubernetes = ["kubernetes"]
+kms = ["bk-kms-sdk"]
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
@@ -90,6 +92,7 @@ drf = ["django", 'cryptography', 'pyjwt', 'djangorestframework (>=3.10.3)', 'drf
 django = ["django", 'pyjwt']
 demo = ['django-environ (>=0.8.1)', "django", 'PyMySQL (>=1.0.2,<2.0.0)', 'pyjwt']
 kubernetes = ['kubernetes']
+kms = ['bk-kms-sdk[gm]==1.0.0']
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

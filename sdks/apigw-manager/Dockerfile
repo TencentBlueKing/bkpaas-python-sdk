@@ -16,7 +16,7 @@ COPY poetry.lock /apigw-manager/poetry.lock
 COPY README.md /apigw-manager/README.md
 
 WORKDIR /apigw-manager
-RUN pip3 install .[demo,kubernetes]
+RUN pip3 install .[demo,kubernetes,kms]
 RUN python manage.py migrate
 
 WORKDIR /data

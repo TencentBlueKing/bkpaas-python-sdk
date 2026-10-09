@@ -1,5 +1,10 @@
 ## Change logs
 
+### 5.0.3
+
+- [feat] 镜像支持通过 `ENABLE_KMS` 开启应用凭据解密：读取环境变量中的私钥和挂载的信封文件，支持选择 `bkapp_id_secret` 下的应用条目，并将解密后的 `app_code` / `app_secret` 用于网关同步和定义模板；关闭 KMS 时保留原有环境变量配置方式
+- [docs] 镜像同步文档新增 KMS 配置说明、信封明文结构和 Kubernetes 挂载示例
+
 ### 5.0.2
 
 #### Improvements

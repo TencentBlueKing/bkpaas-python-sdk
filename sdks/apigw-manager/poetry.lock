@@ -114,6 +114,51 @@ docs = ["furo", "jaraco.packaging (>=9.3)", "rst.linker (>=1.9)", "sphinx (>=3.5
 testing = ["jaraco.test", "pytest (!=8.0.*)", "pytest (>=6,!=8.1.*)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)"]
 
 [[package]]
+name = "bk-crypto-python-sdk"
+version = "4.1.1"
+description = "bk-crypto-python-sdk is a lightweight cryptography toolkit for Python applications based on cryptography / tongsuopy and other encryption libraries."
+optional = true
+python-versions = "<3.15,>=3.9"
+groups = ["main"]
+markers = "extra == \"kms\""
+files = [
+    {file = "bk_crypto_python_sdk-4.1.1-py3-none-any.whl", hash = "sha256:795f8ca88a70d82073a9862f165ec57db42ab0b5138f0a423f50d510b91a0bd5"},
+    {file = "bk_crypto_python_sdk-4.1.1.tar.gz", hash = "sha256:89908ab53e2e71eca7316cf5b64b80cce762b38888c51956fb0850fd1abc7dae"},
+]
+
+[package.dependencies]
+cryptography = ">=44.0.0,<51.0.0"
+dacite = ">=1.8.1,<2.0.0"
+tongsuopy-crayon = {version = ">=1.0.2b5,<2.0.0", optional = true, markers = "extra == \"gm\""}
+typing-extensions = ">=4.0"
+
+[package.extras]
+gm = ["tongsuopy-crayon (>=1.0.2b5,<2.0.0)"]
+
+[[package]]
+name = "bk-kms-sdk"
+version = "1.0.0"
+description = "Python SDK for BlueKing Key Management Service"
+optional = true
+python-versions = "<3.15,>=3.11"
+groups = ["main"]
+markers = "extra == \"kms\""
+files = [
+    {file = "bk_kms_sdk-1.0.0-py3-none-any.whl", hash = "sha256:ba7357de1ec442e676a2e203ecd465fb7c79f0c5d0614a380d4629e85484107d"},
+    {file = "bk_kms_sdk-1.0.0.tar.gz", hash = "sha256:34962182f15f7e1c6b4edbde25ab43610d0d0344373b2977e9084808484a0fd4"},
+]
+
+[package.dependencies]
+bk-crypto-python-sdk = [
+    {version = "4.1.1"},
+    {version = "4.1.1", extras = ["gm"], optional = true, markers = "extra == \"gm\""},
+]
+
+[package.extras]
+dev = ["build (>=1.2,<2)", "mypy (>=2.3.1,<3)", "pytest (>=8,<10)", "ruff (>=0.9,<1)"]
+gm = ["bk-crypto-python-sdk[gm] (==4.1.1)"]
+
+[[package]]
 name = "bkapi-bk-apigateway"
 version = "1.2.0"
 description = "蓝鲸API网关"
@@ -269,7 +314,7 @@ files = [
     {file = "cffi-2.0.0-cp39-cp39-win_amd64.whl", hash = "sha256:b882b3df248017dba09d6b16defe9b5c407fe32fc7c65a9c69798e6175601be9"},
     {file = "cffi-2.0.0.tar.gz", hash = "sha256:44d1b5909021139fe36001ae048dbdde8214afa20200eda0f64c068cac5d5529"},
 ]
-markers = {main = "(extra == \"cryptography\" or extra == \"drf\" or extra == \"kubernetes\") and platform_python_implementation != \"PyPy\"", dev = "platform_python_implementation != \"PyPy\""}
+markers = {main = "(extra == \"cryptography\" or extra == \"drf\" or extra == \"kubernetes\" or extra == \"kms\") and platform_python_implementation != \"PyPy\" or extra == \"kms\"", dev = "platform_python_implementation != \"PyPy\""}
 
 [package.dependencies]
 pycparser = {version = "*", markers = "implementation_name != \"PyPy\""}
@@ -660,7 +705,7 @@ files = [
     {file = "cryptography-48.0.0-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:db63bf618e5dea46c07de12e900fe1cdd2541e6dc9dbae772a70b7d4d4765f6a"},
     {file = "cryptography-48.0.0.tar.gz", hash = "sha256:5c3932f4436d1cccb036cb0eaef46e6e2db91035166f1ad6505c3c9d5a635920"},
 ]
-markers = {main = "extra == \"cryptography\" or extra == \"drf\" or extra == \"kubernetes\""}
+markers = {main = "extra == \"cryptography\" or extra == \"drf\" or extra == \"kubernetes\" or extra == \"kms\""}
 
 [package.dependencies]
 cffi = {version = ">=2.0.0", markers = "platform_python_implementation != \"PyPy\""}
@@ -682,6 +727,22 @@ files = [
 
 [package.dependencies]
 requests = "*"
+
+[[package]]
+name = "dacite"
+version = "1.9.2"
+description = "Simple creation of data classes from dictionaries."
+optional = true
+python-versions = ">=3.7"
+groups = ["main"]
+markers = "extra == \"kms\""
+files = [
+    {file = "dacite-1.9.2-py3-none-any.whl", hash = "sha256:053f7c3f5128ca2e9aceb66892b1a3c8936d02c686e707bee96e19deef4bc4a0"},
+    {file = "dacite-1.9.2.tar.gz", hash = "sha256:6ccc3b299727c7aa17582f0021f6ae14d5de47c7227932c47fec4cdfefd26f09"},
+]
+
+[package.extras]
+dev = ["black", "coveralls", "mypy", "pre-commit", "pylint", "pytest (>=5)", "pytest-benchmark", "pytest-cov"]
 
 [[package]]
 name = "decorator"
@@ -1727,7 +1788,7 @@ files = [
     {file = "pycparser-3.0-py3-none-any.whl", hash = "sha256:b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992"},
     {file = "pycparser-3.0.tar.gz", hash = "sha256:600f49d217304a5902ac3c37e1281c9fe94e4d0489de643a9504c5cdfdfc6b29"},
 ]
-markers = {main = "(extra == \"cryptography\" or extra == \"drf\" or extra == \"kubernetes\") and platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\"", dev = "platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\""}
+markers = {main = "(extra == \"cryptography\" or extra == \"drf\" or extra == \"kubernetes\" or extra == \"kms\") and (platform_python_implementation != \"PyPy\" or extra == \"kms\") and implementation_name != \"PyPy\"", dev = "platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\""}
 
 [[package]]
 name = "pyenv-inspect"
@@ -2362,6 +2423,52 @@ dev = ["build"]
 doc = ["sphinx"]
 
 [[package]]
+name = "tongsuopy-crayon"
+version = "1.0.2b6"
+description = "Tongsuo Python SDK"
+optional = true
+python-versions = ">=3.6"
+groups = ["main"]
+markers = "extra == \"kms\""
+files = [
+    {file = "tongsuopy_crayon-1.0.2b6-cp36-abi3-macosx_10_12_x86_64.whl", hash = "sha256:6dedcf17142d7dead9192cec8d3497ab9ee85d9fcfaab1bb264406043953ea0f"},
+    {file = "tongsuopy_crayon-1.0.2b6-cp36-abi3-macosx_13_0_arm64.whl", hash = "sha256:8230cef643e215b7a3cba2ed9996764937fb95367becacbe7b318d6f57d061f4"},
+    {file = "tongsuopy_crayon-1.0.2b6-cp36-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.manylinux_2_24_aarch64.whl", hash = "sha256:db0b8dd76b9a9d3d906b5fe21009dee7f45839b440f77f154c67fd9678d8cb6d"},
+    {file = "tongsuopy_crayon-1.0.2b6-cp36-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:702d1acb26965ee09248871be6f90eb72793acce9cfec92fb9e797dac6ecd636"},
+    {file = "tongsuopy_crayon-1.0.2b6-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_24_x86_64.whl", hash = "sha256:1931822c93667ca546255f680da58b2eccd9783e9185ef778a67feba5b2f8277"},
+    {file = "tongsuopy_crayon-1.0.2b6-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:da4bd309da1e7a30908af302d971b9f56a8dac57f0347311b910e5945de2a6a5"},
+    {file = "tongsuopy_crayon-1.0.2b6-cp36-abi3-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:7807d0021bf4dc92d03527cd0a7d420de4dd83506cd839874c1c8bb06e517215"},
+    {file = "tongsuopy_crayon-1.0.2b6-cp36-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:1a4263b7965ed7c35a91ecc8c92ed85272753d8e75b8a6055934ae45ae50b029"},
+    {file = "tongsuopy_crayon-1.0.2b6-cp36-abi3-musllinux_1_1_aarch64.whl", hash = "sha256:45b417cdb46c2f70322fad9be1be0d6558bf46e182e4e5a07c8444e13a2f4020"},
+    {file = "tongsuopy_crayon-1.0.2b6-cp36-abi3-musllinux_1_1_x86_64.whl", hash = "sha256:ed9aaac16b3f04483ed241b90a8569ff0602b9788ffa3d3d0d822d54a8ca1d7f"},
+    {file = "tongsuopy_crayon-1.0.2b6-cp36-abi3-win32.whl", hash = "sha256:33353365a7e33cec32cc6516ebe5994132c54a60826b49e2c6af69bbea66480e"},
+    {file = "tongsuopy_crayon-1.0.2b6-cp36-abi3-win_amd64.whl", hash = "sha256:8aa57bd5c7df7a9c658b1b1ef585b80f7d7a39ee23465db69f0d5222ac4aa339"},
+    {file = "tongsuopy_crayon-1.0.2b6-pp38-pypy38_pp73-macosx_10_12_x86_64.whl", hash = "sha256:e3fd0092140dd2c7c48b99cce179d6e3106bf43c3b89af4fb9cc2434acaf4e32"},
+    {file = "tongsuopy_crayon-1.0.2b6-pp38-pypy38_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.manylinux_2_24_aarch64.whl", hash = "sha256:9a85e774cc4c5f4cf63c5d3e19b14b88cf735310a15da47000899e7210b073a5"},
+    {file = "tongsuopy_crayon-1.0.2b6-pp38-pypy38_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:4b46b03d86ccd4318714117a5de01558713b142203f3d39c05d72027f7427a5e"},
+    {file = "tongsuopy_crayon-1.0.2b6-pp38-pypy38_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_24_x86_64.whl", hash = "sha256:3887b6257a2d537e5193072ecc49fe1df5bd3781b0a0b8773854379e02555240"},
+    {file = "tongsuopy_crayon-1.0.2b6-pp38-pypy38_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:041f8896ea14561a484442e79d37637bf61ab6c0f566de203d870d91fe2d0597"},
+    {file = "tongsuopy_crayon-1.0.2b6-pp38-pypy38_pp73-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:a01d6335ccc6edeeb8c012cc4b639cae98dd2ff0a1ed6b36ad70e3b79de41521"},
+    {file = "tongsuopy_crayon-1.0.2b6-pp38-pypy38_pp73-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:be32b697fd80e3ab4dc0ff96c58f610ea05dadb385093c909cd70a7daf7d91cf"},
+    {file = "tongsuopy_crayon-1.0.2b6-pp38-pypy38_pp73-win_amd64.whl", hash = "sha256:5b0792af5195ff90f0e4066e8b257a5a0d21d5f55bff3f9755f3b6c5bfe052e6"},
+    {file = "tongsuopy_crayon-1.0.2b6-pp39-pypy39_pp73-macosx_10_12_x86_64.whl", hash = "sha256:7b365a4c2e2ca58acec6837bc946dd214610841f6e6abaa966a8f7518dcf9534"},
+    {file = "tongsuopy_crayon-1.0.2b6-pp39-pypy39_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.manylinux_2_24_aarch64.whl", hash = "sha256:ea84ec750a1508cf5cb6e170ac5129f0c6208f7e0504bee6739368bcc8512b09"},
+    {file = "tongsuopy_crayon-1.0.2b6-pp39-pypy39_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:8eeb3226a6ddb0d65f79903fb6e286ce86778c70b46a49f2d9843bcd6fd2ec5b"},
+    {file = "tongsuopy_crayon-1.0.2b6-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_24_x86_64.whl", hash = "sha256:20ef52c691edefe485438b194b6a969ddd8d64c8b772f144733896c89cbdab7d"},
+    {file = "tongsuopy_crayon-1.0.2b6-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fd12d135fe89f1c62e478bd2193b71a34be9fc921d59d05d92321681cbafb3fa"},
+    {file = "tongsuopy_crayon-1.0.2b6-pp39-pypy39_pp73-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:e823d1d705a33fddd954e010a3e7b1b9217365736be920c11229d87fb50b21f5"},
+    {file = "tongsuopy_crayon-1.0.2b6-pp39-pypy39_pp73-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:12fafff7d17dad75ce987f40b1b9afccb2e68723f67f590b821850394a5afc66"},
+    {file = "tongsuopy_crayon-1.0.2b6-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:ccf0d627d46f00322a4b42f8f6692da8fbbd3ae848e400efc410c3584c740156"},
+]
+
+[package.dependencies]
+cffi = ">=1.12"
+
+[package.extras]
+pep8test = ["black", "flake8", "flake8-import-order", "pep8-naming"]
+test = ["pytest (>=6.2.0)", "pytest-benchmark", "pytest-cov", "pytest-subtests", "pytest-xdist"]
+
+[[package]]
 name = "tox"
 version = "4.23.2"
 description = "tox is a generic virtualenv management and test command line tool"
@@ -2611,9 +2718,10 @@ cryptography = ["cryptography", "pyjwt"]
 demo = ["PyMySQL", "django", "django-environ", "pyjwt"]
 django = ["django", "pyjwt"]
 drf = ["cryptography", "django", "djangorestframework", "drf-spectacular", "pyjwt"]
+kms = ["bk-kms-sdk"]
 kubernetes = ["kubernetes"]
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.15"
-content-hash = "275e424ed2b6be67680852b7ba5e21c62b2958fa0292c862fb23f1b96b136974"
+content-hash = "eacef8d5ae8faa31b8d00d1e37eec5607aaeb4891ea6a4e185abb637df6363af"
