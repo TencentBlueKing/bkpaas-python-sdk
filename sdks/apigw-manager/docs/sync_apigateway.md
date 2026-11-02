@@ -5,6 +5,8 @@ SDK 同步网关配置到 API 网关，支持多种方案：
 - [直接使用 Django Command 同步](./sync-apigateway-with-django.md)：此方案适用于 `Django 项目`；(可直接执行 SDK 提供的 Django Command 指令)
 - [通过镜像方式同步](./sync-apigateway-with-docker.md)：此方案适用于 `非 Django 项目`；(无法直接执行 SDK 提供的 Django Command 指令)
 
+使用全租户应用（`tenant_mode=global`）执行同步时，需要配置 `BK_APP_TENANT_ID=system`，由 SDK 自动添加请求头 `X-Bk-Tenant-Id`。该配置属于同步进程，不需要写入 `definition.yaml` 或 KMS 信封；配置方式及优先级见 [同步应用的租户配置](./sync-apigateway-with-docker.md#同步应用的租户配置)。
+
 ## 1. 准备工作
 
 同步网关配置到 API 网关，需要准备网关配置、资源配置、资源文档、自定义同步脚本等数据，可参考目录：
