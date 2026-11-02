@@ -15,6 +15,7 @@
 - `BK_API_URL_TMPL`：云网关 API 地址模板，例如：网关 host 是：`bkapi.example.com`，则对应的值为：http://bkapi.example.com/api/{api_name} 注意：{api_name} 这个是占位符。
 - `BK_APP_CODE`：应用名称；
 - `BK_APP_SECRET`：应用密钥；
+- `BK_APP_TENANT_ID`：同步所用应用所属的租户 ID；使用全租户应用时设置为 `system`，见 [同步应用的租户配置](#同步应用的租户配置)。
 
 通过镜像进行同步时，镜像需访问用户自定义的数据，在 chart 和二进制两种不同的部署方案中，镜像加载用户自定义数据的方式有所不同：
 
@@ -49,13 +50,35 @@ functions.sh 中的 bash 函数：
 - `log_warn`: 打印 warning 日志
 - `log_error`: 打印 error 日志
 
+## 同步应用的租户配置
+
+以下镜像示例使用 apigw-manager **5.0.3**。旧版 **3.1.1** 不支持此租户配置，需先升级基础镜像；使用自定义镜像时，需要更新其 Dockerfile 中的基础镜像并重新构建。
+
+使用全租户应用（`tenant_mode=global`）同步时，需要在同步 Job 的容器环境变量中设置 `BK_APP_TENANT_ID=system`。单租户应用按部署要求配置所属租户 ID。
+
+```yaml
+env:
+  - name: BK_APP_TENANT_ID
+    value: "system"
+```
+
+apigw-manager 会自动将租户 ID 写入请求头 `X-Bk-Tenant-Id`，不需要在 `sync-apigateway.sh` 中手工拼接请求头。租户配置独立于应用凭据；开启 KMS 后仍需通过环境变量提供，不需要修改 KMS 信封。
+
+租户 ID 的读取规则如下，默认同步脚本和通过 `apigw-manager.sh` 执行管理命令的自定义脚本均适用：
+
+1. 如果存在 `BKPAAS_APP_TENANT_ID` 环境变量，优先使用它；空字符串映射为 `system`，非空字符串直接作为租户 ID。
+2. 如果不存在 `BKPAAS_APP_TENANT_ID`，先读取 Django settings 中的 `BK_APP_TENANT_ID`，未定义时读取同名环境变量。镜像自带的 `demo.settings` 未定义该项，可直接通过容器环境变量配置。
+3. 均未配置时，请求头中的租户 ID 为空，不会自动补成 `system`。
+
+修改生成同步 Job 的 chart values 或模板后，需要重新创建 Job，确保新 Pod 带上该环境变量。若日志提示全租户应用应设置 `BK_APP_TENANT_ID=system`，且当前值为 `X-Bk-Tenant-Id=`，应核对上述配置及优先级。
+
 ## KMS 配置说明
 
 从 **5.0.3** 开始，基础镜像支持在自带 Django 项目初始化时解密应用凭据。镜像已安装 `bk-kms-sdk` 及国密后端，支持 SDK 的 RSA/SM2、AES/SM4 信封。解密在容器内本地完成，不请求远程 KMS 服务。部署方负责准备配套的私钥、加密信封及 Kubernetes Secret，并完成环境变量注入和文件挂载。
 
 `ENABLE_KMS` 未设置或值为 `false` 时，继续使用原有 `BK_APP_CODE` / `BK_APP_SECRET`，不导入 KMS SDK、不读取信封文件。开关仅接受字面值 `true` 或 `True` 开启，其余值均关闭。
 
-开启 KMS 时，配置以下环境变量，原有 `BK_APIGW_NAME`、`BK_API_URL_TMPL` 等非凭据配置仍然需要提供：
+开启 KMS 时，配置以下环境变量，原有 `BK_APIGW_NAME`、`BK_API_URL_TMPL` 等非凭据配置仍然需要提供；使用全租户应用时，还需配置 `BK_APP_TENANT_ID=system`，见 [同步应用的租户配置](#同步应用的租户配置)：
 
 | 环境变量 | 说明 | 默认值 |
 | --- | --- | --- |
@@ -101,6 +124,9 @@ spec:
               value: "bk-demo"
             - name: BK_API_URL_TMPL
               value: "http://bkapi.example.com/api/{api_name}"
+            # 使用全租户应用同步时，取消以下注释。
+            # - name: BK_APP_TENANT_ID
+            #   value: "system"
             - name: ENABLE_KMS
               value: "true"
             - name: BK_APIGW_MANAGER_KMS_PRIVATE_KEY
@@ -213,7 +239,7 @@ log_info "done"
 
 ```yaml
 apigatewaySync:
-  image: "hub.bktencent.com/blueking/apigw-manager:3.1.1"
+  image: "hub.bktencent.com/blueking/apigw-manager:5.0.3"
   configMapMounts:
     - name: "sync-apigw-base"
       filePath: "files/support-files/*"
@@ -234,6 +260,9 @@ apigatewaySync:
       value: "bk-demo"
     - name: BK_APP_SECRET
       value: "secret"
+    # 使用全租户应用同步时，取消以下注释。
+    # - name: BK_APP_TENANT_ID
+    #   value: "system"
     - name: BK_API_URL_TMPL
       value: "http://bkapi.example.com/api/{api_name}"
 ```
@@ -316,7 +345,7 @@ spec:
 步骤 2. 构建 Dockerfile，参考：
 
 ```Dockerfile
-FROM hub.bktencent.com/blueking/apigw-manager:3.1.1
+FROM hub.bktencent.com/blueking/apigw-manager:5.0.3
 
 COPY support-files /data/
 ```
@@ -352,6 +381,9 @@ spec:
           value: "bk-demo"
         - name: BK_APP_SECRET
           value: "secret"
+        # 使用全租户应用同步时，取消以下注释。
+        # - name: BK_APP_TENANT_ID
+        #   value: "system"
         - name: BK_API_URL_TMPL
           value: "http://bkapi.example.com/api/{api_name}"
       restartPolicy: Never
@@ -361,6 +393,8 @@ spec:
 
 使用基础镜像 apigw-manager，通过外部文件挂载的方式，将对应的目录挂载到 /data/ 目录下，可通过以下类似的命令进行同步：
 
+使用全租户应用时，在下面的 `docker run` 命令中增加 `-e BK_APP_TENANT_ID=system`；租户配置及优先级见 [同步应用的租户配置](#同步应用的租户配置)。
+
 ```bash
 docker run --rm \
     -v /<MY_PATH>/:/data/ \
@@ -368,7 +402,7 @@ docker run --rm \
     -e BK_API_URL_TMPL=<BK_API_URL_TMPL> \
     -e BK_APP_CODE=<BK_APP_CODE> \
     -e BK_APP_SECRET=<BK_APP_SECRET> \
-    hub.bktencent.com/blueking/apigw-manager:3.1.1
+    hub.bktencent.com/blueking/apigw-manager:5.0.3
 ```
 
 ## 支持同步指令

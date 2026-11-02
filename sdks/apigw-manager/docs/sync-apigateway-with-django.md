@@ -107,6 +107,9 @@ class Command(BaseCommand):
 BK_APP_CODE = "my-app"
 BK_APP_SECRET = "my-app-secret"
 
+# 使用全租户应用（tenant_mode=global）同步时，取消以下注释；单租户应用按部署要求配置所属租户 ID。
+# BK_APP_TENANT_ID = "system"
+
 # 待同步网关配置的网关名（如果需同步多个网关，可在同步命令中指定）
 BK_APIGW_NAME = "my-gateway-name"
 
@@ -115,6 +118,10 @@ BK_APIGW_NAME = "my-gateway-name"
 # 实际上，SDK 将调用网关 bk-apigateway 接口将数据同步到 API 网关
 BK_API_URL_TMPL = "http://bkapi.example.com/api/{api_name}/" ## 例如：网关 host 是：`bkapi.example.com`，则对应的值为：http://bkapi.example.com/api/{api_name} 注意：{api_name} 这个是占位符。
 ```
+
+也可以通过同名环境变量 `BK_APP_TENANT_ID` 配置租户 ID；如果 Django settings 已定义该项，则 settings 中的值优先。SDK 会自动将其写入请求头 `X-Bk-Tenant-Id`，无需修改同步脚本或网关定义文件。
+
+如果运行环境存在 `BKPAAS_APP_TENANT_ID`，则优先使用该环境变量；空字符串映射为 `system`，非空字符串直接作为租户 ID。完整规则见 [同步应用的租户配置](./sync-apigateway-with-docker.md#同步应用的租户配置)。
 
 在 INSTALLED_APPS 中加入以下配置，SDK 将创建表 `apigw_manager_context` 用于存储一些中间数据：
 
@@ -147,6 +154,10 @@ spec:
         image: "hub.bktencent.com/blueking/my-image:1.0.0"
         imagePullPolicy: "IfNotPresent"
         name: sync-apigateway
+        # 使用全租户应用且未在 Django settings 中定义 BK_APP_TENANT_ID 时，取消以下注释。
+        # env:
+        #   - name: BK_APP_TENANT_ID
+        #     value: "system"
 ```
 
 二进制部署方案，在部署阶段直接执行 sync-apigateway.sh 脚本：

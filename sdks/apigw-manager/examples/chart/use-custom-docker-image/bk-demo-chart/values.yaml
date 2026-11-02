@@ -8,5 +8,9 @@ apigatewaySync:
       value: "bk-demo"
     - name: BK_APP_SECRET
       value: "secret"
+    # 使用全租户应用（tenant_mode=global）同步时，取消以下注释。
+    # BKPAAS_APP_TENANT_ID 环境变量存在时优先使用，空字符串映射为 system。
+    # - name: BK_APP_TENANT_ID
+    #   value: "system"
     - name: BK_API_URL_TMPL
       value: "http://bkapi.example.com/api/{api_name}"

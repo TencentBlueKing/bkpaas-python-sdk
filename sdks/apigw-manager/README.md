@@ -94,3 +94,41 @@ definition.yaml 指定的环境配置适用于 `sync_apigw_stage` 命令，而�
 ### 7. 同步网关资源的同时想直接根据 `resources.yaml` 即 swagger 或者 openapi3.0 生成文档，该如何操作？
 
 `sync_apigw_resources` 是进行网关资源同步命令，可以通过指定 `--doc_language`: en/zh 生成接口文档
+
+### 8. 同步网关时出现 403：`Cross tenant forbidden`，提示 `X-Bk-Tenant-Id` 不能为空
+
+**错误示例（已脱敏，仅保留关键日志）：**
+
+```text
+[warn] if the syncing to apigateway failed, and your app(demo) is a global tenant app, please set the environment variable BK_APP_TENANT_ID to `system` (or set django settings.BK_APP_TENANT_ID to `system`) and try again. the current value [X-Bk-Tenant-Id=].
+Error responded by API Gateway, status_code: 403, request_id: 00000000-0000-0000-0000-000000000000, error_code: 1640302, Cross tenant forbidden [reason="Cross-tenant calls are not allowed: header X-Bk-Tenant-Id is required and should not be empty. the app demo tenant_mode=global. [AH1]"]
+curl -H 'X-Bkapi-Authorization: {"bk_app_code": "demo", "bk_app_secret": "***", "access_token": null}' \
+     -H 'X-Bk-Tenant-Id;' \
+     -H 'Content-Type: application/json' \
+     -d '{"description": "Demo 网关", "description_en": "Demo gateway", "maintainers": ["demo"]}' \
+     https://bkapi.example.com/api/bk-apigateway/prod/api/v2/sync/gateways/demo/
+```
+
+**错误原因：**
+
+同步所用的应用是全租户应用（`tenant_mode=global`），但请求头 `X-Bk-Tenant-Id` 为空，因此被 API 网关拒绝。全租户应用应使用运营租户 `system` 执行同步。
+
+**修复方案：**
+
+在生成同步 Job 的 chart values 或模板中，为同步容器增加环境变量：
+
+```yaml
+env:
+  - name: BK_APP_TENANT_ID
+    value: "system"
+```
+
+直接使用 Django Command 时，也可以在 Django settings 中配置：
+
+```python
+BK_APP_TENANT_ID = "system"
+```
+
+apigw-manager 会自动添加请求头 `X-Bk-Tenant-Id: system`，无需在 `sync-apigateway.sh` 中手工拼接请求头；开启 KMS 时也不需要修改信封。若运行环境存在 `BKPAAS_APP_TENANT_ID`，会优先使用它，具体规则见 [同步应用的租户配置](./docs/sync-apigateway-with-docker.md#同步应用的租户配置)。
+
+修改配置后重新创建 Job，并检查新一次同步的结果。
