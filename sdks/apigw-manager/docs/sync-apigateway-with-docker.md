@@ -74,7 +74,7 @@ apigw-manager 会自动将租户 ID 写入请求头 `X-Bk-Tenant-Id`，不需要
 
 ## KMS 配置说明
 
-从 **5.0.3** 开始，基础镜像支持在自带 Django 项目初始化时解密应用凭据。镜像已安装 `bk-kms-sdk` 及国密后端，支持 SDK 的 RSA/SM2、AES/SM4 信封。解密在容器内本地完成，不请求远程 KMS 服务。部署方负责准备配套的私钥、加密信封及 Kubernetes Secret，并完成环境变量注入和文件挂载。
+从 **5.0.3 （注意： 要求 definition.yaml 使用 `spec_version: 2`）** 开始，基础镜像支持在自带 Django 项目初始化时解密应用凭据。镜像已安装 `bk-kms-sdk` 及国密后端，支持 SDK 的 RSA/SM2、AES/SM4 信封。解密在容器内本地完成，不请求远程 KMS 服务。部署方负责准备配套的私钥、加密信封及 Kubernetes Secret，并完成环境变量注入和文件挂载。
 
 `ENABLE_KMS` 未设置或值为 `false` 时，继续使用原有 `BK_APP_CODE` / `BK_APP_SECRET`，不导入 KMS SDK、不读取信封文件。开关仅接受字面值 `true` 或 `True` 开启，其余值均关闭。
 
