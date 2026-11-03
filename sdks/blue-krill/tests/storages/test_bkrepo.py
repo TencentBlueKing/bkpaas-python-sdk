@@ -174,7 +174,13 @@ class TestBKRepoManager:
     """BKRepoManager 测试类"""
 
     @pytest.fixture
-    def manager(self, session, username, password, endpoint):
+    def adapter(self):
+        # get_client 每次都会创建新的 session, 因此需要全局 mock, 避免请求被发送到真实的网络中
+        with requests_mock.Mocker() as m:
+            yield m
+
+    @pytest.fixture
+    def manager(self, username, password, endpoint):
         return BKRepoManager(
             endpoint_url=endpoint,
             username=username,
@@ -183,7 +189,7 @@ class TestBKRepoManager:
         )
 
     @pytest.fixture
-    def manager_without_tenant(self, session, username, password, endpoint):
+    def manager_without_tenant(self, username, password, endpoint):
         return BKRepoManager(
             endpoint_url=endpoint,
             username=username,

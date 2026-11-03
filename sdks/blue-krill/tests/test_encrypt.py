@@ -15,13 +15,17 @@
 # We undertake not to change the open source license (MIT license) applicable
 # to the current version of the project delivered to anyone in the future.
 
+import sys
 import unittest
+from unittest import mock
 
+import pytest
 from cryptography.fernet import Fernet
 from django.test.utils import override_settings
 
 from blue_krill.encrypt.handler import EncryptHandler
 from blue_krill.encrypt.legacy import legacy_decrypt, legacy_encrypt
+from tests.utils import requires_gm
 
 
 class TestEncrypt:
@@ -32,6 +36,7 @@ class TestEncrypt:
         assert encrypted.startswith("bkcrypt$")
         assert encrypt_handler.decrypt(encrypted) == text
 
+    @requires_gm
     def test_sm4cipher_encrypt(self):
         encrypt_handler = EncryptHandler(encrypt_cipher_type="SM4CTR", secret_key=Fernet.generate_key())
         text = random_string(10)
@@ -39,6 +44,7 @@ class TestEncrypt:
         assert encrypted.startswith("sm4ctr$")
         assert encrypt_handler.decrypt(encrypted) == text
 
+    @requires_gm
     def test_mixcipher_encrypt(self):
         secret_key = Fernet.generate_key()
         fernet_handler = EncryptHandler(encrypt_cipher_type="FernetCipher", secret_key=secret_key)
@@ -46,6 +52,13 @@ class TestEncrypt:
         text = random_string(10)
         assert sm4ctr_handler.decrypt(fernet_handler.encrypt(text)) == text
         assert fernet_handler.decrypt(sm4ctr_handler.encrypt(text)) == text
+
+    def test_sm4cipher_without_gm_extra(self):
+        # 模拟未安装 tongsuopy 的情况
+        with mock.patch.dict(sys.modules, {"tongsuopy": None}):
+            encrypt_handler = EncryptHandler(encrypt_cipher_type="SM4CTR", secret_key=Fernet.generate_key())
+            with pytest.raises(ImportError, match=r"blue-krill\[gm\]"):
+                encrypt_handler.encrypt(random_string(10))
 
 
 class TestEncryptFromDjangoSetting:
@@ -57,6 +70,7 @@ class TestEncryptFromDjangoSetting:
             assert encrypted.startswith("bkcrypt$")
             assert encrypt_handler.decrypt(encrypted) == text
 
+    @requires_gm
     def test_sm4cipher_encrypt(self):
         with override_settings(ENCRYPT_CIPHER_TYPE="SM4CTR", BKKRILL_ENCRYPT_SECRET_KEY=Fernet.generate_key()):
             encrypt_handler = EncryptHandler()
@@ -74,6 +88,7 @@ class TestEncryptFromDjangoSetting:
             assert encrypt_handler.decrypt(encrypted) == text
 
 
+@requires_gm
 def test_switch_encrypt_type():
     secret_key = Fernet.generate_key()
     with override_settings(ENCRYPT_CIPHER_TYPE="FernetCipher", BKKRILL_ENCRYPT_SECRET_KEY=secret_key):

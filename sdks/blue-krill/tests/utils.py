@@ -15,8 +15,16 @@
 # We undertake not to change the open source license (MIT license) applicable
 # to the current version of the project delivered to anyone in the future.
 
+import importlib.util
 import random
 from string import ascii_lowercase, digits
+
+import pytest
+
+# 国密算法 (如 SM4) 依赖可选的 tongsuopy, 未安装 blue-krill[gm] 时跳过相关测试
+requires_gm = pytest.mark.skipif(
+    importlib.util.find_spec("tongsuopy") is None, reason='requires "blue-krill[gm]" to be installed'
+)
 
 
 def generate_random_string(length=30, chars=(ascii_lowercase + digits)):

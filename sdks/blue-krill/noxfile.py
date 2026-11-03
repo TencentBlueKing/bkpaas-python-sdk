@@ -45,7 +45,7 @@ def tests(session):
     session.run("poetry", "self", "add", "poetry-plugin-export@latest")
 
     # Install dev/test dependencies
-    session.install("-e", ".[all]")
+    session.install("-e", ".[gm]")
     install_with_constraints(
         session,
         "pytest",

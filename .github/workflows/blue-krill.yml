@@ -53,7 +53,7 @@ jobs:
         uses: supercharge/redis-github-action@1.4.0
         if: runner.os == 'Linux'
         with:
-          redis-version: 3.2.0
+          redis-version: 7
       - name: Set Redis URL
         if: runner.os == 'Linux'
         run: |

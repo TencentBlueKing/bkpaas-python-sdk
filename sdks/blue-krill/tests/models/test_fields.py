@@ -19,6 +19,7 @@ import pytest
 
 from blue_krill.models.fields import EncryptField
 from tests.models.apps.test_encrypt.models import TestEncryptFieldModel
+from tests.utils import requires_gm
 
 pytestmark = pytest.mark.django_db
 
@@ -29,7 +30,7 @@ class TestEncryptField:
             # Test the fields with different ciphers
             "data",
             "data_fernet",
-            "data_sm4",
+            pytest.param("data_sm4", marks=requires_gm),
         ]
     )
     def field_name(self, request):
@@ -62,30 +63,31 @@ class TestEncryptField:
         retrieved_obj = TestEncryptFieldModel.objects.get(id=obj.id)
         assert retrieved_obj.data_fernet == test_data
 
-    def test_data_is_actually_encrypted_in_db(self):
+    @pytest.mark.parametrize(
+        ("field_name", "header"),
+        [
+            ("data_fernet", "bkcrypt$"),
+            pytest.param("data_sm4", "sm4ctr$", marks=requires_gm),
+        ],
+    )
+    def test_data_is_actually_encrypted_in_db(self, field_name, header):
         """Test that data is actually encrypted when stored in database"""
         test_data = "This should be encrypted in DB"
 
-        obj = TestEncryptFieldModel.objects.create(
-            name="test_encryption_verification",
-            data_fernet=test_data,
-            data_sm4=test_data,
-        )
+        obj = TestEncryptFieldModel.objects.create(name="test_encryption_verification", **{field_name: test_data})
 
         # Query the raw value from database
         from django.db import connection
 
         with connection.cursor() as cursor:
             cursor.execute(
-                "SELECT data_fernet, data_sm4 FROM test_encrypt_testencryptfieldmodel WHERE id = %s",
+                f"SELECT {field_name} FROM test_encrypt_testencryptfieldmodel WHERE id = %s",
                 [obj.id],
             )
-            raw_fernet_value, raw_sm4_value = cursor.fetchone()
+            (raw_value,) = cursor.fetchone()
 
-        assert raw_fernet_value != test_data, "The value in the database should be encrypted"
-        assert raw_fernet_value.startswith("bkcrypt$")
-        assert raw_sm4_value != test_data, "The value in the database should be encrypted"
-        assert raw_sm4_value.startswith("sm4ctr$")
+        assert raw_value != test_data, "The value in the database should be encrypted"
+        assert raw_value.startswith(header)
 
     def test_get_prep_value_no_repeat_encryption(self):
         """Test get_prep_value method with string value"""
