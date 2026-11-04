@@ -19,7 +19,7 @@ import os
 import random
 import string
 import sys
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from django.conf import settings
 
@@ -36,7 +36,8 @@ def gen_apigateway_resource_config(
     none_schema: bool = False,
     enable_mcp: bool = False,
     oauth2_personal_client_enabled: bool = False,
-) -> Dict[str, Dict[str, any]]:
+    deprecated_note: str = "",
+) -> Dict[str, Dict[str, Any]]:
     """用于辅助生成 bk-apigateway 的资源配置
     Args:
         is_public (bool, optional): 是否公开，不公开在文档中心/应用申请网关权限资源列表中不可见。默认 True
@@ -51,8 +52,9 @@ def gen_apigateway_resource_config(
         enable_mcp (bool, optional): 是否启用 MCP 功能. 默认 False
         oauth2_personal_client_enabled (bool, optional): 是否开启 OAuth2 个人客户端模式(个人 token)，启用时必须同时设置
             user_verified_required=True。默认 False
+        deprecated_note (str, optional): 资源弃用说明，最长 2048 字符，配合 extend_schema(deprecated=True) 使用。默认 ""
     Returns:
-        Dict[str, Dict[str, any]]: _description_
+        Dict[str, Dict[str, Any]]: 网关资源扩展配置，用于 extend_schema(extensions=...)。
     """
 
     # resource_permission_required  need app_verified_required
@@ -86,6 +88,8 @@ def gen_apigateway_resource_config(
             "descriptionEn": description_en,
         }
     }
+    if deprecated_note:
+        resource_config["x-bk-apigateway-resource"]["deprecatedNote"] = deprecated_note
     if hasattr(settings, "BK_APIGW_STAGE_ENABLE_MCP_SERVERS") and settings.BK_APIGW_STAGE_ENABLE_MCP_SERVERS:
         if none_schema:
             resource_config["x-bk-apigateway-resource"]["noneSchema"] = True

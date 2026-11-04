@@ -359,6 +359,56 @@ x-bk-apigateway-resource:
 
 > 详细的插件配置见：[插件配置说明](./plugin-use-guide.md)
 
+#### 1.2.1 资源弃用配置
+
+目标 API 网关需支持资源级弃用自动化导入。OpenAPI 2.0 / 3.0 / 3.1 均使用 Operation 标准字段
+`deprecated` 标记弃用，使用 `x-bk-apigateway-resource.deprecatedNote` 填写弃用说明：
+
+```yaml
+paths:
+  /users/:
+    get:
+      operationId: get_users
+      deprecated: true
+      x-bk-apigateway-resource:
+        deprecatedNote: "请使用 get_users_v2"
+      responses:
+        '200':
+          description: OK
+```
+
+`deprecatedNote` 可省略或为空，最长 2048 字符，由网关服务端校验。取消弃用时将 `deprecated` 设为
+`false` 并移除 `deprecatedNote`。完整 YAML 同步省略这两个字段也会清空已有弃用信息。
+弃用配置随资源版本发布后在对应环境的文档和已发布资源查询中生效，不影响资源调用、认证和授权。
+
+DRF 项目使用 `extend_schema(deprecated=True)` 标记弃用，并通过资源配置助手提供说明。
+需在 Django settings 的 `REST_FRAMEWORK` 中将 `DEFAULT_SCHEMA_CLASS` 设置为
+`drf_spectacular.openapi.AutoSchema`：
+
+```python
+from drf_spectacular.utils import extend_schema
+from drf_spectacular.types import OpenApiTypes
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from apigw_manager.drf.utils import gen_apigateway_resource_config
+
+
+class UsersView(APIView):
+    @extend_schema(
+        operation_id="get_users",
+        deprecated=True,
+        extensions=gen_apigateway_resource_config(deprecated_note="请使用 get_users_v2"),
+        responses={200: OpenApiTypes.OBJECT},
+    )
+    def get(self, request):
+        return Response({})
+```
+
+执行 `generate_resources_yaml` 后，生成的 `resources.yaml` 会包含这两个字段，再通过
+`sync_apigw_resources` 同步。资源配置助手返回 `extensions`，弃用标记应通过 `extend_schema` 的
+`deprecated` 参数设置；助手的默认空说明不会添加 `deprecatedNote`。
+
 ### 1.3 apidocs（可选）
 
 资源文档，资源文档为 markdown 格式。资源文档的文件名，应为 `资源名称` + `.md` 格式，假如资源名称为 get_user，则文档文件名应为 get_user.md。
