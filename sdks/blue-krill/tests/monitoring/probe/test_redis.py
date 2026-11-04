@@ -42,6 +42,30 @@ class TestRedisProbe:
         assert "localhost:6379" in caplog.text
         assert password not in caplog.text
 
+    @pytest.mark.parametrize(
+        "redis_url",
+        [
+            "redis://:{password}@localhost:99999/0",
+            "redis://:{password}@localhost:6379x/0",
+            "redis://:{password}@:6379/0",
+            "redis://localhost:6379/0?password={password}",
+            "redis://:ab#{password}@localhost:6379/0",
+            "redis://:ab/{password}@localhost:6379/0",
+            "redis://:ab?{password}@localhost:6379/0",
+        ],
+    )
+    def test_malformed_url(self, password, caplog, redis_url):
+        class Probe(RedisProbe):
+            name = "dummy"
+
+        Probe.redis_url = redis_url.format(password=password)
+        with mock.patch.object(redis.Redis, "from_url", side_effect=redis.ConnectionError("refused")):
+            issues = Probe().diagnose()
+
+        assert len(issues) == 1
+        assert issues[0].fatal
+        assert password not in caplog.text
+
 
 class TestRedisSentinelProbe:
     def test_password_not_logged(self, password, caplog):
@@ -63,3 +87,27 @@ class TestRedisSentinelProbe:
         assert "127.0.0.2:26347" in caplog.text
         assert password not in caplog.text
         assert another_password not in caplog.text
+
+    @pytest.mark.parametrize(
+        "redis_url",
+        [
+            "sentinel://:{password}@localhost:6379x/0",
+            "sentinel://:{password}@localhost:99999/0;sentinel://:{password}@127.0.0.2:26347/0",
+            "sentinel://:ab#{password}@localhost:26347/0",
+        ],
+    )
+    def test_malformed_url(self, password, caplog, redis_url):
+        class Probe(RedisSentinelProbe):
+            name = "dummy"
+            master_name = "mymaster"
+            sentinel_kwargs = {}
+
+        Probe.redis_url = redis_url.format(password=password)
+        with mock.patch(
+            "blue_krill.monitoring.probe.redis.SentinelBackend", side_effect=redis.ConnectionError("refused")
+        ):
+            issues = Probe().diagnose()
+
+        assert len(issues) == 1
+        assert issues[0].fatal
+        assert password not in caplog.text

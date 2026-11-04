@@ -71,3 +71,44 @@ class TestMutableURL:
         assert url.port == part_port
         assert url.netloc == f"{part_username}:{part_password}@{part_hostname}:{part_port}"
         assert url.path == part_path
+
+
+class TestRedacted:
+    @pytest.mark.parametrize(
+        ("url", "expected"),
+        [
+            ("redis://:secret@localhost:6379/0", "redis://localhost:6379/0"),
+            ("redis://user:secret@localhost:6379/0", "redis://localhost:6379/0"),
+            ("redis://localhost:6379/0?password=secret", "redis://localhost:6379/0"),
+            ("http://admin:secret@example.com/foo?token=secret#secret", "http://example.com/foo"),
+            ("http://admin:sec@ret@example.com/foo", "http://example.com/foo"),
+            ("http://[::1]:8080/foo", "http://[::1]:8080/foo"),
+            ("unix://:secret@/path/to/socket.sock?db=0", "unix:///path/to/socket.sock"),
+            ("redis://localhost:6379/0", "redis://localhost:6379/0"),
+            ("", ""),
+        ],
+    )
+    def test_redacted(self, url, expected):
+        assert MutableURL(url).redacted() == expected
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            # invalid port
+            "redis://:secret@localhost:99999/0",
+            "redis://:secret@localhost:6379x/0",
+            # invalid IPv6 address
+            "http://:secret@[::1/foo",
+            # unescaped separators in password
+            "redis://:ab#secret@host:6379/0",
+            "redis://:ab/secret@host:6379/0",
+            "redis://:ab?secret@host:6379/0",
+            "redis://:12#secret@host:6379/0",
+            ":secret@:6379/0",
+        ],
+    )
+    def test_unparsable(self, url):
+        assert MutableURL(url).redacted() == "<unparsable url>"
+
+    def test_empty_hostname(self):
+        assert MutableURL("redis://:secret@:6379/0").redacted() == "redis://:6379/0"

@@ -18,9 +18,9 @@
 import logging
 from typing import List
 
+from blue_krill.data_types.url import MutableURL
 from blue_krill.monitoring.probe.base import Issue, VirtualProbe
 from blue_krill.redis_tools.sentinel import SentinelBackend
-from blue_krill.text import desensitize_url
 
 try:
     import redis
@@ -31,9 +31,10 @@ except ImportError as _e:
 logger = logging.getLogger(__name__)
 
 
-def _obscure_redis_url(url: str) -> str:
-    """Obscure the password in redis url, sentinel url like "sentinel://...;sentinel://..." is also supported"""
-    return ";".join(desensitize_url(chunk) for chunk in url.split(";"))
+def _redact_redis_url(url: str) -> str:
+    """Redact the redis url so that it can be logged safely, only scheme, hostname, port and path are kept.
+    Sentinel url like "sentinel://...;sentinel://..." is also supported."""
+    return ";".join(MutableURL(chunk).redacted() for chunk in url.split(";"))
 
 
 class RedisProbe(VirtualProbe):
@@ -57,7 +58,7 @@ class RedisProbe(VirtualProbe):
             connection = redis.Redis.from_url(self.redis_url)
             connection.ping()
         except Exception as e:  # pylint: disable=broad-except
-            logger.exception("Unknown Exception when connecting to %s", _obscure_redis_url(self.redis_url))
+            logger.exception("Unknown Exception when connecting to %s", _redact_redis_url(self.redis_url))
             return [Issue(fatal=True, description=str(e))]
         return []
 
@@ -87,7 +88,7 @@ class RedisSentinelProbe(VirtualProbe):
         except Exception as e:  # pylint: disable=broad-except
             logger.exception(
                 "Unknown Exception when connecting to %s, sentinel master_name is %s",
-                _obscure_redis_url(self.redis_url),
+                _redact_redis_url(self.redis_url),
                 self.master_name,
             )
             return [Issue(fatal=True, description=str(e))]

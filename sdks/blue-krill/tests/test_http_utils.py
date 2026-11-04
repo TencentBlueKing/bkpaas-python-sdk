@@ -36,7 +36,7 @@ class TestToSafeCurl:
         assert "secret-value" not in cmd
         assert f"{header}: ******" in cmd
         assert "X-Foo: bar" in cmd
-        assert "http://example.com/foo?a=1" in cmd
+        assert "http://example.com/foo" in cmd
 
     def test_basic_auth(self):
         req = prepare(auth=HTTPBasicAuth("user", "secret-password"))
@@ -54,6 +54,19 @@ class TestToSafeCurl:
     def test_body_omitted(self, kwargs):
         assert "secret-value" not in to_safe_curl(prepare(**kwargs))
 
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "http://admin:secret-value@example.com/foo",
+            "http://example.com/foo?token=secret-value",
+            "http://admin:secret-value@example.com/foo?token=secret-value",
+        ],
+    )
+    def test_url_credentials(self, url):
+        cmd = to_safe_curl(prepare(url=url))
+        assert "secret-value" not in cmd
+        assert "http://example.com/foo" in cmd
+
     def test_original_request_unchanged(self):
         req = prepare(headers={"Authorization": "secret-value"}, json={"pwd": "secret-value"})
         to_safe_curl(req)
@@ -69,3 +82,13 @@ class TestToSafeCurl:
                 raise RuntimeError("broken")
 
         assert to_safe_curl(BrokenRequest()) == "GET http://example.com/"  # type: ignore[arg-type]
+
+    def test_fallback_url_credentials(self):
+        class BrokenRequest:
+            method = "GET"
+            url = "http://admin:secret-value@example.com/foo?token=secret-value"
+
+            def copy(self):
+                raise RuntimeError("broken")
+
+        assert to_safe_curl(BrokenRequest()) == "GET http://example.com/foo"  # type: ignore[arg-type]

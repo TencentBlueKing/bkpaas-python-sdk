@@ -35,3 +35,19 @@ def desensitize_url(url: str) -> str:
     "scheme://username:********@hostname:6666/path/?foo=bar"
     """
     return MutableURL(url).obscure()
+
+
+def mask_secret(value: str, keep_tail: int = 6, min_length: int = 20) -> str:
+    """Mask a secret value so that it can be logged. Only the last `keep_tail` characters are kept, the
+    rest is replaced by a fixed length mask so that the length of the value is not exposed. The value is
+    masked completely when it's too short, so that no more than 1/4 of the characters are exposed.
+
+    NOTE: Only use it on long random values such as API tokens or JWT signatures, never on passwords or
+    the value of Basic auth, the tail of which is exactly the tail of the password.
+
+    >>> mask_secret("SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c")
+    "***Qssw5c"
+    """
+    if keep_tail <= 0 or len(value) < max(min_length, keep_tail * 4):
+        return "******"
+    return "***" + value[-keep_tail:]

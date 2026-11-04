@@ -21,6 +21,7 @@ from unittest.mock import MagicMock
 
 import jwt
 import pytest
+from jwt.utils import base64url_encode
 import requests
 import requests_mock as requests_mock_mod
 from django.utils.crypto import get_random_string
@@ -113,6 +114,27 @@ class TestTokenNotLogged:
 
         token = resp.request.headers["Authorization"].split()[1]
         assert token not in caplog.text
+        assert token.rsplit(".", 1)[-1] not in caplog.text
+        # The log should still be helpful for troubleshooting
+        assert "iss='foo', expires_at=" in caplog.text
+        assert f"signature=***{token[-6:]}" in caplog.text
+
+    def test_client_and_middleware_logs_correlated(self, requests_mock, rf, caplog):
+        """The token can be correlated by the masked signature in logs of both sides"""
+        caplog.set_level(logging.DEBUG)
+        # Sign the token using a key which is different from the server side
+        auth = ClientJWTAuth(JWTAuthConf(iss=_JWT_CLIENT["iss"], key="another_random_key", algorithm="HS256"))
+        requests_mock.register_uri(requests_mock_mod.ANY, requests_mock_mod.ANY, text="resp")
+        header_value = requests.get("mock://", auth=auth).request.headers["Authorization"]
+
+        request = rf.get("/", HTTP_AUTHORIZATION=header_value)
+        VerifiedClientMiddleware(MagicMock())(request)
+
+        assert request.client is None
+        client_logs = [r.getMessage() for r in caplog.records if r.name == "blue_krill.auth.jwt"]
+        server_logs = [r.getMessage() for r in caplog.records if r.name == "blue_krill.auth.client"]
+        description = client_logs[0].split("token(", 1)[1]
+        assert any(description in msg for msg in server_logs)
 
     def test_middleware_auth_failed(self, rf, caplog):
         caplog.set_level(logging.DEBUG)
@@ -125,3 +147,41 @@ class TestTokenNotLogged:
         assert request.client is None
         assert caplog.records, "no logs captured"
         assert token not in caplog.text
+        # The log should still be helpful for troubleshooting
+        assert f"iss='foo', expires_at='{payload['expires_at']}', signature=***{token[-6:]}" in caplog.text
+        assert token.rsplit(".", 1)[-1] not in caplog.text
+
+    @pytest.mark.parametrize(
+        "payload",
+        [
+            # expired
+            {"iss": _JWT_CLIENT["iss"], "expires_at": int(time.time()) - 3600},
+            # issuer mismatched
+            {"iss": "bar", "expires_at": int(time.time()) + 3600},
+        ],
+    )
+    def test_middleware_invalid_claims(self, rf, caplog, payload):
+        caplog.set_level(logging.INFO)
+        token = jwt.encode(payload, key=_JWT_CLIENT["key"], algorithm=_JWT_CLIENT["algorithm"])
+
+        request = rf.get("/", HTTP_AUTHORIZATION=f"Bearer {token}")
+        VerifiedClientMiddleware(MagicMock())(request)
+
+        assert request.client is None
+        assert token not in caplog.text
+        assert f"iss='{payload['iss']}', expires_at='{payload['expires_at']}'" in caplog.text
+
+    def test_middleware_undecodable_payload(self, rf, caplog):
+        caplog.set_level(logging.INFO)
+        # The payload is base64 encoded but not a valid JSON object
+        signature = get_random_string(length=43)
+        token = ".".join(
+            [base64url_encode(b'{"alg":"HS256","typ":"JWT"}').decode(), base64url_encode(b"[1]").decode(), signature]
+        )
+
+        request = rf.get("/", HTTP_AUTHORIZATION=f"Bearer {token}")
+        VerifiedClientMiddleware(MagicMock())(request)
+
+        assert request.client is None
+        assert signature not in caplog.text
+        assert f"token(signature=***{signature[-6:]})" in caplog.text
