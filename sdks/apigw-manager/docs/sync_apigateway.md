@@ -334,6 +334,7 @@ apigateway:
 字段配置说明：
 
 ```yaml
+deprecated: false # 是否弃用资源，OpenAPI Operation 标准字段
 x-bk-apigateway-resource:
   isPublic: true   # 是否公开，公开，则用户可查看资源文档、申请资源权限；不公开，则资源对用户隐藏
   allowApplyPermission: false # 是否允许用户申请资源权限(前提：开启应用认证接口)，允许，则任何蓝鲸应用可在蓝鲸开发者中心申请资源的访问权限；否则，只能通过网关管理员主动授权为某应用添加权限
@@ -353,61 +354,12 @@ x-bk-apigateway-resource:
     resourcePermissionRequired: false # 是否校验应用权限，开启后，蓝鲸应用需申请资源访问权限; 前提必须开启应用认证；
     oauth2PersonalClientEnabled: false # 是否开启 OAuth2 个人客户端模式(个人 token)，开启时必须同时开启用户认证
   descriptionEn: # 资源描述的英文翻译
+  deprecatedNote: "" # 资源弃用说明，可省略或为空，最长 2048 字符，由网关服务端校验
 ```
 
 > **注意**：API 资源开启 `oauth2PersonalClientEnabled` 时，必须同时将 `userVerifiedRequired` 设置为 `true`。参数组合由 API 网关服务端校验，SDK 不做前置校验。
 
 > 详细的插件配置见：[插件配置说明](./plugin-use-guide.md)
-
-#### 1.2.1 资源弃用配置
-
-目标 API 网关需支持资源级弃用自动化导入。OpenAPI 2.0 / 3.0 / 3.1 均使用 Operation 标准字段
-`deprecated` 标记弃用，使用 `x-bk-apigateway-resource.deprecatedNote` 填写弃用说明：
-
-```yaml
-paths:
-  /users/:
-    get:
-      operationId: get_users
-      deprecated: true
-      x-bk-apigateway-resource:
-        deprecatedNote: "请使用 get_users_v2"
-      responses:
-        '200':
-          description: OK
-```
-
-`deprecatedNote` 可省略或为空，最长 2048 字符，由网关服务端校验。取消弃用时将 `deprecated` 设为
-`false` 并移除 `deprecatedNote`。完整 YAML 同步省略这两个字段也会清空已有弃用信息。
-弃用配置随资源版本发布后在对应环境的文档和已发布资源查询中生效，不影响资源调用、认证和授权。
-
-DRF 项目使用 `extend_schema(deprecated=True)` 标记弃用，并通过资源配置助手提供说明。
-需在 Django settings 的 `REST_FRAMEWORK` 中将 `DEFAULT_SCHEMA_CLASS` 设置为
-`drf_spectacular.openapi.AutoSchema`：
-
-```python
-from drf_spectacular.utils import extend_schema
-from drf_spectacular.types import OpenApiTypes
-from rest_framework.response import Response
-from rest_framework.views import APIView
-
-from apigw_manager.drf.utils import gen_apigateway_resource_config
-
-
-class UsersView(APIView):
-    @extend_schema(
-        operation_id="get_users",
-        deprecated=True,
-        extensions=gen_apigateway_resource_config(deprecated_note="请使用 get_users_v2"),
-        responses={200: OpenApiTypes.OBJECT},
-    )
-    def get(self, request):
-        return Response({})
-```
-
-执行 `generate_resources_yaml` 后，生成的 `resources.yaml` 会包含这两个字段，再通过
-`sync_apigw_resources` 同步。资源配置助手返回 `extensions`，弃用标记应通过 `extend_schema` 的
-`deprecated` 参数设置；助手的默认空说明不会添加 `deprecatedNote`。
 
 ### 1.3 apidocs（可选）
 
