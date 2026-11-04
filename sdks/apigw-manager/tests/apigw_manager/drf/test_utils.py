@@ -28,6 +28,16 @@ from apigw_manager.drf.utils import (
 
 
 class TestGenApigatewayResourceConfig:
+    @pytest.mark.parametrize("deprecated_note", ["", "Use get_users_v2 instead", "请使用新版接口", "x" * 2048])
+    def test_gen_with_deprecated_note(self, deprecated_note):
+        data = gen_apigateway_resource_config(deprecated_note=deprecated_note)
+
+        extension = data["x-bk-apigateway-resource"]
+        if deprecated_note:
+            assert extension["deprecatedNote"] == deprecated_note
+        else:
+            assert "deprecatedNote" not in extension
+
     def test_gen(self):
         data = gen_apigateway_resource_config(
             is_public=False,
