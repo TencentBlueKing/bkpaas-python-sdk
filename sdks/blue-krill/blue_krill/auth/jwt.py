@@ -23,6 +23,8 @@ from typing import Dict, Optional
 import jwt
 from requests.auth import AuthBase
 
+from .utils import describe_token
+
 logger = logging.getLogger(__name__)
 
 DEFAULT_ALGORITHM = "HS256"
@@ -59,8 +61,11 @@ class ClientJWTAuth(AuthBase):
         self.expires_in = expires_in or self._default_expires_in
 
     def __call__(self, r):
-        r.headers["Authorization"] = self.make_authorization_header_value()
-        logger.debug(f"got remote services' jwt header: {r.headers}")
+        header_value = self.make_authorization_header_value()
+        r.headers["Authorization"] = header_value
+        # Strip the prefix such as "Bearer"
+        token = header_value.split(None, 1)[-1]
+        logger.debug("jwt authorization header injected, token(%s)", describe_token(token))
         return r
 
     def make_authorization_header_value(self, extra_payload: Optional[Dict] = None) -> str:

@@ -604,6 +604,9 @@ r.get('foo')
 ### 10 blue_krill.encrypt.handler
 
 `blue_krill.encrypt.handler` 提够 Fernet 和 SM4 两种对称加密算法，并且为了适应存量数据，在解密时会根据`header`选择相应的算法进行解密。
+
+> 注意：SM4 等国密算法依赖的 `tongsuopy` 为可选依赖，使用前需要通过 `pip install "blue-krill[gm]"` 安装。
+
 具体的使用方式如下:
 
 ```python

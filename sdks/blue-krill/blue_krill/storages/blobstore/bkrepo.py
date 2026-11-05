@@ -20,12 +20,13 @@ from os import PathLike, getenv
 from typing import Any, BinaryIO, List, Optional
 from urllib.parse import urljoin
 
-import curlify
 import requests
 from requests.adapters import HTTPAdapter
 from requests.auth import HTTPBasicAuth
 
 from blue_krill.data_types.enum import EnumField, StructuredEnum
+from blue_krill.data_types.url import MutableURL
+from blue_krill.http_utils import to_safe_curl
 from blue_krill.storages.blobstore.base import BlobStore, SignatureType
 from blue_krill.storages.blobstore.exceptions import (
     DownloadFailedError,
@@ -42,10 +43,7 @@ TIMEOUT_THRESHOLD = float(getenv("BKREPO_TIMEOUT_THRESHOLD", "30"))
 
 def _validate_resp(response: requests.Response) -> Any:
     """校验响应体"""
-    try:
-        logger.info("Calling BkRepo, the equivalent curl command: %s", curlify.to_curl(response.request))
-    except Exception:  # pylint: disable=broad-except
-        pass
+    logger.info("Calling BkRepo, the equivalent curl command: %s", to_safe_curl(response.request))
 
     try:
         data = response.json()
@@ -272,7 +270,7 @@ class BKGenericRepo(BlobStore):
             # 251012: Node Existed
             if str(e.code) in ["250107", "251012"]:
                 raise ObjectAlreadyExists(e.message, e.code, e.response) from e
-            logger.exception("Request success, but the server rejects the upload request.")
+            logger.exception("Request success, but the server rejects the upload request, key: %s", key)
             raise UploadFailedError(key=key, src=src) from e
         except Exception as e:
             logger.exception("An unexpected exception occurred, detail: %s", e)  # noqa: TRY401
@@ -299,15 +297,20 @@ class BKGenericRepo(BlobStore):
         dest = getattr(fh, "name", "<memory>")
         try:
             resp = client.get(url, stream=True, timeout=TIMEOUT_THRESHOLD)
-            logger.info("Calling BkRepo, the equivalent curl command: %s", curlify.to_curl(resp.request))
         except Exception as e:
-            logger.exception("Fail to init request to BkRepo when calling '%s'", url)
+            logger.exception(
+                "Fail to init request to BkRepo when calling '%s', key: %s", MutableURL(url).redacted(), key
+            )
             raise DownloadFailedError(key=key, dest=dest) from e
 
+        # The key is logged separately because the url in curl command may be redacted as a whole
+        logger.info("Calling BkRepo, key: %s, the equivalent curl command: %s", key, to_safe_curl(resp.request))
         if not resp.ok:
-            logger.exception(
-                "Request success, but the server rejects the download request, please check by those curl command: %s",
-                curlify.to_curl(resp.request),
+            logger.error(
+                "Request success, but the server rejects the download request, key: %s, "
+                "please check by those curl command: %s",
+                key,
+                to_safe_curl(resp.request),
             )
             raise DownloadFailedError(key=key, dest=dest) from RequestError(
                 str("下载制品文件失败"), code=str(resp.status_code), response=resp

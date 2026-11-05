@@ -17,7 +17,7 @@
 
 import pytest
 
-from blue_krill.text import desensitize_url, remove_prefix, remove_suffix
+from blue_krill.text import desensitize_url, mask_secret, remove_prefix, remove_suffix
 
 
 @pytest.mark.parametrize(
@@ -58,3 +58,26 @@ def test_remove_suffix(input_, suffix, output):
 )
 def test_remove_prefix(input_, prefix, output):
     assert remove_prefix(input_, prefix) == output
+
+
+@pytest.mark.parametrize(
+    ("value", "kwargs", "expected"),
+    [
+        ("SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c", {}, "***Qssw5c"),
+        ("SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c", {"keep_tail": 4}, "***sw5c"),
+        # too short
+        ("", {}, "******"),
+        ("0123456789abcdefghi", {}, "******"),
+        ("0123456789abcdefghij", {"keep_tail": 5}, "***fghij"),
+        # no more than 1/4 of the characters are exposed
+        ("0123456789abcdefghij", {}, "******"),
+        ("0123456789abcdefghijklmn", {}, "***ijklmn"),
+        ("0123456789", {"keep_tail": 3, "min_length": 0}, "******"),
+        ("0123456789ab", {"keep_tail": 3, "min_length": 0}, "***9ab"),
+        # invalid keep_tail
+        ("0123456789abcdefghij", {"keep_tail": 0}, "******"),
+        ("0123456789abcdefghij", {"keep_tail": -1}, "******"),
+    ],
+)
+def test_mask_secret(value, kwargs, expected):
+    assert mask_secret(value, **kwargs) == expected

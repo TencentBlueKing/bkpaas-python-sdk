@@ -71,3 +71,56 @@ class TestMutableURL:
         assert url.port == part_port
         assert url.netloc == f"{part_username}:{part_password}@{part_hostname}:{part_port}"
         assert url.path == part_path
+
+
+class TestRedacted:
+    @pytest.mark.parametrize(
+        ("url", "expected"),
+        [
+            ("redis://:secret@localhost:6379/0", "redis://localhost:6379/0"),
+            ("redis://user:secret@localhost:6379/0", "redis://localhost:6379/0"),
+            ("redis://localhost:6379/0?password=secret", "redis://localhost:6379/0"),
+            ("redis://:secret@:6379/0", "redis://:6379/0"),
+            ("http://admin:secret@example.com/foo?token=secret#secret", "http://example.com/foo"),
+            ("http://admin:sec@ret@example.com/foo", "http://example.com/foo"),
+            ("http://[::1]:8080/foo", "http://[::1]:8080/foo"),
+            ("unix://:secret@/path/to/socket.sock?db=0", "unix:///path/to/socket.sock"),
+            ("unix:///path/to/socket.sock?db=0", "unix:///path/to/socket.sock"),
+            ("redis://localhost:6379/0", "redis://localhost:6379/0"),
+            # escaped separators in password
+            ("redis://:ab%40%2F%3F%23cd@host:6379/0", "redis://host:6379/0"),
+            # unescaped ";" in password
+            ("redis://:ab;secret;cd@host:6379/0", "redis://host:6379/0"),
+            ("redis://:12345;secret@host:6379/0", "redis://host:6379/0"),
+            ("redis://:ab@cd;secret@host:6379/0", "redis://host:6379/0"),
+        ],
+    )
+    def test_redacted(self, url, expected):
+        assert MutableURL(url).redacted() == expected
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "",
+            # no scheme
+            ":secret@:6379/0",
+            "//:secret@host:6379/0",
+            "://:secret@host:6379/0",
+            # invalid IPv6 address
+            "http://:secret@[::1/foo",
+            # non-ascii or non-printable characters
+            "redis://:s\u00e9cret@host:6379/0",
+            "redis://:sec\nret@host:6379/0",
+            # unescaped separators in password
+            "redis://:ab#secret@host:6379/0",
+            "redis://:ab/secret@host:6379/0",
+            "redis://:ab?secret@host:6379/0",
+            "redis://:12#secret@host:6379/0",
+            # unescaped "@" followed by separators in password
+            "redis://:ab@cd/secret@host:6379/0",
+            "redis://:ab@cd#secret@host:6379/0",
+            "redis://:ab@cd?secret@host:6379/0",
+        ],
+    )
+    def test_unparsable(self, url):
+        assert MutableURL(url).redacted() == "<unparsable url>"

@@ -25,8 +25,12 @@ dependencies = [
   'python-editor (>=1.0.4,<2.0.0)',
   'watchdog',
   'curlify (>=2.2.1,<4.0.0)',
-  'bk-crypto-python-sdk (>=3.0.0)',
+  'bk-crypto-python-sdk (>=4.0.0)',
 ]
+
+[project.optional-dependencies]
+# 国密算法 (如 SM4) 相关依赖
+gm = ['bk-crypto-python-sdk[gm] (>=4.0.0)']
 
 [project.urls]
 Homepage = "https://github.com/TencentBlueKing/bkpaas-python-sdk/"

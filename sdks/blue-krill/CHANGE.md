@@ -1,5 +1,10 @@
 ## Change logs
 
+### Unreleased
+
+- 优化 BKRepo、JWT 认证、Redis 探针等模块的日志输出内容
+- 升级 bk-crypto-python-sdk 至 4.x, SM4 等国密算法相关依赖改为可选, **使用 SM4 加密（含解密存量 `sm4ctr$` 数据）需要安装 `blue-krill[gm]`**
+
 ### 3.1.1
 
 - 放宽 django-environ 的版本限制
