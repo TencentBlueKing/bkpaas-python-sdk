@@ -18,6 +18,7 @@
 import importlib.util
 import random
 from string import ascii_lowercase, digits
+from typing import Iterable
 
 import pytest
 
@@ -37,3 +38,16 @@ def generate_random_string(length=30, chars=(ascii_lowercase + digits)):
     """
     rand = random.SystemRandom()
     return "".join(rand.choice(chars) for x in range(length))
+
+
+def assert_redacted(text: str, *, secrets: Iterable[str], expected: Iterable[str]):
+    """Assert that the text (usually the captured logs) contains all the expected fragments but none of
+    the secrets. The expected fragments are required, so that the check never passes vacuously when
+    nothing is logged, and the logs are proved to be still helpful for troubleshooting.
+    """
+    expected = list(expected)
+    assert expected, "at least one expected fragment is required"
+    for fragment in expected:
+        assert fragment in text
+    for secret in secrets:
+        assert secret not in text
