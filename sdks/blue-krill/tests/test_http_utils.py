@@ -16,6 +16,7 @@
 # to the current version of the project delivered to anyone in the future.
 
 import io
+import json
 
 import pytest
 import requests
@@ -29,7 +30,19 @@ def prepare(**kwargs) -> requests.PreparedRequest:
 
 
 class TestToSafeCurl:
-    @pytest.mark.parametrize("header", ["Authorization", "authorization", "Proxy-Authorization", "Cookie"])
+    @pytest.mark.parametrize(
+        "header",
+        [
+            "Authorization",
+            "authorization",
+            "Proxy-Authorization",
+            "Cookie",
+            "X-Bkapi-Authorization",
+            "X-Api-Key",
+            "X-Token",
+            "X-Bk-App-Secret",
+        ],
+    )
     def test_mask_sensitive_headers(self, header):
         req = prepare(headers={header: "secret-value", "X-Foo": "bar"})
         cmd = to_safe_curl(req)
@@ -37,6 +50,28 @@ class TestToSafeCurl:
         assert f"{header}: ******" in cmd
         assert "X-Foo: bar" in cmd
         assert "http://example.com/foo" in cmd
+
+    def test_keep_normal_headers(self):
+        req = prepare(headers={"X-Bk-Tenant-Id": "tenant", "X-BKREPO-OVERWRITE": "True"})
+        cmd = to_safe_curl(req)
+        assert "X-Bk-Tenant-Id: tenant" in cmd
+        assert "X-BKREPO-OVERWRITE: True" in cmd
+
+    @pytest.mark.parametrize(
+        "credentials",
+        [
+            {"bk_app_code": "app", "bk_app_secret": "secret-value", "bk_token": "secret-value"},
+            {"access_token": "secret-value"},
+        ],
+    )
+    def test_bkapi_authorization_with_file_body(self, credentials):
+        headers = {"X-Bkapi-Authorization": json.dumps(credentials), "X-Api-Key": "secret-value"}
+        req = prepare(method="PUT", headers=headers, data=io.BytesIO(b"file"))
+        cmd = to_safe_curl(req)
+        assert "secret-value" not in cmd
+        assert "X-Bkapi-Authorization: ******" in cmd
+        assert req.headers["X-Bkapi-Authorization"] == json.dumps(credentials)
+        assert req.headers["X-Api-Key"] == "secret-value"
 
     def test_basic_auth(self):
         req = prepare(auth=HTTPBasicAuth("user", "secret-password"))

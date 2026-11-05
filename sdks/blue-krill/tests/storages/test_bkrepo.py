@@ -18,6 +18,7 @@
 import base64
 import contextlib
 import io
+import json
 import logging
 from tempfile import SpooledTemporaryFile
 from unittest import mock
@@ -289,6 +290,30 @@ class TestCredentialsNotLogged:
             store.download_fileobj(key, fh=fh)
         self.assert_no_secrets(caplog, secrets)
         assert any(r.levelno == logging.ERROR and url in r.getMessage() for r in caplog.records)
+
+    def test_upload_with_bkapi_authorization(self, store, session, adapter, endpoint, project, caplog, secrets):
+        app_secret = generate_random_string()
+        session.headers.update(
+            {"X-Bkapi-Authorization": json.dumps({"bk_app_code": "app", "bk_app_secret": app_secret})}
+        )
+        key = "dummy-key"
+        adapter.register_uri(
+            "PUT", urljoin(endpoint, f"/generic/{project}/dummy-bucket/{key}"), json={"code": 0, "message": ""}
+        )
+        store.upload_fileobj(io.BytesIO(b"foo"), key=key)
+        self.assert_no_secrets(caplog, [*secrets, app_secret])
+
+    @pytest.mark.parametrize("status_code", [200, 403])
+    def test_download_key_with_at_sign(self, store, adapter, endpoint, project, caplog, secrets, status_code):
+        # The url is redacted as a whole because of the "@", the key should still be logged for troubleshooting
+        key = "pkg@1.0.0.tgz"
+        adapter.register_uri(
+            "GET", urljoin(endpoint, f"/generic/{project}/dummy-bucket/{key}"), status_code=status_code, text="foo"
+        )
+        with SpooledTemporaryFile() as fh, contextlib.suppress(DownloadFailedError):
+            store.download_fileobj(key, fh=fh)
+        self.assert_no_secrets(caplog, secrets)
+        assert any(r.name == "blue_krill.storages.blobstore.bkrepo" and key in r.getMessage() for r in caplog.records)
 
     @pytest.mark.parametrize(
         ("method", "http_method", "url_suffix"),

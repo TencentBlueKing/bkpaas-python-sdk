@@ -31,10 +31,20 @@ except ImportError as _e:
 logger = logging.getLogger(__name__)
 
 
-def _redact_sentinel_url(url: str) -> str:
+def _redact_url(url: object) -> str:
+    """Redact the url so that it can be logged safely. Non-string values (e.g. ``None`` from an
+    unset environment variable) are replaced with a placeholder, so this function never raises."""
+    if not isinstance(url, str):
+        return REDACTED_URL_PLACEHOLDER
+    return MutableURL(url).redacted()
+
+
+def _redact_sentinel_url(url: object) -> str:
     """Redact the sentinel url like "sentinel://...;sentinel://..." so that it can be logged safely.
     If any of the chunks can not be redacted, the whole url is replaced with a placeholder."""
-    chunks = [MutableURL(chunk).redacted() for chunk in url.split(";")]
+    if not isinstance(url, str):
+        return REDACTED_URL_PLACEHOLDER
+    chunks = [_redact_url(chunk) for chunk in url.split(";")]
     if REDACTED_URL_PLACEHOLDER in chunks:
         return REDACTED_URL_PLACEHOLDER
     return ";".join(chunks)
@@ -61,7 +71,7 @@ class RedisProbe(VirtualProbe):
             connection = redis.Redis.from_url(self.redis_url)
             connection.ping()
         except Exception as e:  # pylint: disable=broad-except
-            logger.exception("Unknown Exception when connecting to %s", MutableURL(self.redis_url).redacted())
+            logger.exception("Unknown Exception when connecting to %s", _redact_url(self.redis_url))
             return [Issue(fatal=True, description=str(e))]
         return []
 

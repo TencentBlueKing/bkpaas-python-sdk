@@ -69,6 +69,18 @@ class TestRedisProbe:
         assert issues[0].fatal
         assert password not in caplog.text
 
+    @pytest.mark.parametrize("redis_url", [None, 6379, b"redis://localhost:6379/0"])
+    def test_non_string_url(self, caplog, redis_url):
+        class Probe(RedisProbe):
+            name = "dummy"
+
+        Probe.redis_url = redis_url
+        issues = Probe().diagnose()
+
+        assert len(issues) == 1
+        assert issues[0].fatal
+        assert "<unparsable url>" in caplog.text
+
     @pytest.mark.parametrize(
         "redis_url",
         [
@@ -135,6 +147,20 @@ class TestRedisSentinelProbe:
         assert len(issues) == 1
         assert issues[0].fatal
         assert password not in caplog.text
+
+    @pytest.mark.parametrize("redis_url", [None, 26347, b"sentinel://localhost:26347/0"])
+    def test_non_string_url(self, caplog, redis_url):
+        class Probe(RedisSentinelProbe):
+            name = "dummy"
+            master_name = "mymaster"
+            sentinel_kwargs = {}
+
+        Probe.redis_url = redis_url
+        issues = Probe().diagnose()
+
+        assert len(issues) == 1
+        assert issues[0].fatal
+        assert "<unparsable url>" in caplog.text
 
     @pytest.mark.parametrize(
         "redis_url",

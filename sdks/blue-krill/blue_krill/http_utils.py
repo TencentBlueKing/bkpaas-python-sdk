@@ -20,8 +20,14 @@ import requests
 
 from blue_krill.data_types.url import MutableURL
 
-# 可能包含凭证信息的请求头, 打印日志前需要脱敏
-SENSITIVE_HEADERS = frozenset({"authorization", "proxy-authorization", "cookie"})
+# 名称中包含以下关键字的请求头可能携带凭证信息, 打印日志前需要脱敏,
+# 如 Authorization、Proxy-Authorization、X-Bkapi-Authorization、Cookie、X-Api-Key、X-Token 等
+SENSITIVE_HEADER_KEYWORDS = ("authorization", "cookie", "token", "secret", "password", "api-key", "apikey", "session")
+
+
+def _is_sensitive_header(name: str) -> bool:
+    lowered = name.lower()
+    return any(keyword in lowered for keyword in SENSITIVE_HEADER_KEYWORDS)
 
 
 def to_safe_curl(request: requests.PreparedRequest) -> str:
@@ -35,7 +41,7 @@ def to_safe_curl(request: requests.PreparedRequest) -> str:
         safe_request = request.copy()
         safe_request.url = safe_url
         for name in list(safe_request.headers):
-            if name.lower() in SENSITIVE_HEADERS:
+            if _is_sensitive_header(name):
                 safe_request.headers[name] = "******"
         safe_request.body = None
         return curlify.to_curl(safe_request)
