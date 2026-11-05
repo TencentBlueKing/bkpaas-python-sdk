@@ -18,7 +18,7 @@
 import logging
 from typing import List
 
-from blue_krill.data_types.url import MutableURL
+from blue_krill.data_types.url import REDACTED_URL_PLACEHOLDER, MutableURL
 from blue_krill.monitoring.probe.base import Issue, VirtualProbe
 from blue_krill.redis_tools.sentinel import SentinelBackend
 
@@ -31,10 +31,13 @@ except ImportError as _e:
 logger = logging.getLogger(__name__)
 
 
-def _redact_redis_url(url: str) -> str:
-    """Redact the redis url so that it can be logged safely, only scheme, hostname, port and path are kept.
-    Sentinel url like "sentinel://...;sentinel://..." is also supported."""
-    return ";".join(MutableURL(chunk).redacted() for chunk in url.split(";"))
+def _redact_sentinel_url(url: str) -> str:
+    """Redact the sentinel url like "sentinel://...;sentinel://..." so that it can be logged safely.
+    If any of the chunks can not be redacted, the whole url is replaced with a placeholder."""
+    chunks = [MutableURL(chunk).redacted() for chunk in url.split(";")]
+    if REDACTED_URL_PLACEHOLDER in chunks:
+        return REDACTED_URL_PLACEHOLDER
+    return ";".join(chunks)
 
 
 class RedisProbe(VirtualProbe):
@@ -58,7 +61,7 @@ class RedisProbe(VirtualProbe):
             connection = redis.Redis.from_url(self.redis_url)
             connection.ping()
         except Exception as e:  # pylint: disable=broad-except
-            logger.exception("Unknown Exception when connecting to %s", _redact_redis_url(self.redis_url))
+            logger.exception("Unknown Exception when connecting to %s", MutableURL(self.redis_url).redacted())
             return [Issue(fatal=True, description=str(e))]
         return []
 
@@ -88,7 +91,7 @@ class RedisSentinelProbe(VirtualProbe):
         except Exception as e:  # pylint: disable=broad-except
             logger.exception(
                 "Unknown Exception when connecting to %s, sentinel master_name is %s",
-                _redact_redis_url(self.redis_url),
+                _redact_sentinel_url(self.redis_url),
                 self.master_name,
             )
             return [Issue(fatal=True, description=str(e))]

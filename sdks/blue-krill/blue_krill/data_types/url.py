@@ -103,34 +103,29 @@ class MutableURL:
         return self._url
 
     def redacted(self) -> str:
-        """Return a string which is safe to be logged. Only scheme, hostname, port and path are kept,
-        userinfo, query and fragment are all dropped. When the url can not be parsed reliably, a fixed
-        placeholder is returned instead of the original url, so this method never raises.
+        """Return a string which is safe to be logged. Only scheme, host, port and path are kept,
+        userinfo, query and fragment are all dropped. This is best-effort: urls which are not
+        well-formed are replaced with a fixed placeholder, so this method never raises.
 
         >>> MutableURL("redis://:password@localhost:6379/0?password=foo").redacted()
         'redis://localhost:6379/0'
         """
+        url = self._url
         try:
             components = self.components
-            # Unescaped "/", "?" or "#" in the password will truncate the userinfo, the rest of the password
-            # will be treated as path, query or fragment, e.g. "redis://:ab#cd@host:6379/0" is split into
-            # netloc=":ab" and fragment="cd@host:6379/0".
-            if "@" not in components.netloc and "@" in self._url:
-                return REDACTED_URL_PLACEHOLDER
-
-            netloc = components.hostname or ""
-            if ":" in netloc:
-                # Restore the brackets of IPv6 address
-                netloc = f"[{netloc}]"
-            if components.port is not None:
-                netloc += f":{components.port}"
-
-            result = f"{components.scheme}:" if components.scheme else ""
-            if components.netloc or self._url[len(result) :].startswith("//"):
-                result += f"//{netloc}"
-            return result + components.path
-        except Exception:  # pylint: disable=broad-except
+        except ValueError:
             return REDACTED_URL_PLACEHOLDER
+
+        if not (
+            url.isascii() and url.isprintable() and components.scheme and url.startswith(f"{components.scheme}://")
+        ):
+            return REDACTED_URL_PLACEHOLDER
+        # "@" outside the netloc means the password contains unescaped "/", "?" or "#", the boundary
+        # of userinfo can not be determined, e.g. "redis://:ab/cd@host:6379/0"
+        if "@" in components.path + components.query + components.fragment:
+            return REDACTED_URL_PLACEHOLDER
+        # The last "@" in netloc is always the end of userinfo, the rest is "host:port"
+        return f"{components.scheme}://{components.netloc.rpartition('@')[2]}{components.path}"
 
     def __str__(self) -> str:
         return self._url

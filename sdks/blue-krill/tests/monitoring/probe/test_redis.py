@@ -52,6 +52,9 @@ class TestRedisProbe:
             "redis://:ab#{password}@localhost:6379/0",
             "redis://:ab/{password}@localhost:6379/0",
             "redis://:ab?{password}@localhost:6379/0",
+            "redis://:ab@{password}/cd@localhost:6379/0",
+            "redis://:ab@{password}#cd@localhost:6379/0",
+            "redis://:ab@{password}?cd@localhost:6379/0",
         ],
     )
     def test_malformed_url(self, password, caplog, redis_url):
@@ -65,6 +68,26 @@ class TestRedisProbe:
         assert len(issues) == 1
         assert issues[0].fatal
         assert password not in caplog.text
+
+    @pytest.mark.parametrize(
+        "redis_url",
+        [
+            "redis://:ab;{password};cd@localhost:6379/0",
+            "redis://:12345;{password}@localhost:6379/0",
+            "redis://:ab@{password};cd@localhost:6379/0",
+        ],
+    )
+    def test_semicolon_in_password(self, password, caplog, redis_url):
+        class Probe(RedisProbe):
+            name = "dummy"
+
+        Probe.redis_url = redis_url.format(password=password)
+        with mock.patch.object(redis.Redis, "from_url", side_effect=redis.ConnectionError("refused")):
+            Probe().diagnose()
+
+        assert "redis://localhost:6379/0" in caplog.text
+        assert password not in caplog.text
+        assert "12345" not in caplog.text
 
 
 class TestRedisSentinelProbe:
@@ -94,6 +117,7 @@ class TestRedisSentinelProbe:
             "sentinel://:{password}@localhost:6379x/0",
             "sentinel://:{password}@localhost:99999/0;sentinel://:{password}@127.0.0.2:26347/0",
             "sentinel://:ab#{password}@localhost:26347/0",
+            "sentinel://:ab@{password}/cd@localhost:26347/0;sentinel://:{password}@127.0.0.2:26347/0",
         ],
     )
     def test_malformed_url(self, password, caplog, redis_url):
@@ -111,3 +135,28 @@ class TestRedisSentinelProbe:
         assert len(issues) == 1
         assert issues[0].fatal
         assert password not in caplog.text
+
+    @pytest.mark.parametrize(
+        "redis_url",
+        [
+            "sentinel://:ab;{password};cd@localhost:26347/0",
+            "sentinel://:12345;{password}@localhost:26347/0",
+            "sentinel://:ab@{password};cd@localhost:26347/0",
+        ],
+    )
+    def test_semicolon_in_password(self, password, caplog, redis_url):
+        class Probe(RedisSentinelProbe):
+            name = "dummy"
+            master_name = "mymaster"
+            sentinel_kwargs = {}
+
+        Probe.redis_url = redis_url.format(password=password)
+        with mock.patch(
+            "blue_krill.monitoring.probe.redis.SentinelBackend", side_effect=redis.ConnectionError("refused")
+        ):
+            Probe().diagnose()
+
+        # Chunks split by ";" in password can not be redacted reliably
+        assert "<unparsable url>" in caplog.text
+        assert password not in caplog.text
+        assert "12345" not in caplog.text
