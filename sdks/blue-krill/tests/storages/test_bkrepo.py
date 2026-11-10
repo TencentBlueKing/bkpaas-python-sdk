@@ -21,7 +21,7 @@ import io
 import json
 import logging
 from tempfile import SpooledTemporaryFile
-from typing import List
+from typing import List, Sequence
 from unittest import mock
 from urllib.parse import urljoin
 
@@ -42,7 +42,9 @@ MASKED_AUTH = "'Authorization: ******'"
 
 def curl_fragments(method: str, url: str) -> List[str]:
     """日志中的等价 curl 命令应包含的关键信息"""
-    return [f"curl -X {method}", MASKED_AUTH, url]
+    # GET 是 curl 的默认方法, curlify>=3.0 生成命令时会省略 "-X GET"
+    command = "curl" if method == "GET" else f"curl -X {method}"
+    return [command, MASKED_AUTH, url]
 
 
 @pytest.fixture(autouse=True)
@@ -71,7 +73,7 @@ def credentials(username, password):
 def check_logs(caplog, credentials):
     """检查日志中包含所有期望的信息, 且不包含任何凭证"""
 
-    def _check(*expected: str, extra_secrets: List[str] = ()):
+    def _check(*expected: str, extra_secrets: Sequence[str] = ()):
         assert_redacted(caplog.text, secrets=[*credentials, *extra_secrets], expected=expected)
 
     return _check

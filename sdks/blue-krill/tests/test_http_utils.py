@@ -119,6 +119,7 @@ class TestToSafeCurl:
 
         class BrokenRequest:
             method = "GET"
+            url: str
 
             def copy(self):
                 raise RuntimeError("broken")
