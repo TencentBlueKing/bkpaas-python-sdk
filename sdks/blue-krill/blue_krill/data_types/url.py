@@ -18,6 +18,9 @@
 from typing import Any, Dict, Optional, Union
 from urllib.parse import SplitResult, parse_qsl, unquote, urlsplit
 
+# Placeholder for urls which can not be redacted reliably
+REDACTED_URL_PLACEHOLDER = "<unparsable url>"
+
 
 class MutableURL:
     _url: str
@@ -98,6 +101,31 @@ class MutableURL:
         if self.password:
             return self.replace(password="********")._url
         return self._url
+
+    def redacted(self) -> str:
+        """Return a string which is safe to be logged. Only scheme, host, port and path are kept,
+        userinfo, query and fragment are all dropped. This is best-effort: urls which are not
+        well-formed are replaced with a fixed placeholder, so this method never raises.
+
+        >>> MutableURL("redis://:password@localhost:6379/0?password=foo").redacted()
+        'redis://localhost:6379/0'
+        """
+        url = self._url
+        try:
+            components = self.components
+        except ValueError:
+            return REDACTED_URL_PLACEHOLDER
+
+        if not (
+            url.isascii() and url.isprintable() and components.scheme and url.startswith(f"{components.scheme}://")
+        ):
+            return REDACTED_URL_PLACEHOLDER
+        # "@" outside the netloc means the password contains unescaped "/", "?" or "#", the boundary
+        # of userinfo can not be determined, e.g. "redis://:ab/cd@host:6379/0"
+        if "@" in components.path + components.query + components.fragment:
+            return REDACTED_URL_PLACEHOLDER
+        # The last "@" in netloc is always the end of userinfo, the rest is "host:port"
+        return f"{components.scheme}://{components.netloc.rpartition('@')[2]}{components.path}"
 
     def __str__(self) -> str:
         return self._url

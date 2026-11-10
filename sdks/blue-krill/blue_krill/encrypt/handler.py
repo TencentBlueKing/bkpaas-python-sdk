@@ -77,6 +77,7 @@ class EncryptHandler:
 
 def register_cipher(cls):
     EncryptHandler.cipher_classes[cls.__name__] = cls
+    return cls
 
 
 @register_cipher
@@ -103,6 +104,14 @@ class SM4CTR:
     header = _Header("sm4ctr$")
 
     def __init__(self, secret_key: Optional[bytes] = None):
+        # SM4 等国密算法依赖的 tongsuopy 为可选依赖
+        try:
+            import tongsuopy  # noqa: F401
+        except ImportError as e:
+            raise ImportError(
+                'SM4 cipher requires extra dependencies, install them with `pip install "blue-krill[gm]"`'
+            ) from e
+
         self.secret_key = secret_key or get_default_secret_key()
         self.cipher = get_symmetric_cipher(
             common={"key": self.secret_key},

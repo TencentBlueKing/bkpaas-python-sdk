@@ -17,10 +17,17 @@
 
 import logging
 from binascii import Error as PaddingError
+from typing import Any
 
+import jwt
 from jwt.utils import base64url_decode
 
+from blue_krill.text import mask_secret
+
 logger = logging.getLogger(__name__)
+
+# The claims are not verified when describing a token and may be crafted by anyone, so limit their length
+_MAX_CLAIM_LENGTH = 64
 
 
 def validate_jwt_token(s: str) -> bool:
@@ -39,6 +46,27 @@ def validate_jwt_token(s: str) -> bool:
     except (PaddingError, ValueError):
         return False
     return True
+
+
+def describe_token(token: str) -> str:
+    """Describe a JWT token for logging. The token itself is never logged, only the unverified "iss" and
+    "expires_at" claims and the masked signature are included. Never raises, if the claims can not be
+    decoded, only the masked signature is returned.
+    """
+    signature = mask_secret(token.rsplit(".", 1)[-1])
+    try:
+        payload = jwt.decode(token, options={"verify_signature": False})
+        iss, expires_at = (_format_claim(payload.get(name)) for name in ("iss", "expires_at"))
+    except Exception:  # pylint: disable=broad-except
+        return f"signature={signature}"
+    return f"iss={iss}, expires_at={expires_at}, signature={signature}"
+
+
+def _format_claim(value: Any) -> str:
+    """Format an unverified claim for logging, use repr to escape special characters such as line breaks"""
+    if value is None:
+        return "None"
+    return repr(str(value)[:_MAX_CLAIM_LENGTH])
 
 
 def get_paas_service_jwt_clients():

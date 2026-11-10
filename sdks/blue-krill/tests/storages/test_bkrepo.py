@@ -15,9 +15,13 @@
 # We undertake not to change the open source license (MIT license) applicable
 # to the current version of the project delivered to anyone in the future.
 
+
 import base64
 import io
+import json
+import logging
 from tempfile import SpooledTemporaryFile
+from typing import List, Sequence
 from unittest import mock
 from urllib.parse import urljoin
 
@@ -27,9 +31,26 @@ import requests_mock
 from requests.auth import HTTPBasicAuth
 
 from blue_krill.contextlib import nullcontext as does_not_raise
+from blue_krill.data_types.url import REDACTED_URL_PLACEHOLDER
 from blue_krill.storages.blobstore.bkrepo import BKGenericRepo, BKRepoManager
-from blue_krill.storages.blobstore.exceptions import ObjectAlreadyExists, UploadFailedError
-from tests.utils import generate_random_string
+from blue_krill.storages.blobstore.exceptions import DownloadFailedError, ObjectAlreadyExists, UploadFailedError
+from tests.utils import assert_redacted, generate_random_string
+
+# 脱敏后的认证请求头, 出现在日志中说明请求确实携带了认证信息且已被脱敏
+MASKED_AUTH = "'Authorization: ******'"
+
+
+def curl_fragments(method: str, url: str) -> List[str]:
+    """日志中的等价 curl 命令应包含的关键信息"""
+    # GET 是 curl 的默认方法, curlify>=3.0 生成命令时会省略 "-X GET"
+    command = "curl" if method == "GET" else f"curl -X {method}"
+    return [command, MASKED_AUTH, url]
+
+
+@pytest.fixture(autouse=True)
+def _capture_all_logs(caplog):
+    # 捕获所有级别的日志, 确保任何级别的日志中都不包含凭证信息
+    caplog.set_level(logging.DEBUG)
 
 
 @pytest.fixture
@@ -40,6 +61,22 @@ def username():
 @pytest.fixture
 def password():
     return generate_random_string()
+
+
+@pytest.fixture
+def credentials(username, password):
+    """可能泄露到日志中的凭证: 密码本身及 Basic 认证请求头的值"""
+    return [password, base64.b64encode(f"{username}:{password}".encode()).decode()]
+
+
+@pytest.fixture
+def check_logs(caplog, credentials):
+    """检查日志中包含所有期望的信息, 且不包含任何凭证"""
+
+    def _check(*expected: str, extra_secrets: Sequence[str] = ()):
+        assert_redacted(caplog.text, secrets=[*credentials, *extra_secrets], expected=expected)
+
+    return _check
 
 
 @pytest.fixture
@@ -62,6 +99,16 @@ def adapter(session):
 @pytest.fixture
 def project():
     return "dummy-project-id"
+
+
+@pytest.fixture
+def object_url(endpoint, project):
+    """返回制品文件的 URL"""
+
+    def _object_url(key: str) -> str:
+        return urljoin(endpoint, f"/generic/{project}/dummy-bucket/{key}")
+
+    return _object_url
 
 
 @pytest.fixture
@@ -103,42 +150,69 @@ class TestBKGenericRepo:
             (False, {"code": 251012, "message": ""}, pytest.raises(ObjectAlreadyExists)),
         ],
     )
-    def test_upload(self, store, adapter, endpoint, project, allow_overwrite, fake_response, expected):
-        key = "dummy-key"
-        adapter.register_uri("PUT", urljoin(endpoint, f"/generic/{project}/dummy-bucket/{key}"), json=fake_response)
+    def test_upload(self, store, adapter, object_url, check_logs, allow_overwrite, fake_response, expected):
+        url = object_url("dummy-key")
+        adapter.register_uri("PUT", url, json=fake_response)
         with expected:
-            store.upload_fileobj(io.BytesIO(), key=key, allow_overwrite=allow_overwrite)
+            store.upload_fileobj(io.BytesIO(), key="dummy-key", allow_overwrite=allow_overwrite)
+        check_logs(*curl_fragments("PUT", url))
 
-    def test_download(self, store, adapter, endpoint, mktemp, project):
+    def test_upload_with_bkapi_authorization(self, store, session, adapter, object_url, check_logs):
+        """会话中携带的其他凭证类请求头同样不能出现在日志中"""
+        app_secret = generate_random_string()
+        session.headers["X-Bkapi-Authorization"] = json.dumps({"bk_app_code": "app", "bk_app_secret": app_secret})
+        url = object_url("dummy-key")
+        adapter.register_uri("PUT", url, json={"code": 0, "message": ""})
+
+        store.upload_fileobj(io.BytesIO(), key="dummy-key")
+        check_logs(*curl_fragments("PUT", url), "'X-Bkapi-Authorization: ******'", extra_secrets=[app_secret])
+
+    def test_download(self, store, adapter, object_url, mktemp):
         key = "dummy-key"
         expected = generate_random_string().encode()
-        adapter.register_uri(
-            "GET", urljoin(endpoint, f"/generic/{project}/dummy-bucket/{key}"), body=io.BytesIO(expected)
-        )
+        adapter.register_uri("GET", object_url(key), body=io.BytesIO(expected))
         with open(store.download_file(key, filepath=mktemp()), "rb") as fh:
             assert fh.read() == expected
 
-    def test_download_fileobj(self, store, adapter, endpoint, mktemp, project):
+    def test_download_fileobj(self, store, adapter, object_url, check_logs):
         key = "dummy-key"
+        url = object_url(key)
         expected = generate_random_string().encode()
-        adapter.register_uri(
-            "GET", urljoin(endpoint, f"/generic/{project}/dummy-bucket/{key}"), body=io.BytesIO(expected)
-        )
+        adapter.register_uri("GET", url, body=io.BytesIO(expected))
         with SpooledTemporaryFile() as fh:
             store.download_fileobj(key, fh=fh)
             fh.seek(0)
             assert fh.read() == expected
+        check_logs(f"key: {key}", *curl_fragments("GET", url))
 
-    def test_delete_file(self, store, adapter, endpoint, project):
+    def test_download_rejected(self, store, adapter, object_url, caplog, check_logs):
         key = "dummy-key"
-        adapter.register_uri(
-            "DELETE",
-            urljoin(endpoint, f"/generic/{project}/dummy-bucket/{key}"),
-            json={"code": 0, "message": None, "data": None, "traceId": ""},
-        )
-        assert store.delete_file(key) is None
+        url = object_url(key)
+        adapter.register_uri("GET", url, status_code=403, text="forbidden")
+        with SpooledTemporaryFile() as fh, pytest.raises(DownloadFailedError):
+            store.download_fileobj(key, fh=fh)
 
-    def test_get_file_metadata(self, store, adapter, endpoint, mktemp, project):
+        check_logs(*curl_fragments("GET", url))
+        (error_log,) = [r.getMessage() for r in caplog.records if r.levelno == logging.ERROR]
+        assert "rejects the download request" in error_log
+        assert f"key: {key}" in error_log
+        assert url in error_log
+
+    def test_download_key_with_at_sign(self, store, adapter, object_url, check_logs):
+        # 路径中的 "@" 导致 URL 被整体替换为占位符, 需要单独记录 key 以便排查
+        key = "pkg@1.0.0.tgz"
+        adapter.register_uri("GET", object_url(key), text="foo")
+        with SpooledTemporaryFile() as fh:
+            store.download_fileobj(key, fh=fh)
+        check_logs(f"key: {key}", MASKED_AUTH, REDACTED_URL_PLACEHOLDER)
+
+    def test_delete_file(self, store, adapter, object_url, check_logs):
+        url = object_url("dummy-key")
+        adapter.register_uri("DELETE", url, json={"code": 0, "message": None, "data": None, "traceId": ""})
+        assert store.delete_file("dummy-key") is None
+        check_logs(*curl_fragments("DELETE", url))
+
+    def test_get_file_metadata(self, store, adapter, object_url):
         key = "dummy-key"
         mock_headers = {
             "Accept-Ranges": "bytes",
@@ -154,25 +228,30 @@ class TestBKGenericRepo:
             "X-Proxy-By": "SmartGate-IDC",
             "X-Rio-Seq": "kjskbhxa-173749784",
         }
-        adapter.register_uri("HEAD", urljoin(endpoint, f"/generic/{project}/dummy-bucket/{key}"), headers=mock_headers)
+        adapter.register_uri("HEAD", object_url(key), headers=mock_headers)
         assert store.get_file_metadata(key) == mock_headers
 
-    def test_generate_random_string(self, store, adapter, endpoint):
-        key = "dummy-key"
+    def test_generate_presigned_url(self, store, adapter, endpoint, check_logs):
+        url = urljoin(endpoint, "/generic/temporary/url/create")
         expected = generate_random_string()
         adapter.register_uri(
-            "POST",
-            urljoin(endpoint, "/generic/temporary/url/create"),
-            json={"code": 0, "message": "", "data": [{"url": urljoin(endpoint, expected)}]},
+            "POST", url, json={"code": 0, "message": "", "data": [{"url": urljoin(endpoint, expected)}]}
         )
-        assert store.generate_presigned_url(key, expires_in=3600) == urljoin(endpoint, expected)
+        assert store.generate_presigned_url("dummy-key", expires_in=3600) == urljoin(endpoint, expected)
+        check_logs(*curl_fragments("POST", url))
 
 
 class TestBKRepoManager:
     """BKRepoManager 测试类"""
 
     @pytest.fixture
-    def manager(self, session, username, password, endpoint):
+    def adapter(self):
+        # get_client 每次都会创建新的 session, 因此需要全局 mock, 避免请求被发送到真实的网络中
+        with requests_mock.Mocker() as m:
+            yield m
+
+    @pytest.fixture
+    def manager(self, username, password, endpoint):
         return BKRepoManager(
             endpoint_url=endpoint,
             username=username,
@@ -181,7 +260,7 @@ class TestBKRepoManager:
         )
 
     @pytest.fixture
-    def manager_without_tenant(self, session, username, password, endpoint):
+    def manager_without_tenant(self, username, password, endpoint):
         return BKRepoManager(
             endpoint_url=endpoint,
             username=username,
@@ -218,3 +297,28 @@ class TestBKRepoManager:
         resp = manager_without_tenant.get_client().post(url, json={"name": "test"})
 
         assert "X-Bk-Tenant-Id" not in resp.request.headers
+
+    @pytest.mark.parametrize(
+        ("method", "http_method", "url_suffix", "extra_kwargs"),
+        [
+            ("create_user_to_repo", "POST", "/auth/api/user/create/repo", {"project": "p", "repo": "r"}),
+            ("create_user_to_project", "POST", "/auth/api/user/create/project", {"project": "p"}),
+            ("update_user", "PUT", "/auth/api/user/new-user", {}),
+        ],
+    )
+    def test_user_password_not_logged(
+        self, manager, adapter, endpoint, check_logs, method, http_method, url_suffix, extra_kwargs
+    ):
+        """请求体中的用户密码不能出现在日志中"""
+        url = urljoin(endpoint, url_suffix)
+        adapter.register_uri(http_method, url, json={"code": 0, "data": True})
+        new_user_password = generate_random_string()
+
+        getattr(manager, method)(
+            username="new-user", password=new_user_password, association_users=["foo"], **extra_kwargs
+        )
+        check_logs(
+            *curl_fragments(http_method, url),
+            "'X-Bk-Tenant-Id: test-tenant-123'",
+            extra_secrets=[new_user_password],
+        )

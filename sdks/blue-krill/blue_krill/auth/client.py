@@ -24,7 +24,7 @@ from django.http import HttpRequest
 from jwt.exceptions import DecodeError
 
 from .jwt import DEFAULT_ALGORITHM
-from .utils import get_paas_service_jwt_clients, validate_jwt_token
+from .utils import describe_token, get_paas_service_jwt_clients, validate_jwt_token
 
 logger = logging.getLogger(__name__)
 
@@ -161,7 +161,9 @@ class VerifiedClientMiddleware:
                 request.client = ret.client
                 request.extra_payload = ret.extra_payload
             except AuthFailedError as e:
-                logger.info("Unable to create an authenticated client using token: %s, reason: %s", token, e)
+                logger.info(
+                    "Unable to create an authenticated client using token(%s), reason: %s", describe_token(token), e
+                )
 
         response = self.get_response(request)
         return response

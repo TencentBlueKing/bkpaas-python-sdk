@@ -15,9 +15,10 @@
 # We undertake not to change the open source license (MIT license) applicable
 # to the current version of the project delivered to anyone in the future.
 
+import jwt
 import pytest
 
-from blue_krill.auth.utils import validate_jwt_token
+from blue_krill.auth.utils import describe_token, validate_jwt_token
 
 
 @pytest.mark.parametrize(
@@ -34,3 +35,19 @@ from blue_krill.auth.utils import validate_jwt_token
 )
 def test_test_jwt_token(input_s, result):
     assert validate_jwt_token(input_s) is result
+
+
+class TestDescribeToken:
+    def test_missing_claims(self):
+        token = jwt.encode({"foo": "bar"}, key="key", algorithm="HS256")
+        assert describe_token(token) == f"iss=None, expires_at=None, signature=***{token[-6:]}"
+
+    def test_crafted_claims(self):
+        token = jwt.encode({"iss": "foo\nbar" + "x" * 100, "expires_at": 1}, key="key", algorithm="HS256")
+        description = describe_token(token)
+        assert "\n" not in description
+        assert len(description) < 120
+
+    @pytest.mark.parametrize("token", ["", "not-a-jwt", "a.b.c", "a.b.short-signature"])
+    def test_malformed_token(self, token):
+        assert describe_token(token) == "signature=******"
