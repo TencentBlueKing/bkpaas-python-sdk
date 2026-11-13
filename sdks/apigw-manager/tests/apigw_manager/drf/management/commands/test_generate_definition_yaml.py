@@ -20,6 +20,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock, mock_open, patch
 
 import pytest
+import yaml
 from django.core.management.base import CommandError
 from django.template import Context, Template
 
@@ -35,6 +36,22 @@ class AppendOnlyHooks:
 
 
 class TestCommand:
+    # Existing Django settings use 1/10; new settings use True/False.
+    @pytest.mark.parametrize(
+        ("configured_value", "expected"),
+        [(1, True), (10, False), (True, True), (False, False)],
+    )
+    def test_definition_template_renders_is_official_boolean(self, configured_value, expected):
+        template_path = (
+            Path(__file__).resolve().parents[5] / "src/apigw_manager/drf/management/commands/data/definition.yaml"
+        )
+        rendered = Template(template_path.read_text()).render(
+            Context({"settings": SimpleNamespace(BK_APIGW_IS_OFFICIAL=configured_value)})
+        )
+        field_line = next(line for line in rendered.splitlines() if line.startswith("  is_official: "))
+
+        assert yaml.safe_load(field_line)["is_official"] is expected
+
     def test_definition_template_renders_oauth2_client_settings(self):
         template_path = (
             Path(__file__).resolve().parents[5] / "src/apigw_manager/drf/management/commands/data/definition.yaml"
