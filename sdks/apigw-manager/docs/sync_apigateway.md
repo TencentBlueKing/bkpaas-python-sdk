@@ -334,6 +334,7 @@ apigateway:
 字段配置说明：
 
 ```yaml
+deprecated: false # 是否弃用资源，OpenAPI Operation 标准字段
 x-bk-apigateway-resource:
   isPublic: true   # 是否公开，公开，则用户可查看资源文档、申请资源权限；不公开，则资源对用户隐藏
   allowApplyPermission: false # 是否允许用户申请资源权限(前提：开启应用认证接口)，允许，则任何蓝鲸应用可在蓝鲸开发者中心申请资源的访问权限；否则，只能通过网关管理员主动授权为某应用添加权限
@@ -353,6 +354,7 @@ x-bk-apigateway-resource:
     resourcePermissionRequired: false # 是否校验应用权限，开启后，蓝鲸应用需申请资源访问权限; 前提必须开启应用认证；
     oauth2PersonalClientEnabled: false # 是否开启 OAuth2 个人客户端模式(个人 token)，开启时必须同时开启用户认证
   descriptionEn: # 资源描述的英文翻译
+  deprecatedNote: "" # 资源弃用说明，可省略或为空，最长 2048 字符，由网关服务端校验
 ```
 
 > **注意**：API 资源开启 `oauth2PersonalClientEnabled` 时，必须同时将 `userVerifiedRequired` 设置为 `true`。参数组合由 API 网关服务端校验，SDK 不做前置校验。
