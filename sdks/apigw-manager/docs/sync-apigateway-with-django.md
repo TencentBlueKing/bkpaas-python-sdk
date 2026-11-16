@@ -127,6 +127,14 @@ BK_API_URL_TMPL = "http://bkapi.example.com/api/{api_name}/" ## 例如：网关 
 
 如果运行环境存在 `BKPAAS_APP_TENANT_ID`，则优先使用该环境变量；空字符串映射为 `system`，非空字符串直接作为租户 ID。完整规则见 [同步应用的租户配置](./sync-apigateway-with-docker.md#同步应用的租户配置)。
 
+SDK 默认校验 API 网关 HTTPS 服务端证书。如部署环境的证书无法通过校验，可在执行 Django 管理命令的进程环境中设置：
+
+```shell
+export BK_APIGW_MANAGER_ENABLE_SSL_VERIFY=false
+```
+
+这是环境变量配置，无需在 Django settings 中添加同名配置。仅 `false`（忽略大小写和首尾空白）关闭校验，未设置或其他值均保持校验；SDK 在创建管理 API 客户端时读取它。关闭校验会失去服务端证书及主机名验证，建议优先修复证书或配置可信 CA；完整说明见 [HTTPS 证书校验配置](./sync-apigateway-with-docker.md#https-证书校验配置)。
+
 在 INSTALLED_APPS 中加入以下配置，SDK 将创建表 `apigw_manager_context` 用于存储一些中间数据：
 
 ```python

@@ -16,6 +16,7 @@
 - `BK_APP_CODE`：应用名称；
 - `BK_APP_SECRET`：应用密钥；
 - `BK_APP_TENANT_ID`：同步所用应用所属的租户 ID；使用全租户应用时设置为 `system`，见 [同步应用的租户配置](#同步应用的租户配置)。
+- `BK_APIGW_MANAGER_ENABLE_SSL_VERIFY`：是否校验 API 网关 HTTPS 服务端证书，默认 `true`；详见 [HTTPS 证书校验配置](#https-证书校验配置)。
 
 通过镜像进行同步时，镜像需访问用户自定义的数据，在 chart 和二进制两种不同的部署方案中，镜像加载用户自定义数据的方式有所不同：
 
@@ -49,6 +50,22 @@ functions.sh 中的 bash 函数：
 - `log_info`: 打印 info 日志
 - `log_warn`: 打印 warning 日志
 - `log_error`: 打印 error 日志
+
+## HTTPS 证书校验配置
+
+apigw-manager 默认校验 API 网关 HTTPS 服务端证书。如果部署环境的证书无法通过校验，可在同步容器中设置环境变量 `BK_APIGW_MANAGER_ENABLE_SSL_VERIFY=false`：
+
+```yaml
+env:
+  - name: BK_APIGW_MANAGER_ENABLE_SSL_VERIFY
+    value: "false"
+```
+
+通过 `docker run` 启动同步容器时，可增加 `-e BK_APIGW_MANAGER_ENABLE_SSL_VERIFY=false`。该配置适用于默认同步脚本及通过 `apigw-manager.sh` 执行管理命令的自定义脚本，包括同步、发布、授权和获取公钥等管理 API 请求。
+
+仅值为 `false` 时关闭校验，忽略大小写和首尾空白；未设置、空值、`true` 或其他值均保持校验。SDK 在创建管理 API 客户端时读取此环境变量，修改容器配置后需重新创建 Job / Pod，并使用包含此功能的 SDK 或镜像版本。
+
+关闭校验后，客户端不再验证服务端证书的可信性及主机名，可能受到中间人攻击。建议修复证书或配置可信 CA；仅在明确接受此风险的环境中关闭校验。此开关不改变 JWT 签名校验。
 
 ## 同步应用的租户配置
 
