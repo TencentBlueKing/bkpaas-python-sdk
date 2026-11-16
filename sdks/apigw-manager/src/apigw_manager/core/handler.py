@@ -36,6 +36,8 @@ class Handler(object):
         self.config = config  # type: configuration.Configuration
 
         self.client = BKAPIGatewayClient(endpoint=config.host, stage=config.stage)
+        if os.getenv("BK_APIGW_MANAGER_ENABLE_SSL_VERIFY", "true").strip().lower() == "false":
+            self.client.disable_ssl_verify()
 
     def __post_init__(self):
         pass
@@ -107,7 +109,7 @@ class Handler(object):
 
     def _call_v2(self, operation, files=None, **kwargs):
         """Call the API instance (v2 version):
-          - Uses "gateway_name" as the key in `path_params` instead of "api_name".
+        - Uses "gateway_name" as the key in `path_params` instead of "api_name".
         """
 
         # 安全获取 gateway_name，避免意外删除 api_name
